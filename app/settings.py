@@ -222,15 +222,26 @@ AD_SLOT_RE = re.compile(r"^\d{6,15}$")
 
 def get_settings():
     if "settings" not in g:
-        data = dict(DEFAULTS)
-        for row in get_db().all("SELECT key, value FROM settings"):
-            data[row["key"]] = row["value"]
-        g.settings = data
+        from . import lowdb
+        cached = lowdb.cache_get("settings") if lowdb.enabled() else (False, None)
+        if cached[0]:
+            g.settings = dict(cached[1])
+        else:
+            data = dict(DEFAULTS)
+            for row in get_db().all("SELECT key, value FROM settings"):
+                data[row["key"]] = row["value"]
+            g.settings = data
+            if lowdb.enabled():
+                lowdb.cache_set("settings", dict(data), 300)
     return g.settings
 
 
 def save_settings(values):
     g.pop("blocked_sets", None)
+    from . import lowdb
+    if lowdb.enabled():
+        lowdb.cache_drop("settings")
+        lowdb.cache_drop("popular")
     db = get_db()
     for key, value in values.items():
         if key not in DEFAULTS:

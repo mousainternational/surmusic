@@ -16,7 +16,7 @@ from .security import csp_nonce, csrf_protect, csrf_token, current_user, securit
 from .settings import ads_active, get_settings
 from .util import human_size, render_markdown, valid_email
 
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 
 
 def create_app(overrides=None):
@@ -55,6 +55,7 @@ def create_app(overrides=None):
 
     app.teardown_appcontext(dbmod.close_db)
     app.before_request(_to_main_address)
+    app.before_request(_lowdb_touch)
     app.before_request(csrf_protect)
 
     @app.after_request
@@ -228,5 +229,14 @@ def _to_main_address():
             and host.endswith(".onrender.com"):
         target = f"https://{site.netloc}{request.full_path if request.query_string else request.path}"
         return redirect(target, code=301)
+    return None
+
+
+def _lowdb_touch():
+    from . import lowdb
+    if lowdb.enabled():
+        lowdb.touch_request()
+        if request.path.startswith(("/admin", "/account")):
+            lowdb.flush()                  # up-to-date numbers and sign-ins (the database is awake for these anyway)
     return None
 

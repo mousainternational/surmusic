@@ -26,7 +26,7 @@ services:
       - key: GEOIP_DB
         value: /data/storage/geoip.sqlite
       - key: WEB_CONCURRENCY
-        value: "2"                  # free plan has 512 MB memory
+        value: "1"                  # one process: low-database mode keeps listeners/visits in its memory
       - key: TRUSTED_PROXIES
         value: "1"
       - key: SESSION_COOKIE_SECURE

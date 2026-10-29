@@ -74,8 +74,11 @@ def rate_limited(name, limit, window_seconds, ident=None):
     """True when the caller exceeded `limit` hits in the window (records the hit)."""
     if current_app.config.get("RATE_LIMITS_DISABLED"):
         return False
-    db = get_db()
     bucket = f"{name}:{ident or ip_hash()}"
+    from . import lowdb
+    if lowdb.enabled():
+        return lowdb.rate_limited(bucket, limit, window_seconds)
+    db = get_db()
     now = datetime.now(timezone.utc)
     row = db.one("SELECT hits, reset_at FROM rate_limits WHERE bucket = ?", (bucket,))
     if row is None or datetime.fromisoformat(row["reset_at"]) <= now:

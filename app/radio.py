@@ -100,6 +100,28 @@ def normalize(raw, https_only=True):
 
 
 def _cached(key, loader, ttl_minutes):
+    from . import lowdb
+    if lowdb.enabled():
+        hit, value = lowdb.cache_get("radio:" + key)
+        if hit:
+            return value
+        if key.startswith("q:"):                      # searches: memory only, never wake the database
+            data = loader()
+            lowdb.cache_set("radio:" + key, data, ttl_minutes * 60)
+            return data
+        try:
+            data = loader()
+        except RadioError:
+            data = None
+        if data is not None:
+            lowdb.cache_set("radio:" + key, data, ttl_minutes * 60)
+            seen, _ = lowdb.cache_get("radio-saved:" + key)
+            if not seen:                              # keep a copy for cold starts, at most every 6 hours
+                lowdb.cache_set("radio-saved:" + key, True, 6 * 3600)
+                lowdb.defer("DELETE FROM station_cache WHERE cache_key = ?", (key,))
+                lowdb.defer("INSERT INTO station_cache (cache_key, body, fetched_at) VALUES (?, ?, ?)",
+                            (key, json.dumps(data), utcnow()))
+            return data
     db = get_db()
     row = db.one("SELECT body, fetched_at FROM station_cache WHERE cache_key = ?", (key,))
     fresh_after = datetime.now(timezone.utc) - timedelta(minutes=ttl_minutes)

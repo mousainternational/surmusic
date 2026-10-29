@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from xml.sax.saxutils import escape
 
 from flask import (Blueprint, Response, abort, current_app, flash, g, jsonify, redirect, render_template,
-                   request, send_file, url_for)
+                   request, send_file, session, url_for)
 
 import base64
 import hashlib
@@ -74,6 +74,18 @@ def _user_favorite_ids():
 
 
 def _popular(days=7, limit=8):
+    from . import lowdb
+    if lowdb.enabled():
+        hit, value = lowdb.cache_get("popular")
+        if hit:
+            return value
+        value = _popular_query(days, limit)
+        lowdb.cache_set("popular", value, 1800)
+        return value
+    return _popular_query(days, limit)
+
+
+def _popular_query(days=7, limit=8):
     since = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
     rows = get_db().all("SELECT station_name, category, COUNT(*) AS n FROM plays WHERE created_at > ? "
                         "GROUP BY station_name, category ORDER BY n DESC LIMIT ?", (since, limit + 5))
@@ -355,9 +367,14 @@ def api_track():
     if rate_limited("track", 300, 600):
         return jsonify({"ok": True})
     analytics.remember_timezone(data.get("tz"))
-    u = current_user()
+    from . import lowdb
+    if lowdb.enabled():
+        uid = session.get("uid")
+    else:
+        u = current_user()
+        uid = u["id"] if u else None
     ref = data.get("ref") if isinstance(data.get("ref"), str) else ""
-    analytics.record("page_view", u["id"] if u else None, path.split("?")[0], referrer=analytics.referrer_domain(ref))
+    analytics.record("page_view", uid, path.split("?")[0], referrer=analytics.referrer_domain(ref))
     return jsonify({"ok": True})
 
 
@@ -365,16 +382,21 @@ def api_track():
 def api_heartbeat():
     """While a station is playing the player calls this every minute (powers Admin → Live now)."""
     data = _json_body()
-    u = current_user()
+    from . import lowdb
+    if lowdb.enabled():
+        uid = session.get("uid")            # signed session cookie; no database look-up while listening
+    else:
+        u = current_user()
+        uid = u["id"] if u else None
     if rate_limited("heartbeat", 60, 600):
         return jsonify({"ok": True})
     if data.get("stop"):
-        analytics.stop_listening(u["id"] if u else None)
+        analytics.stop_listening(uid)
         return jsonify({"ok": True})
     name = data.get("station_name") if isinstance(data.get("station_name"), str) else ""
     cat = data.get("category") if data.get("category") in CATEGORY_PAGES else ""
     if name:
-        analytics.heartbeat(u["id"] if u else None, " ".join(name.split())[:120], cat)
+        analytics.heartbeat(uid, " ".join(name.split())[:120], cat)
     return jsonify({"ok": True})
 
 
@@ -391,6 +413,18 @@ def api_play():
     if rate_limited("play", 120, 3600):
         return jsonify({"ok": True})
     cat = data.get("category") if data.get("category") in CATEGORY_PAGES else ""
+    from . import lowdb
+    if lowdb.enabled():
+        # no database wake-up: queue the play (and a member's history) for the next batch write
+        uid = session.get("uid")
+        lowdb.defer("INSERT INTO plays (station_uuid, station_name, category, created_at) VALUES (?, ?, ?, ?)",
+                    (st["uuid"], st["name"], cat, utcnow()))
+        analytics.record("play", uid, detail=st["name"])
+        if uid:
+            lowdb.defer("DELETE FROM history WHERE user_id = ? AND station_uuid = ?", (uid, st["uuid"]))
+            lowdb.defer("INSERT INTO history (user_id, station_uuid, station_json, played_at) VALUES (?, ?, ?, ?)",
+                        (uid, st["uuid"], json.dumps(st), utcnow()))
+        return jsonify({"ok": True})
     db = get_db()
     db.insert("plays", {"station_uuid": st["uuid"], "station_name": st["name"], "category": cat,
                         "created_at": utcnow()})

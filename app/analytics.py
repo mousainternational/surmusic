@@ -12,13 +12,14 @@ import hashlib
 import hmac
 import json
 import re
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import urlparse
 
 from flask import current_app, request, session
 
-from . import geo
+from . import geo, lowdb
 from .db import get_db, utcnow
 from .security import client_ip
 
@@ -112,11 +113,17 @@ def record(kind, user_id=None, path="", detail="", referrer=""):
         return
     device, browser, os_name = parse_ua(request.headers.get("User-Agent", ""))
     code, city = _location()
+    vid = visitor_id()
+    sql = ("INSERT INTO events (kind, visitor_id, user_id, path, referrer, country, region, device, browser, os, "
+           "detail, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+    params = (kind, vid, user_id, path[:200], referrer[:120], code, city[:60], device, browser, os_name,
+              detail[:200], utcnow())
+    if lowdb.enabled():
+        lowdb.saw_visitor(vid)
+        lowdb.defer(sql, params)
+        return
     db = get_db()
-    db.execute("INSERT INTO events (kind, visitor_id, user_id, path, referrer, country, region, device, browser, os, "
-               "detail, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-               (kind, visitor_id(), user_id, path[:200], referrer[:120], code, city[:60], device, browser, os_name,
-                detail[:200], utcnow()))
+    db.execute(sql, params)
     db.commit()
 
 
@@ -130,7 +137,7 @@ def referrer_domain(ref):
     return host[4:] if host.startswith("www.") else host
 
 
-def _close(row, extra=30):
+def close_session(row, extra=30):
     """A listening session ended: store how long it lasted as a 'listened' event.
     `extra` covers the time after the last check-in (about half a minute when the tab just vanished)."""
     try:
@@ -141,12 +148,18 @@ def _close(row, extra=30):
     if secs < 45:
         return
     mins = max(1, round(secs / 60))
-    db = get_db()
-    db.execute("INSERT INTO events (kind, visitor_id, user_id, path, referrer, country, region, device, browser, os, "
-               "detail, created_at) VALUES ('listened', ?, ?, '', '', ?, ?, ?, ?, '', ?, ?)",
-               (row["session_key"][1:] if row["session_key"].startswith("v") else "", row["user_id"],
-                row["country"], row["region"], row["device"], row["browser"],
-                f"{row['station_name']} · {mins} min"[:200], row["last_seen"]))
+    sql = ("INSERT INTO events (kind, visitor_id, user_id, path, referrer, country, region, device, browser, os, "
+           "detail, created_at) VALUES ('listened', ?, ?, '', '', ?, ?, ?, ?, '', ?, ?)")
+    params = (row["session_key"][1:] if row["session_key"].startswith("v") else "", row["user_id"],
+              row["country"], row["region"], row["device"], row["browser"],
+              f"{row['station_name']} · {mins} min"[:200], row["last_seen"])
+    if lowdb.enabled():
+        lowdb.defer(sql, params)
+    else:
+        get_db().execute(sql, params)
+
+
+_close = close_session
 
 
 def heartbeat(user_id, station_name, category):
@@ -157,6 +170,21 @@ def heartbeat(user_id, station_name, category):
     code, city = _location()
     key = f"u{user_id}" if user_id else f"v{visitor_id()}"
     now = utcnow()
+    if lowdb.enabled():
+        lowdb.saw_visitor(visitor_id())
+        st = lowdb.state()
+        with st.lock:
+            row = st.live.get(key)
+            same = row and row["station_name"] == station_name and row["_seen"] > time.time() - LIVE_SECONDS
+            if row and not same:
+                st.live.pop(key, None)
+            st.live[key] = {"session_key": key, "user_id": user_id, "station_name": station_name[:120],
+                            "category": category[:20], "country": code, "region": city[:60], "device": device,
+                            "browser": browser, "started_at": row["started_at"] if same else now, "last_seen": now,
+                            "_seen": time.time()}
+        if row and not same:
+            close_session(row)
+        return
     db = get_db()
     row = db.one("SELECT * FROM live_sessions WHERE session_key = ?", (key,))
     same = row and row["station_name"] == station_name and \
@@ -173,6 +201,16 @@ def heartbeat(user_id, station_name, category):
 
 def stop_listening(user_id):
     key = f"u{user_id}" if user_id else f"v{visitor_id()}"
+    if lowdb.enabled():
+        st = lowdb.state()
+        with st.lock:
+            row = st.live.pop(key, None)
+        if row:
+            last = datetime.fromisoformat(row["last_seen"])
+            row["last_seen"] = min(datetime.now(timezone.utc), last + timedelta(seconds=60)).replace(
+                microsecond=0).isoformat()
+            close_session(row, extra=0)
+        return
     db = get_db()
     row = db.one("SELECT * FROM live_sessions WHERE session_key = ?", (key,))
     if row:
@@ -210,6 +248,8 @@ def _since(days=0, minutes=0):
 
 
 def live_now():
+    if lowdb.enabled():
+        return _live_now_memory()
     db = get_db()
     cutoff = _since(minutes=LIVE_SECONDS / 60)
     for stale in db.all("SELECT * FROM live_sessions WHERE last_seen < ?", (cutoff,)):
@@ -330,3 +370,28 @@ def purge_old():
                (_since(days=current_app.config.get("PAGEVIEW_DAYS", 180)),))
     db.execute("DELETE FROM events WHERE created_at < ?", (_since(days=current_app.config.get("EVENT_DAYS", 365)),))
     db.commit()
+
+
+def _live_now_memory():
+    lowdb._sweep(current_app._get_current_object())
+    st = lowdb.state()
+    with st.lock:
+        listeners = sorted((dict(v) for v in st.live.values()), key=lambda r: r["started_at"])
+    ids = sorted({r["user_id"] for r in listeners if r["user_id"]})
+    people = {}
+    if ids:
+        marks = ", ".join("?" for _ in ids)
+        people = {r["id"]: r for r in get_db().all(f"SELECT id, email, display_name FROM users WHERE id IN ({marks})", ids)}
+    now = datetime.now(timezone.utc)
+    for r in listeners:
+        r.pop("_seen", None)
+        p = people.get(r["user_id"]) or {}
+        r["email"], r["display_name"] = p.get("email"), p.get("display_name")
+        r["country_name"] = country_name(r["country"])
+        r["flag"] = flag(r["country"])
+        try:
+            r["minutes"] = max(0, int((now - datetime.fromisoformat(r["started_at"])).total_seconds() // 60))
+        except ValueError:
+            r["minutes"] = 0
+    return {"listeners": listeners, "online": lowdb.online_visitors()}
+

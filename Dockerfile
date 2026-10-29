@@ -13,7 +13,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 COPY app ./app
-COPY wsgi.py .
+COPY wsgi.py gunicorn.conf.py ./
 
 # Run as an unprivileged user; uploads go to a separate volume that is never executed.
 RUN useradd --system --uid 10001 --home /srv/surmusic surmusic \
@@ -26,5 +26,6 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s \
   CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:' + __import__('os').environ.get('PORT', '8000') + '/ping', timeout=4).status == 200 else 1)"
 
 # --preload creates tables once before workers start.
-# PORT is set by hosts such as Render (default 8000); WEB_CONCURRENCY = number of workers (default 3).
-CMD ["sh", "-c", "exec gunicorn --preload --workers ${WEB_CONCURRENCY:-3} --threads 4 --worker-class gthread --timeout 300 --bind 0.0.0.0:${PORT:-8000} --forwarded-allow-ips '*' --access-logfile - wsgi:app"]
+# PORT is set by hosts such as Render (default 8000); WEB_CONCURRENCY = processes (default 3; use 1 on free
+# hosting so low-database mode keeps one shared memory), WEB_THREADS = threads per process (default 8).
+CMD ["sh", "-c", "exec gunicorn --preload --workers ${WEB_CONCURRENCY:-3} --threads ${WEB_THREADS:-8} --worker-class gthread --timeout 300 --bind 0.0.0.0:${PORT:-8000} --forwarded-allow-ips '*' --access-logfile - wsgi:app"]
