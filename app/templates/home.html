@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% import "_ad.html" as ads with context %}
+{% block body_class %}page-home{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="eyebrow">Free live radio · by {{ S.owner_brand }}</p>
+      <h1>{{ S.hero_title }}</h1>
+      <p class="lead">{{ S.hero_subtitle }}</p>
+      <form class="hero-search" action="{{ url_for('public.search') }}" method="get" role="search">
+        <label for="hero-q" class="sr">Search radio stations</label>
+        <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input id="hero-q" name="q" type="search" placeholder="Search: Arijit, ghazal, Lahore, FM 100…" maxlength="60">
+        <button class="btn btn-primary">Search</button>
+      </form>
+      <div class="hero-actions">
+        <button class="btn btn-accent btn-lg" type="button" data-play-first>▶ Play Bollywood now</button>
+        <a class="btn btn-ghost" href="{{ url_for('public.download_page') }}">Get the Android app</a>
+      </div>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <div class="orb"></div>
+      <img src="{{ url_for('static', filename='img/surmusic-logo.svg') }}" alt="" width="200" height="200">
+      <div class="eq-big"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+  </div>
+</section>
+
+{{ ads.ad('top') }}
+
+<section class="section">
+  <div class="wrap">
+    {{ ui.cat_tabs('bollywood') }}
+    <div class="section-head">
+      <h2>Top Bollywood stations right now</h2>
+      <a href="{{ url_for('public.category', cat='bollywood') }}">All Bollywood →</a>
+    </div>
+    {% if error and not stations %}
+    <div class="empty card"><p>{{ error }} Please try again in a minute.</p></div>
+    {% else %}
+    {{ ui.station_list(stations[:24], cat) }}
+    {% endif %}
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap grid three genre-cards">
+    <a class="card genre g-bolly" href="{{ url_for('public.category', cat='bollywood') }}">
+      <h2>Bollywood</h2><p>Hindi film songs, romantic hits, 90s classics and new releases.</p><span>Listen →</span>
+    </a>
+    <a class="card genre g-lolly" href="{{ url_for('public.category', cat='lollywood') }}">
+      <h2>Lollywood</h2><p>Pakistani songs, Urdu &amp; Punjabi pop, ghazals and qawwali.</p><span>Listen →</span>
+    </a>
+    <a class="card genre g-holly" href="{{ url_for('public.category', cat='hollywood') }}">
+      <h2>Hollywood</h2><p>Top 40 hits, pop, 80s–90s classics and movie soundtracks.</p><span>Listen →</span>
+    </a>
+  </div>
+</section>
+
+{% if popular %}
+<section class="section">
+  <div class="wrap">
+    <div class="section-head"><h2>Popular on Sur Music this week</h2></div>
+    <ol class="popular-list">
+      {% for p in popular %}<li><span class="pop-rank">{{ loop.index }}</span> <span class="pop-name">{{ p.station_name }}</span> <span class="muted small">{{ p.category | capitalize }} · {{ p.n }} plays</span></li>{% endfor %}
+    </ol>
+  </div>
+</section>
+{% endif %}
+
+<section class="section">
+  <div class="wrap grid two-col">
+    <div class="card cta">
+      <div>
+        <h2>Take Sur Music everywhere</h2>
+        <p class="muted">Android app with background play and lock-screen controls, plus a Chrome extension that keeps playing while you browse.</p>
+      </div>
+      <a class="btn btn-primary" href="{{ url_for('public.download_page') }}">Download free</a>
+    </div>
+    <div class="card cta">
+      <div>
+        <h2>Save your favourites</h2>
+        <p class="muted">Create a free account to keep your favourite stations and history on every device.</p>
+      </div>
+      {% if user %}<a class="btn btn-ghost" href="{{ url_for('public.favorites') }}">My favourites</a>
+      {% else %}<a class="btn btn-ghost" href="{{ url_for('auth.signup') }}">Sign up free</a>{% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap prose narrow seo-text">
+    <h2>Live Bollywood, Pakistani and English radio — free</h2>
+    <p>Sur Music brings together thousands of live radio stations for Hindi, Urdu, Punjabi and English music. Listen to Bollywood hits from Mumbai, Lollywood songs and ghazals from Lahore and Karachi, qawwali and Sufi music, or the latest Top 40 from the USA and UK — right in your browser, with no app or sign-up needed.</p>
+    <p>Every station is a public live stream from its broadcaster, listed in the open Radio Browser directory. Sur Music is made by {{ S.owner_name }} ({{ S.owner_brand }}) and is free thanks to ads and your <a href="{{ url_for('public.donate') }}">support</a>.</p>
+  </div>
+</section>
+{% endblock %}

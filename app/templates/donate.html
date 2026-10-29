@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% macro copy_row(id, label, value) -%}
+<div class="copy-row">
+  <span class="small muted">{{ label }}</span>
+  <code id="{{ id }}">{{ value }}</code>
+  <button class="btn btn-sm btn-ghost" type="button" data-copy="#{{ id }}">Copy</button>
+</div>
+{%- endmacro %}
+{% block content %}
+<div class="wrap page">
+  {{ ui.breadcrumbs([('Home', '/'), ('Support', '/donate')]) }}
+  <header class="page-head">
+    <h1>Support Sur Music</h1>
+    <p class="muted">Sur Music is free and made by {{ S.owner_name }} ({{ S.owner_brand }}). Ads and your support pay for servers and new features.</p>
+    <div class="lead prose">{{ S.donation_purpose_md | markdown }}</div>
+  </header>
+
+  <div class="notice card">
+    <strong>Before you send money:</strong> donations are voluntary and are not a purchase. Always check the account holder name in your payment app. Scanning a QR code here does not confirm a payment — we confirm donations manually from our account records.
+    <a href="{{ url_for('public.donation_disclaimer') }}">Read the donation disclaimer</a>.
+  </div>
+
+  <h2 class="section-title">From Pakistan</h2>
+  <div class="grid donate-grid">
+    {% set jc = methods.jazzcash %}
+    <section class="card donate-card" aria-labelledby="jc-h">
+      <h3 id="jc-h"><span class="pay-dot jc" aria-hidden="true"></span>JazzCash</h3>
+      {% if jc %}
+        {% if jc.qr %}<button type="button" class="qr" data-lightbox-src="{{ media_src(jc.qr) }}" aria-label="Enlarge JazzCash QR code"><img src="{{ media_src(jc.qr) }}" alt="JazzCash QR code for {{ jc.holder }}" width="220" height="220"></button>{% endif %}
+        {{ copy_row('jc-holder', 'Account holder', jc.holder) }}
+        {% if jc.number %}{{ copy_row('jc-number', 'JazzCash number', jc.number) }}{% endif %}
+        {% if jc.title %}{{ copy_row('jc-title', 'Account title', jc.title) }}{% endif %}
+        <p class="small">{{ jc.instructions }}</p>
+      {% else %}
+        <p class="muted">JazzCash donations are being set up. Please check back soon.</p>
+      {% endif %}
+    </section>
+
+    {% set np = methods.nayapay %}
+    <section class="card donate-card" aria-labelledby="np-h">
+      <h3 id="np-h"><span class="pay-dot np" aria-hidden="true"></span>NayaPay</h3>
+      {% if np %}
+        {% if np.qr %}<button type="button" class="qr" data-lightbox-src="{{ media_src(np.qr) }}" aria-label="Enlarge NayaPay QR code"><img src="{{ media_src(np.qr) }}" alt="NayaPay QR code for {{ np.holder }}" width="220" height="220"></button>{% endif %}
+        {{ copy_row('np-holder', 'Account holder', np.holder) }}
+        {% if np.details %}{{ copy_row('np-details', 'NayaPay ID / number', np.details) }}{% endif %}
+        <p class="small">{{ np.instructions }}</p>
+      {% else %}
+        <p class="muted">NayaPay donations are being set up. Please check back soon.</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <h2 class="section-title">From other countries</h2>
+  {% set w = methods.wise %}
+  <section class="card donate-card intl" aria-labelledby="w-h">
+    <h3 id="w-h"><span class="pay-dot wise" aria-hidden="true"></span>International transfer (Wise)</h3>
+    {% if w %}
+      <p>{{ w.instructions }}</p>
+      {% if w.link %}<a class="btn btn-primary" href="{{ w.link }}" rel="noopener" target="_blank">Open the payment page ↗</a>{% endif %}
+      {{ copy_row('w-holder', 'Account holder', w.holder) }}
+      {% if w.details %}
+      <div class="copy-row block">
+        <span class="small muted">Transfer details</span>
+        <pre id="w-details">{{ w.details }}</pre>
+        <button class="btn btn-sm btn-ghost" type="button" data-copy="#w-details">Copy details</button>
+      </div>
+      {% endif %}
+      {% if w.currencies %}<p class="small"><strong>Currencies:</strong> {{ w.currencies }}</p>{% endif %}
+      <p class="small muted">{{ w.fee_note }}</p>
+    {% else %}
+      <p class="muted">International donations are being set up. If you would like to support us from abroad now, please <a href="{{ url_for('public.contact') }}">contact us</a>.</p>
+    {% endif %}
+    <p class="small muted">We do not control third-party payment processing. Transfers may take time to arrive.</p>
+  </section>
+
+  <section class="prose card">
+    <h2>Refund policy</h2>
+    {{ S.refund_policy_md | markdown }}
+    <p>Questions about a donation? <a href="{{ url_for('public.contact') }}">Contact us</a>.</p>
+  </section>
+</div>
+{% endblock %}

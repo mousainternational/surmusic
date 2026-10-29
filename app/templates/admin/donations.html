@@ -1,0 +1,84 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Donation setup{% endblock %}
+{% macro status_line(ready) -%}
+  {%- if ready %}<p class="ready">● Live on the Donate page</p>{% else %}<p class="notready">● Hidden — needs holder name, official QR or details, “verified” and “enabled”</p>{% endif -%}
+{%- endmacro %}
+{% macro toggles(m) -%}
+  <label class="check"><input type="checkbox" name="{{ m }}_verified" value="1" {% if S[m ~ '_verified'] == '1' %}checked{% endif %}> I checked these details in my own {{ {'jazzcash': 'JazzCash', 'nayapay': 'NayaPay', 'wise': 'Wise'}[m] }} app, and they are correct</label>
+  <label class="check"><input type="checkbox" name="{{ m }}_enabled" value="1" {% if S[m ~ '_enabled'] == '1' %}checked{% endif %}> Show this method on the Donate page</label>
+{%- endmacro %}
+{% block admin %}
+<div class="card warn-list">
+  <p><strong>Use only official details.</strong> Download the QR code from your own JazzCash or NayaPay app (Receive / My QR) and upload it here. Never upload a QR code made by another website or person. Never enter a PIN, password or OTP anywhere on this site.</p>
+</div>
+<br>
+<div class="grid donate-grid">
+  <form id="jazzcash" class="card form" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="method" value="jazzcash">
+    <h2 class="h3"><span class="pay-dot jc"></span> JazzCash</h2>
+    {{ status_line(status.jazzcash) }}
+    <label for="jazzcash_holder">Account holder name (as shown in the app)</label>
+    <input id="jazzcash_holder" name="jazzcash_holder" value="{{ S.jazzcash_holder }}" maxlength="100">
+    <label for="jazzcash_number">JazzCash mobile / account number</label>
+    <input id="jazzcash_number" name="jazzcash_number" value="{{ S.jazzcash_number }}" maxlength="30" inputmode="tel">
+    <label for="jazzcash_title">Account title <span class="muted">(optional)</span></label>
+    <input id="jazzcash_title" name="jazzcash_title" value="{{ S.jazzcash_title }}" maxlength="100">
+    <label for="jc-qr">Official JazzCash QR image</label>
+    {% if S.jazzcash_qr %}<p><img src="{{ media_src(S.jazzcash_qr) }}" alt="Current JazzCash QR" width="160"> <label class="check"><input type="checkbox" name="remove_qr" value="1"> Remove QR</label></p>{% endif %}
+    <input id="jc-qr" name="qr" type="file" accept="image/png,image/jpeg,image/webp">
+    <label for="jazzcash_instructions">Instructions for donors</label>
+    <textarea id="jazzcash_instructions" name="jazzcash_instructions" rows="3">{{ S.jazzcash_instructions }}</textarea>
+    {{ toggles('jazzcash') }}
+    <button class="btn btn-primary">Save JazzCash</button>
+  </form>
+
+  <form id="nayapay" class="card form" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="method" value="nayapay">
+    <h2 class="h3"><span class="pay-dot np"></span> NayaPay</h2>
+    {{ status_line(status.nayapay) }}
+    <label for="nayapay_holder">Account holder name (as shown in the app)</label>
+    <input id="nayapay_holder" name="nayapay_holder" value="{{ S.nayapay_holder }}" maxlength="100">
+    <label for="nayapay_details">NayaPay ID or phone number</label>
+    <input id="nayapay_details" name="nayapay_details" value="{{ S.nayapay_details }}" maxlength="100">
+    <label for="np-qr">Official NayaPay QR image</label>
+    {% if S.nayapay_qr %}<p><img src="{{ media_src(S.nayapay_qr) }}" alt="Current NayaPay QR" width="160"> <label class="check"><input type="checkbox" name="remove_qr" value="1"> Remove QR</label></p>{% endif %}
+    <input id="np-qr" name="qr" type="file" accept="image/png,image/jpeg,image/webp">
+    <label for="nayapay_instructions">Instructions for donors</label>
+    <textarea id="nayapay_instructions" name="nayapay_instructions" rows="3">{{ S.nayapay_instructions }}</textarea>
+    {{ toggles('nayapay') }}
+    <button class="btn btn-primary">Save NayaPay</button>
+  </form>
+</div>
+<br>
+<form id="wise" class="card form" method="post">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="method" value="wise">
+  <h2 class="h3"><span class="pay-dot wise"></span> International (Wise)</h2>
+  {{ status_line(status.wise) }}
+  <p class="help">Check that Wise allows receiving donations for your account type and country before enabling this. If it does not, use another supported service and describe it here.</p>
+  <div class="two">
+    <div><label for="wise_holder">Account holder name</label><input id="wise_holder" name="wise_holder" value="{{ S.wise_holder }}" maxlength="100"></div>
+    <div><label for="wise_link">Verified Wise payment link <span class="muted">(https)</span></label><input id="wise_link" name="wise_link" type="url" value="{{ S.wise_link }}" placeholder="https://wise.com/pay/…"></div>
+  </div>
+  <label for="wise_details">Transfer details (account number / IBAN, SWIFT/BIC, bank, address)</label>
+  <textarea id="wise_details" name="wise_details" rows="5">{{ S.wise_details }}</textarea>
+  <label for="wise_currencies">Supported currencies (only ones you confirmed)</label>
+  <input id="wise_currencies" name="wise_currencies" value="{{ S.wise_currencies }}" placeholder="USD, GBP, EUR">
+  <label for="wise_instructions">Instructions for donors</label>
+  <textarea id="wise_instructions" name="wise_instructions" rows="2">{{ S.wise_instructions }}</textarea>
+  <label for="wise_fee_note">Fees and timing note</label>
+  <textarea id="wise_fee_note" name="wise_fee_note" rows="2">{{ S.wise_fee_note }}</textarea>
+  {{ toggles('wise') }}
+  <button class="btn btn-primary">Save international</button>
+</form>
+<br>
+<form id="general" class="card form" method="post">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="method" value="general">
+  <h2 class="h3">Donation purpose and refund policy</h2>
+  <label for="donation_purpose_md">Donation purpose (shown at the top of the Donate page)</label>
+  <textarea id="donation_purpose_md" name="donation_purpose_md" rows="3">{{ S.donation_purpose_md }}</textarea>
+  <label for="refund_policy_md">Refund policy (Markdown)</label>
+  <textarea id="refund_policy_md" name="refund_policy_md" rows="5">{{ S.refund_policy_md }}</textarea>
+  <p class="help">Review this policy against Pakistani law and your payment providers' rules before launch. The full Donation Disclaimer is under Settings → Pages &amp; policies.</p>
+  <button class="btn btn-primary">Save</button>
+</form>
+{% endblock %}

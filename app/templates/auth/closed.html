@@ -1,0 +1,6 @@
+{% extends "auth/_layout.html" %}
+{% block auth %}
+<h1 class="h2">Sign-ups are paused</h1>
+<p class="muted">New accounts are not available right now. You can still listen to every station without an account.</p>
+<a class="btn btn-primary btn-block" href="{{ url_for('public.home') }}">Start listening</a>
+{% endblock %}

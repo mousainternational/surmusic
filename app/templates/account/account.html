@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="wrap page narrow">
+  <header class="page-head">
+    <h1>My account</h1>
+    <p class="muted">{{ me.email }} · member since {{ me.created_at | date }}{% if me.role == 'admin' %} · <strong>Administrator</strong>{% endif %}</p>
+  </header>
+
+  {% if not me.email_verified %}
+  <div class="flash flash-warning">
+    Your email is not confirmed yet.
+    {% if smtp %}
+    <form method="post" action="{{ url_for('auth.verify_resend') }}" class="inline"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="linklike">Send confirmation link</button></form>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="stat-grid three">
+    <a class="card stat" href="{{ url_for('public.favorites') }}"><span class="muted small">Favourite stations</span><strong>{{ stats.favorites }}</strong></a>
+    <div class="card stat"><span class="muted small">Stations in history</span><strong>{{ stats.history }}</strong></div>
+    <div class="card stat"><span class="muted small">Minutes listened</span><strong>{{ minutes }}</strong></div>
+  </div>
+
+  {% if signins %}
+  <section class="card">
+    <h2 class="h3">Recent sign-ins</h2>
+    <p class="small muted">If you don't recognise one of these, change your password and use “Sign out on all other devices”.</p>
+    <ul class="signins">
+      {% for e in signins %}<li><span class="nowrap">{{ e.created_at[:16] | replace('T', ' ') }} UTC</span> · {{ e.flag }} {{ e.region ~ ', ' if e.region }}{{ e.country_name if e.country else 'Unknown location' }} · {{ e.device }}, {{ e.browser }}, {{ e.os }}</li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if recent %}
+  <section class="card">
+    <h2 class="h3">Recently played</h2>
+    <ul class="stations compact" data-cat="history">
+      {% for st in recent %}
+      <li class="st" data-station="{{ station_json(st) }}" data-uuid="{{ st.uuid }}">
+        <button class="st-play" type="button" aria-label="Play {{ st.name }}">
+          <span class="thumb {{ thumb_class(st.name) }}" data-letter="{{ st.name[:1] | upper }}">{% if st.favicon %}<img src="{{ st.favicon }}" alt="" loading="lazy" referrerpolicy="no-referrer" width="44" height="44">{% endif %}</span>
+          <span class="st-text"><span class="st-name">{{ st.name }}</span><span class="st-meta">{{ st.played_at | date }}</span></span>
+        </button>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <form class="card form" method="post">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="profile">
+    <h2 class="h3">Profile</h2>
+    <label for="display_name">Display name</label>
+    <input id="display_name" name="display_name" maxlength="40" value="{{ me.display_name }}">
+    <button class="btn btn-primary">Save</button>
+  </form>
+
+  <form class="card form" method="post">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="password">
+    <h2 class="h3">Change password</h2>
+    <label for="current">Current password</label>
+    <input id="current" name="current" type="password" autocomplete="current-password" required>
+    <label for="new">New password <span class="muted">(at least 10 characters)</span></label>
+    <input id="new" name="new" type="password" autocomplete="new-password" minlength="10" required>
+    <label for="again">Repeat new password</label>
+    <input id="again" name="again" type="password" autocomplete="new-password" minlength="10" required>
+    <button class="btn btn-primary">Change password</button>
+  </form>
+
+  <div class="card">
+    <h2 class="h3">Security &amp; data</h2>
+    <div class="actions">
+      <form method="post" class="inline"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="action" value="signout_all"><button class="btn btn-sm btn-ghost">Sign out on all other devices</button></form>
+      <a class="btn btn-sm btn-ghost" href="{{ url_for('auth.account_export') }}" data-no-pjax>Download my data</a>
+    </div>
+  </div>
+
+  {% if me.role != 'admin' %}
+  <form class="card form danger-zone" method="post" action="{{ url_for('auth.account_delete') }}" data-confirm="Delete your Sur Music account and all its data? This cannot be undone.">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <h2 class="h3">Delete account</h2>
+    <p class="small muted">Permanently deletes your account, favourites and history.</p>
+    <label for="del-pw">Enter your password to confirm</label>
+    <input id="del-pw" name="password" type="password" autocomplete="current-password" required>
+    <button class="btn btn-danger">Delete my account</button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

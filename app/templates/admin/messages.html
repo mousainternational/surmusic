@@ -1,0 +1,21 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Messages{% endblock %}
+{% block admin %}
+<div class="card table-wrap">
+  {% if rows %}
+  <table>
+    <thead><tr><th>From</th><th>Subject</th><th>Email delivery</th><th>Received</th></tr></thead>
+    <tbody>
+    {% for m in rows %}
+    <tr>
+      <td>{% if not m.is_read %}<strong>{% endif %}{{ m.name }}{% if not m.is_read %}</strong>{% endif %}<br><span class="small muted">{{ m.email }}</span></td>
+      <td><a href="{{ url_for('admin.message_view', mid=m.id) }}">{{ m.subject }}</a></td>
+      <td><span class="status">{{ {'sent': 'sent', 'pending_setup': 'not set up', 'failed': 'failed'}.get(m.email_status, m.email_status) }}</span></td>
+      <td>{{ m.created_at | date }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="muted">No messages yet.</p>{% endif %}
+</div>
+{% endblock %}

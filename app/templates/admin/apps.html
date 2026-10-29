@@ -1,0 +1,29 @@
+{% extends "admin/_layout.html" %}
+{% block title %}App downloads{% endblock %}
+{% block admin %}
+<div class="grid donate-grid">
+  {% for key, title, exts in [('android', 'Android app (APK)', '.apk'), ('chrome', 'Chrome extension', '.zip or .crx')] %}
+  {% set a = apps.get(key) %}
+  <form class="card form" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="platform" value="{{ key }}">
+    <h2 class="h3">{{ title }}</h2>
+    {% if a and a.file_name %}
+      <p class="small">Current file: <strong>{{ a.file_original_name }}</strong> · {{ a.file_size | filesize }} · {{ a.download_count }} downloads<br><span class="muted break">SHA-256 {{ a.file_sha256 }}</span></p>
+      <label class="check"><input type="checkbox" name="remove_file" value="1"> Remove this file</label>
+    {% elif a and a.external_url %}<p class="small">Using link: {{ a.external_url }}</p>{% endif %}
+    <label for="v-{{ key }}">Version</label>
+    <input id="v-{{ key }}" name="version" value="{{ a.version if a else '' }}" placeholder="1.0.0">
+    {% if config.EPHEMERAL_STORAGE %}
+    <p class="help">Free hosting has no permanent disk: put the file on <strong>GitHub Releases</strong> (free) and paste its link below.</p>
+    {% else %}
+    <label for="f-{{ key }}">Upload file ({{ exts }})</label>
+    <input id="f-{{ key }}" name="file" type="file" accept="{{ '.apk' if key == 'android' else '.zip,.crx' }}">
+    {% endif %}
+    <label for="u-{{ key }}">…or a download link (https) <span class="muted">e.g. Chrome Web Store or your MISH website</span></label>
+    <input id="u-{{ key }}" name="external_url" type="url" value="{{ a.external_url if a else '' }}" placeholder="https://">
+    <p class="help">An uploaded file is used first; the link is used when there is no file.</p>
+    <button class="btn btn-primary">Save</button>
+  </form>
+  {% endfor %}
+</div>
+{% endblock %}

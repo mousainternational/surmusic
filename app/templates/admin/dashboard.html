@@ -1,0 +1,81 @@
+{% extends "admin/_layout.html" %}
+{% import "admin/_bars.html" as b with context %}
+{% block title %}Dashboard{% endblock %}
+{% block admin %}
+{% if warnings %}
+<details class="card warn-list" {% if counts.users < 2 %}open{% endif %}>
+  <summary><strong>Launch checklist ({{ warnings | length }})</strong></summary>
+  <ul>{% for w in warnings %}<li>{{ w }}</li>{% endfor %}</ul>
+</details><br>
+{% endif %}
+
+<div class="stat-grid">
+  <a class="card stat live-stat" href="{{ url_for('admin.live') }}"><span class="muted small">🔴 Listening right now</span><strong id="live-count">{{ live.listeners | length }}</strong></a>
+  <a class="card stat" href="{{ url_for('admin.live') }}"><span class="muted small">On the website (5 min)</span><strong id="online-count">{{ live.online }}</strong></a>
+  <a class="card stat" href="{{ url_for('admin.analytics_page', days=1) }}"><span class="muted small">Visitors today</span><strong>{{ today.visitors }}</strong></a>
+  <a class="card stat" href="{{ url_for('admin.analytics_page', days=1) }}"><span class="muted small">Plays today</span><strong>{{ today.plays }}</strong></a>
+  <a class="card stat" href="{{ url_for('admin.activity', kind='signup') }}"><span class="muted small">Sign-ups today</span><strong>{{ today.signups }}</strong></a>
+  <a class="card stat" href="{{ url_for('admin.activity', kind='login') }}"><span class="muted small">Sign-ins today</span><strong>{{ today.logins }}</strong></a>
+  <div class="card stat"><span class="muted small">Minutes listened today</span><strong>{{ today.listen_minutes }}</strong></div>
+  <a class="card stat" href="{{ url_for('admin.users') }}"><span class="muted small">Members (total)</span><strong>{{ counts.users }}</strong></a>
+</div>
+
+<div class="card table-wrap">
+  <div class="row-between"><h2 class="h3">🔴 Who is listening now</h2><span class="small muted"><span id="live-updated">updates every 15 s</span> · <a href="{{ url_for('admin.live') }}">Full view →</a></span></div>
+  <table class="events">
+    <thead><tr><th>Listener</th><th>Station</th><th>Where</th><th>Device</th><th>Since (UTC)</th></tr></thead>
+    <tbody id="live-rows">
+    {% for r in live.listeners %}
+      <tr>
+        <td>{% if r.user_id %}<a href="{{ url_for('admin.user_detail', uid=r.user_id) }}">{{ r.display_name or r.email }}</a>{% else %}<span class="muted">Guest</span>{% endif %}</td>
+        <td><strong>{{ r.station_name }}</strong></td>
+        <td class="nowrap">{{ r.flag }} {{ r.region ~ ', ' if r.region }}{{ r.country_name if r.country else 'Unknown' }}</td>
+        <td class="small">{{ r.device }} · {{ r.browser }}</td>
+        <td class="small nowrap">{{ r.started_at[11:16] }} ({{ r.minutes }} min)</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="5" class="muted">Nobody is listening right now.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div><br>
+
+<div class="card table-wrap">
+  <div class="row-between"><h2 class="h3">Latest activity</h2><a class="small" href="{{ url_for('admin.activity') }}">Activity log →</a></div>
+  {% if recent %}{{ b.event_rows(recent) }}{% else %}<p class="muted">No activity yet.</p>{% endif %}
+</div><br>
+
+<div class="grid two-col">
+  <div class="card">
+    <h2 class="h3">Plays per day — last 14 days</h2>
+    <svg viewBox="0 0 560 170" class="chart" role="img" aria-label="Plays per day">
+      <defs><linearGradient id="bar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff3d86"/><stop offset="1" stop-color="#ffb13f"/></linearGradient></defs>
+      <line x1="0" y1="150" x2="560" y2="150" stroke="currentColor" stroke-opacity=".2"/>
+      {% for d in days %}{%- set h = (d.n / peak * 140) if d.n else 0 %}
+      <rect x="{{ loop.index0 * 40 + 6 }}" y="{{ 150 - h }}" width="28" height="{{ h }}" rx="4" fill="url(#bar)"><title>{{ d.day }}: {{ d.n }}</title></rect>{% endfor %}
+      <text x="0" y="166" font-size="10" fill="currentColor" opacity=".6">{{ days[0].day }}</text>
+      <text x="560" y="166" font-size="10" fill="currentColor" opacity=".6" text-anchor="end">{{ days[-1].day }}</text>
+    </svg>
+  </div>
+  <div class="card table-wrap">
+    <h2 class="h3">Top stations this week</h2>
+    {% if top %}<table><thead><tr><th>Station</th><th>Category</th><th>Plays</th></tr></thead>
+    <tbody>{% for t in top %}<tr><td>{{ t.station_name }}</td><td>{{ t.category or '—' }}</td><td>{{ t.n }}</td></tr>{% endfor %}</tbody></table>
+    {% else %}<p class="muted">No plays yet.</p>{% endif %}
+  </div>
+</div>
+<br>
+<div class="grid two-col">
+  <div class="card stat-mini">
+    <h2 class="h3">More</h2>
+    <p class="small">{{ counts.users_7d }} new members this week · {{ counts.favorites }} saved favourites · {{ counts.downloads }} app downloads · {{ counts.unread }} unread messages · ads {{ 'on' if ads_on else 'off' }}</p>
+    <p class="small">{% if geoip_on %}📍 City-level locations are on (DB-IP database installed).{% else %}📍 Locations show <strong>country only</strong> until you install the free DB-IP city database — see README → “Visitor locations”.{% endif %}</p>
+  </div>
+  <form class="card" method="post" action="{{ url_for('admin.cache_clear') }}">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <h2 class="h3">Station lists</h2>
+    <p class="small muted">Lists come from Radio Browser and are cached for {{ config.RADIO_CACHE_MINUTES }} minutes.</p>
+    <button class="btn btn-sm btn-ghost">Refresh station lists now</button>
+  </form>
+</div>
+{% endblock %}

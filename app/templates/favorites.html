@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% block content %}
+<div class="wrap page">
+  <header class="page-head">
+    <h1>★ My favourite stations</h1>
+    {% if user %}
+    <p class="muted">Saved to your account — available on every device where you sign in.</p>
+    {% else %}
+    <p class="muted">Saved in this browser only. <a href="{{ url_for('auth.signup') }}">Create a free account</a> or <a href="{{ url_for('auth.login', next='/favorites') }}">sign in</a> to keep them everywhere.</p>
+    {% endif %}
+  </header>
+  {% if user %}
+    {% if stations %}
+      {{ ui.station_list(stations, 'favorites', ad_every=1000) }}
+    {% else %}
+      <div class="empty card"><p>No favourites yet. Tap ★ next to any station to save it here.</p></div>
+    {% endif %}
+  {% else %}
+    <div id="local-favs" data-empty="No favourites yet. Tap ★ next to any station to save it here."></div>
+  {% endif %}
+</div>
+{% endblock %}

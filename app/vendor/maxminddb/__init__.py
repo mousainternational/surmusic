@@ -1,0 +1,112 @@
+"""Module for reading MaxMind DB files."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, cast
+
+from .const import (
+    MODE_AUTO,
+    MODE_FD,
+    MODE_FILE,
+    MODE_MEMORY,
+    MODE_MMAP,
+    MODE_MMAP_EXT,
+    Mode,
+)
+from .errors import InvalidDatabaseError
+from .reader import _PATH_TYPES, Reader, _is_descriptor, _type_name
+
+if TYPE_CHECKING:
+    from .types import DatabaseSource
+
+try:
+    from . import extension as _extension
+except ImportError:
+    _extension = None  # type: ignore[assignment]
+
+
+__all__ = [
+    "MODE_AUTO",
+    "MODE_FD",
+    "MODE_FILE",
+    "MODE_MEMORY",
+    "MODE_MMAP",
+    "MODE_MMAP_EXT",
+    "InvalidDatabaseError",
+    "Mode",
+    "Reader",
+    "open_database",
+]
+
+
+def open_database(
+    database: DatabaseSource,
+    mode: int = MODE_AUTO,
+) -> Reader:
+    """Open a MaxMind DB database.
+
+    Arguments:
+        database: A path to a valid MaxMind DB file such as a GeoIP database
+                  file, or a binary file object for MODE_FD or MODE_AUTO.
+                  MODE_MMAP, MODE_FILE and MODE_MEMORY also accept the file
+                  descriptor of a regular file. MODE_MEMORY reads it from its
+                  current offset, the others from the start. Without the C
+                  extension, MODE_AUTO accepts one too. Once the reader opens
+                  a file descriptor, it closes it, even when the file is not
+                  a valid database. If an error comes first, for example for
+                  a mode that takes no descriptor or for a directory, the
+                  caller still owns it. The reader does not close a file
+                  object, but it closes a buffer that read() returns if the
+                  buffer has close(), such as an mmap.
+        mode: mode to open the database with. Valid mode are:
+              * MODE_MMAP_EXT - use the C extension with memory map.
+              * MODE_MMAP - read from memory map. Pure Python.
+              * MODE_FILE - read database as standard file. Pure Python.
+              * MODE_MEMORY - load database into memory. Pure Python.
+              * MODE_FD - the param passed via database is a binary file
+                          object, not a path. This mode implies MODE_MEMORY.
+              * MODE_AUTO - tries MODE_MMAP_EXT, MODE_MMAP, MODE_FILE in that
+                          order. Reads a file object into memory, as MODE_FD
+                          does. Default mode.
+
+    """
+    if mode not in (
+        MODE_AUTO,
+        MODE_FD,
+        MODE_FILE,
+        MODE_MEMORY,
+        MODE_MMAP,
+        MODE_MMAP_EXT,
+    ):
+        msg = f"Unsupported open mode: {mode}"
+        raise ValueError(msg)
+
+    has_extension = _extension and hasattr(_extension, "Reader")
+
+    if mode == MODE_MMAP_EXT and not has_extension:
+        msg = "MODE_MMAP_EXT requires the maxminddb.extension module to be available"
+        raise ValueError(
+            msg,
+        )
+
+    # The extension accepts only a path, so MODE_AUTO gives a file object to
+    # the pure Python reader. It still refuses a file descriptor, as before.
+    # The cast pretends the C reader is the pure Python Reader, which has the
+    # same API.
+    if mode in (MODE_AUTO, MODE_MMAP_EXT) and has_extension:
+        if isinstance(database, _PATH_TYPES):
+            return cast("Reader", _extension.Reader(database, mode))
+        # Leave a bool to the pure Python reader, which refuses it.
+        is_descriptor = _is_descriptor(database)
+        if mode == MODE_MMAP_EXT or is_descriptor:
+            msg = f"The C extension requires a path ({_type_name(database)} given)."
+            if is_descriptor:
+                msg += " Use MODE_MMAP for a file descriptor."
+            elif callable(getattr(database, "read", None)):
+                msg += " Use MODE_FD for a file object."
+            raise TypeError(msg)
+
+    return Reader(database, mode)
+
+
+__version__ = "vendored"

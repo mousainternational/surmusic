@@ -1,0 +1,10 @@
+{#- Google AdSense unit — rendered only when ads are on and the slot ID for `name` is set. -#}
+{% macro ad(name) -%}
+{%- set _slot = ad_slot_id(name) %}
+{%- if _slot %}
+<aside class="ad ad-{{ name }}" aria-label="Advertisement">
+  <span class="ad-label">Advertisement</span>
+  <ins class="adsbygoogle" style="display:block" data-ad-client="{{ S.adsense_client }}" data-ad-slot="{{ _slot }}" data-ad-format="auto" data-full-width-responsive="true"></ins>
+</aside>
+{%- endif %}
+{%- endmacro %}

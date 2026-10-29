@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MISH logo">
+  <defs>
+    <linearGradient id="mish-g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6c5cff"/>
+      <stop offset="0.55" stop-color="#3b7bff"/>
+      <stop offset="1" stop-color="#0fb6f0"/>
+    </linearGradient>
+    <linearGradient id="mish-s" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".28"/>
+      <stop offset=".5" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="120" fill="url(#mish-g)"/>
+  <rect width="512" height="512" rx="120" fill="url(#mish-s)"/>
+  <path d="M120 384V172l136 124 136-124v212" fill="none" stroke="#fff" stroke-width="58" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="404" cy="100" r="30" fill="#ffb020"/>
+</svg>

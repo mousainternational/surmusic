@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  {%- set m = meta or {} %}
+  <title>{{ m.title or S.seo_default_title }}</title>
+  <meta name="description" content="{{ m.description or S.seo_default_description }}">
+  <meta name="robots" content="{{ 'noindex, nofollow' if m.noindex else 'index, follow, max-image-preview:large' }}">
+  {%- if m.canonical %}<link rel="canonical" href="{{ m.canonical }}">{% endif %}
+  {%- if m.title and not m.noindex %}
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ m.site_name }}">
+  <meta property="og:title" content="{{ m.title }}">
+  <meta property="og:description" content="{{ m.description }}">
+  <meta property="og:image" content="{{ m.image }}">
+  <meta property="og:url" content="{{ m.canonical }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ m.title }}">
+  <meta name="twitter:description" content="{{ m.description }}">
+  <meta name="twitter:image" content="{{ m.image }}">
+  {%- endif %}
+  {%- if m.google_verification %}<meta name="google-site-verification" content="{{ m.google_verification }}">{% endif %}
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="theme-color" content="#0e0b16">
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon-32.png') }}" sizes="32x32">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo-180.png') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
+  <link rel="preload" href="{{ url_for('static', filename='fonts/Inter-Regular.woff') }}" as="font" type="font/woff" crossorigin>
+  <link rel="stylesheet" href="{{ asset('css/site.css') }}">
+  <script nonce="{{ csp_nonce() }}" src="{{ asset('js/theme.js') }}"></script>
+  {%- for item in (ld or []) %}
+  <script type="application/ld+json">{{ item | tojson }}</script>
+  {%- endfor %}
+  {%- if ads_on and not request.path.startswith(('/admin', '/account')) %}
+  <script async nonce="{{ csp_nonce() }}" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ S.adsense_client }}" crossorigin="anonymous"></script>
+  {%- endif %}
+  {%- if S.analytics_provider == 'plausible' and S.analytics_domain and not request.path.startswith('/admin') %}
+  <script defer nonce="{{ csp_nonce() }}" data-domain="{{ S.analytics_domain }}" src="https://plausible.io/js/script.js"></script>
+  {%- endif %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+<a class="skip" href="#main">Skip to content</a>
+{% block header %}
+<header class="site-header">
+  <div class="wrap nav">
+    <a class="brand" href="{{ url_for('public.home') }}" aria-label="{{ S.site_name }} home">
+      <img src="{{ url_for('static', filename='img/surmusic-logo.svg') }}" alt="" width="38" height="38">
+      <span class="brand-text"><strong>{{ S.site_name }}</strong><small>by {{ S.owner_brand }}</small></span>
+    </a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu"><span></span><span></span><span></span></button>
+    <nav id="menu" class="menu" aria-label="Main">
+      {%- set here = request.path %}
+      <a href="{{ url_for('public.category', cat='bollywood') }}" {% if here == '/bollywood' %}aria-current="page"{% endif %}>Bollywood</a>
+      <a href="{{ url_for('public.category', cat='lollywood') }}" {% if here == '/lollywood' %}aria-current="page"{% endif %}>Lollywood</a>
+      <a href="{{ url_for('public.category', cat='hollywood') }}" {% if here == '/hollywood' %}aria-current="page"{% endif %}>Hollywood</a>
+      <a href="{{ url_for('public.favorites') }}" {% if here == '/favorites' %}aria-current="page"{% endif %}>★ Favourites</a>
+      <a href="{{ url_for('public.download_page') }}" {% if here == '/download' %}aria-current="page"{% endif %}>Get the app</a>
+      <form class="nav-search" action="{{ url_for('public.search') }}" method="get" role="search">
+        <label for="nav-q" class="sr">Search stations</label>
+        <input id="nav-q" name="q" type="search" placeholder="Search stations…" maxlength="60" autocomplete="off">
+      </form>
+      {%- if user %}
+        <a href="{{ url_for('auth.account') }}" class="nav-user" {% if here.startswith('/account') %}aria-current="page"{% endif %}>👤 {{ user.display_name or user.email.split('@')[0] }}</a>
+        {%- if user.role == 'admin' %}<a href="{{ url_for('admin.dashboard') }}">Admin</a>{% endif %}
+        <form method="post" action="{{ url_for('auth.logout') }}" class="inline"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="linklike">Sign out</button></form>
+      {%- else %}
+        <a href="{{ url_for('auth.login') }}" {% if here == '/login' %}aria-current="page"{% endif %}>Sign in</a>
+        <a class="btn btn-sm btn-primary" href="{{ url_for('auth.signup') }}">Sign up free</a>
+      {%- endif %}
+      <a class="btn btn-sm btn-accent" href="{{ url_for('public.donate') }}">Donate</a>
+      <button class="theme-toggle" type="button" aria-label="Switch light or dark theme" title="Switch theme">
+        <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+        <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"/></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+{% endblock %}
+
+<main id="main" tabindex="-1" data-page="{{ request.endpoint }}">
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% if msgs %}<div class="wrap flashes" role="status">{% for cat, msg in msgs %}<div class="flash flash-{{ cat }}">{{ msg }}</div>{% endfor %}</div>{% endif %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+
+{% block footer %}
+<footer class="site-footer">
+  <div class="wrap footer-grid">
+    <div class="footer-brand">
+      <a class="brand" href="{{ url_for('public.home') }}">
+        <img src="{{ url_for('static', filename='img/surmusic-logo.svg') }}" alt="" width="34" height="34">
+        <span class="brand-text"><strong>{{ S.site_full_name }}</strong><small>{{ S.tagline }}</small></span>
+      </a>
+      <p class="made-by">
+        <img src="{{ url_for('static', filename='img/mish-logo.svg') }}" alt="MISH logo" width="28" height="28">
+        <span>A product of {% if S.owner_url %}<a href="{{ S.owner_url }}" rel="noopener">{{ S.owner_brand }} — {{ S.owner_name }}</a>{% else %}<strong>{{ S.owner_brand }} — {{ S.owner_name }}</strong>{% endif %}</span>
+      </p>
+      {%- set socials = [('social_facebook','Facebook'),('social_youtube','YouTube'),('social_x','X'),('social_instagram','Instagram'),('social_tiktok','TikTok')] %}
+      <ul class="socials">{% for key, label in socials if S[key] %}<li><a href="{{ S[key] }}" rel="noopener me" target="_blank">{{ label }}</a></li>{% endfor %}</ul>
+    </div>
+    <nav aria-label="Listen">
+      <h2>Listen</h2>
+      <a href="{{ url_for('public.category', cat='bollywood') }}">Bollywood radio</a>
+      <a href="{{ url_for('public.category', cat='lollywood') }}">Pakistani radio</a>
+      <a href="{{ url_for('public.category', cat='hollywood') }}">English hits radio</a>
+      <a href="{{ url_for('public.search') }}">Search stations</a>
+      <a href="{{ url_for('public.download_page') }}">Android app & extension</a>
+    </nav>
+    <nav aria-label="Sur Music">
+      <h2>Sur Music</h2>
+      <a href="{{ url_for('public.about') }}">About</a>
+      <a href="{{ url_for('public.faq') }}">FAQ</a>
+      <a href="{{ url_for('public.donate') }}">Donate</a>
+      <a href="{{ url_for('public.contact') }}">Contact &amp; advertising</a>
+      {% if S.contact_email %}<a href="mailto:{{ S.contact_email }}">{{ S.contact_email }}</a>{% endif %}
+    </nav>
+    <nav aria-label="Policies">
+      <h2>Policies</h2>
+      <a href="{{ url_for('public.privacy') }}">Privacy Policy</a>
+      <a href="{{ url_for('public.terms') }}">Terms of Use</a>
+      <a href="{{ url_for('public.cookies') }}">Cookie Policy</a>
+      <a href="{{ url_for('public.disclaimer') }}">Disclaimer</a>
+      <a href="{{ url_for('public.donation_disclaimer') }}">Donation Disclaimer</a>
+    </nav>
+  </div>
+  {%- import "_ad.html" as ads with context %}
+  {%- if ad_slot_id('footer') %}<div class="wrap">{{ ads.ad('footer') }}</div>{% endif %}
+  <div class="wrap footer-bottom">
+    <span>© {{ now_year }} {{ S.owner_name }}. All rights reserved. Station data: <a href="https://www.radio-browser.info/" rel="noopener">radio-browser.info</a>. All music belongs to its owners.{% if geoip_on %} <a href="https://db-ip.com" rel="noopener">IP Geolocation by DB-IP</a>.{% endif %}</span>
+  </div>
+</footer>
+{% endblock %}
+
+{% block player %}
+<div id="player" class="player" data-state="idle" data-locked="{{ '1' if listen_locked() else '0' }}" role="region" aria-label="Radio player">
+  <div class="wrap player-inner">
+    <div class="pl-now">
+      <span class="thumb pl-thumb" id="pl-thumb" aria-hidden="true">♪</span>
+      <div class="pl-text">
+        <div id="pl-name" class="pl-name">Pick a station to start listening</div>
+        <div id="pl-status" class="pl-status" aria-live="polite"></div>
+      </div>
+    </div>
+    <div class="pl-ctrl">
+      <button id="pl-prev" class="pl-btn" type="button" aria-label="Previous station"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg></button>
+      <button id="pl-play" class="pl-btn pl-main" type="button" aria-label="Play"><svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="i-pause" viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg></button>
+      <button id="pl-next" class="pl-btn" type="button" aria-label="Next station"><svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg></button>
+      <button id="pl-fav" class="pl-btn pl-fav" type="button" aria-label="Add to favourites" aria-pressed="false">★</button>
+    </div>
+    <label class="pl-vol"><span class="sr">Volume</span><input id="pl-vol" type="range" min="0" max="1" step="0.01" value="0.8"></label>
+  </div>
+  <audio id="pl-audio" preload="none"></audio>
+</div>
+{% endblock %}
+
+{%- if listen_locked() %}
+<div id="login-gate" class="gate" hidden role="dialog" aria-modal="true" aria-labelledby="gate-title">
+  <div class="gate-card card">
+    <img src="{{ url_for('static', filename='img/surmusic-logo.svg') }}" alt="" width="64" height="64">
+    <h2 id="gate-title">Sign in to listen</h2>
+    <p class="muted" id="gate-text">Create your free Sur Music account to play this station and thousands of live Bollywood, Lollywood and Hollywood stations.</p>
+    <a class="btn btn-primary btn-block" id="gate-signup" href="{{ url_for('auth.signup') }}">Create free account</a>
+    <a class="btn btn-ghost btn-block" id="gate-login" href="{{ url_for('auth.login') }}">I already have an account</a>
+    <button class="linklike small" type="button" id="gate-close">Not now</button>
+  </div>
+</div>
+{%- endif %}
+<div id="cookie-note" class="cookie-note" hidden role="dialog" aria-label="Cookie notice">
+  <p>We use one essential cookie to keep you signed in and to protect forms.{% if ads_on %} Our advertising partner Google may use cookies to show ads — you will be asked for consent where required.{% endif %} <a href="{{ url_for('public.cookies') }}">Cookie Policy</a></p>
+  <button class="btn btn-sm btn-primary" type="button" id="cookie-ok">OK</button>
+</div>
+
+<script nonce="{{ csp_nonce() }}" src="{{ asset('js/site.js') }}" defer></script>
+{% block scripts %}<script nonce="{{ csp_nonce() }}" src="{{ asset('js/player.js') }}" defer></script>{% endblock %}
+{%- if ads_on %}<script nonce="{{ csp_nonce() }}" src="{{ asset('js/ads.js') }}" defer></script>{% endif %}
+</body>
+</html>

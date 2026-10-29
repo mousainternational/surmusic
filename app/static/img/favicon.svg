@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff3d86"/>
+      <stop offset="0.55" stop-color="#ff6f5b"/>
+      <stop offset="1" stop-color="#ffb13f"/>
+    </linearGradient>
+    <radialGradient id="shine" cx="0.2" cy="0.1" r="0.7">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="sh" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#7a1030" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="118" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="118" fill="url(#shine)"/>
+  <g filter="url(#sh)">
+    <g fill="none" stroke="#fff" stroke-linecap="round" stroke-width="28">
+      <path d="M336 186 a96 96 0 0 1 0 152"/>
+      <path d="M386 140 a150 150 0 0 1 0 240" opacity="0.6"/>
+    </g>
+    <g fill="#fff">
+      <ellipse cx="160" cy="352" rx="64" ry="52" transform="rotate(-22 160 352)"/>
+      <rect x="192" y="122" width="34" height="232" rx="12"/>
+      <path d="M192 128 c8 -8 20 -12 34 -10 c40 6 70 34 66 86 c-1 14 -15 17 -20 5 c-12 -28 -34 -42 -80 -42 z"/>
+    </g>
+  </g>
+</svg>

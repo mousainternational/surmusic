@@ -1,0 +1,24 @@
+{% extends "admin/_layout.html" %}
+{% import "admin/_bars.html" as b with context %}
+{% block title %}{{ u.display_name or u.email }}{% endblock %}
+{% block admin %}
+<div class="card">
+  <p><strong>{{ u.email }}</strong>{% if u.role == 'admin' %} <span class="badge badge-donation">admin</span>{% endif %}
+    · <span class="status {{ 'status-published' if u.is_active else 'status-rejected' }}">{{ 'active' if u.is_active else 'suspended' }}</span>
+    · {{ 'email confirmed' if u.email_verified else 'email not confirmed' }}</p>
+  <p class="small muted">Joined {{ u.created_at[:16] | replace('T', ' ') }} UTC · last sign-in {{ (u.last_login_at or '—')[:16] | replace('T', ' ') }}
+  {% if signup %} · signed up from {{ signup.flag }} {{ signup.region ~ ', ' if signup.region }}{{ signup.country_name if signup.country else 'unknown location' }} on {{ signup.device }} ({{ signup.browser }}, {{ signup.os }}){% endif %}</p>
+</div>
+<div class="stat-grid">
+  <div class="card stat"><span class="muted small">Stations played</span><strong>{{ stats.plays }}</strong></div>
+  <div class="card stat"><span class="muted small">Sign-ins</span><strong>{{ stats.logins }}</strong></div>
+  <div class="card stat"><span class="muted small">Favourites</span><strong>{{ stats.favorites }}</strong></div>
+  <div class="card stat"><span class="muted small">Minutes listened</span><strong>{{ stats.minutes }}</strong></div>
+</div>
+{% if favs %}<div class="card"><h2 class="h3">Favourite stations</h2><p class="small">{{ favs | join(' · ') }}</p></div><br>{% endif %}
+<div class="card table-wrap">
+  <h2 class="h3">Activity</h2>
+  {% if rows %}{{ b.event_rows(rows, show_user=False) }}{% else %}<p class="muted">No activity recorded.</p>{% endif %}
+</div>
+<p><a href="{{ url_for('admin.users') }}">← All users</a></p>
+{% endblock %}

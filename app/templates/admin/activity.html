@@ -1,0 +1,18 @@
+{% extends "admin/_layout.html" %}
+{% import "admin/_bars.html" as b with context %}
+{% block title %}Activity log{% endblock %}
+{% block admin %}
+<nav class="tabs" aria-label="Filter">
+  <a href="{{ url_for('admin.activity') }}" {% if not kind %}aria-current="page"{% endif %}>Everything</a>
+  {% for k in ['signup', 'login', 'login_failed', 'play', 'favorite', 'download', 'contact', 'page_view', 'logout', 'password_reset', 'account_deleted'] %}
+  <a href="{{ url_for('admin.activity', kind=k) }}" {% if kind == k %}aria-current="page"{% endif %}>{{ kinds[k] }}</a>
+  {% endfor %}
+</nav>
+<div class="card table-wrap">
+  {% if rows %}{{ b.event_rows(rows) }}{% else %}<p class="muted">No activity yet.</p>{% endif %}
+  <div class="row-between">
+    {% if page > 1 %}<a class="btn btn-sm btn-ghost" href="{{ url_for('admin.activity', kind=kind, page=page - 1) }}">← Newer</a>{% else %}<span></span>{% endif %}
+    {% if rows | length == 100 %}<a class="btn btn-sm btn-ghost" href="{{ url_for('admin.activity', kind=kind, page=page + 1) }}">Older →</a>{% endif %}
+  </div>
+</div>
+{% endblock %}

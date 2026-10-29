@@ -1,0 +1,23 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Backup and restore{% endblock %}
+{% block admin %}
+<div class="grid donate-grid">
+  <form class="card form" method="post" action="{{ url_for('admin.backup_download') }}">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <h2 class="h3">Download a backup</h2>
+    <p>Exports settings, user accounts (password hashes only), favourites, history, app downloads, play statistics, messages and the audit log as one JSON file.</p>
+    <p class="help">The file contains members' email addresses — store it privately. Uploaded files (APK, images, QR codes) live in the storage folder — back that folder up too (see README → Backups).</p>
+    <button class="btn btn-primary">Download backup</button>
+  </form>
+  <form class="card form danger-zone" method="post" action="{{ url_for('admin.backup_restore') }}" enctype="multipart/form-data">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <h2 class="h3">Restore from a backup</h2>
+    <p class="small muted">This replaces all current site data with the backup's contents. Download a fresh backup first.</p>
+    <label for="backup">Backup file (.json)</label>
+    <input id="backup" name="backup" type="file" accept="application/json,.json" required>
+    <label for="confirm">Type RESTORE to confirm</label>
+    <input id="confirm" name="confirm" autocomplete="off" required>
+    <button class="btn btn-danger">Restore backup</button>
+  </form>
+</div>
+{% endblock %}

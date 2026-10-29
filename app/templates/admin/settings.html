@@ -1,0 +1,63 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Settings &amp; SEO{% endblock %}
+{% set labels = {
+  'site_name': 'Short site name', 'site_full_name': 'Full site name', 'owner_name': 'Company name',
+  'owner_brand': 'Company short brand', 'owner_url': 'Company website (https, e.g. your MISH site)',
+  'tagline': 'Tagline', 'hero_title': 'Homepage headline', 'hero_subtitle': 'Homepage sub-headline',
+  'about_md': 'About page text (Markdown)', 'contact_email': 'Contact email (public)',
+  'support_url': 'Support link (https, e.g. Patreon)',
+  'play_requires_login': 'Visitors must sign in to play music (station lists stay visible to everyone)',
+  'signup_enabled': 'Allow new sign-ups', 'require_email_verification': 'Require email confirmation before sign-in (needs SMTP)',
+  'social_facebook': 'Facebook URL', 'social_youtube': 'YouTube URL', 'social_x': 'X (Twitter) URL',
+  'social_instagram': 'Instagram URL', 'social_tiktok': 'TikTok URL',
+  'seo_default_title': 'Default page title', 'seo_default_description': 'Default meta description',
+  'google_site_verification': 'Google Search Console verification code', 'analytics_provider': 'Analytics',
+  'analytics_domain': 'Analytics domain (e.g. surmusic.pk)',
+  'faq_md': 'FAQ (Markdown — ### before each question)', 'privacy_md': 'Privacy Policy', 'terms_md': 'Terms of Use',
+  'disclaimer_md': 'Disclaimer', 'donation_disclaimer_md': 'Donation Disclaimer', 'cookies_md': 'Cookie Policy',
+  'policies_updated': 'Policies last updated (YYYY-MM-DD)'
+} %}
+{% block admin %}
+<nav class="tabs" aria-label="Settings sections">
+  {% for key, l in [('general', 'General'), ('accounts', 'Accounts'), ('social', 'Social links'), ('seo', 'SEO & analytics'), ('policies', 'Policies')] %}
+  <a href="{{ url_for('admin.settings', section=key) }}" {% if section == key %}aria-current="page"{% endif %}>{{ l }}</a>
+  {% endfor %}
+</nav>
+<form method="post" enctype="multipart/form-data" class="card form">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  {% for key in sections[section] %}
+    {% if key in ('play_requires_login', 'signup_enabled', 'require_email_verification') %}
+      <label class="check"><input type="checkbox" name="{{ key }}" value="1" {% if S[key] == '1' %}checked{% endif %}> {{ labels[key] }}</label>
+      {% if key == 'require_email_verification' and not smtp %}<p class="help">SMTP is not configured yet, so this setting has no effect until you add the SMTP_* values in .env.</p>{% endif %}
+    {% else %}
+    <label for="{{ key }}">{{ labels.get(key, key) }}</label>
+    {% if key == 'analytics_provider' %}
+      <select id="{{ key }}" name="{{ key }}">
+        <option value="none" {% if S[key] != 'plausible' %}selected{% endif %}>None</option>
+        <option value="plausible" {% if S[key] == 'plausible' %}selected{% endif %}>Plausible (cookie-free)</option>
+      </select>
+    {% elif key.endswith('_md') or key in ('hero_subtitle', 'seo_default_description') %}
+      <textarea id="{{ key }}" name="{{ key }}" rows="{{ 14 if key.endswith('_md') else 3 }}">{{ S[key] }}</textarea>
+    {% else %}
+      <input id="{{ key }}" name="{{ key }}" value="{{ S[key] }}" {% if key == 'contact_email' %}type="email"{% elif key in ('owner_url', 'support_url') or key.startswith('social_') %}type="url" placeholder="https://"{% endif %}>
+      {% if key == 'contact_email' and not S.contact_email %}<p class="help">You supplied “{{ S.contact_email_unverified }}”, which has no @ sign. Enter the complete address (e.g. name@gmail.com).</p>{% endif %}
+    {% endif %}
+    {% endif %}
+  {% endfor %}
+  {% if section == 'seo' %}
+    <label for="seo_og_image">Default social sharing image (1200×630)</label>
+    {% if S.seo_og_image %}<p><img src="{{ media_src(S.seo_og_image) }}" alt="Current sharing image" width="300"></p>{% endif %}
+    <input id="seo_og_image" name="seo_og_image" type="file" accept="image/png,image/jpeg,image/webp">
+    <h2 class="h3 mt">Per-page titles and descriptions</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Page</th><th>Title (max 70)</th><th>Description (max 170)</th></tr></thead>
+      <tbody>{% for p in page_keys %}<tr>
+        <td>/{{ '' if p == 'home' else p }}</td>
+        <td><input aria-label="{{ p }} title" name="page_{{ p }}_title" maxlength="70" value="{{ page_seo.get(p, {}).get('title', '') }}"></td>
+        <td><input aria-label="{{ p }} description" name="page_{{ p }}_description" maxlength="170" value="{{ page_seo.get(p, {}).get('description', '') }}"></td>
+      </tr>{% endfor %}</tbody>
+    </table></div>
+  {% endif %}
+  <button class="btn btn-primary">Save settings</button>
+</form>
+{% endblock %}

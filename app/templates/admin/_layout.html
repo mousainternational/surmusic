@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block header %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block player %}{% endblock %}
+{% block scripts %}<script nonce="{{ csp_nonce() }}" src="{{ asset('js/admin.js') }}" defer></script>{% endblock %}
+{% block body_class %}admin{% endblock %}
+{% block content %}
+<div class="admin-shell">
+  <aside class="admin-nav">
+    <a class="brand" href="{{ url_for('admin.dashboard') }}">
+      <img src="{{ url_for('static', filename='img/surmusic-logo.svg') }}" alt="" width="34" height="34">
+      <span class="brand-text"><strong>Sur Music</strong><small>Admin · by MISH</small></span>
+    </a>
+    {%- set p = request.path %}
+    <nav class="admin-links" aria-label="Admin">
+      <a href="{{ url_for('admin.dashboard') }}" {% if p == '/admin/' %}aria-current="page"{% endif %}>Dashboard</a>
+      <a href="{{ url_for('admin.live') }}" {% if p.startswith('/admin/live') %}aria-current="page"{% endif %}>🔴 Live now</a>
+      <a href="{{ url_for('admin.analytics_page') }}" {% if p.startswith('/admin/analytics') %}aria-current="page"{% endif %}>Analytics</a>
+      <a href="{{ url_for('admin.activity') }}" {% if p.startswith('/admin/activity') %}aria-current="page"{% endif %}>Activity log</a>
+      <a href="{{ url_for('admin.users') }}" {% if p.startswith('/admin/users') %}aria-current="page"{% endif %}>Users</a>
+      <a href="{{ url_for('admin.ads') }}" {% if p.startswith('/admin/ads') %}aria-current="page"{% endif %}>Ads (AdSense)</a>
+      <a href="{{ url_for('admin.stations') }}" {% if p.startswith('/admin/stations') %}aria-current="page"{% endif %}>Sponsored stations</a>
+      <a href="{{ url_for('admin.apps') }}" {% if p.startswith('/admin/apps') %}aria-current="page"{% endif %}>App downloads</a>
+      <a href="{{ url_for('admin.donations') }}" {% if p.startswith('/admin/donations') %}aria-current="page"{% endif %}>Donations</a>
+      <a href="{{ url_for('admin.messages') }}" {% if p.startswith('/admin/messages') %}aria-current="page"{% endif %}>Messages</a>
+      <a href="{{ url_for('admin.settings') }}" {% if p.startswith('/admin/settings') %}aria-current="page"{% endif %}>Settings &amp; SEO</a>
+      <a href="{{ url_for('admin.backup') }}" {% if p.startswith('/admin/backup') %}aria-current="page"{% endif %}>Backup</a>
+      <a href="{{ url_for('admin.audit_log') }}" {% if p.startswith('/admin/audit') %}aria-current="page"{% endif %}>Audit log</a>
+      <a href="{{ url_for('auth.account') }}">My account</a>
+      <a href="{{ url_for('public.home') }}" target="_blank" rel="noopener">View site ↗</a>
+    </nav>
+  </aside>
+  <div class="admin-main">
+    {% with msgs = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in msgs %}<div class="flash flash-{{ cat }}" role="status">{{ msg }}</div>{% endfor %}
+    {% endwith %}
+    <div class="admin-top">
+      <h1>{% block title %}{% endblock %}</h1>
+      <div class="actions">
+        {% block top_actions %}{% endblock %}
+        <button class="theme-toggle" type="button" aria-label="Switch light or dark theme">
+          <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+          <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"/></svg>
+        </button>
+        <form method="post" action="{{ url_for('auth.logout') }}" class="inline">
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-ghost">Sign out</button>
+        </form>
+      </div>
+    </div>
+    {% block admin %}{% endblock %}
+  </div>
+</div>
+{% endblock %}

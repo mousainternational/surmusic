@@ -1,0 +1,43 @@
+{% import "_ad.html" as ads with context %}
+{% macro station_item(st, fav_ids=[]) -%}
+<li class="st{% if st.sponsored %} st-sponsored{% endif %}" data-station="{{ station_json(st) }}" data-uuid="{{ st.uuid }}">
+  <button class="st-play" type="button" aria-label="Play {{ st.name }}">
+    <span class="thumb {{ thumb_class(st.name) }}" data-letter="{{ (st.name or '?')[:1] | upper }}">{% if st.favicon %}<img src="{{ st.favicon }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" width="44" height="44">{% endif %}</span>
+    <span class="st-text">
+      <span class="st-name">{{ st.name }}</span>
+      <span class="st-meta">{% if st.sponsored %}<span class="badge badge-sponsored">Sponsored</span> {% endif %}{{ [st.country, st.tags, (st.bitrate ~ ' kbps') if st.bitrate else ''] | select | join(' · ') }}</span>
+    </span>
+    <span class="st-eq" aria-hidden="true"><i></i><i></i><i></i></span>
+  </button>
+  <button class="st-fav{% if st.uuid in fav_ids %} on{% endif %}" type="button" aria-label="Save {{ st.name }} to favourites" aria-pressed="{{ 'true' if st.uuid in fav_ids else 'false' }}">★</button>
+</li>
+{%- endmacro %}
+
+{% macro station_list(stations, cat='', fav_ids=[], ad_every=10) -%}
+<ul class="stations" data-cat="{{ cat }}">
+  {%- for st in stations %}
+    {{ station_item(st, fav_ids) }}
+    {%- if loop.index % ad_every == 0 and not loop.last and ad_slot_id('list') %}
+    <li class="st-ad">{{ ads.ad('list') }}</li>
+    {%- endif %}
+  {%- endfor %}
+</ul>
+{%- endmacro %}
+
+{% macro breadcrumbs(items) -%}
+<nav class="crumbs" aria-label="Breadcrumb"><ol>
+  {%- for name, href in items %}<li>{% if loop.last %}<span aria-current="page">{{ name }}</span>{% else %}<a href="{{ href }}">{{ name }}</a>{% endif %}</li>{%- endfor %}
+</ol></nav>
+{%- endmacro %}
+
+{% macro field_error(errors, key) -%}
+  {%- if errors and errors.get(key) %}<p class="field-error" id="err-{{ key }}">{{ errors[key] }}</p>{% endif -%}
+{%- endmacro %}
+
+{% macro cat_tabs(active) -%}
+<nav class="cat-tabs" aria-label="Music categories">
+  {%- for key, label in [('bollywood', 'Bollywood'), ('lollywood', 'Lollywood'), ('hollywood', 'Hollywood')] %}
+  <a href="/{{ key }}" class="{{ 'active' if key == active }}" {% if key == active %}aria-current="page"{% endif %}>{{ label }}</a>
+  {%- endfor %}
+</nav>
+{%- endmacro %}

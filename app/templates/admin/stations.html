@@ -1,0 +1,29 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Sponsored stations{% endblock %}
+{% block admin %}
+<div class="form-grid">
+  <div class="card table-wrap">
+    <p class="help">Sponsored stations appear at the top of the chosen list with a “Sponsored” label. Agree payment terms with the station in writing.</p>
+    {% if rows %}
+    <table><thead><tr><th>Station</th><th>List</th><th>Stream</th><th></th></tr></thead>
+    <tbody>{% for s in rows %}<tr>
+      <td><strong>{{ s.name }}</strong><br><span class="small muted">{{ s.country }} {{ s.tags }}</span></td>
+      <td>{{ s.category }}</td><td class="small break">{{ s.url }}</td>
+      <td><form method="post" class="inline" data-confirm="Remove {{ s.name }}?"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="action" value="remove"><input type="hidden" name="index" value="{{ loop.index0 }}"><button class="btn btn-sm btn-ghost">Remove</button></form></td>
+    </tr>{% endfor %}</tbody></table>
+    {% else %}<p class="muted">No sponsored stations.</p>{% endif %}
+  </div>
+  <form class="card form" method="post">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="action" value="add">
+    <h2 class="h3">Add sponsored station</h2>
+    <label for="name">Station name</label><input id="name" name="name" required maxlength="120">
+    <label for="url">Stream URL (https only)</label><input id="url" name="url" type="url" required placeholder="https://">
+    <label for="favicon">Logo URL (https, optional)</label><input id="favicon" name="favicon" type="url">
+    <label for="country">Country</label><input id="country" name="country" maxlength="60">
+    <label for="tags">Tags</label><input id="tags" name="tags" maxlength="120" placeholder="urdu, pop">
+    <label for="category">Show in</label>
+    <select id="category" name="category"><option value="all">All lists</option><option value="bollywood">Bollywood</option><option value="lollywood">Lollywood</option><option value="hollywood">Hollywood</option></select>
+    <button class="btn btn-primary">Add station</button>
+  </form>
+</div>
+{% endblock %}

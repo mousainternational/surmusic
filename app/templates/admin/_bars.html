@@ -1,0 +1,33 @@
+{#- Horizontal bar list: rows have .label/.name, .visitors, .n -#}
+{% macro bars(rows, empty='No data yet.', label_key='label') -%}
+  {%- if rows %}
+  {%- set top = rows | map(attribute='visitors') | max %}
+  <ul class="bars-list">
+    {%- for r in rows %}
+    <li>
+      <span class="bl-label">{% if r.flag %}<span class="flag" aria-hidden="true">{{ r.flag }}</span> {% endif %}{{ r[label_key] or '—' }}</span>
+      <span class="bl-bar"><span class="bl-fill" data-w="{{ ((r.visitors / (top or 1)) * 100) | round | int }}"></span></span>
+      <span class="bl-num">{{ r.visitors }}</span>
+    </li>
+    {%- endfor %}
+  </ul>
+  {%- else %}<p class="muted small">{{ empty }}</p>{% endif %}
+{%- endmacro %}
+
+{% macro event_rows(rows, show_user=True) -%}
+<table class="events">
+  <thead><tr><th>When (UTC)</th><th>What</th>{% if show_user %}<th>Who</th>{% endif %}<th>Where</th><th>Device</th><th>Detail</th></tr></thead>
+  <tbody>
+  {%- for r in rows %}
+  <tr class="ev-{{ r.kind }}">
+    <td class="nowrap small">{{ r.created_at[:16] | replace('T', ' ') }}</td>
+    <td><span class="ev ev-k-{{ r.kind }}">{{ r.label }}</span></td>
+    {% if show_user %}<td>{% if r.user_id %}<a href="{{ url_for('admin.user_detail', uid=r.user_id) }}">{{ r.display_name or r.email }}</a>{% else %}<span class="muted">Guest</span>{% endif %}</td>{% endif %}
+    <td class="nowrap">{% if r.country %}{{ r.flag }} {{ r.region ~ ', ' if r.region }}{{ r.country_name }}{% else %}<span class="muted">Unknown</span>{% endif %}</td>
+    <td class="small">{{ r.device }} · {{ r.browser }} · {{ r.os }}</td>
+    <td class="small">{{ r.detail or r.path }}{% if r.referrer %} <span class="muted">from {{ r.referrer }}</span>{% endif %}</td>
+  </tr>
+  {%- endfor %}
+  </tbody>
+</table>
+{%- endmacro %}

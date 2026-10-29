@@ -1,0 +1,60 @@
+{% extends "admin/_layout.html" %}
+{% import "admin/_bars.html" as b with context %}
+{% block title %}Analytics{% endblock %}
+{% block admin %}
+<nav class="tabs" aria-label="Period">
+  {% for d, l in [(1, 'Today'), (7, '7 days'), (30, '30 days'), (90, '90 days'), (365, '1 year')] %}
+  <a href="{{ url_for('admin.analytics_page', days=d) }}" {% if days == d %}aria-current="page"{% endif %}>{{ l }}</a>
+  {% endfor %}
+</nav>
+{% set t = a.totals %}
+<div class="stat-grid">
+  <div class="card stat"><span class="muted small">Unique visitors</span><strong>{{ t.visitors }}</strong></div>
+  <div class="card stat"><span class="muted small">Page views</span><strong>{{ t.page_views }}</strong></div>
+  <div class="card stat"><span class="muted small">Station plays</span><strong>{{ t.plays }}</strong></div>
+  <div class="card stat"><span class="muted small">People who listened</span><strong>{{ t.listeners }}</strong></div>
+  <div class="card stat"><span class="muted small">Minutes listened</span><strong>{{ t.listen_minutes }}</strong></div>
+  <a class="card stat" href="{{ url_for('admin.activity', kind='signup') }}"><span class="muted small">New sign-ups</span><strong>{{ t.signups }}</strong></a>
+  <a class="card stat" href="{{ url_for('admin.activity', kind='login') }}"><span class="muted small">Sign-ins</span><strong>{{ t.logins }}</strong></a>
+  <a class="card stat" href="{{ url_for('admin.activity', kind='login_failed') }}"><span class="muted small">Failed sign-ins</span><strong>{{ t.failed_logins }}</strong></a>
+  <a class="card stat" href="{{ url_for('admin.activity', kind='download') }}"><span class="muted small">App downloads</span><strong>{{ t.downloads }}</strong></a>
+</div>
+
+{% if days > 1 %}
+<div class="card">
+  <div class="row-between"><h2 class="h3">Visitors and plays per day</h2>
+    <span class="legend small"><span class="lg lg-v"></span> Visitors <span class="lg lg-p"></span> Plays <span class="lg lg-s"></span> Sign-ups</span></div>
+  {%- set n = a.days | length %}{%- set w = 1000 / n %}
+  <svg viewBox="0 0 1000 200" class="chart" role="img" aria-label="Visitors, plays and sign-ups per day" preserveAspectRatio="none">
+    <line x1="0" y1="180" x2="1000" y2="180" stroke="currentColor" stroke-opacity=".2"/>
+    {% for d in a.days %}
+      {%- set x = loop.index0 * w %}
+      {%- set hv = (d.visitors / a.peak * 165) %}{%- set hp = (d.plays / a.peak * 165) %}
+      <rect x="{{ x + w * 0.12 }}" y="{{ 180 - hv }}" width="{{ w * 0.36 }}" height="{{ hv }}" rx="2" class="bar-v"><title>{{ d.day }}: {{ d.visitors }} visitors</title></rect>
+      <rect x="{{ x + w * 0.52 }}" y="{{ 180 - hp }}" width="{{ w * 0.36 }}" height="{{ hp }}" rx="2" class="bar-p"><title>{{ d.day }}: {{ d.plays }} plays</title></rect>
+      {% if d.signups %}<circle cx="{{ x + w / 2 }}" cy="188" r="4" class="dot-s"><title>{{ d.day }}: {{ d.signups }} sign-ups</title></circle>{% endif %}
+    {% endfor %}
+  </svg>
+  <div class="row-between small muted"><span>{{ a.days[0].day }}</span><span>{{ a.days[-1].day }}</span></div>
+</div><br>
+{% endif %}
+
+<div class="grid two-col">
+  <div class="card"><h2 class="h3">🌍 Countries</h2>{{ b.bars(a.countries, label_key='name') }}</div>
+  <div class="card"><h2 class="h3">📍 Cities / regions</h2>
+    {%- set cities = [] %}{% for c in a.cities %}{% set _ = cities.append({'label': c.region ~ ', ' ~ c.country_name, 'flag': c.flag, 'visitors': c.visitors}) %}{% endfor %}
+    {{ b.bars(cities) }}
+  </div>
+  <div class="card"><h2 class="h3">🎵 Most played stations</h2>
+    {%- set st = [] %}{% for s in a.stations %}{% set _ = st.append({'label': s.label, 'visitors': s.n}) %}{% endfor %}
+    {{ b.bars(st, empty='No plays yet.') }}
+  </div>
+  <div class="card"><h2 class="h3">🔗 Where visitors came from</h2>{{ b.bars(a.referrers, empty='Direct visits only so far.') }}</div>
+  <div class="card"><h2 class="h3">📄 Top pages</h2>{{ b.bars(a.pages) }}</div>
+  <div class="card"><h2 class="h3">📱 Devices</h2>{{ b.bars(a.devices) }}
+    <h2 class="h3 mt">Browsers</h2>{{ b.bars(a.browsers) }}
+    <h2 class="h3 mt">Operating systems</h2>{{ b.bars(a.systems) }}
+  </div>
+</div>
+<p class="help">Bars show unique visitors. Bots are not counted. No IP addresses are stored — visitors are counted with a code that changes every day. Location is approximate.</p>
+{% endblock %}

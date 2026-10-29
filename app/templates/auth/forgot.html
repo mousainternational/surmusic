@@ -1,0 +1,13 @@
+{% extends "auth/_layout.html" %}
+{% block auth %}
+<h1 class="h2">Forgot your password?</h1>
+<p class="muted small">Enter your email and we will send you a link to choose a new password.</p>
+<form method="post">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <div class="hp" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>
+  <label for="email">Email</label>
+  <input id="email" name="email" type="email" required autocomplete="email" autofocus>
+  <button class="btn btn-primary btn-block">Send reset link</button>
+</form>
+<p class="small center"><a href="{{ url_for('auth.login') }}">← Back to sign in</a></p>
+{% endblock %}

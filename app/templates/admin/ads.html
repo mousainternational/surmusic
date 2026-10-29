@@ -1,0 +1,32 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Ads — Google AdSense{% endblock %}
+{% block admin %}
+<div class="card warn-list">
+  <h2 class="h3">How to start earning</h2>
+  <ol>
+    <li>Put the website online on your own domain with HTTPS, and keep it running for a while with real visitors.</li>
+    <li>Apply at <strong>adsense.google.com</strong> with your domain. Google reviews the site (often a few days to a few weeks).</li>
+    <li>After approval, copy your <strong>publisher ID</strong> (ca-pub-…) here. The site's <a href="/ads.txt" target="_blank">ads.txt</a> updates automatically.</li>
+    <li>In AdSense → Ads → <em>By ad unit</em>, create <strong>Display ads</strong> units and paste each <strong>data-ad-slot</strong> number below.</li>
+    <li>In AdSense → <strong>Privacy &amp; messaging</strong>, turn on the European regulations (GDPR) message — Google requires a certified consent message for visitors from the EEA, UK and Switzerland.</li>
+    <li>Tick “Show ads” and save.</li>
+  </ol>
+  <p class="small">Never click your own ads or ask others to click them — Google bans accounts for invalid clicks.</p>
+</div><br>
+<form class="card form" method="post">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <label for="adsense_client">AdSense publisher ID</label>
+  <input id="adsense_client" name="adsense_client" value="{{ S.adsense_client }}" placeholder="ca-pub-1234567890123456" pattern="ca-pub-[0-9]{10,20}">
+  <div class="two">
+    <div><label for="ad_slot_top">Slot: under the hero / page title</label><input id="ad_slot_top" name="ad_slot_top" value="{{ S.ad_slot_top }}" inputmode="numeric" placeholder="1234567890"></div>
+    <div><label for="ad_slot_list">Slot: inside station lists (every 10 stations)</label><input id="ad_slot_list" name="ad_slot_list" value="{{ S.ad_slot_list }}" inputmode="numeric"></div>
+    <div><label for="ad_slot_side">Slot: sidebar on category pages</label><input id="ad_slot_side" name="ad_slot_side" value="{{ S.ad_slot_side }}" inputmode="numeric"></div>
+    <div><label for="ad_slot_footer">Slot: above the footer</label><input id="ad_slot_footer" name="ad_slot_footer" value="{{ S.ad_slot_footer }}" inputmode="numeric"></div>
+  </div>
+  <label for="ads_txt_extra">Extra ads.txt lines <span class="muted">(only if another ad network asks you)</span></label>
+  <textarea id="ads_txt_extra" name="ads_txt_extra" rows="3">{{ S.ads_txt_extra }}</textarea>
+  <label class="check"><input type="checkbox" name="ads_enabled" value="1" {% if S.ads_enabled == '1' %}checked{% endif %}> Show ads on the website</label>
+  <p class="help">Ads never appear in the admin panel, account pages or the player bar, and are always labelled “Advertisement”.</p>
+  <button class="btn btn-primary">Save ad settings</button>
+</form>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "auth/_layout.html" %}
+{% import "_macros.html" as ui with context %}
+{% block auth %}
+<h1 class="h2">Create your free account</h1>
+<p class="muted small">{{ 'Free account — needed to listen. ' if S.play_requires_login == '1' }}Keep favourite stations and history on every device.</p>
+<form method="post" novalidate>
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <div class="hp" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>
+  {% if errors.get('form') %}<p class="flash flash-error" role="alert">{{ errors.form }}</p>{% endif %}
+  <label for="display_name">Your name <span class="muted">(optional)</span></label>
+  <input id="display_name" name="display_name" maxlength="40" autocomplete="nickname" value="{{ form.get('display_name', '') }}">
+  <label for="email">Email</label>
+  <input id="email" name="email" type="email" required maxlength="254" autocomplete="email" value="{{ form.get('email', '') }}" {% if errors.get('email') %}aria-invalid="true" aria-describedby="err-email"{% endif %}>
+  {{ ui.field_error(errors, 'email') }}
+  <label for="password">Password <span class="muted">(at least 10 characters)</span></label>
+  <div class="pw-field">
+    <input id="password" name="password" type="password" required minlength="10" maxlength="200" autocomplete="new-password" {% if errors.get('password') %}aria-invalid="true" aria-describedby="err-password"{% endif %}>
+    <button type="button" class="pw-show" data-show="#password" aria-label="Show password">Show</button>
+  </div>
+  {{ ui.field_error(errors, 'password') }}
+  <label for="password2">Repeat password</label>
+  <input id="password2" name="password2" type="password" required minlength="10" maxlength="200" autocomplete="new-password" {% if errors.get('password2') %}aria-invalid="true" aria-describedby="err-password2"{% endif %}>
+  {{ ui.field_error(errors, 'password2') }}
+  <label class="check"><input type="checkbox" name="agree" value="1" required> I agree to the <a href="{{ url_for('public.terms') }}" target="_blank">Terms</a> and <a href="{{ url_for('public.privacy') }}" target="_blank">Privacy Policy</a></label>
+  {{ ui.field_error(errors, 'agree') }}
+  <p class="small muted">For security and statistics we record sign-ins and listening with approximate location (city/country) and device type. We never store your IP address. See the <a href="{{ url_for('public.privacy') }}" target="_blank">Privacy Policy</a>.</p>
+  <button class="btn btn-primary btn-block">Create account</button>
+</form>
+<p class="small center">Already have an account? <a href="{{ url_for('auth.login', next=request.args.get('next')) }}">Sign in</a></p>
+{% endblock %}

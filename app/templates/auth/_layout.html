@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block body_class %}page-auth{% endblock %}
+{% block content %}
+<div class="wrap auth-wrap">
+  <div class="card form auth-card">
+    <a class="brand auth-brand" href="{{ url_for('public.home') }}">
+      <img src="{{ url_for('static', filename='img/surmusic-logo.svg') }}" alt="" width="44" height="44">
+      <span class="brand-text"><strong>{{ S.site_name }}</strong><small>by {{ S.owner_brand }}</small></span>
+    </a>
+    {% block auth %}{% endblock %}
+  </div>
+</div>
+{% endblock %}

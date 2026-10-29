@@ -1,0 +1,43 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Users{% endblock %}
+{% block admin %}
+<form class="filters card" method="get" role="search">
+  <div class="field grow"><label for="q">Search email or name</label><input id="q" name="q" value="{{ q }}" type="search"></div>
+  <button class="btn btn-primary">Search</button>
+</form>
+<div class="card table-wrap">
+  {% if rows %}
+  <table>
+    <thead><tr><th>Member</th><th>Status</th><th>Last seen from</th><th>Favs</th><th>Joined</th><th>Last sign-in</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for u in rows %}
+    <tr>
+      <td><a href="{{ url_for('admin.user_detail', uid=u.id) }}"><strong>{{ u.display_name or '—' }}</strong></a><br><span class="small muted">{{ u.email }}</span>{% if u.role == 'admin' %} <span class="badge badge-donation">admin</span>{% endif %}</td>
+      <td>
+        <span class="status {{ 'status-published' if u.is_active else 'status-rejected' }}">{{ 'active' if u.is_active else 'suspended' }}</span>
+        {% if not u.email_verified %}<br><span class="small muted">email not confirmed</span>{% endif %}
+      </td>
+      <td class="nowrap">{% set pl = places.get(u.id) %}{% if pl %}{{ pl.flag }} {{ pl.place }}{% else %}<span class="muted">—</span>{% endif %}</td>
+      <td>{{ u.favs }}</td>
+      <td>{{ u.created_at | date }}</td>
+      <td>{{ (u.last_login_at or '') | date }}</td>
+      <td>
+        <div class="actions">
+        {% for action, label in [('verify', 'Confirm email'), ('signout', 'Sign out'), ('suspend', 'Suspend'), ('activate', 'Activate'), ('delete', 'Delete')] %}
+          {% if not (action == 'verify' and u.email_verified) and not (action == 'suspend' and (not u.is_active or u.role == 'admin')) and not (action == 'activate' and u.is_active) and not (action == 'delete' and u.role == 'admin') %}
+          <form method="post" action="{{ url_for('admin.user_action', uid=u.id, action=action) }}" class="inline" {% if action in ('delete', 'suspend') %}data-confirm="{{ label }} {{ u.email }}?"{% endif %}>
+            <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-ghost">{{ label }}</button>
+          </form>
+          {% endif %}
+        {% endfor %}
+        </div>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="muted">No members found.</p>{% endif %}
+  <p class="help">Showing up to 200 members. Administrators are added with <code>flask --app wsgi create-admin</code>.</p>
+</div>
+{% endblock %}

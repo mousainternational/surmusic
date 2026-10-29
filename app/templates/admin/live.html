@@ -1,0 +1,28 @@
+{% extends "admin/_layout.html" %}
+{% block title %}🔴 Live now{% endblock %}
+{% block admin %}
+<div class="stat-grid">
+  <div class="card stat live-stat"><span class="muted small">Listening right now</span><strong id="live-count">{{ live.listeners | length }}</strong></div>
+  <div class="card stat"><span class="muted small">On the website (last 5 min)</span><strong id="online-count">{{ live.online }}</strong></div>
+</div>
+<div class="card table-wrap">
+  <div class="row-between"><h2 class="h3">Who is listening</h2><span class="small muted">Updates automatically every 15 seconds · <span id="live-updated">just now</span></span></div>
+  <table class="events">
+    <thead><tr><th>Listener</th><th>Station</th><th>Where</th><th>Device</th><th>Listening since (UTC)</th></tr></thead>
+    <tbody id="live-rows">
+    {% for r in live.listeners %}
+      <tr>
+        <td>{% if r.user_id %}<a href="{{ url_for('admin.user_detail', uid=r.user_id) }}">{{ r.display_name or r.email }}</a><br><span class="small muted">{{ r.email }}</span>{% else %}<span class="muted">Guest</span>{% endif %}</td>
+        <td><strong>{{ r.station_name }}</strong><br><span class="small muted">{{ r.category }}</span></td>
+        <td class="nowrap">{{ r.flag }} {{ r.region ~ ', ' if r.region }}{{ r.country_name if r.country else 'Unknown' }}</td>
+        <td class="small">{{ r.device }} · {{ r.browser }}</td>
+        <td class="small nowrap">{{ r.started_at[11:16] }} ({{ r.minutes }} min)</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="5" class="muted">Nobody is listening right now.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="help">A listener counts as live while their player is playing (it checks in every minute). Location is approximate: city and country from the IP geolocation database when installed, otherwise country from the device's time zone. IP addresses are never stored.</p>
+</div>
+{% endblock %}

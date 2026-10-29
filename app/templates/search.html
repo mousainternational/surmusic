@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% import "_ad.html" as ads with context %}
+{% block content %}
+<div class="wrap page">
+  <header class="page-head">
+    <h1>{{ ('Results for “' ~ q ~ '”') if q else 'Search radio stations' }}</h1>
+    <form class="hero-search" action="{{ url_for('public.search') }}" method="get" role="search">
+      <label for="s-q" class="sr">Search radio stations</label>
+      <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+      <input id="s-q" name="q" type="search" value="{{ q }}" placeholder="Station, singer, city or genre" maxlength="60">
+      <button class="btn btn-primary">Search</button>
+    </form>
+  </header>
+  {% if error %}
+    <div class="empty card"><p>{{ error }}</p></div>
+  {% elif q and not stations %}
+    <div class="empty card"><p>No stations found for “{{ q }}”. Try a shorter word, a city (Lahore, Mumbai) or a genre (ghazal, qawwali, pop).</p></div>
+  {% elif stations %}
+    {{ ui.station_list(stations, 'search') }}
+  {% else %}
+    <div class="chips">
+      {% for t in ['Arijit Singh', 'ghazal', 'qawwali', 'Punjabi', 'Lahore', 'Karachi', 'Mumbai', 'retro', 'sufi', 'top 40', 'soundtrack', 'news'] %}
+      <a class="chip" href="{{ url_for('public.search', q=t) }}">{{ t }}</a>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

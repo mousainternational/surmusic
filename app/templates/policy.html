@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% block content %}
+<div class="wrap page narrow">
+  {{ ui.breadcrumbs([('Home', '/'), (title, request.path)]) }}
+  <header class="page-head"><h1>{{ title }}</h1></header>
+  <div class="prose card">
+    {{ body | markdown }}
+    {% if request.path == '/privacy' and S.analytics_provider == 'plausible' and S.analytics_domain %}
+    <h3>Analytics in use</h3>
+    <p>This website uses Plausible Analytics, which does not use cookies and does not collect personal data. It counts page views in aggregate.</p>
+    {% endif %}
+    <p class="small muted">Last updated: {{ S.policies_updated }} · {{ S.site_full_name }} by {{ S.owner_name }}</p>
+  </div>
+</div>
+{% endblock %}

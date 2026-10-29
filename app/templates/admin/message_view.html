@@ -1,0 +1,17 @@
+{% extends "admin/_layout.html" %}
+{% block title %}{{ m.subject }}{% endblock %}
+{% block admin %}
+<div class="card">
+  <p><strong>{{ m.name }}</strong> · <a href="mailto:{{ m.email }}?subject={{ ('Re: ' ~ m.subject) | urlencode }}">{{ m.email }}</a><br>
+  <span class="small muted">Received {{ m.created_at }} · email delivery: {{ m.email_status }}</span></p>
+  <p class="review-body">{{ m.body }}</p>
+  <div class="actions">
+    <a class="btn btn-primary btn-sm" href="mailto:{{ m.email }}?subject={{ ('Re: ' ~ m.subject) | urlencode }}">Reply by email</a>
+    <form method="post" action="{{ url_for('admin.message_delete', mid=m.id) }}" class="inline" data-confirm="Delete this message?">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <button class="btn btn-sm btn-ghost">Delete</button>
+    </form>
+    <a class="btn btn-sm btn-ghost" href="{{ url_for('admin.messages') }}">← All messages</a>
+  </div>
+</div>
+{% endblock %}
