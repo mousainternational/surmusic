@@ -645,3 +645,12 @@ html.menu-open .cookie-note { display: none; }
   .section-head h2 { flex: 1 1 100%; }
   .section-head a { white-space: normal; }
 }
+
+/* long station names/tags must never push a list wider than its column (they end with "…") */
+.stations { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 760px) { .stations, .with-side .stations { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+@media (min-width: 1180px) { .page-home .stations { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.with-side .stations, .stations.compact { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 760px) { .with-side .stations { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.stations > li, .st-play, .st-text { min-width: 0; }
+.st-text { flex: 1; overflow: hidden; }
