@@ -1,0 +1,39 @@
+# FREE hosting: Render free web service + Neon free PostgreSQL (database lives on Neon, not Render).
+# Render → New + → Blueprint → pick this repository → Blueprint file: render-free.yaml
+# Render will ask for the values marked "sync: false" (see docs/FREE_HOSTING.md).
+services:
+  - type: web
+    name: surmusic
+    runtime: docker
+    plan: free
+    region: singapore             # closest Render region to Pakistan
+    healthCheckPath: /ping          # does not wake the Neon database
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: SITE_URL
+        sync: false                 # e.g. https://surmusic.onrender.com
+      - key: DATABASE_URL
+        sync: false                 # the Neon connection string (postgresql://…?sslmode=require)
+      - key: ADMIN_EMAIL
+        sync: false                 # your admin email (first start creates the admin; delete afterwards)
+      - key: ADMIN_PASSWORD
+        sync: false                 # 12+ characters; delete this variable after your first sign-in
+      - key: EPHEMERAL_STORAGE
+        value: "1"                  # no permanent disk on the free plan: app files are links
+      - key: STORAGE_DIR
+        value: /data/storage
+      - key: WEB_CONCURRENCY
+        value: "2"                  # free plan has 512 MB memory
+      - key: TRUSTED_PROXIES
+        value: "1"
+      - key: SESSION_COOKIE_SECURE
+        value: "1"
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
+        sync: false

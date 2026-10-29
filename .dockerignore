@@ -1,0 +1,12 @@
+.env
+.git
+*.db
+*.db-*
+data/
+__pycache__/
+*.pyc
+.pytest_cache/
+tests/
+docs/
+geoip/*.csv
+geoip/*.csv.gz

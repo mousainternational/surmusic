@@ -1,0 +1,10 @@
+.env
+*.db
+*.db-*
+/data/
+__pycache__/
+*.pyc
+.pytest_cache/
+.sql-log.txt
+geoip/*.csv
+geoip/*.csv.gz

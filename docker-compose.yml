@@ -1,0 +1,64 @@
+# One-command deployment on any Linux VPS with Docker:
+#   cp .env.example .env   (fill it in)
+#   docker compose up -d --build
+#   docker compose exec web flask --app wsgi create-admin
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: surmusic
+      POSTGRES_USER: surmusic
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U surmusic -d surmusic"]
+      interval: 10s
+      retries: 10
+
+  web:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://surmusic:${POSTGRES_PASSWORD}@db:5432/surmusic
+      STORAGE_DIR: /data/storage
+      GEOIP_DB: /data/storage/geoip.sqlite
+      TRUSTED_PROXIES: "1"
+    volumes:
+      - storage:/data/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "8000"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+
+  # Optional malware scanner:  docker compose --profile scan up -d   and set CLAMAV_HOST=clamav
+  clamav:
+    image: clamav/clamav:stable
+    restart: unless-stopped
+    profiles: ["scan"]
+    expose:
+      - "3310"
+
+volumes:
+  pgdata:
+  storage:
+  caddy_data:
+  caddy_config:

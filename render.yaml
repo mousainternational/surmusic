@@ -1,0 +1,42 @@
+# Render Blueprint — "New + → Blueprint" in the Render dashboard, then pick this repository.
+# Uploads need a persistent disk, which Render offers only on paid instance types.
+services:
+  - type: web
+    name: surmusic
+    runtime: docker
+    plan: starter
+    healthCheckPath: /healthz
+    disk:
+      name: surmusic-storage
+      mountPath: /data
+      sizeGB: 5
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: SITE_URL
+        sync: false            # enter your public URL, e.g. https://www.example.com
+      - key: STORAGE_DIR
+        value: /data/storage
+      - key: GEOIP_DB
+        value: /data/storage/geoip.sqlite
+      - key: TRUSTED_PROXIES
+        value: "1"
+      - key: SESSION_COOKIE_SECURE
+        value: "1"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: surmusic-db
+          property: connectionString
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+
+databases:
+  - name: surmusic-db
+    databaseName: surmusic
+    user: surmusic

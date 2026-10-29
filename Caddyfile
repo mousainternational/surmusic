@@ -1,0 +1,18 @@
+# Caddy gets and renews a free HTTPS certificate automatically for {$DOMAIN}.
+{$DOMAIN} {
+	encode zstd gzip
+	request_body {
+		max_size 600MB
+	}
+	reverse_proxy web:8000 {
+		transport http {
+			read_timeout 300s
+			write_timeout 300s
+		}
+	}
+}
+
+# Redirect the bare domain to www (remove if you use the bare domain as SITE_URL).
+# example.com {
+# 	redir https://www.example.com{uri} permanent
+# }
