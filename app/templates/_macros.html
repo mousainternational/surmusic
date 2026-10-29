@@ -10,6 +10,14 @@
     <span class="st-eq" aria-hidden="true"><i></i><i></i><i></i></span>
   </button>
   <button class="st-fav{% if st.uuid in fav_ids %} on{% endif %}" type="button" aria-label="Save {{ st.name }} to favourites" aria-pressed="{{ 'true' if st.uuid in fav_ids else 'false' }}">★</button>
+  {%- if user and user.role == 'admin' and not st.sponsored %}
+  <form class="st-remove" method="post" action="/admin/stations/block" data-confirm="Remove “{{ st.name }}” from Sur Music for everyone? You can restore it later in Admin → Stations.">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <input type="hidden" name="uuid" value="{{ st.uuid }}"><input type="hidden" name="url" value="{{ st.url }}">
+    <input type="hidden" name="name" value="{{ st.name }}"><input type="hidden" name="back" value="{{ request.full_path }}">
+    <button type="submit" title="Admin: remove this station" aria-label="Admin: remove {{ st.name }}">🚫</button>
+  </form>
+  {%- endif %}
 </li>
 {%- endmacro %}
 

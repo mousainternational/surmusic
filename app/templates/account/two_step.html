@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="wrap page narrow">
+  <header class="page-head">
+    <h1>🔐 2-step sign-in</h1>
+    <p class="muted">After your password, Sur Music asks for a 6-digit code from an app on your phone. Someone who steals your password still cannot get in.</p>
+  </header>
+
+  {% if codes %}
+  <section class="card notice">
+    <h2 class="h3">Your recovery codes — save them now</h2>
+    <p>If you lose your phone, each of these codes lets you sign in <strong>once</strong>. They are shown <strong>only now</strong>. Write them on paper or save them somewhere safe (not on the same phone).</p>
+    <pre class="recovery" id="recovery-codes">{% for c in codes %}{{ c }}
+{% endfor %}</pre>
+    <p><button type="button" class="btn btn-ghost btn-sm" data-copy="#recovery-codes">Copy codes</button></p>
+    <a class="btn btn-primary" href="{{ url_for('auth.account') }}">I have saved them — done</a>
+  </section>
+
+  {% elif enabled %}
+  <section class="card">
+    <p><strong class="ok">2-step sign-in is on.</strong> Recovery codes left: <strong>{{ left }}</strong>.</p>
+  </section>
+  <form class="card form" method="post">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <h2 class="h3">New recovery codes, or turn it off</h2>
+    <label for="pw">Your password</label><input id="pw" name="password" type="password" required autocomplete="current-password">
+    <label for="c1">Code from your app</label><input id="c1" name="code" required inputmode="numeric" autocomplete="one-time-code" maxlength="11" class="code-input">
+    <div class="actions">
+      <button class="btn btn-ghost" name="action" value="new_codes">Make new recovery codes</button>
+      <button class="btn btn-ghost danger" name="action" value="disable">Turn off 2-step sign-in</button>
+    </div>
+  </form>
+
+  {% elif secret %}
+  <section class="card">
+    <h2 class="h3">1. Install an authenticator app</h2>
+    <p><strong>Google Authenticator</strong> or <strong>Microsoft Authenticator</strong> (free, Play Store / App Store).</p>
+    <h2 class="h3">2. Add Sur Music to the app</h2>
+    <p>In the app press <strong>+</strong> → <strong>Scan a QR code</strong> and scan this:</p>
+    <div id="qr" class="qr" data-uri="{{ uri }}"></div>
+    <p class="small">Can't scan (for example on the same phone)? Choose <strong>Enter a setup key</strong> and type:<br>
+      Account: <code>Sur Music</code> · Key: <code class="break">{{ pretty }}</code> · Time based</p>
+    <h2 class="h3">3. Type the 6-digit code the app shows</h2>
+    <form class="form" method="post">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <label for="c2">6-digit code</label>
+      <input id="c2" name="code" required inputmode="numeric" autocomplete="one-time-code" maxlength="7" class="code-input" autofocus>
+      <div class="actions">
+        <button class="btn btn-primary" name="action" value="confirm">Turn on</button>
+        <button class="btn btn-ghost" name="action" value="cancel" formnovalidate>Cancel</button>
+      </div>
+    </form>
+  </section>
+
+  {% else %}
+  <form class="card form" method="post">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <p>You will need your phone for about two minutes.</p>
+    <button class="btn btn-primary" name="action" value="start">Set up 2-step sign-in</button>
+  </form>
+  {% endif %}
+  <p class="small"><a href="{{ url_for('auth.account') }}">← Back to My account</a></p>
+</div>
+{% endblock %}
+{% block scripts %}{{ super() }}{% if secret %}
+<script nonce="{{ csp_nonce() }}" src="{{ asset('js/vendor/qrcode.js') }}" defer></script>
+<script nonce="{{ csp_nonce() }}" src="{{ asset('js/two-step.js') }}" defer></script>{% endif %}{% endblock %}

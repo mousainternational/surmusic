@@ -23,6 +23,8 @@ services:
         value: "1"                  # no permanent disk on the free plan: app files are links
       - key: STORAGE_DIR
         value: /data/storage
+      - key: GEOIP_DB
+        value: /data/storage/geoip.sqlite
       - key: WEB_CONCURRENCY
         value: "2"                  # free plan has 512 MB memory
       - key: TRUSTED_PROXIES

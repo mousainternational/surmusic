@@ -10,7 +10,7 @@ import json
 from .db import get_db, utcnow
 
 # Order matters for foreign keys (parents first).
-BACKUP_TABLES = ["settings", "users", "favorites", "history", "apps", "plays", "events", "messages", "audit_log", "media_blobs"]
+BACKUP_TABLES = ["settings", "users", "favorites", "history", "apps", "plays", "events", "messages", "audit_log", "media_blobs", "user_2fa"]
 BACKUP_FORMAT = "surmusic-backup-v1"
 
 

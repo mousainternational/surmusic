@@ -103,7 +103,7 @@ The "Sur Music Player & Radio" name, logo, design and source code are the proper
 
 Stations marked **Sponsored** are paid placements. Advertisements are provided by third parties and are not endorsements.
 
-If you own a station and want it removed, contact us and we will remove it from our lists.
+**Station owners:** if you own or manage a station and do not want it on Sur Music, send a removal request through the contact page (link “Station owners: remove a station” at the bottom of every page). We remove it, usually within 48 hours.
 """
 
 DONATION_DISCLAIMER_MD = """\
@@ -188,6 +188,7 @@ DEFAULTS = {
     "ads_txt_extra": "",
     # stations
     "sponsored_stations": "[]",
+    "blocked_stations": "[]",
     # policies
     "privacy_md": PRIVACY_MD,
     "terms_md": TERMS_MD,
@@ -229,6 +230,7 @@ def get_settings():
 
 
 def save_settings(values):
+    g.pop("blocked_sets", None)
     db = get_db()
     for key, value in values.items():
         if key not in DEFAULTS:
@@ -262,6 +264,50 @@ def sponsored_stations():
     except ValueError:
         return []
     return rows if isinstance(rows, list) else []
+
+
+def blocked_stations():
+    """Stations the owner removed (for example after a station owner's request)."""
+    try:
+        rows = json.loads(get_settings().get("blocked_stations") or "[]")
+    except ValueError:
+        return []
+    return [r for r in rows if isinstance(r, dict)] if isinstance(rows, list) else []
+
+
+def stream_key(url):
+    """Comparable form of a stream address: host + path, no scheme, no trailing slash, lower-case."""
+    from urllib.parse import urlsplit
+    try:
+        u = urlsplit((url or "").strip())
+    except ValueError:
+        return ""
+    if not u.netloc:
+        return ""
+    return (u.netloc.lower() + u.path.rstrip("/").lower() + (("?" + u.query) if u.query else ""))
+
+
+def _blocked_sets():
+    if "blocked_sets" not in g:
+        rows = blocked_stations()
+        g.blocked_sets = ({r.get("uuid") for r in rows if r.get("uuid")},
+                          {stream_key(r.get("url")) for r in rows if r.get("url")} - {""},
+                          {(r.get("name") or "").strip().lower() for r in rows if r.get("match_name")} - {""})
+    return g.blocked_sets
+
+
+def is_blocked(st):
+    if not isinstance(st, dict):
+        return False
+    uuids, urls, names = _blocked_sets()
+    return (st.get("uuid") in uuids or (st.get("url") and stream_key(st.get("url")) in urls)
+            or (st.get("name") or st.get("station_name") or "").strip().lower() in names)
+
+
+def without_blocked(stations):
+    if not blocked_stations():
+        return stations
+    return [s for s in stations if not is_blocked(s)]
 
 
 def donation_method(name):
@@ -305,7 +351,12 @@ def setup_warnings(smtp_ready):
             w.append(f"{label} donations are hidden until you add the holder name, upload the official QR or "
                      f"details, tick “verified” and enable it.")
     from flask import current_app
-    from . import geo
+    from . import geo, twofa
+    from .security import current_user
+    me = current_user()
+    if me and me["role"] == "admin" and not twofa.is_enabled(me["id"]):
+        w.append("Protect the admin panel: turn on 2-step sign-in (My account → 2-step sign-in). Then even a "
+                 "stolen password is not enough to get in.")
     if not geo.available():
         cfg = current_app.config
         st = geo.read_status(cfg.get("GEOIP_MMDB", "")) if cfg.get("GEOIP_MMDB") else {}

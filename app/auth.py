@@ -8,7 +8,7 @@ from flask import (Blueprint, Response, current_app, flash, g, redirect, render_
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from . import analytics
+from . import analytics, twofa
 from .db import get_db, utcnow
 from .mailer import send_mail, smtp_ready
 from .security import current_user, login_required, rate_limited, safe_next, start_session
@@ -146,17 +146,18 @@ def login():
                 elif verification_required() and not row["email_verified"] and row["role"] != "admin":
                     error = "Please confirm your email first. Check your inbox, or request a new link below."
                     session["resend_uid"] = row["id"]
+                elif twofa.is_enabled(row["id"]):
+                    # password is right; now ask for the code from the authenticator app
+                    geo = (session.get("geo_c"), session.get("geo_r"))
+                    session.clear()
+                    if geo[0]:
+                        session["geo_c"], session["geo_r"] = geo
+                    session["2fa_uid"], session["2fa_at"] = row["id"], utcnow()
+                    session["2fa_remember"] = bool(request.form.get("remember"))
+                    session["2fa_next"] = safe_next(request.args.get("next"), "")
+                    return redirect(url_for("auth.login_code"))
                 else:
-                    db.execute("UPDATE users SET failed_attempts = 0, locked_until = NULL, last_login_at = ? "
-                               "WHERE id = ?", (utcnow(), row["id"]))
-                    db.commit()
-                    start_session(row, remember=bool(request.form.get("remember")))
-                    analytics.record("login", row["id"])
-                    if row["role"] == "admin":
-                        from .security import audit
-                        audit("admin_login", email)
-                    default = url_for("admin.dashboard") if row["role"] == "admin" else url_for("public.home")
-                    return redirect(safe_next(request.args.get("next"), default))
+                    return _finish_login(row, bool(request.form.get("remember")), request.args.get("next"))
             else:
                 if row:
                     fails = row["failed_attempts"] + 1
@@ -170,6 +171,97 @@ def login():
     return render_template("auth/login.html", meta={"title": "Sign in | Sur Music", "noindex": True},
                            error=error, email=email, can_resend=bool(session.get("resend_uid"))), \
         (401 if error else 200)
+
+
+def _finish_login(row, remember, nxt):
+    db = get_db()
+    db.execute("UPDATE users SET failed_attempts = 0, locked_until = NULL, last_login_at = ? WHERE id = ?",
+               (utcnow(), row["id"]))
+    db.commit()
+    start_session(row, remember=remember)
+    analytics.record("login", row["id"])
+    if row["role"] == "admin":
+        from .security import audit
+        audit("admin_login", row["email"])
+    default = url_for("admin.dashboard") if row["role"] == "admin" else url_for("public.home")
+    return redirect(safe_next(nxt, default))
+
+
+@bp.route("/login/code", methods=["GET", "POST"])
+def login_code():
+    """Second step of sign-in: 6-digit code from the authenticator app (or a recovery code)."""
+    uid, started = session.get("2fa_uid"), session.get("2fa_at")
+    if not uid or not started or (datetime.now(timezone.utc) - datetime.fromisoformat(started)).total_seconds() > 300:
+        for k in ("2fa_uid", "2fa_at", "2fa_remember", "2fa_next"):
+            session.pop(k, None)
+        flash("Please sign in again.", "error")
+        return redirect(url_for("auth.login"))
+    error = None
+    if request.method == "POST":
+        db = get_db()
+        row = db.one("SELECT * FROM users WHERE id = ?", (uid,))
+        if not _form_ok() or not row or not row["is_active"]:
+            error = "Sign-in rejected."
+        elif rate_limited("login_code", 10, 900):
+            error = "Too many wrong codes. Please wait 15 minutes and sign in again."
+        else:
+            used = twofa.verify(uid, request.form.get("code"))
+            if used:
+                nxt, remember = session.get("2fa_next"), session.get("2fa_remember")
+                if used == "recovery":
+                    flash(f"You used a recovery code. {twofa.recovery_left(uid)} left — make new ones in My account "
+                          "if you are running low.", "success")
+                return _finish_login(row, remember, nxt)
+            error = "That code is not right. Use the newest code in your authenticator app."
+            analytics.record("login_failed", uid, detail="wrong 2-step code")
+    return render_template("auth/login_code.html", meta={"title": "Sign-in code | Sur Music", "noindex": True},
+                           error=error), (401 if error else 200)
+
+
+@bp.route("/account/two-step", methods=["GET", "POST"])
+@login_required
+def two_step():
+    """Turn the authenticator-app code on or off for my own account."""
+    db = get_db()
+    me = db.one("SELECT * FROM users WHERE id = ?", (g.user["id"],))
+    codes = None
+    if request.method == "POST":
+        action = request.form.get("action")
+        if action == "start":
+            twofa.start_setup(me["id"])
+        elif action == "confirm":
+            codes = twofa.enable(me["id"], request.form.get("code"))
+            if codes:
+                from .security import audit
+                audit("two_step_on", me["email"])
+            else:
+                flash("That code is not right. Check that your phone's time is automatic, then try the newest code.",
+                      "error")
+        elif action in ("disable", "new_codes"):
+            if not check_password_hash(me["password_hash"], request.form.get("password") or ""):
+                flash("Your password is incorrect.", "error")
+            elif not twofa.verify(me["id"], request.form.get("code")):
+                flash("That code is not right.", "error")
+            elif action == "disable":
+                twofa.disable(me["id"])
+                from .security import audit
+                audit("two_step_off", me["email"])
+                flash("2-step sign-in is off.", "success")
+                return redirect(url_for("auth.account"))
+            else:
+                codes = twofa.regenerate_recovery(me["id"])
+        elif action == "cancel":
+            if not twofa.is_enabled(me["id"]):
+                twofa.disable(me["id"])
+            return redirect(url_for("auth.account"))
+        if not codes:
+            return redirect(url_for("auth.two_step"))
+    enabled = twofa.is_enabled(me["id"])
+    secret = None if enabled else twofa.pending_secret(me["id"])
+    return render_template("account/two_step.html", meta={"title": "2-step sign-in | Sur Music", "noindex": True},
+                           enabled=enabled, secret=secret, pretty=twofa.pretty(secret) if secret else "",
+                           uri=twofa.otpauth_uri(secret, me["email"]) if secret else "", codes=codes,
+                           left=twofa.recovery_left(me["id"]) if enabled else 0)
 
 
 @bp.route("/logout", methods=["POST"])
@@ -321,7 +413,7 @@ def account():
     signins = [e for e in analytics.recent(user_id=me["id"], limit=60) if e["kind"] in ("login", "signup")][:5]
     return render_template("account/account.html", meta={"title": "My account | Sur Music", "noindex": True},
                            me=me, stats=stats, recent=recent, smtp=smtp_ready(), signins=signins,
-                           minutes=analytics.listening_minutes(me["id"]))
+                           minutes=analytics.listening_minutes(me["id"]), two_step=twofa.is_enabled(me["id"]))
 
 
 @bp.route("/account/export")
@@ -357,6 +449,7 @@ def account_delete():
     db.execute("DELETE FROM history WHERE user_id = ?", (me["id"],))
     db.execute("DELETE FROM live_sessions WHERE user_id = ?", (me["id"],))
     db.execute("UPDATE events SET user_id = NULL WHERE user_id = ?", (me["id"],))
+    db.execute("DELETE FROM user_2fa WHERE user_id = ?", (me["id"],))
     db.execute("DELETE FROM users WHERE id = ?", (me["id"],))
     db.commit()
     analytics.record("account_deleted")

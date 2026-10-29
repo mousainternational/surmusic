@@ -574,3 +574,30 @@ a, button, summary, label, .st-play { touch-action: manipulation; -webkit-tap-hi
 html.menu-open .cookie-note { display: none; }
 @media (max-width: 759px) { .cookie-note { padding: 10px 12px; gap: 10px; font-size: .82rem; } }
 @media (max-width: 1199px) { .menu > * { flex-shrink: 0; } }
+
+/* admin-only "remove station" button inside station rows */
+.st-remove { flex: none; margin: 0 6px 0 -2px; }
+.st-remove button { width: 40px; height: 40px; border: 1px dashed var(--border); border-radius: 10px; background: none; cursor: pointer; font-size: 1rem; opacity: .7; }
+.st-remove button:hover { opacity: 1; border-color: var(--err); }
+.notice { border-left: 4px solid var(--brand); margin-bottom: 16px; }
+.player[data-state="removed"] .pl-status { color: var(--err); }
+
+/* 2-step sign-in */
+.qr { display: inline-block; padding: 10px; background: #fff; border-radius: 12px; border: 1px solid var(--border); margin: 6px 0 10px; }
+.qr svg { display: block; width: 220px; height: 220px; }
+.recovery { font: 600 1.05rem/1.9 ui-monospace, Menlo, Consolas, monospace; background: var(--surface-2); padding: 12px 16px; border-radius: 10px; columns: 2; }
+.code-input { font: 600 1.4rem ui-monospace, Menlo, Consolas, monospace !important; letter-spacing: .25em; text-align: center; max-width: 260px; }
+.ok { color: var(--ok, #16a34a); }
+.btn.danger { color: var(--err); }
+
+/* desktop header: keep logo, links and search readable on 1200–1500 px screens */
+.site-header .brand { flex: none; margin-right: 12px; }
+@media (min-width: 1200px) and (max-width: 1499px) {
+  .menu { gap: 0; }
+  .menu a:not(.btn), .menu .linklike { padding: 8px 7px; font-size: .86rem; }
+  .nav-search input[type="search"] { width: 130px; }
+  .menu .btn { padding-left: 14px; padding-right: 14px; }
+}
+@media (min-width: 1200px) { .nav-search { flex: none; } .menu { flex-wrap: nowrap; white-space: nowrap; } }
+@media (min-width: 1200px) { .nav-search { width: 130px; } .nav-search input[type="search"] { width: 100%; } } @media (min-width: 1500px) { .nav-search { width: 180px; } }
+@media (min-width: 1200px) and (max-width: 1299px) { .nav-search { width: 112px; } .menu a:not(.btn), .menu .linklike { padding: 8px 6px; } }

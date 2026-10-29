@@ -1,6 +1,30 @@
 {% extends "admin/_layout.html" %}
-{% block title %}Sponsored stations{% endblock %}
+{% block title %}Stations{% endblock %}
 {% block admin %}
+<h2 class="h3">🚫 Removed stations</h2>
+<div class="form-grid">
+  <div class="card table-wrap">
+    <p class="help">Removed stations are hidden everywhere on Sur Music and cannot be played — also from visitors' saved favourites. <strong>Quickest way:</strong> while signed in as admin, open any station list on the website and press the 🚫 button next to the station. Use this when a station owner asks for removal (Messages → “Station removal request”).</p>
+    {% if blocked %}
+    <table><thead><tr><th>Station</th><th>Removed</th><th>Stream</th><th></th></tr></thead>
+    <tbody>{% for s in blocked|reverse %}{% set idx = blocked|length - loop.index %}<tr>
+      <td><strong>{{ s.name }}</strong>{% if s.reason %}<br><span class="small muted">{{ s.reason }}</span>{% endif %}</td>
+      <td class="small">{{ s.at }}</td><td class="small break">{{ s.url or ('name: ' ~ s.name) }}</td>
+      <td><form method="post" class="inline" data-confirm="Put {{ s.name }} back on Sur Music?"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="action" value="unblock"><input type="hidden" name="index" value="{{ idx }}"><button class="btn btn-sm btn-ghost">Restore</button></form></td>
+    </tr>{% endfor %}</tbody></table>
+    {% else %}<p class="muted">No stations removed.</p>{% endif %}
+  </div>
+  <form class="card form" method="post">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="action" value="block">
+    <h2 class="h3">Remove a station by address</h2>
+    <label for="b-url">Stream address (from the owner's request)</label><input id="b-url" name="url" type="url" placeholder="https://…">
+    <label for="b-name">…or the exact station name</label><input id="b-name" name="name" maxlength="120">
+    <label for="b-reason">Note (optional)</label><input id="b-reason" name="reason" maxlength="200" placeholder="Owner request by email, 30 Oct">
+    <button class="btn btn-primary">Remove station</button>
+  </form>
+</div>
+
+<h2 class="h3">⭐ Sponsored stations</h2>
 <div class="form-grid">
   <div class="card table-wrap">
     <p class="help">Sponsored stations appear at the top of the chosen list with a “Sponsored” label. Agree payment terms with the station in writing.</p>

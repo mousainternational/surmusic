@@ -16,7 +16,7 @@ from .security import csp_nonce, csrf_protect, csrf_token, current_user, securit
 from .settings import ads_active, get_settings
 from .util import human_size, render_markdown, valid_email
 
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 
 
 def create_app(overrides=None):
@@ -54,6 +54,7 @@ def create_app(overrides=None):
     app.register_blueprint(admin_bp)
 
     app.teardown_appcontext(dbmod.close_db)
+    app.before_request(_to_main_address)
     app.before_request(csrf_protect)
 
     @app.after_request
@@ -159,7 +160,9 @@ def register_cli(app):
                 db.execute("UPDATE users SET password_hash = ?, role = 'admin', is_active = 1, email_verified = 1, "
                            "session_version = session_version + 1, failed_attempts = 0, locked_until = NULL "
                            "WHERE id = ?", (h, row["id"]))
-                click.echo("Account updated to administrator; its sessions were signed out.")
+                db.execute("DELETE FROM user_2fa WHERE user_id = ?", (row["id"],))
+                click.echo("Account updated to administrator; its sessions were signed out and 2-step sign-in "
+                           "was switched off (turn it on again in My account).")
             else:
                 db.insert("users", {"email": email, "password_hash": h, "display_name": "Admin", "role": "admin",
                                     "is_active": 1, "email_verified": 1, "created_at": utcnow()})
@@ -210,4 +213,20 @@ def _apply_setting_changes(app):
         db.rollback()
     finally:
         db.close()
+
+
+def _to_main_address():
+    """After your own domain is set in SITE_URL, send visitors (and Google) from the old *.onrender.com
+    address to it with a permanent redirect, so search engines see one website, not two."""
+    from urllib.parse import urlsplit
+    from flask import current_app
+    if request.path in ("/ping", "/healthz"):
+        return None
+    site = urlsplit(current_app.config.get("SITE_URL", ""))
+    host = (request.host or "").split(":")[0].lower()
+    if site.scheme == "https" and site.hostname and not site.hostname.endswith(".onrender.com") \
+            and host.endswith(".onrender.com"):
+        target = f"https://{site.netloc}{request.full_path if request.query_string else request.path}"
+        return redirect(target, code=301)
+    return None
 

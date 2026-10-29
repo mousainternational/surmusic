@@ -141,7 +141,8 @@ def users():
     q = (request.args.get("q") or "").strip().lower()[:100]
     db = get_db()
     base = ("SELECT u.id, u.email, u.display_name, u.role, u.is_active, u.email_verified, u.created_at, "
-            "u.last_login_at, (SELECT COUNT(*) FROM favorites f WHERE f.user_id = u.id) AS favs FROM users u ")
+            "u.last_login_at, (SELECT COUNT(*) FROM favorites f WHERE f.user_id = u.id) AS favs, "
+            "(SELECT t.enabled FROM user_2fa t WHERE t.user_id = u.id) AS twofa FROM users u ")
     if q:
         rows = db.all(base + "WHERE LOWER(u.email) LIKE ? OR LOWER(u.display_name) LIKE ? "
                              "ORDER BY u.created_at DESC LIMIT 200", (f"%{q}%", f"%{q}%"))
@@ -151,7 +152,7 @@ def users():
                            places=analytics.user_locations([r["id"] for r in rows]))
 
 
-@bp.route("/users/<int:uid>/<any(suspend, activate, verify, signout, delete):action>", methods=["POST"])
+@bp.route("/users/<int:uid>/<any(suspend, activate, verify, signout, delete, reset_2fa):action>", methods=["POST"])
 @admin_required
 def user_action(uid, action):
     db = get_db()
@@ -169,11 +170,14 @@ def user_action(uid, action):
         db.execute("UPDATE users SET email_verified = 1 WHERE id = ?", (uid,))
     elif action == "signout":
         db.execute("UPDATE users SET session_version = session_version + 1 WHERE id = ?", (uid,))
+    elif action == "reset_2fa":
+        db.execute("DELETE FROM user_2fa WHERE user_id = ?", (uid,))
     elif action == "delete":
         db.execute("DELETE FROM favorites WHERE user_id = ?", (uid,))
         db.execute("DELETE FROM history WHERE user_id = ?", (uid,))
         db.execute("DELETE FROM live_sessions WHERE user_id = ?", (uid,))
         db.execute("UPDATE events SET user_id = NULL WHERE user_id = ?", (uid,))
+        db.execute("DELETE FROM user_2fa WHERE user_id = ?", (uid,))
         db.execute("DELETE FROM users WHERE id = ?", (uid,))
     db.commit()
     audit(f"user_{action}", u["email"])
@@ -421,12 +425,66 @@ def apps():
 
 # ---------------------------------------------------------------- sponsored stations
 
+def _save_blocked(rows):
+    save_settings({"blocked_stations": json.dumps(rows[-2000:])})
+
+
+@bp.route("/stations/block", methods=["POST"])
+@admin_required
+def block_station():
+    """The 🚫 button on a station row (shown only to admins): hide that station for everyone."""
+    from .settings import blocked_stations, stream_key
+    from .security import safe_next
+    name = (request.form.get("name") or "").strip()[:120]
+    url = (request.form.get("url") or "").strip()[:500]
+    uuid = (request.form.get("uuid") or "").strip()[:64]
+    back = safe_next(request.form.get("back"), url_for("admin.stations"))
+    if not (uuid or valid_url(url, https_only=True)):
+        flash("This station could not be removed (no station id or stream address).", "error")
+        return redirect(back)
+    rows = blocked_stations()
+    key = stream_key(url)
+    if not any((uuid and r.get("uuid") == uuid) or (key and stream_key(r.get("url")) == key) for r in rows):
+        rows.append({"name": name or "Radio station", "url": url if valid_url(url, https_only=True) else "",
+                     "uuid": uuid, "reason": (request.form.get("reason") or "").strip()[:200],
+                     "at": utcnow()[:16].replace("T", " ")})
+        _save_blocked(rows)
+        audit("station_removed", name or url or uuid)
+    flash(f"“{name or 'Station'}” was removed from Sur Music. Restore it any time in Admin → Stations.", "success")
+    return redirect(back)
+
+
 @bp.route("/stations", methods=["GET", "POST"])
 @admin_required
 def stations():
+    from .settings import blocked_stations
     rows = sponsored_stations()
+    blocked = blocked_stations()
     if request.method == "POST":
         action = request.form.get("action")
+        if action == "unblock":
+            i = clamp_int(request.form.get("index"), -1, len(blocked), -1)
+            if 0 <= i < len(blocked):
+                restored = blocked.pop(i)
+                _save_blocked(blocked)
+                audit("station_restored", restored.get("name", ""))
+                flash(f"“{restored.get('name', 'Station')}” is back on Sur Music.", "success")
+            return redirect(url_for("admin.stations"))
+        if action == "block":
+            name = (request.form.get("name") or "").strip()[:120]
+            url = (request.form.get("url") or "").strip()[:500]
+            if url and not valid_url(url, https_only=False):
+                flash("The stream address must start with https:// or http://.", "error")
+            elif not url and len(name) < 2:
+                flash("Enter the station's stream address, or its exact name.", "error")
+            else:
+                blocked.append({"name": name or url, "url": url, "uuid": "", "match_name": not url,
+                                "reason": (request.form.get("reason") or "").strip()[:200],
+                                "at": utcnow()[:16].replace("T", " ")})
+                _save_blocked(blocked)
+                audit("station_removed", name or url)
+                flash("Station removed from Sur Music.", "success")
+            return redirect(url_for("admin.stations"))
         if action == "add":
             st = {"name": (request.form.get("name") or "").strip()[:120],
                   "url": (request.form.get("url") or "").strip(),
@@ -452,7 +510,7 @@ def stations():
                 audit("sponsored_remove", removed.get("name", ""))
                 flash("Sponsored station removed.", "success")
         return redirect(url_for("admin.stations"))
-    return render_template("admin/stations.html", meta=META, rows=rows)
+    return render_template("admin/stations.html", meta=META, rows=rows, blocked=blocked)
 
 
 # ---------------------------------------------------------------- audit & backup

@@ -17,7 +17,8 @@
   var beatTimer = null;
   var STATUS = {
     idle: "", loading: "Connecting…", playing: "LIVE · Playing now", paused: "Paused",
-    error: "This station is offline right now — press Next"
+    error: "This station is offline right now — press Next",
+    removed: "This station is no longer available on Sur Music — press Next"
   };
 
   // ---------- helpers ----------
@@ -158,7 +159,9 @@
       var p = audio.play();
       if (p && p.catch) p.catch(function (err) { if (err && err.name !== "AbortError") setState("error"); });
     }, function (status) {
-      if (status === 401) { state.locked = true; setState("idle"); showGate(station); } else { setState("error"); }
+      if (status === 401) { state.locked = true; setState("idle"); showGate(station); }
+      else if (status === 410) { forgetRemoved(station); }
+      else { setState("error"); }
     });
     if ("mediaSession" in navigator) {
       try {
@@ -168,7 +171,23 @@
         });
       } catch (e) { /* older browsers */ }
     }
-    api("POST", "/api/play", { station: station, category: state.category }).catch(function () {});
+    api("POST", "/api/play", { station: station, category: state.category }).catch(function (status) {
+      if (status === 410 && state.station === station) forgetRemoved(station);
+    });
+  }
+  // A station the site owner removed (e.g. at the station owner's request): stop it and forget it in this browser.
+  function forgetRemoved(station) {
+    if (state.station === station) {
+      audio.pause(); audio.removeAttribute("src"); audio.load();
+      stopBeats(true);
+      setState("removed");
+    }
+    try {
+      local("sm-favs", (local("sm-favs") || []).filter(function (s) { return s && s.uuid !== station.uuid; }));
+      var last = local("sm-last");
+      if (last && last.station && last.station.uuid === station.uuid) localStorage.removeItem("sm-last");
+    } catch (e) { /* ignore */ }
+    state.list = state.list.filter(function (s) { return s.uuid !== station.uuid; });
   }
   function pause() {
     audio.pause(); audio.removeAttribute("src"); audio.load();

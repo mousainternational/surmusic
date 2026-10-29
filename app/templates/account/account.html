@@ -21,6 +21,16 @@
     <div class="card stat"><span class="muted small">Minutes listened</span><strong>{{ minutes }}</strong></div>
   </div>
 
+  <section class="card">
+    <h2 class="h3">🔐 2-step sign-in</h2>
+    {% if two_step %}
+    <p><strong class="ok">On.</strong> Signing in needs your password <em>and</em> a code from your authenticator app.</p>
+    {% else %}
+    <p>{% if me.role == 'admin' %}<strong>Recommended for administrators.</strong> {% endif %}Protect your account with a code from your phone, so a stolen password alone is not enough.</p>
+    {% endif %}
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('auth.two_step') }}">{{ 'Manage' if two_step else 'Turn on 2-step sign-in' }}</a>
+  </section>
+
   {% if signins %}
   <section class="card">
     <h2 class="h3">Recent sign-ins</h2>

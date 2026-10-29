@@ -10,6 +10,7 @@
   {%- if m.canonical %}<link rel="canonical" href="{{ m.canonical }}">{% endif %}
   {%- if m.title and not m.noindex %}
   <meta property="og:type" content="website">
+  <meta property="og:locale" content="en_US">
   <meta property="og:site_name" content="{{ m.site_name }}">
   <meta property="og:title" content="{{ m.title }}">
   <meta property="og:description" content="{{ m.description }}">
@@ -22,7 +23,13 @@
   {%- endif %}
   {%- if m.google_verification %}<meta name="google-site-verification" content="{{ m.google_verification }}">{% endif %}
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <meta name="theme-color" content="#0e0b16">
+  <meta name="theme-color" content="#0e0b16" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Sur Music">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="application-name" content="Sur Music">
   <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
   <link rel="icon" href="{{ url_for('static', filename='img/favicon-32.png') }}" sizes="32x32">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo-180.png') }}">
@@ -59,11 +66,15 @@
       <a href="{{ url_for('public.download_page') }}" {% if here == '/download' %}aria-current="page"{% endif %}>Get the app</a>
       <form class="nav-search" action="{{ url_for('public.search') }}" method="get" role="search">
         <label for="nav-q" class="sr">Search stations</label>
-        <input id="nav-q" name="q" type="search" placeholder="Search stations…" maxlength="60" autocomplete="off">
+        <input id="nav-q" name="q" type="search" placeholder="Search…" maxlength="60" autocomplete="off">
       </form>
       {%- if user %}
-        <a href="{{ url_for('auth.account') }}" class="nav-user" {% if here.startswith('/account') %}aria-current="page"{% endif %}>👤 {{ user.display_name or user.email.split('@')[0] }}</a>
-        {%- if user.role == 'admin' %}<a href="{{ url_for('admin.dashboard') }}">Admin</a>{% endif %}
+        {%- if user.role == 'admin' %}
+        <a href="{{ url_for('admin.dashboard') }}" class="nav-admin">⚙️ Admin panel</a>
+        <a href="{{ url_for('auth.account') }}" class="nav-user" {% if here.startswith('/account') %}aria-current="page"{% endif %}>👤 My account</a>
+        {%- else %}
+        <a href="{{ url_for('auth.account') }}" class="nav-user" title="My account" {% if here.startswith('/account') %}aria-current="page"{% endif %}>👤 {{ user.display_name or user.email.split('@')[0] }}</a>
+        {%- endif %}
         <form method="post" action="{{ url_for('auth.logout') }}" class="inline"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="linklike">Sign out</button></form>
       {%- else %}
         <a href="{{ url_for('auth.login') }}" {% if here == '/login' %}aria-current="page"{% endif %}>Sign in</a>
@@ -124,6 +135,7 @@
       <a href="{{ url_for('public.cookies') }}">Cookie Policy</a>
       <a href="{{ url_for('public.disclaimer') }}">Disclaimer</a>
       <a href="{{ url_for('public.donation_disclaimer') }}">Donation Disclaimer</a>
+      <a href="{{ url_for('public.contact', topic='removal') }}">Station owners: remove a station</a>
     </nav>
   </div>
   {%- import "_ad.html" as ads with context %}

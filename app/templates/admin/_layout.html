@@ -19,7 +19,7 @@
       <a href="{{ url_for('admin.activity') }}" {% if p.startswith('/admin/activity') %}aria-current="page"{% endif %}>Activity log</a>
       <a href="{{ url_for('admin.users') }}" {% if p.startswith('/admin/users') %}aria-current="page"{% endif %}>Users</a>
       <a href="{{ url_for('admin.ads') }}" {% if p.startswith('/admin/ads') %}aria-current="page"{% endif %}>Ads (AdSense)</a>
-      <a href="{{ url_for('admin.stations') }}" {% if p.startswith('/admin/stations') %}aria-current="page"{% endif %}>Sponsored stations</a>
+      <a href="{{ url_for('admin.stations') }}" {% if p.startswith('/admin/stations') %}aria-current="page"{% endif %}>Stations (remove / sponsor)</a>
       <a href="{{ url_for('admin.apps') }}" {% if p.startswith('/admin/apps') %}aria-current="page"{% endif %}>App downloads</a>
       <a href="{{ url_for('admin.donations') }}" {% if p.startswith('/admin/donations') %}aria-current="page"{% endif %}>Donations</a>
       <a href="{{ url_for('admin.messages') }}" {% if p.startswith('/admin/messages') %}aria-current="page"{% endif %}>Messages</a>

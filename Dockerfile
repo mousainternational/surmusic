@@ -4,7 +4,8 @@ FROM python:3.13-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    STORAGE_DIR=/data/storage
+    STORAGE_DIR=/data/storage \
+    GEOIP_DB=/data/storage/geoip.sqlite
 
 WORKDIR /srv/surmusic
 

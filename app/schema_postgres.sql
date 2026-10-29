@@ -136,3 +136,13 @@ CREATE TABLE IF NOT EXISTS media_blobs (
   data TEXT NOT NULL,
   created_at TEXT NOT NULL
 );
+
+-- Two-step sign-in (authenticator app). secret is encrypted with a key derived from SECRET_KEY.
+CREATE TABLE IF NOT EXISTS user_2fa (
+  user_id BIGINT PRIMARY KEY,
+  secret TEXT NOT NULL,
+  enabled INTEGER NOT NULL DEFAULT 0,
+  recovery_json TEXT NOT NULL DEFAULT '[]',
+  last_step BIGINT NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL
+);

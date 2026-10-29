@@ -16,7 +16,8 @@ from .db import get_db, utcnow
 from .mailer import send_mail
 from .security import current_user, ip_hash, rate_limited
 from .seo import breadcrumb_ld, build_meta, faq_ld, media_url, organization_ld, webapp_ld, website_ld
-from .settings import ADSENSE_CLIENT_RE, ads_active, donation_method, get_settings, sponsored_stations
+from .settings import (ADSENSE_CLIENT_RE, ads_active, donation_method, get_settings, is_blocked, sponsored_stations,
+                       without_blocked)
 from .storage import file_path, media_bytes, media_path, software_mime
 from .util import valid_email, valid_url
 
@@ -60,9 +61,9 @@ def _sponsored(cat):
 
 def _stations_for(cat):
     try:
-        return _sponsored(cat) + radio.category_stations(cat), None
+        return without_blocked(_sponsored(cat) + radio.category_stations(cat)), None
     except radio.RadioError as exc:
-        return _sponsored(cat), str(exc)
+        return without_blocked(_sponsored(cat)), str(exc)
 
 
 def _user_favorite_ids():
@@ -74,8 +75,9 @@ def _user_favorite_ids():
 
 def _popular(days=7, limit=8):
     since = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
-    return get_db().all("SELECT station_name, category, COUNT(*) AS n FROM plays WHERE created_at > ? "
-                        "GROUP BY station_name, category ORDER BY n DESC LIMIT ?", (since, limit))
+    rows = get_db().all("SELECT station_name, category, COUNT(*) AS n FROM plays WHERE created_at > ? "
+                        "GROUP BY station_name, category ORDER BY n DESC LIMIT ?", (since, limit + 5))
+    return [r for r in rows if not is_blocked({"name": r["station_name"]})][:limit]
 
 
 def _json_body():
@@ -150,7 +152,7 @@ def search():
             error = "Too many searches. Please wait a moment."
         else:
             try:
-                stations = radio.search_stations(q)
+                stations = without_blocked(radio.search_stations(q))
             except radio.RadioError as exc:
                 error = str(exc)
     meta = build_meta(f"Search: {q}" if q else "Search radio stations", "Search live radio stations by name, "
@@ -163,8 +165,8 @@ def favorites():
     stations = []
     u = current_user()
     if u:
-        stations = [json.loads(r["station_json"]) for r in get_db().all(
-            "SELECT station_json FROM favorites WHERE user_id = ? ORDER BY created_at DESC", (u["id"],))]
+        stations = without_blocked([json.loads(r["station_json"]) for r in get_db().all(
+            "SELECT station_json FROM favorites WHERE user_id = ? ORDER BY created_at DESC", (u["id"],))])
     meta = build_meta("My favourite stations", "Your saved radio stations.", page="favorites", noindex=True)
     return render_template("favorites.html", meta=meta, stations=stations)
 
@@ -222,7 +224,11 @@ def about():
 def contact():
     s = get_settings()
     u = current_user()
+    removal = request.args.get("topic") == "removal"
     form = {"name": (u["display_name"] if u else ""), "email": (u["email"] if u else "")}
+    if removal:
+        station = " ".join((request.args.get("station") or "").split())[:100]
+        form["subject"] = ("Station removal request: " + station) if station else "Station removal request"
     errors = {}
     if request.method == "POST":
         form = {k: (request.form.get(k) or "").strip() for k in ("name", "email", "subject", "message")}
@@ -256,7 +262,7 @@ def contact():
             return redirect(url_for("public.contact"))
     meta = build_meta("Contact Sur Music", "Questions, feedback, station removal requests or advertising "
                       "enquiries for Sur Music by Mousa International Software House.", page="contact")
-    return render_template("contact.html", meta=meta, form=form, errors=errors), (400 if errors else 200)
+    return render_template("contact.html", meta=meta, form=form, errors=errors, removal=removal), (400 if errors else 200)
 
 
 def _policy(key, page, title, description, extra_ld=None):
@@ -303,7 +309,7 @@ def cookies():
 @bp.route("/api/stations/<any(bollywood, lollywood, hollywood):cat>")
 def api_stations(cat):
     stations, error = _stations_for(cat)
-    resp = jsonify({"stations": protect(stations), "error": error})
+    resp = jsonify({"stations": protect(without_blocked(stations)), "error": error})
     resp.headers["Cache-Control"] = "private, max-age=300"
     return resp
 
@@ -314,7 +320,7 @@ def api_search():
     if rate_limited("search", 60, 300):
         return jsonify({"stations": [], "error": "Too many searches. Please wait a moment."}), 429
     try:
-        return jsonify({"stations": protect(radio.search_stations(q)), "error": None})
+        return jsonify({"stations": protect(without_blocked(radio.search_stations(q))), "error": None})
     except radio.RadioError as exc:
         return jsonify({"stations": [], "error": str(exc)}), 503
 
@@ -334,6 +340,8 @@ def api_stream():
     st = _unlock(_json_body().get("station"))
     if not st:
         abort(400)
+    if is_blocked(st):
+        return jsonify({"error": "removed"}), 410
     return jsonify({"url": st["url"]})
 
 
@@ -378,6 +386,8 @@ def api_play():
     st = _unlock(data.get("station"))
     if not st:
         abort(400)
+    if is_blocked(st):
+        return jsonify({"error": "removed"}), 410
     if rate_limited("play", 120, 3600):
         return jsonify({"ok": True})
     cat = data.get("category") if data.get("category") in CATEGORY_PAGES else ""
@@ -408,6 +418,8 @@ def api_favorites():
         st = _unlock(_json_body().get("station"))
         if not st:
             abort(400)
+        if is_blocked(st):
+            return jsonify({"error": "removed"}), 410
         if db.scalar("SELECT COUNT(*) FROM favorites WHERE user_id = ?", (u["id"],)) >= 500:
             return jsonify({"error": "You can save up to 500 favourites."}), 400
         if not db.one("SELECT id FROM favorites WHERE user_id = ? AND station_uuid = ?", (u["id"], st["uuid"])):
@@ -416,7 +428,7 @@ def api_favorites():
             db.commit()
             analytics.record("favorite", u["id"], detail=st["name"])
     rows = db.all("SELECT station_json FROM favorites WHERE user_id = ? ORDER BY created_at DESC", (u["id"],))
-    return jsonify({"favorites": [json.loads(r["station_json"]) for r in rows]})
+    return jsonify({"favorites": without_blocked([json.loads(r["station_json"]) for r in rows])})
 
 
 @bp.route("/api/favorites/<path:uuid>", methods=["DELETE"])
@@ -444,7 +456,7 @@ def api_favorites_import():
     added = 0
     for raw in items[:200]:
         st = _unlock(raw)
-        if st and st["uuid"] not in have and len(have) < 500:
+        if st and not is_blocked(st) and st["uuid"] not in have and len(have) < 500:
             db.insert("favorites", {"user_id": u["id"], "station_uuid": st["uuid"], "station_json": json.dumps(st),
                                     "created_at": utcnow()})
             have.add(st["uuid"])

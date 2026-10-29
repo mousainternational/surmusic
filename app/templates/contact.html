@@ -7,6 +7,12 @@
     <h1>Contact us</h1>
     <p class="muted">Questions, feedback, station removal requests, advertising and sponsorship enquiries.{% if S.contact_email %} You can also email <a href="mailto:{{ S.contact_email }}">{{ S.contact_email }}</a>.{% endif %}</p>
   </header>
+  {% if removal %}
+  <div class="card notice" role="note">
+    <h2 class="h3">Station owners: removal request</h2>
+    <p>If you own or manage a radio station listed on Sur Music and do not want it here, tell us the <strong>station name</strong>, its <strong>stream address</strong> (or a link to the page where it appears) and how you are connected to the station. We remove it from Sur Music, usually within 48 hours, and reply by email. Sur Music does not host or copy any audio: stations play directly from their own servers.</p>
+  </div>
+  {% endif %}
   <form class="card form" method="post" novalidate>
     <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
         <div class="hp" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>

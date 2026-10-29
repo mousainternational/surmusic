@@ -23,9 +23,9 @@
       <td>{{ (u.last_login_at or '') | date }}</td>
       <td>
         <div class="actions">
-        {% for action, label in [('verify', 'Confirm email'), ('signout', 'Sign out'), ('suspend', 'Suspend'), ('activate', 'Activate'), ('delete', 'Delete')] %}
-          {% if not (action == 'verify' and u.email_verified) and not (action == 'suspend' and (not u.is_active or u.role == 'admin')) and not (action == 'activate' and u.is_active) and not (action == 'delete' and u.role == 'admin') %}
-          <form method="post" action="{{ url_for('admin.user_action', uid=u.id, action=action) }}" class="inline" {% if action in ('delete', 'suspend') %}data-confirm="{{ label }} {{ u.email }}?"{% endif %}>
+        {% for action, label in [('verify', 'Confirm email'), ('signout', 'Sign out'), ('reset_2fa', 'Turn off 2-step'), ('suspend', 'Suspend'), ('activate', 'Activate'), ('delete', 'Delete')] %}
+          {% if not (action == 'verify' and u.email_verified) and not (action == 'suspend' and (not u.is_active or u.role == 'admin')) and not (action == 'activate' and u.is_active) and not (action == 'delete' and u.role == 'admin') and not (action == 'reset_2fa' and not u.twofa) %}
+          <form method="post" action="{{ url_for('admin.user_action', uid=u.id, action=action) }}" class="inline" {% if action in ('delete', 'suspend', 'reset_2fa') %}data-confirm="{{ label }} {{ u.email }}?"{% endif %}>
             <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
             <button class="btn btn-sm btn-ghost">{{ label }}</button>
           </form>
