@@ -15,9 +15,10 @@ from . import analytics, radio
 from .db import get_db, utcnow
 from .mailer import send_mail
 from .security import current_user, ip_hash, rate_limited
-from .seo import breadcrumb_ld, build_meta, faq_ld, media_url, organization_ld, webapp_ld, website_ld
-from .settings import (ADSENSE_CLIENT_RE, ads_active, donation_method, get_settings, is_blocked, sponsored_stations,
-                       without_blocked)
+from .seo import (breadcrumb_ld, build_meta, faq_ld, media_url, organization_ld, station_ld, webapp_ld,
+                  website_ld)
+from .settings import (ADSENSE_CLIENT_RE, ads_active, affiliate_offers, donation_method, get_settings, is_blocked,
+                       offers_for, sponsored_stations, without_blocked)
 from .storage import file_path, media_bytes, media_path, software_mime
 from .util import valid_email, valid_url
 
@@ -43,6 +44,56 @@ CATEGORY_PAGES = {
         "intro": "Enjoy live English music radio: Top 40 chart hits, pop and dance, timeless 80s and 90s classics, and Hollywood movie soundtracks from stations around the world. Perfect for work, study, workouts and long drives — free, with no download and no sign-up needed.",
     },
 }
+
+
+GENRE_PAGES = {
+    "naat": {"h1": "Naat Radio — Live Naat Sharif & Hamd",
+             "seo_title": "Naat Radio Live — Naat Sharif, Hamd & Islamic Nasheed Online Free",
+             "description": "Listen to live naat radio free: Naat Sharif, Hamd and nasheed in Urdu, Punjabi and Arabic, around the clock.",
+             "intro": "Live naat stations playing Naat Sharif, Hamd and nasheed day and night — beautiful recitations in Urdu, Punjabi, Arabic and more. Choose a station and let it play while you work, study or rest."},
+    "qawwali": {"h1": "Qawwali Radio — Live Sufi Qawwali",
+                "seo_title": "Qawwali Radio Live — Nusrat Fateh Ali Khan, Sabri Brothers & More",
+                "description": "Listen to live qawwali radio free: classic and modern qawwali from Nusrat Fateh Ali Khan, Sabri Brothers, Aziz Mian and more.",
+                "intro": "Live qawwali from stations that love the tradition — the timeless voices of Nusrat Fateh Ali Khan, the Sabri Brothers, Aziz Mian, Rahat Fateh Ali Khan and today's qawwals."},
+    "ghazal": {"h1": "Ghazal Radio — Live Urdu & Hindi Ghazals",
+               "seo_title": "Ghazal Radio Live — Mehdi Hassan, Ghulam Ali, Jagjit Singh",
+               "description": "Listen to live ghazal radio free: Urdu and Hindi ghazals by Mehdi Hassan, Ghulam Ali, Jagjit Singh, Farida Khanum and more.",
+               "intro": "Slow down with live ghazal radio: Urdu and Hindi poetry sung by Mehdi Hassan, Ghulam Ali, Jagjit Singh, Farida Khanum, Iqbal Bano and other masters."},
+    "sufi": {"h1": "Sufi Music Radio — Live Sufi Kalam",
+             "seo_title": "Sufi Music Radio Live — Sufi Kalam, Kafi & Dhamal Online",
+             "description": "Listen to live Sufi music radio free: Sufi kalam, kafi, dhamal and spiritual songs from Pakistan and India.",
+             "intro": "Live Sufi music: the poetry of Bulleh Shah, Shah Hussain and Baba Farid, kafi, dhamal and spiritual songs that have been sung for centuries."},
+    "punjabi": {"h1": "Punjabi Radio — Live Punjabi Songs & Bhangra",
+                "seo_title": "Punjabi Radio Live — Punjabi Songs, Bhangra & Lok Geet",
+                "description": "Listen to live Punjabi radio free: new Punjabi songs, bhangra, folk lok geet and classic hits.",
+                "intro": "Live Punjabi radio: new Punjabi pop, bhangra beats, folk lok geet and the classics — from both sides of Punjab and the Punjabi diaspora."},
+    "quran": {"h1": "Quran & Islamic Radio — Live Tilawat",
+              "seo_title": "Quran Radio Live — Tilawat, Islamic Lectures & Recitation",
+              "description": "Listen to live Quran radio free: tilawat by famous qaris, translations and Islamic programmes.",
+              "intro": "Live Quran recitation by well-known qaris, with translations and Islamic programmes, around the clock."},
+    "news": {"h1": "Urdu & Hindi News Radio — Live",
+             "seo_title": "Urdu News Radio Live — Pakistani & Hindi News Online",
+             "description": "Listen to live Urdu and Hindi news radio free: news, current affairs and talk from Pakistan and India.",
+             "intro": "Live news and current affairs in Urdu and Hindi from radio stations in Pakistan and India."},
+    "old-songs": {"h1": "Old Songs Radio — Purane Geet Live",
+                  "seo_title": "Old Hindi & Urdu Songs Radio Live — Purane Geet Online Free",
+                  "description": "Listen to live old songs radio free: golden-era Hindi and Urdu film songs from the 50s to the 90s.",
+                  "intro": "Purane geet that never get old: golden-era film songs from Lata, Rafi, Kishore, Noor Jehan, Mehdi Hassan and more."},
+}
+
+
+def station_path(st):
+    """Address of a station's own page, e.g. /station/9617a9-…/geo-fm-100."""
+    import re as _re
+    slug = _re.sub(r"[^a-z0-9]+", "-", (st.get("name") or "station").lower()).strip("-")[:60] or "station"
+    return f"/station/{st['uuid']}/{slug}"
+
+
+@bp.app_template_global()
+def station_href(st):
+    if not isinstance(st, dict) or st.get("sponsored") or not st.get("uuid"):
+        return ""
+    return station_path(st)
 
 
 # ---------------------------------------------------------------- helpers
@@ -153,6 +204,85 @@ def category(cat):
     meta = build_meta(info["seo_title"], info["description"], page=cat)
     return render_template("category.html", meta=meta, stations=protect(stations), error=error, cat=cat, info=info,
                            ld=[breadcrumb_ld([("Home", "/"), (info["h1"].split(" — ")[0], f"/{cat}")])])
+
+
+@bp.route("/genre/<slug>")
+def genre(slug):
+    if slug not in GENRE_PAGES:
+        abort(404)
+    info = GENRE_PAGES[slug]
+    try:
+        stations, error = without_blocked(radio.genre_stations(slug)), None
+    except radio.RadioError as exc:
+        stations, error = [], str(exc)
+    meta = build_meta(info["seo_title"], info["description"], page=f"genre-{slug}")
+    return render_template("category.html", meta=meta, stations=protect(stations), error=error, cat=slug,
+                           info=info, genre=slug,
+                           ld=[breadcrumb_ld([("Home", "/"), (info["h1"].split(" — ")[0], f"/genre/{slug}")])])
+
+
+@bp.route("/station/<uuid>")
+@bp.route("/station/<uuid>/<slug>")
+def station_page(uuid, slug=None):
+    """Each station's own page: play button, details, similar stations and ads."""
+    st, key = radio.station_by_uuid(uuid)
+    if not st:
+        abort(404)
+    if is_blocked(st):
+        abort(410)
+    want = station_path(st)
+    if request.path != want:
+        return redirect(want, code=301)
+    similar = []
+    try:
+        if key in CATEGORY_PAGES:
+            similar = radio.category_stations(key)
+        elif key in GENRE_PAGES:
+            similar = radio.genre_stations(key)
+    except radio.RadioError:
+        similar = []
+    similar = [s for s in without_blocked(similar) if s["uuid"] != st["uuid"]][:12]
+    place = st.get("country") or "around the world"
+    tags = st.get("tags") or "music"
+    title = f"{st['name']} Live — Listen Online Free"
+    desc = (f"Listen to {st['name']} live online free on Sur Music. A radio station from {place} playing {tags}. "
+            "No download, no sign-up — press play.")
+    meta = build_meta(title, desc, canonical_path=want)
+    back = (CATEGORY_PAGES.get(key) or GENRE_PAGES.get(key) or {}).get("h1", "Radio").split(" — ")[0]
+    back_href = f"/{key}" if key in CATEGORY_PAGES else (f"/genre/{key}" if key in GENRE_PAGES else "/")
+    ld = [breadcrumb_ld([("Home", "/"), (back, back_href), (st["name"], want)]), station_ld(st, want)]
+    return render_template("station.html", meta=meta, st=protect([st])[0], similar=protect(similar), cat=key or "",
+                           back=back, back_href=back_href, ld=ld)
+
+
+@bp.app_template_global("offers_for")
+def _offers_for(place, limit=3):
+    return offers_for(place, limit)
+
+
+@bp.route("/deals")
+def deals():
+    items = affiliate_offers(True) if get_settings().get("affiliate_enabled") == "1" else []
+    meta = build_meta("Deals & recommendations — headphones, speakers and more",
+                      "Hand-picked headphones, speakers and gadgets for better listening. Affiliate links.", page="deals")
+    return render_template("deals.html", meta=meta, items=items)
+
+
+@bp.route("/go/<oid>")
+def go(oid):
+    """Partner offer click: count it (Admin → Partner offers) and send the visitor to the stored link only."""
+    o = next((x for x in affiliate_offers(True) if x.get("id") == oid), None)
+    if not o or get_settings().get("affiliate_enabled") != "1":
+        abort(404)
+    if not rate_limited("go", 60, 600):
+        from . import lowdb
+        uid = session.get("uid") if lowdb.enabled() else (current_user() or {}).get("id")
+        analytics.record("affiliate_click", uid, detail=f"{o['id']} · {o.get('store', '')} · {o.get('title', '')}")
+    resp = redirect(o["url"], code=302)
+    resp.headers["Cache-Control"] = "no-store"
+    resp.headers["X-Robots-Tag"] = "noindex, nofollow"
+    resp.headers["Referrer-Policy"] = "no-referrer-when-downgrade"
+    return resp
 
 
 @bp.route("/search")
@@ -547,6 +677,14 @@ def sitemap():
     site = current_app.config["SITE_URL"]
     pages = ["/", "/bollywood", "/lollywood", "/hollywood", "/download", "/donate", "/about", "/contact", "/faq",
              "/privacy", "/terms", "/disclaimer", "/donation-disclaimer", "/cookies"]
+    pages += [f"/genre/{g}" for g in GENRE_PAGES] + ["/deals"]
+    seen = set()
+    for key in list(radio.CATEGORIES) + list(radio.GENRES):          # station pages from lists already loaded
+        prefix = "cat:" if key in radio.CATEGORIES else "genre:"
+        for st in without_blocked(radio._peek(prefix + key) or []):
+            if st.get("uuid") and st["uuid"] not in seen and len(seen) < 1000:
+                seen.add(st["uuid"])
+                pages.append(station_path(st))
     parts = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
     for p in pages:
         parts.append(f"<url><loc>{escape(site + p)}</loc></url>")

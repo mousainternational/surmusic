@@ -1,0 +1,47 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Partner offers (affiliate){% endblock %}
+{% block admin %}
+<div class="card notice">
+  <p><strong>How it works:</strong> join an affiliate programme (Amazon Associates, Daraz, AliExpress…), copy <em>your</em> link for a product, and add it here. It appears on the website as a “Recommended” card with a clear “Affiliate” label. When a visitor buys through it, the store pays you a commission.</p>
+  <p class="small muted">Rules that keep your accounts safe: only real products you would recommend, never ask people to click, never hide the “Affiliate” label, and follow each programme's own rules (Amazon requires the disclosure that is already on the site).</p>
+</div>
+
+<form class="card form" method="post">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="action" value="switch">
+  <label class="check"><input type="checkbox" name="affiliate_enabled" value="1" {% if S.affiliate_enabled == '1' %}checked{% endif %}> Show partner offers on the website</label>
+  <button class="btn btn-sm btn-ghost">Save</button>
+</form>
+
+<div class="form-grid">
+  <div class="card table-wrap">
+    <h2 class="h3">Your offers ({{ rows | length }})</h2>
+    {% if rows %}
+    <table><thead><tr><th>Product</th><th>Store · where</th><th>Clicks (30 days)</th><th></th></tr></thead>
+    <tbody>{% for o in rows %}<tr>
+      <td><strong>{{ o.title }}</strong>{% if o.price %} · {{ o.price }}{% endif %}<br><span class="small muted break">{{ o.url }}</span></td>
+      <td>{{ o.store }}<br><span class="small muted">{{ places.get(o.place, o.place) }}</span></td>
+      <td>{{ clicks.get(o.id, 0) }}</td>
+      <td class="nowrap">
+        <form method="post" class="inline"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="{{ o.id }}"><button class="btn btn-sm btn-ghost">{{ 'Hide' if o.active else 'Show' }}</button></form>
+        <form method="post" class="inline" data-confirm="Remove {{ o.title }}?"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="action" value="remove"><input type="hidden" name="id" value="{{ o.id }}"><button class="btn btn-sm btn-ghost">Remove</button></form>
+      </td>
+    </tr>{% endfor %}</tbody></table>
+    {% else %}<p class="muted">No offers yet. Add your first affiliate link on the right.</p>{% endif %}
+  </div>
+
+  <form class="card form" method="post">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="action" value="add">
+    <h2 class="h3">Add an offer</h2>
+    <label for="o-title">Product title</label><input id="o-title" name="title" required maxlength="90" placeholder="Wireless earbuds — great for radio">
+    <label for="o-url">Your affiliate link (https)</label><input id="o-url" name="url" type="url" required placeholder="https://amzn.to/… or your Daraz/AliExpress link">
+    <label for="o-image">Product image link (https, optional)</label><input id="o-image" name="image" type="url" placeholder="https://… .jpg">
+    <label for="o-price">Price text (optional)</label><input id="o-price" name="price" maxlength="30" placeholder="Rs 2,499">
+    <label for="o-note">One line about it (optional)</label><input id="o-note" name="note" maxlength="140" placeholder="Long battery, clear sound">
+    <label for="o-store">Store</label>
+    <select id="o-store" name="store">{% for s in stores %}<option>{{ s }}</option>{% endfor %}</select>
+    <label for="o-place">Show on</label>
+    <select id="o-place" name="place">{% for k, v in places.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select>
+    <button class="btn btn-primary">Add offer</button>
+  </form>
+</div>
+{% endblock %}

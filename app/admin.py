@@ -513,6 +513,63 @@ def stations():
     return render_template("admin/stations.html", meta=META, rows=rows, blocked=blocked)
 
 
+# ---------------------------------------------------------------- partner (affiliate) offers
+
+@bp.route("/offers", methods=["GET", "POST"])
+@admin_required
+def offers():
+    import secrets as _secrets
+    from .settings import AFFILIATE_PLACES, AFFILIATE_STORES, affiliate_offers
+    rows = affiliate_offers()
+    if request.method == "POST":
+        action = request.form.get("action")
+        if action == "add":
+            o = {"id": _secrets.token_hex(4),
+                 "title": " ".join((request.form.get("title") or "").split())[:90],
+                 "url": (request.form.get("url") or "").strip()[:1000],
+                 "image": (request.form.get("image") or "").strip()[:500],
+                 "price": " ".join((request.form.get("price") or "").split())[:30],
+                 "note": " ".join((request.form.get("note") or "").split())[:140],
+                 "store": request.form.get("store") if request.form.get("store") in AFFILIATE_STORES else "Other",
+                 "place": request.form.get("place") if request.form.get("place") in AFFILIATE_PLACES else "all",
+                 "active": True, "added": utcnow()[:10]}
+            if len(o["title"]) < 3:
+                flash("Write a short product title (3+ characters).", "error")
+            elif not valid_url(o["url"], https_only=True):
+                flash("The affiliate link must start with https://", "error")
+            elif o["image"] and not valid_url(o["image"], https_only=True):
+                flash("The image address must start with https:// (or leave it empty).", "error")
+            elif len(rows) >= 100:
+                flash("You can keep up to 100 offers. Remove old ones first.", "error")
+            else:
+                rows.append(o)
+                save_settings({"affiliate_offers": json.dumps(rows)})
+                audit("offer_add", o["title"])
+                flash("Offer added. It now shows on the website.", "success")
+        elif action in ("remove", "toggle"):
+            oid = request.form.get("id")
+            for i, o in enumerate(rows):
+                if o.get("id") == oid:
+                    if action == "remove":
+                        rows.pop(i)
+                        audit("offer_remove", o.get("title", ""))
+                    else:
+                        o["active"] = not o.get("active")
+                    save_settings({"affiliate_offers": json.dumps(rows)})
+                    break
+        elif action == "switch":
+            save_settings({"affiliate_enabled": "1" if request.form.get("affiliate_enabled") else "0"})
+            flash("Saved.", "success")
+        return redirect(url_for("admin.offers"))
+    clicks = {}
+    since = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    for r in get_db().all("SELECT detail, COUNT(*) AS n FROM events WHERE kind = 'affiliate_click' AND created_at >= ? "
+                          "GROUP BY detail", (since,)):
+        clicks[(r["detail"] or "").split(" · ")[0]] = r["n"]
+    return render_template("admin/offers.html", meta=META, rows=rows, clicks=clicks, stores=AFFILIATE_STORES,
+                           places=AFFILIATE_PLACES)
+
+
 # ---------------------------------------------------------------- audit & backup
 
 @bp.route("/audit")

@@ -127,6 +127,7 @@
     url.search = new URLSearchParams(new FormData(f)).toString();
     navigate(url.href, true);
   });
+  window.SurNav = function (href) { var u = new URL(href, location.href); if (swappable(u)) navigate(u.href, true); };
   window.addEventListener("popstate", function (e) {
     navigate(location.href, false, e.state && typeof e.state.y === "number" ? e.state.y : 0);
   });

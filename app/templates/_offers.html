@@ -1,0 +1,20 @@
+{#- Partner (affiliate) offers: clearly labelled; links go through /go/<id> so the owner sees clicks. -#}
+{% macro offers(place, limit=3, title='Recommended for you') -%}
+{%- set items = offers_for(place, limit) %}
+{%- if items %}
+<section class="offers card" aria-label="Partner offers">
+  <div class="offers-head"><h2 class="h3">{{ title }}</h2><span class="badge">Affiliate</span></div>
+  <ul class="offer-list">
+  {%- for o in items %}
+    <li class="offer">
+      <a href="{{ url_for('public.go', oid=o.id) }}" rel="sponsored nofollow noopener" target="_blank">
+        {%- if o.image %}<img src="{{ o.image }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" width="72" height="72">{% else %}<span class="offer-ph" aria-hidden="true">🛍️</span>{% endif %}
+        <span class="offer-text"><strong>{{ o.title }}</strong>{% if o.note %}<span class="small muted">{{ o.note }}</span>{% endif %}<span class="small">{% if o.price %}<b>{{ o.price }}</b> · {% endif %}on {{ o.store }} ↗</span></span>
+      </a>
+    </li>
+  {%- endfor %}
+  </ul>
+  <p class="tiny muted">We may earn a commission if you buy through these links, at no extra cost to you. <a href="{{ url_for('public.deals') }}">All deals</a> · <a href="{{ url_for('public.disclaimer') }}">Disclosure</a></p>
+</section>
+{%- endif %}
+{%- endmacro %}

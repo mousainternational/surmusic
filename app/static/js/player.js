@@ -293,6 +293,9 @@
       if (state.station && station && station.uuid === state.station.uuid &&
           (bar.getAttribute("data-state") === "playing" || bar.getAttribute("data-state") === "loading")) { pause(); return; }
       play(station, listStations(ul), ul.getAttribute("data-cat"));
+      // open the station's own page; in-site navigation keeps the music playing
+      var href = li.getAttribute("data-href");
+      if (href && !state.locked && location.pathname !== href && window.SurNav) window.SurNav(href);
       return;
     }
     var first = e.target.closest("[data-play-first]");

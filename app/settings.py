@@ -103,6 +103,8 @@ The "Sur Music Player & Radio" name, logo, design and source code are the proper
 
 Stations marked **Sponsored** are paid placements. Advertisements are provided by third parties and are not endorsements.
 
+**Partner offers (affiliate links):** some product links on Sur Music are affiliate links. If you buy through them, Sur Music may earn a small commission at no extra cost to you. As an Amazon Associate, Sur Music earns from qualifying purchases. Prices, delivery and returns are handled by the store, not by Sur Music.
+
 **Station owners:** if you own or manage a station and do not want it on Sur Music, send a removal request through the contact page (link “Station owners: remove a station” at the bottom of every page). We remove it, usually within 48 hours.
 """
 
@@ -189,6 +191,8 @@ DEFAULTS = {
     # stations
     "sponsored_stations": "[]",
     "blocked_stations": "[]",
+    "affiliate_offers": "[]",
+    "affiliate_enabled": "1",
     # policies
     "privacy_md": PRIVACY_MD,
     "terms_md": TERMS_MD,
@@ -275,6 +279,33 @@ def sponsored_stations():
     except ValueError:
         return []
     return rows if isinstance(rows, list) else []
+
+
+AFFILIATE_STORES = ["Amazon", "Daraz", "AliExpress", "Temu", "Other"]
+AFFILIATE_PLACES = {"all": "All pages", "station": "Station pages", "lists": "Station lists (categories & types)",
+                    "home": "Home page", "deals": "Deals page only"}
+
+
+def affiliate_offers(active_only=False):
+    """Partner (affiliate) product links added by the owner in Admin → Partner offers."""
+    try:
+        rows = json.loads(get_settings().get("affiliate_offers") or "[]")
+    except ValueError:
+        return []
+    rows = [r for r in rows if isinstance(r, dict) and r.get("id") and r.get("url")] if isinstance(rows, list) else []
+    if active_only:
+        rows = [r for r in rows if r.get("active")]
+    return rows
+
+
+def offers_for(place, limit=3):
+    """Active offers for one kind of page (rotated so visitors see different products)."""
+    if get_settings().get("affiliate_enabled") != "1":
+        return []
+    import random
+    rows = [r for r in affiliate_offers(True) if r.get("place", "all") in ("all", place)]
+    random.shuffle(rows)
+    return rows[:limit]
 
 
 def blocked_stations():

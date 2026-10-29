@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% import "_macros.html" as ui with context %}
 {% import "_ad.html" as ads with context %}
+{% import "_offers.html" as partner with context %}
 {% block content %}
 <div class="wrap page">
   {{ ui.breadcrumbs([('Home', '/'), (info.h1.split(' — ')[0], request.path)]) }}
@@ -10,18 +11,21 @@
     <button class="btn btn-accent" type="button" data-play-first>▶ Play top station</button>
   </header>
   {{ ui.cat_tabs(cat) }}
+  {{ ui.genre_chips(genre or '') }}
   {{ ads.ad('top') }}
   <div class="with-side">
     <div>
       {% if error and not stations %}
       <div class="empty card"><p>{{ error }} Please try again in a minute.</p></div>
       {% else %}
+      {% if not stations %}<div class="empty card"><p>No live stations of this type are online right now. Please try again later, or explore the other types above.</p></div>{% endif %}
       <p class="muted small">{{ stations | length }} live stations · secure streams that play in your browser. More stations are available in the <a href="{{ url_for('public.download_page') }}">Android app</a>.</p>
       {{ ui.station_list(stations, cat) }}
       {% endif %}
     </div>
     <aside class="side">
       {{ ads.ad('side') }}
+      {{ partner.offers('lists') }}
       <div class="card">
         <h2 class="h3">Listen on the go</h2>
         <p class="small muted">Background play and lock-screen controls in the free Sur Music Android app.</p>

@@ -601,3 +601,47 @@ html.menu-open .cookie-note { display: none; }
 @media (min-width: 1200px) { .nav-search { flex: none; } .menu { flex-wrap: nowrap; white-space: nowrap; } }
 @media (min-width: 1200px) { .nav-search { width: 130px; } .nav-search input[type="search"] { width: 100%; } } @media (min-width: 1500px) { .nav-search { width: 180px; } }
 @media (min-width: 1200px) and (max-width: 1299px) { .nav-search { width: 112px; } .menu a:not(.btn), .menu .linklike { padding: 8px 6px; } }
+
+/* station pages and "listen by type" chips */
+.genre-chips { margin: 10px 0 18px; }
+.genre-chips .h3 { font-size: .95rem; margin: 0 0 8px; color: var(--muted); }
+.genre-chips .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.genre-chips .chip { padding: 8px 14px; min-height: 40px; font-size: .9rem; }
+.genre-chips .chip.active { background: var(--grad); color: #2a0a17; border-color: transparent; }
+.station-head { display: flex; gap: 20px; align-items: center; margin: 8px 0 18px; }
+.station-head h1 { margin: 4px 0; overflow-wrap: anywhere; }
+.station-info { min-width: 0; flex: 1; }
+.thumb-xl { width: 96px; height: 96px; border-radius: 18px; font-size: 2.2rem; flex: none; }
+.station-solo { list-style: none; padding: 0; margin: 12px 0 0; }
+.station-solo .st { background: none; border: 0; gap: 8px; }
+.station-solo .st-play { display: inline-flex; width: auto; gap: 10px; align-items: center; padding: 12px 22px; border-radius: 999px; }
+.station-solo .st-name { font-weight: 700; white-space: normal; }
+@media (max-width: 600px) {
+  .station-head { flex-direction: column; text-align: center; }
+  .station-solo .st { justify-content: center; }
+  .thumb-xl { width: 80px; height: 80px; }
+}
+
+/* partner (affiliate) offers */
+.offers { margin: 16px 0; }
+.offers-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.offers-head .h3 { margin: 0; font-size: 1rem; }
+.offer-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.offer a { display: flex; gap: 12px; align-items: center; text-decoration: none; color: var(--text); padding: 6px; border-radius: 12px; min-height: 48px; }
+.offer a:hover { background: var(--surface-2); }
+.offer img, .offer-ph { width: 72px; height: 72px; object-fit: contain; border-radius: 10px; background: #fff; flex: none; display: grid; place-items: center; font-size: 1.8rem; }
+.offer-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.offer-text strong { overflow-wrap: anywhere; }
+.offer-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+.offer-grid img, .offer-grid .offer-ph { width: 120px; height: 120px; }
+.tiny { font-size: .78rem; margin: 8px 0 0; }
+.with-side .side .offers { margin-top: 0; }
+.with-side > * { min-width: 0; }
+.station-solo .st-play { background: var(--grad); color: #2a0a17; font-weight: 700; box-shadow: var(--shadow); flex: none; }
+.station-solo .st-play .st-name { color: inherit; }
+.station-solo .st-fav { color: var(--muted); }
+@media (max-width: 600px) {
+  .section-head { flex-wrap: wrap; align-items: center; row-gap: 4px; }
+  .section-head h2 { flex: 1 1 100%; }
+  .section-head a { white-space: normal; }
+}

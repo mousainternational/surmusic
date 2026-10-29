@@ -1,6 +1,6 @@
 {% import "_ad.html" as ads with context %}
 {% macro station_item(st, fav_ids=[]) -%}
-<li class="st{% if st.sponsored %} st-sponsored{% endif %}" data-station="{{ station_json(st) }}" data-uuid="{{ st.uuid }}">
+<li class="st{% if st.sponsored %} st-sponsored{% endif %}" data-station="{{ station_json(st) }}" data-uuid="{{ st.uuid }}"{% if station_href(st) %} data-href="{{ station_href(st) }}"{% endif %}>
   <button class="st-play" type="button" aria-label="Play {{ st.name }}">
     <span class="thumb {{ thumb_class(st.name) }}" data-letter="{{ (st.name or '?')[:1] | upper }}">{% if st.favicon %}<img src="{{ st.favicon }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" width="44" height="44">{% endif %}</span>
     <span class="st-text">
@@ -49,3 +49,15 @@
   {%- endfor %}
 </nav>
 {%- endmacro %}
+
+{% macro genre_chips(active='') -%}
+<nav class="genre-chips" aria-label="Radio by type">
+  <h2 class="h3">Listen by type</h2>
+  <div class="chips">
+  {%- for key, label in [('naat', 'Naat'), ('qawwali', 'Qawwali'), ('ghazal', 'Ghazal'), ('sufi', 'Sufi'), ('punjabi', 'Punjabi'), ('old-songs', 'Old songs'), ('quran', 'Quran'), ('news', 'News')] %}
+    <a class="chip{{ ' active' if key == active }}" href="/genre/{{ key }}" {% if key == active %}aria-current="page"{% endif %}>{{ label }}</a>
+  {%- endfor %}
+  </div>
+</nav>
+{%- endmacro %}
+

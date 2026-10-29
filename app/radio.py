@@ -34,6 +34,22 @@ CATEGORIES = {
                   f"/json/stations/search?tag=soundtrack&{COMMON}"],
     },
 }
+# Genre pages (/genre/<slug>): each is its own page with its own stations (Radio Browser tags)
+def _tag(t, extra=""):
+    return f"/json/stations/search?tag={urllib.parse.quote(t)}{extra}&{COMMON}"
+
+
+GENRES = {
+    "naat": {"title": "Naat", "paths": [_tag("naat"), _tag("naats"), _tag("nasheed")]},
+    "qawwali": {"title": "Qawwali", "paths": [_tag("qawwali"), _tag("qawali")]},
+    "ghazal": {"title": "Ghazal", "paths": [_tag("ghazal"), _tag("ghazals")]},
+    "sufi": {"title": "Sufi", "paths": [_tag("sufi"), _tag("sufi music")]},
+    "punjabi": {"title": "Punjabi", "paths": [_tag("punjabi"), _tag("bhangra")]},
+    "quran": {"title": "Quran & Islamic", "paths": [_tag("quran"), _tag("islamic"), _tag("islam")]},
+    "news": {"title": "Urdu & Hindi News",
+             "paths": [_tag("news", "&language=urdu"), _tag("news", "&countrycode=PK"), _tag("news", "&language=hindi")]},
+    "old-songs": {"title": "Old Songs", "paths": [_tag("old hindi songs"), _tag("retro"), _tag("oldies", "&language=hindi")]},
+}
 _bad_servers = {}
 
 
@@ -148,13 +164,22 @@ DEMO_NAMES = {
                   "Ghazal Shaam", "Lollywood Evergreen", "Islamabad Pop FM", "Sindhi Sur Radio"],
     "hollywood": ["Top 40 USA Hits", "Movie Soundtracks Radio", "Chill Pop Lounge", "80s & 90s Hit Machine",
                   "Dance Floor FM", "Acoustic Mornings"],
+    "naat": ["Madina Naat Radio", "Naat Sharif 24/7", "Hamd o Naat FM"],
+    "qawwali": ["Qawwali Mehfil Radio", "Nusrat Forever", "Sabri Qawwali FM"],
+    "ghazal": ["Ghazal Raat", "Mehdi Hassan Classics", "Jagjit Ghazal Radio"],
+    "sufi": ["Sufi Rang Radio", "Dhamal Sufi FM"],
+    "punjabi": ["Punjabi Virsa Radio", "Bhangra Nation FM", "Lok Geet Punjab"],
+    "quran": ["Quran Tilawat Radio", "Islamic Voice FM"],
+    "news": ["Urdu News 24", "Khabar FM"],
+    "old-songs": ["Purane Geet Radio", "Golden Era Melodies"],
 }
+DEMO_COUNTRY = {"bollywood": "India", "hollywood": "United States", "news": "Pakistan"}
 
 
 def _demo(paths):
-    key = next((k for k, v in CATEGORIES.items() if v["paths"] == paths), "bollywood")
+    key = next((k for k, v in list(CATEGORIES.items()) + list(GENRES.items()) if v["paths"] == paths), "bollywood")
     names = DEMO_NAMES.get(key, DEMO_NAMES["bollywood"])
-    country = {"bollywood": "India", "lollywood": "Pakistan", "hollywood": "United States"}[key]
+    country = DEMO_COUNTRY.get(key, "Pakistan")
     raw = [{"stationuuid": f"demo-{key}-{i}", "name": n, "url_resolved": f"https://stream.example.com/{key}/{i}",
             "favicon": "", "country": country, "tags": key, "bitrate": 128, "hls": 0, "lastcheckok": 1,
             "clickcount": 1000 - i} for i, n in enumerate(names)]
@@ -189,6 +214,71 @@ def category_stations(cat):
         raise KeyError(cat)
     return _cached(f"cat:{cat}", lambda: _merge(CATEGORIES[cat]["paths"]),
                    current_app.config["RADIO_CACHE_MINUTES"])
+
+
+def genre_stations(slug):
+    if slug not in GENRES:
+        raise KeyError(slug)
+    return _cached(f"genre:{slug}", lambda: _merge(GENRES[slug]["paths"]),
+                   current_app.config["RADIO_CACHE_MINUTES"])
+
+
+def _peek(key):
+    """A cached list without fetching anything (memory first, then the database copy, even if old)."""
+    from . import lowdb
+    if lowdb.enabled():
+        hit, value = lowdb.cache_get("radio:" + key)
+        if hit:
+            return value
+        hit, value = lowdb.cache_get("radio-peek:" + key)
+        if hit:
+            return value
+    row = get_db().one("SELECT body FROM station_cache WHERE cache_key = ?", (key,))
+    data = json.loads(row["body"]) if row else None
+    if lowdb.enabled():
+        lowdb.cache_set("radio-peek:" + key, data, 1800)
+    return data
+
+
+def all_lists():
+    """(key, stations) for every category and genre list that can be loaded (cached)."""
+    out = []
+    for cat in CATEGORIES:
+        try:
+            out.append((cat, category_stations(cat)))
+        except RadioError:
+            pass
+    for slug in GENRES:
+        try:
+            out.append((slug, genre_stations(slug)))
+        except RadioError:
+            pass
+    return out
+
+
+def station_by_uuid(uuid):
+    """One station for its own page: first from the cached lists, otherwise from Radio Browser (cached).
+    Returns (station, list_key) or (None, '')."""
+    uuid = _text(uuid, 64)
+    if not uuid:
+        return None, ""
+    keys = [("cat:" + c, c) for c in CATEGORIES] + [("genre:" + g, g) for g in GENRES]
+    for cache_key, key in keys:                     # already-loaded lists only; never fetch 11 lists here
+        for st in _peek(cache_key) or []:
+            if st.get("uuid") == uuid:
+                return st, key
+    if current_app.config.get("RADIO_DEMO"):
+        for key, stations in all_lists():
+            for st in stations:
+                if st["uuid"] == uuid:
+                    return st, key
+        return None, ""
+    try:
+        found = _cached(f"st:{uuid}", lambda: normalize(_fetch_json(
+            f"/json/stations/byuuid/{urllib.parse.quote(uuid)}")), 360)
+    except RadioError:
+        return None, ""
+    return (found[0], "") if found else (None, "")
 
 
 def search_stations(q):

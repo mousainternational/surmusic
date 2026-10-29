@@ -117,3 +117,17 @@ def faq_ld(markdown_text):
         "mainEntity": [{"@type": "Question", "name": qq,
                         "acceptedAnswer": {"@type": "Answer", "text": plain_text(a, 500)}} for qq, a in items],
     }
+
+
+def station_ld(st, path):
+    """schema.org RadioStation for a station page."""
+    data = {"@context": "https://schema.org", "@type": "RadioStation", "name": st.get("name", ""),
+            "url": absolute(path)}
+    if st.get("favicon"):
+        data["logo"] = st["favicon"]
+    if st.get("country"):
+        data["areaServed"] = st["country"]
+    if st.get("tags"):
+        data["keywords"] = st["tags"]
+    return data
+

@@ -30,7 +30,7 @@ KINDS = {
     "page_view": "Page view", "play": "Played a station", "signup": "Signed up", "login": "Signed in",
     "login_failed": "Failed sign-in", "logout": "Signed out", "password_reset": "Reset password",
     "account_deleted": "Deleted account", "download": "Downloaded app", "contact": "Sent a message",
-    "favorite": "Saved a favourite", "listened": "Listened",
+    "favorite": "Saved a favourite", "listened": "Listened", "affiliate_click": "Opened a partner offer",
 }
 LIVE_SECONDS = 150
 

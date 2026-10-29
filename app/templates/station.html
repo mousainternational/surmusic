@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% import "_ad.html" as ads with context %}
+{% import "_offers.html" as partner with context %}
+{% block content %}
+<div class="wrap page">
+  {{ ui.breadcrumbs([('Home', '/'), (back, back_href), (st.name, request.path)]) }}
+  <header class="station-head card">
+    <span class="thumb thumb-xl {{ thumb_class(st.name) }}" data-letter="{{ (st.name or '?')[:1] | upper }}">{% if st.favicon %}<img src="{{ st.favicon }}" alt="{{ st.name }} logo" decoding="async" referrerpolicy="no-referrer" width="96" height="96">{% endif %}</span>
+    <div class="station-info">
+      <p class="eyebrow">Live radio</p>
+      <h1>{{ st.name }}</h1>
+      <p class="muted">{{ [st.country, st.tags, (st.bitrate ~ ' kbps') if st.bitrate else ''] | select | join(' · ') }}</p>
+      <ul class="stations station-solo" data-cat="{{ cat }}">
+        <li class="st" data-station="{{ station_json(st) }}" data-uuid="{{ st.uuid }}">
+          <button class="st-play btn btn-accent btn-lg" type="button" aria-label="Play {{ st.name }}">▶ <span class="st-name">Play {{ st.name }}</span><span class="st-eq" aria-hidden="true"><i></i><i></i><i></i></span></button>
+          <button class="st-fav" type="button" aria-label="Save {{ st.name }} to favourites" aria-pressed="false">★</button>
+        </li>
+      </ul>
+    </div>
+  </header>
+
+  {{ ads.ad('top') }}
+
+  <div class="with-side">
+    <div>
+      <section class="card prose">
+        <h2 class="h3">About {{ st.name }}</h2>
+        <p>Listen to <strong>{{ st.name }}</strong> live online for free on Sur Music. This radio station {% if st.country %}from <strong>{{ st.country }}</strong> {% endif %}plays {{ st.tags or 'music and programmes' }}{% if st.bitrate %} in {{ st.bitrate }} kbps quality{% endif %}. Press play and keep browsing — the music keeps playing while you explore other pages.</p>
+        <p class="small muted">Sur Music does not host or record this station; it plays directly from the station's own server. Are you the owner? <a href="{{ url_for('public.contact', topic='removal', station=st.name) }}">Ask us to remove it</a>.</p>
+      </section>
+      {% if similar %}
+      <section class="section">
+        <div class="section-head"><h2 class="h3">More stations like {{ st.name }}</h2><a href="{{ back_href }}">All {{ back }} →</a></div>
+        {{ ui.station_list(similar, cat) }}
+      </section>
+      {% endif %}
+    </div>
+    <aside class="side">
+      {{ ads.ad('side') }}
+      {{ partner.offers('station') }}
+      {{ ui.genre_chips() }}
+    </aside>
+  </div>
+</div>
+{% endblock %}
