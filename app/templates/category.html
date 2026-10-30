@@ -5,7 +5,7 @@
 {% block content %}
 <div class="wrap page">
   {{ ui.breadcrumbs(crumbs or [('Home', '/'), (info.h1.split(' — ')[0], request.path)]) }}
-  <header class="page-head">
+  <header class="page-head"{% if genre %} data-topic-page="{{ genre }}" data-topic-label="{{ info.label }}"{% endif %}>
     <h1>{{ info.h1 }}</h1>
     {% if info.native %}<p class="native-name" dir="auto">{{ info.native }}</p>{% endif %}
     <p class="lead">{{ info.intro }}</p>

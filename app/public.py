@@ -61,10 +61,33 @@ def _topic_href(slug):
     return topic_path(slug)
 
 
+def visitor_country():
+    """The visitor's country code (from the IP address / Cloudflare, else the browser's time zone remembered in the
+    session, else the browser language such as "en-GB"). Used only to choose which radio types to show first."""
+    if "sm_cc" in g:
+        return g.sm_cc
+    code = ""
+    try:
+        code = analytics._location()[0]
+    except Exception:
+        code = ""
+    if not code:
+        import re as _re
+        m = _re.search(r"[a-z]{2,3}-([A-Z]{2})\b", request.headers.get("Accept-Language", ""))
+        code = m.group(1) if m else ""
+    g.sm_cc = code.upper()
+    return g.sm_cc
+
+
+@bp.app_template_global("chips_here")
+def _chips_here():
+    from .topics import chips_for
+    return chips_for(visitor_country())
+
+
 @bp.app_context_processor
 def _topic_globals():
-    from .topics import CHIPS
-    return {"TOPICS": TOPICS, "TOPIC_CHIPS": CHIPS}
+    return {"TOPICS": TOPICS}
 
 
 @bp.app_template_global()

@@ -51,11 +51,12 @@
 {%- endmacro %}
 
 {% macro genre_chips(active='') -%}
-<nav class="genre-chips" aria-label="Radio by type">
+<nav class="genre-chips" aria-label="Radio by type" data-genre-chips>
   <h2 class="h3">Listen by type</h2>
   <div class="chips">
-  {%- for key in TOPIC_CHIPS + ([active] if active and active in TOPICS and active not in TOPIC_CHIPS else []) %}
-    <a class="chip{{ ' active' if key == active }}" href="{{ topic_href(key) }}" {% if key == active %}aria-current="page"{% endif %}>{{ TOPICS[key].label }}</a>
+  {%- set here = chips_here() %}
+  {%- for key in here + ([active] if active and active in TOPICS and active not in here else []) %}
+    <a class="chip{{ ' active' if key == active }}" href="{{ topic_href(key) }}" data-topic="{{ key }}" {% if key == active %}aria-current="page"{% endif %}>{{ TOPICS[key].label }}</a>
   {%- endfor %}
     <a class="chip chip-more" href="/radio-stations">All types &amp; countries →</a>
   </div>

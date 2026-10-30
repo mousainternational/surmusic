@@ -680,3 +680,4 @@ html.menu-open .cookie-note { display: none; }
 @media (min-width: 700px) { .country-list.big { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .country-list.big a { padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
 .country-list .native-name { margin: 0; font-size: .95rem; }
+.genre-chips .chip.chip-mine:not(.active) { border-color: var(--brand); }

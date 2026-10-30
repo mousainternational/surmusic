@@ -217,4 +217,35 @@
     });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", cookieNote); else cookieNote();
+
+  // ---------- "Listen by type": the types this visitor opened before come first (kept only in this browser)
+  function myTypes() {
+    try { var v = JSON.parse(localStorage.getItem("sm-types") || "[]"); return Array.isArray(v) ? v : []; }
+    catch (e) { return []; }
+  }
+  function personalChips() {
+    var head = document.querySelector("[data-topic-page]"), list = myTypes();
+    if (head) {
+      var slug = head.getAttribute("data-topic-page"), label = head.getAttribute("data-topic-label") || slug;
+      if (/^[a-z0-9-]{1,40}$/.test(slug)) {
+        list = [{ s: slug, l: label.slice(0, 40), h: location.pathname }].concat(list.filter(function (x) { return x && x.s !== slug; })).slice(0, 5);
+        try { localStorage.setItem("sm-types", JSON.stringify(list)); } catch (e) { /* ignore */ }
+      }
+    }
+    var box = document.querySelector("[data-genre-chips] .chips");
+    if (!box || !list.length) return;
+    for (var i = list.length - 1; i >= 0; i--) {
+      var t = list[i];
+      if (!t || !/^[a-z0-9-]{1,40}$/.test(t.s) || !/^\/(genre|country)\/[a-z0-9-]{1,60}$/.test(t.h || "")) continue;
+      var chip = box.querySelector('[data-topic="' + t.s + '"]');
+      if (!chip) {
+        chip = document.createElement("a");
+        chip.className = "chip"; chip.href = t.h; chip.textContent = t.l; chip.setAttribute("data-topic", t.s);
+      }
+      chip.classList.add("chip-mine");
+      box.insertBefore(chip, box.firstChild);
+    }
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", personalChips); else personalChips();
+  document.addEventListener("page:load", personalChips);
 })();

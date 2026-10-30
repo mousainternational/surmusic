@@ -368,6 +368,23 @@ TOPICS = {
         more="Also searched as K-pop radio, Korean music radio, J-pop radio and anime radio.",
         paths=[tag("kpop"), tag("k-pop"), tag("jpop")]),
 
+    "jewish": dict(
+        kind="genre", group="Islamic & spiritual", label="Jewish & Hebrew",
+        h1="Jewish Radio — Live Hebrew & Jewish Music", native="רדיו יהודי",
+        seo_title="Jewish Radio Live — Hebrew Songs, Jewish Music & Israeli Radio",
+        description="Listen to live Jewish radio free: Hebrew songs, Jewish and Hasidic music, Israeli pop and Torah programmes.",
+        intro="Live Jewish and Hebrew radio — Israeli pop, Hasidic and traditional Jewish music, and Torah and community programmes.",
+        more="Also searched as Jewish music radio, Hebrew radio, Israeli radio online and רדיו בשידור חי.",
+        paths=[tag("jewish"), lang("hebrew"), tag("hebrew")]),
+    "persian": dict(
+        kind="genre", group="Pakistani & South Asian languages", label="Persian (Farsi)",
+        h1="Persian Radio — Live Farsi Music & News", native="رادیو فارسی",
+        seo_title="Persian Radio Live — Farsi Songs, Persian Music & News",
+        description="Listen to live Persian radio free: Farsi pop, traditional Persian music and news from Iran, Afghanistan and the diaspora.",
+        intro="Live Persian-language radio — Farsi pop, classical Persian music, poetry and news.",
+        more="Also searched as Farsi radio, Iranian radio online, Persian music live and رادیو آنلاین.",
+        paths=[lang("persian"), tag("persian"), tag("farsi")]),
+
     # ------------------------------------------------------------------ Countries
     "pakistan": dict(
         kind="country", group="", label="Pakistan",
@@ -585,6 +602,65 @@ COUNTRY_PAGES = {k: v for k, v in TOPICS.items() if v["kind"] == "country"}
 CHIPS = ["naat", "quran", "islamic", "qawwali", "ghazal", "sufi", "punjabi", "pashto", "old-songs", "news",
          "lofi", "pakistan"]
 
+# "Listen by type" strip: what people in each part of the world listen to most. It is chosen by the visitor's
+# COUNTRY only (never a guess about a person's religion). The browser also puts the types a visitor played
+# before at the front (site.js), so everyone quickly sees their own kind of radio, wherever they are.
+_SOUTH_ASIA_MUSLIM = ["naat", "quran", "islamic", "qawwali", "ghazal", "sufi", "punjabi", "pashto", "old-songs",
+                      "news", "lofi"]
+_GULF = ["quran", "arabic", "islamic", "naat", "news", "malayalam", "punjabi", "qawwali", "old-songs", "english-news",
+         "pop", "lofi"]
+_ARAB = ["quran", "arabic", "islamic", "naat", "english-news", "pop", "classical", "lofi", "sports"]
+_ENGLISH = ["pop", "english-news", "talk", "christian", "rock", "80s-90s", "country-music", "hip-hop", "jazz",
+            "sports", "classical", "lofi"]
+_EUROPE = ["pop", "dance", "rock", "english-news", "80s-90s", "classical", "jazz", "talk", "metal", "christian",
+           "lofi", "islamic"]
+_LATIN = ["latin", "pop", "christian", "rock", "80s-90s", "dance", "talk", "sports", "jazz", "lofi"]
+_AFRICA = ["afrobeats", "pop", "christian", "islamic", "quran", "reggae", "english-news", "talk", "sports",
+           "hip-hop", "dance"]
+_EAST_ASIA = ["k-pop", "pop", "jazz", "classical", "lofi", "rock", "dance", "english-news", "christian"]
+_DEFAULT = ["pop", "naat", "quran", "english-news", "christian", "latin", "jazz", "classical", "rock", "talk",
+            "lofi", "old-songs"]
+REGION_CHIPS = {
+    "PK": _SOUTH_ASIA_MUSLIM,
+    "AF": ["pashto", "persian", "quran", "naat", "islamic", "news", "qawwali", "old-songs", "lofi"],
+    "BD": ["bengali", "naat", "quran", "islamic", "qawwali", "old-songs", "news", "pop", "lofi"],
+    "IN": ["bhajan", "old-songs", "punjabi", "ghazal", "qawwali", "sufi", "news", "tamil", "telugu", "malayalam",
+           "marathi", "bengali", "gujarati", "naat", "gurbani", "lofi"],
+    "NP": ["bhajan", "old-songs", "news", "pop", "lofi"], "LK": ["tamil", "pop", "christian", "news", "lofi"],
+    "IR": ["persian", "quran", "islamic", "pop", "classical", "lofi"],
+    "IL": ["jewish", "pop", "english-news", "rock", "classical", "jazz", "talk", "lofi"],
+    "TR": ["quran", "islamic", "pop", "arabic", "classical", "lofi"],
+    "ID": ["islamic", "quran", "naat", "pop", "k-pop", "dance", "lofi"],
+    "MY": ["islamic", "quran", "naat", "pop", "k-pop", "tamil", "lofi"],
+    "US": _ENGLISH + ["latin"], "CA": _ENGLISH + ["punjabi"], "GB": _ENGLISH[:5] + ["punjabi", "naat", "islamic"] + _ENGLISH[5:],
+    "IE": _ENGLISH, "AU": _ENGLISH, "NZ": _ENGLISH,
+}
+for _c in ("SA", "AE", "QA", "OM", "KW", "BH"):
+    REGION_CHIPS[_c] = _GULF
+for _c in ("EG", "JO", "LB", "IQ", "SY", "PS", "YE", "MA", "DZ", "TN", "LY", "SD"):
+    REGION_CHIPS[_c] = _ARAB
+for _c in ("MX", "GT", "HN", "SV", "NI", "CR", "PA", "CU", "DO", "PR"):
+    REGION_CHIPS[_c] = _LATIN
+for _c in ("JP", "KR", "CN", "TW", "HK", "SG", "TH", "VN", "PH"):
+    REGION_CHIPS[_c] = _EAST_ASIA
+CONTINENT_CHIPS = {"europe": _EUROPE, "south-america": _LATIN, "africa": _AFRICA, "north-america": _LATIN,
+                   "oceania": _ENGLISH, "middle-east": _ARAB, "asia": _DEFAULT}
+CODE_TO_COUNTRY = {}            # ISO code -> country page slug (filled below, after the country list exists)
+
+
+def chips_for(code):
+    """Chips for a visitor from this country: their own country first, then what people there listen to."""
+    code = (code or "").upper()
+    slug = CODE_TO_COUNTRY.get(code)
+    if code in REGION_CHIPS:
+        base = REGION_CHIPS[code]
+    elif slug:
+        base = CONTINENT_CHIPS.get(TOPICS[slug]["group"], _DEFAULT)
+    else:
+        base = _DEFAULT
+    out = ([slug] if slug else []) + [k for k in base if k in TOPICS]
+    return list(dict.fromkeys(out))[:16]
+
 
 def topic_path(slug):
     t = TOPICS[slug]
@@ -599,3 +675,6 @@ def grouped():
 def countries_in(continent):
     """[(slug, topic)] of one continent, A–Z."""
     return sorted(((k, v) for k, v in COUNTRY_PAGES.items() if v["group"] == continent), key=lambda kv: kv[1]["label"])
+
+
+CODE_TO_COUNTRY.update({v: k for k, v in COUNTRY_CODES.items()})
