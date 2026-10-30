@@ -173,8 +173,8 @@ DEFAULTS = {
     "play_requires_login": "0",
     "require_email_verification": "0",
     # SEO / analytics
-    "seo_default_title": "Sur Music — Live Bollywood, Lollywood & Hollywood Radio",
-    "seo_default_description": "Listen free to live Bollywood, Lollywood (Pakistani) and Hollywood radio. Hindi, Urdu, Punjabi and English music stations — by Mousa International Software House.",
+    "seo_default_title": "Sur Music — Live Radio: Naat, Quran, Qawwali, News, Bollywood & Pakistani FM",
+    "seo_default_description": "Listen free to live radio from around the world: Naat, Quran, qawwali, ghazal, Urdu news, Bollywood, Pakistani FM and English hits. No download, no sign-up.",
     "seo_og_image": "",
     "google_site_verification": "",
     "page_seo": "{}",
@@ -183,6 +183,7 @@ DEFAULTS = {
     # ads
     "ads_enabled": "0",
     "adsense_client": "",
+    "ads_eu_consent": "0",
     "ad_slot_top": "",
     "ad_slot_list": "",
     "ad_slot_side": "",
@@ -388,6 +389,10 @@ def setup_warnings(smtp_ready):
     if not ads_active():
         w.append("Ads are off. After Google AdSense approves the site, enter your publisher ID (ca-pub-…) and ad "
                  "unit IDs in Ads, then switch ads on.")
+    if s.get("adsense_client") and s.get("ads_eu_consent") != "1":
+        w.append("IMPORTANT for Europe & UK visitors: in AdSense open Privacy & messaging → European regulations "
+                 "and publish the consent message (it is free). Then tick “I published the European consent "
+                 "message” in Ads. Google requires it for visitors from the EEA, UK and Switzerland.")
     for name, label in (("jazzcash", "JazzCash"), ("nayapay", "NayaPay"), ("wise", "Wise")):
         if donation_method(name) is None:
             w.append(f"{label} donations are hidden until you add the holder name, upload the official QR or "

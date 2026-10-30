@@ -34,22 +34,14 @@ CATEGORIES = {
                   f"/json/stations/search?tag=soundtrack&{COMMON}"],
     },
 }
-# Genre pages (/genre/<slug>): each is its own page with its own stations (Radio Browser tags)
+# Genre and country pages (/genre/<slug>, /country/<slug>): each has its own stations (see topics.py)
 def _tag(t, extra=""):
     return f"/json/stations/search?tag={urllib.parse.quote(t)}{extra}&{COMMON}"
 
 
-GENRES = {
-    "naat": {"title": "Naat", "paths": [_tag("naat"), _tag("naats"), _tag("nasheed")]},
-    "qawwali": {"title": "Qawwali", "paths": [_tag("qawwali"), _tag("qawali")]},
-    "ghazal": {"title": "Ghazal", "paths": [_tag("ghazal"), _tag("ghazals")]},
-    "sufi": {"title": "Sufi", "paths": [_tag("sufi"), _tag("sufi music")]},
-    "punjabi": {"title": "Punjabi", "paths": [_tag("punjabi"), _tag("bhangra")]},
-    "quran": {"title": "Quran & Islamic", "paths": [_tag("quran"), _tag("islamic"), _tag("islam")]},
-    "news": {"title": "Urdu & Hindi News",
-             "paths": [_tag("news", "&language=urdu"), _tag("news", "&countrycode=PK"), _tag("news", "&language=hindi")]},
-    "old-songs": {"title": "Old Songs", "paths": [_tag("old hindi songs"), _tag("retro"), _tag("oldies", "&language=hindi")]},
-}
+from .topics import TOPICS as _TOPICS  # noqa: E402
+
+GENRES = {k: {"title": v["label"], "paths": v["paths"]} for k, v in _TOPICS.items()}
 _bad_servers = {}
 
 
@@ -178,7 +170,8 @@ DEMO_COUNTRY = {"bollywood": "India", "hollywood": "United States", "news": "Pak
 
 def _demo(paths):
     key = next((k for k, v in list(CATEGORIES.items()) + list(GENRES.items()) if v["paths"] == paths), "bollywood")
-    names = DEMO_NAMES.get(key, DEMO_NAMES["bollywood"])
+    names = DEMO_NAMES.get(key) or ([f"{GENRES[key]['title']} Live {i}" for i in (1, 2, 3)] if key in GENRES
+                                    else DEMO_NAMES["bollywood"])
     country = DEMO_COUNTRY.get(key, "Pakistan")
     raw = [{"stationuuid": f"demo-{key}-{i}", "name": n, "url_resolved": f"https://stream.example.com/{key}/{i}",
             "favicon": "", "country": country, "tags": key, "bitrate": 128, "hls": 0, "lastcheckok": 1,
@@ -262,11 +255,25 @@ def station_by_uuid(uuid):
     uuid = _text(uuid, 64)
     if not uuid:
         return None, ""
+    import re as _re
+    if not _re.fullmatch(r"[A-Za-z0-9-]+", uuid):
+        return None, ""
+    from . import lowdb
     keys = [("cat:" + c, c) for c in CATEGORIES] + [("genre:" + g, g) for g in GENRES]
-    for cache_key, key in keys:                     # already-loaded lists only; never fetch 11 lists here
-        for st in _peek(cache_key) or []:
-            if st.get("uuid") == uuid:
-                return st, key
+    names = dict(keys)
+    if lowdb.enabled():                             # lists already in memory: no database at all
+        for cache_key, key in keys:
+            for prefix in ("radio:", "radio-peek:"):
+                hit, value = lowdb.cache_get(prefix + cache_key)
+                for st in (value or []) if hit else []:
+                    if st.get("uuid") == uuid:
+                        return st, key
+    # one query over the saved lists (never fetch dozens of lists here)
+    for row in get_db().all("SELECT cache_key, body FROM station_cache WHERE body LIKE ?", (f'%"{uuid}"%',)):
+        if row["cache_key"] in names:
+            for st in json.loads(row["body"]) or []:
+                if st.get("uuid") == uuid:
+                    return st, names[row["cache_key"]]
     if current_app.config.get("RADIO_DEMO"):
         for key, stations in all_lists():
             for st in stations:
@@ -311,3 +318,35 @@ def clean_station(data):
         "tags": _text(data.get("tags"), 120),
         "bitrate": bitrate if isinstance(bitrate, int) and 0 <= bitrate < 10000 else 0,
     }
+
+
+def country_counts():
+    """{ISO code: number of stations} from Radio Browser (cached for a day), or None if not known.
+    Used to list only countries that really have stations, so no page promises what it does not have."""
+    if current_app.config.get("RADIO_DEMO"):
+        return None
+    try:
+        rows = _cached("countries", lambda: _fetch_json("/json/countries"), 24 * 60)
+    except RadioError:
+        return None
+    out = {}
+    for r in rows or []:
+        if isinstance(r, dict):
+            code = str(r.get("iso_3166_1") or "").upper()
+            try:
+                out[code] = out.get(code, 0) + int(r.get("stationcount") or 0)
+            except (TypeError, ValueError):
+                pass
+    return out or None
+
+
+def known_empty(key):
+    """True when this list was loaded and had no playable station (memory only, never wakes the database)."""
+    from . import lowdb
+    if not lowdb.enabled():
+        return False
+    for prefix in ("radio:genre:", "radio-peek:genre:"):
+        hit, value = lowdb.cache_get(prefix + key)
+        if hit and value is not None:
+            return not value
+    return False

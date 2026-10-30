@@ -25,6 +25,8 @@
   </div>
   <label for="ads_txt_extra">Extra ads.txt lines <span class="muted">(only if another ad network asks you)</span></label>
   <textarea id="ads_txt_extra" name="ads_txt_extra" rows="3">{{ S.ads_txt_extra }}</textarea>
+  <label class="check"><input type="checkbox" name="ads_eu_consent" value="1" {% if S.ads_eu_consent == '1' %}checked{% endif %}> I published the European consent message in AdSense (Privacy &amp; messaging → European regulations)</label>
+  <p class="help">Required before ads can be switched on. Without it Google can limit or stop ads for visitors from Europe and the UK.</p>
   <label class="check"><input type="checkbox" name="ads_enabled" value="1" {% if S.ads_enabled == '1' %}checked{% endif %}> Show ads on the website</label>
   <p class="help">Ads never appear in the admin panel, account pages or the player bar, and are always labelled “Advertisement”.</p>
   <button class="btn btn-primary">Save ad settings</button>

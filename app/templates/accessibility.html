@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% block content %}
+<div class="wrap page prose narrow">
+  {{ ui.breadcrumbs([('Home', '/'), ('Accessibility', '/accessibility')]) }}
+  <h1>Radio for blind and low-vision listeners</h1>
+  <p class="lead">Radio is made for the ears. Sur Music is built so you can find and play live stations from every country with a screen reader or the keyboard alone — no mouse and no sight needed.</p>
+
+  <h2>Works with your screen reader</h2>
+  <ul>
+    <li><strong>Phones:</strong> TalkBack on Android and VoiceOver on iPhone and iPad.</li>
+    <li><strong>Computers:</strong> NVDA and JAWS on Windows, VoiceOver on Mac, ChromeVox on Chromebook.</li>
+    <li>Every station is a button that says its name, for example “Play BBC Radio 4”. The star button says “Save … to favourites”.</li>
+    <li>When a station starts, stops or goes offline, your screen reader announces it with the station name.</li>
+    <li>When you open another page, the music keeps playing and your screen reader tells you the new page title.</li>
+    <li>Use the “Skip to content” link at the top of every page to jump past the menu.</li>
+  </ul>
+
+  <h2>Keyboard shortcuts</h2>
+  <table>
+    <thead><tr><th scope="col">Key</th><th scope="col">What it does</th></tr></thead>
+    <tbody>
+      <tr><td><kbd>K</kbd></td><td>Play or pause</td></tr>
+      <tr><td><kbd>N</kbd></td><td>Next station</td></tr>
+      <tr><td><kbd>B</kbd></td><td>Previous station</td></tr>
+      <tr><td><kbd>M</kbd></td><td>Mute or unmute</td></tr>
+      <tr><td><kbd>Alt</kbd> + <kbd>↑</kbd> / <kbd>↓</kbd></td><td>Volume up or down (announced)</td></tr>
+      <tr><td><kbd>/</kbd></td><td>Jump to the search box</td></tr>
+      <tr><td><kbd>Tab</kbd>, <kbd>Enter</kbd></td><td>Move between stations and play the one you are on</td></tr>
+    </tbody>
+  </table>
+  <p class="small muted">Shortcuts do not work while you are typing in a box. Some screen readers use single letters for their own commands; switch to focus or forms mode (for example <kbd>Insert</kbd> + <kbd>Space</kbd> in NVDA) to use them.</p>
+
+  <h2>Fast ways to find something to listen to</h2>
+  <ul>
+    <li><a href="/radio-stations">All radio stations</a> — one page listing every country and type, grouped under headings, so you can jump by heading.</li>
+    <li><a href="/genre/news">News</a>, <a href="/genre/talk">talk radio</a>, <a href="/genre/english-news">world news</a> and <a href="/genre/sports">sports and cricket</a> — easy to follow without a screen.</li>
+    <li><a href="/genre/quran">Quran</a>, <a href="/genre/naat">Naat</a>, <a href="/genre/christian">Christian</a> and <a href="/genre/bhajan">devotional</a> radio.</li>
+    <li>Your country: <a href="/country/usa">USA</a>, <a href="/country/uk">UK</a>, <a href="/country/canada">Canada</a>, <a href="/country/australia">Australia</a>, <a href="/country/pakistan">Pakistan</a>, <a href="/country/india">India</a> and <a href="/radio-stations">more than 200 others</a>.</li>
+    <li>The search page finds stations by name, city or style.</li>
+  </ul>
+
+  <h2>Listening with the screen off</h2>
+  <p>On Android, the <a href="{{ url_for('public.download_page') }}">Sur Music app</a> keeps playing with the screen locked and works with headset and Bluetooth buttons. On a computer, the Chrome extension keeps playing while you use other websites.</p>
+
+  <h2>Tell us what does not work</h2>
+  <p>We test with screen-reader labels and the keyboard, but real listeners find things we miss. If anything is hard to use, please <a href="{{ url_for('public.contact') }}">contact us</a> — accessibility problems are fixed first.</p>
+</div>
+{% endblock %}

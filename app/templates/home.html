@@ -61,6 +61,21 @@
   </div>
 </section>
 
+<section class="section">
+  <div class="wrap">
+    <div class="section-head"><h2>Radio from around the world</h2><a href="/radio-stations">All countries →</a></div>
+    <nav class="chips world-chips" aria-label="Radio by country">
+      {%- for slug in ['usa', 'uk', 'canada', 'australia', 'germany', 'france', 'pakistan', 'india', 'uae', 'saudi-arabia', 'turkey'] %}
+      <a class="chip" href="{{ topic_href(slug) }}">{{ TOPICS[slug].label }}</a>
+      {%- endfor %}
+      {%- for slug, name in [('europe', 'Europe'), ('north-america', 'North America'), ('south-america', 'South America'), ('africa', 'Africa'), ('asia', 'Asia'), ('oceania', 'Oceania')] %}
+      <a class="chip chip-more" href="/continent/{{ slug }}">{{ name }}</a>
+      {%- endfor %}
+    </nav>
+    <p class="small muted">Blind or low-vision? Sur Music works with screen readers and the keyboard — <a href="/accessibility">see how</a>.</p>
+  </div>
+</section>
+
 <div class="wrap">{{ partner.offers('home', 4, 'Better listening — recommended') }}</div>
 
 {% if popular %}
@@ -81,7 +96,7 @@
         <h2>Take Sur Music everywhere</h2>
         <p class="muted">Android app with background play and lock-screen controls, plus a Chrome extension that keeps playing while you browse.</p>
       </div>
-      <a class="btn btn-primary" href="{{ url_for('public.download_page') }}">Download free</a>
+      <a class="btn btn-primary" href="{{ url_for('public.download_page') }}">Get the apps</a>
     </div>
     <div class="card cta">
       <div>
@@ -96,8 +111,8 @@
 
 <section class="section">
   <div class="wrap prose narrow seo-text">
-    <h2>Live Bollywood, Pakistani and English radio — free</h2>
-    <p>Sur Music brings together thousands of live radio stations for Hindi, Urdu, Punjabi and English music. Listen to Bollywood hits from Mumbai, Lollywood songs and ghazals from Lahore and Karachi, qawwali and Sufi music, or the latest Top 40 from the USA and UK — right in your browser, with no app or sign-up needed.</p>
+    <h2>Live radio from every country — free</h2>
+    <p>Sur Music brings together thousands of live radio stations for Hindi, Urdu, Punjabi and English music. Listen to Bollywood hits from Mumbai, Lollywood songs and ghazals from Lahore and Karachi, qawwali and Sufi music, or the latest Top 40 from the USA and UK — right in your browser, with no app or sign-up needed. You can also listen to radio from more than 200 countries across Europe, North and South America, Africa, Asia and Oceania: news, talk, sports, Christian, Latin, jazz, classical and much more.</p>
     <p>Every station is a public live stream from its broadcaster, listed in the open Radio Browser directory. Sur Music is made by {{ S.owner_name }} ({{ S.owner_brand }}) and is free thanks to ads and your <a href="{{ url_for('public.donate') }}">support</a>.</p>
   </div>
 </section>

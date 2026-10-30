@@ -54,9 +54,10 @@
 <nav class="genre-chips" aria-label="Radio by type">
   <h2 class="h3">Listen by type</h2>
   <div class="chips">
-  {%- for key, label in [('naat', 'Naat'), ('qawwali', 'Qawwali'), ('ghazal', 'Ghazal'), ('sufi', 'Sufi'), ('punjabi', 'Punjabi'), ('old-songs', 'Old songs'), ('quran', 'Quran'), ('news', 'News')] %}
-    <a class="chip{{ ' active' if key == active }}" href="/genre/{{ key }}" {% if key == active %}aria-current="page"{% endif %}>{{ label }}</a>
+  {%- for key in TOPIC_CHIPS + ([active] if active and active in TOPICS and active not in TOPIC_CHIPS else []) %}
+    <a class="chip{{ ' active' if key == active }}" href="{{ topic_href(key) }}" {% if key == active %}aria-current="page"{% endif %}>{{ TOPICS[key].label }}</a>
   {%- endfor %}
+    <a class="chip chip-more" href="/radio-stations">All types &amp; countries →</a>
   </div>
 </nav>
 {%- endmacro %}

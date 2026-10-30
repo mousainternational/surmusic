@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% import "_ad.html" as ads with context %}
+{% block content %}
+<div class="wrap page">
+  {{ ui.breadcrumbs([('Home', '/'), ('All radio', '/radio-stations')]) }}
+  <header class="page-head">
+    <h1>All Radio Stations — World Radio by Country and Type</h1>
+    <p class="lead">Live radio from every continent — Europe, North and South America, Africa, Asia, the Middle East and Oceania — plus Naat, Quran, qawwali, ghazal, news, cricket, pop, rock, jazz, lo-fi and much more. Pick a country or a type, press play, and keep browsing: the music keeps going.</p>
+  </header>
+  <nav class="chips continent-jump" aria-label="Continents">
+    {% for slug, name, items in world if items %}<a class="chip" href="#{{ slug }}">{{ name }}</a>{% endfor %}
+    <a class="chip" href="#types">Radio by type</a>
+  </nav>
+  {{ ads.ad('top') }}
+
+  <h2 class="section-title">Radio by country</h2>
+  {% for slug, name, items in world if items %}
+  <section class="topic-group" id="{{ slug }}">
+    <h3><a href="/continent/{{ slug }}">{{ name }} radio</a></h3>
+    <ul class="country-list">
+      {% for cslug, t, n in items %}
+      <li><a href="{{ topic_path(cslug) }}">{{ t.label }}{% if n %} <span class="muted small">{{ n }}</span>{% endif %}</a></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endfor %}
+
+  <h2 class="section-title" id="types">Radio by type</h2>
+  {% for heading, items in groups if items %}
+  <section class="topic-group">
+    <h3>{{ heading }}</h3>
+    <ul class="topic-list">
+      {% for slug, t in items %}
+      <li><a class="card topic-card" href="{{ topic_path(slug) }}">
+        <strong>{{ t.h1.split(' — ')[0] }}</strong>
+        {% if t.native %}<span class="native-name" dir="auto">{{ t.native }}</span>{% endif %}
+        <span class="small muted">{{ t.description }}</span>
+      </a></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endfor %}
+  <section class="topic-group">
+    <h3>Film music</h3>
+    <ul class="topic-list">
+      <li><a class="card topic-card" href="/bollywood"><strong>Bollywood Radio</strong><span class="small muted">Hindi film songs, romantic hits and 90s classics.</span></a></li>
+      <li><a class="card topic-card" href="/lollywood"><strong>Lollywood &amp; Pakistani Radio</strong><span class="small muted">Lollywood film songs, Urdu pop, ghazal and qawwali.</span></a></li>
+      <li><a class="card topic-card" href="/hollywood"><strong>English Hits Radio</strong><span class="small muted">Top 40, pop and Hollywood soundtracks.</span></a></li>
+    </ul>
+  </section>
+</div>
+{% endblock %}

@@ -56,6 +56,11 @@
       eq.className = "eq"; eq.innerHTML = "<i></i><i></i><i></i>";
       st.appendChild(eq);
     }
+    if (STATUS[s]) {                                   // screen readers hear the station name too
+      var who = document.createElement("span"); who.className = "sr";
+      who.textContent = $("pl-name").textContent + ": ";
+      st.appendChild(who);
+    }
     st.appendChild(document.createTextNode(STATUS[s] || ""));
     $("pl-play").setAttribute("aria-label", (s === "playing" || s === "loading") ? "Pause" : "Play");
     if ("mediaSession" in navigator) {
@@ -217,6 +222,39 @@
   $("pl-next").addEventListener("click", function () { step(1); });
   $("pl-prev").addEventListener("click", function () { step(-1); });
   $("pl-vol").addEventListener("input", function (e) { audio.volume = Number(e.target.value); local("sm-volume", audio.volume); });
+
+  // Keyboard shortcuts (for everyone, and a big help for blind and low-vision listeners):
+  // K = play/pause · N = next · B = previous · M = mute · ↑/↓ with Alt = volume · / = search
+  document.addEventListener("keydown", function (e) {
+    if (e.ctrlKey || e.metaKey || e.defaultPrevented) return;
+    var t = e.target, tag = (t && t.tagName) || "";
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(tag) || (t && t.isContentEditable)) return;
+    var k = (e.key || "").toLowerCase(), vol = $("pl-vol");
+    if (e.altKey && (k === "arrowup" || k === "arrowdown")) {
+      vol.value = Math.min(1, Math.max(0, Number(vol.value) + (k === "arrowup" ? 0.1 : -0.1)));
+      vol.dispatchEvent(new Event("input"));
+      say("Volume " + Math.round(Number(vol.value) * 100) + " percent");
+      e.preventDefault(); return;
+    }
+    if (e.altKey) return;
+    if (k === "k") { toggle(); e.preventDefault(); }
+    else if (k === "n") { step(1); e.preventDefault(); }
+    else if (k === "b") { step(-1); e.preventDefault(); }
+    else if (k === "m") { audio.muted = !audio.muted; say(audio.muted ? "Muted" : "Sound on"); e.preventDefault(); }
+    else if (k === "/") {
+      var boxes = document.querySelectorAll("main input[type=search], input[type=search]"), q = null;
+      for (var i = 0; i < boxes.length && !q; i++) if (boxes[i].offsetParent !== null) q = boxes[i];
+      e.preventDefault();
+      if (q) q.focus();
+      else if (window.SurNav) window.SurNav("/search");
+    }
+  });
+  function say(text) {
+    var box = document.getElementById("sr-announce");
+    if (!box) return;
+    box.textContent = "";
+    setTimeout(function () { box.textContent = text; }, 30);
+  }
   $("pl-fav").addEventListener("click", function () { if (state.station) toggleFav(state.station); });
 
   if ("mediaSession" in navigator) {

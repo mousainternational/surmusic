@@ -300,6 +300,7 @@ def ads():
                                                                   "ad_slot_footer")}
         extra = (request.form.get("ads_txt_extra") or "").strip()[:5000]
         enabled = "1" if request.form.get("ads_enabled") else "0"
+        eu = "1" if request.form.get("ads_eu_consent") else "0"
         if client and not ADSENSE_CLIENT_RE.match(client):
             errors.append("Publisher ID must look like ca-pub-1234567890123456.")
         for k, v in slots.items():
@@ -307,11 +308,15 @@ def ads():
                 errors.append(f"{k.replace('ad_slot_', '').title()} slot ID must be digits only (from AdSense).")
         if enabled == "1" and not client:
             errors.append("Enter your AdSense publisher ID before switching ads on.")
+        if enabled == "1" and eu != "1":
+            errors.append("First publish the European consent message in AdSense (Privacy & messaging → European "
+                          "regulations), then tick “I published the European consent message”. Google requires it "
+                          "for visitors from Europe and the UK.")
         if errors:
             for e in errors:
                 flash(e, "error")
         else:
-            save_settings(dict(slots, adsense_client=client, ads_txt_extra=extra, ads_enabled=enabled))
+            save_settings(dict(slots, adsense_client=client, ads_txt_extra=extra, ads_enabled=enabled, ads_eu_consent=eu))
             audit("ads_update", f"enabled={enabled}")
             flash("Ad settings saved.", "success")
         return redirect(url_for("admin.ads"))

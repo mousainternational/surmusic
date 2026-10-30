@@ -46,40 +46,7 @@ CATEGORY_PAGES = {
 }
 
 
-GENRE_PAGES = {
-    "naat": {"h1": "Naat Radio — Live Naat Sharif & Hamd",
-             "seo_title": "Naat Radio Live — Naat Sharif, Hamd & Islamic Nasheed Online Free",
-             "description": "Listen to live naat radio free: Naat Sharif, Hamd and nasheed in Urdu, Punjabi and Arabic, around the clock.",
-             "intro": "Live naat stations playing Naat Sharif, Hamd and nasheed day and night — beautiful recitations in Urdu, Punjabi, Arabic and more. Choose a station and let it play while you work, study or rest."},
-    "qawwali": {"h1": "Qawwali Radio — Live Sufi Qawwali",
-                "seo_title": "Qawwali Radio Live — Nusrat Fateh Ali Khan, Sabri Brothers & More",
-                "description": "Listen to live qawwali radio free: classic and modern qawwali from Nusrat Fateh Ali Khan, Sabri Brothers, Aziz Mian and more.",
-                "intro": "Live qawwali from stations that love the tradition — the timeless voices of Nusrat Fateh Ali Khan, the Sabri Brothers, Aziz Mian, Rahat Fateh Ali Khan and today's qawwals."},
-    "ghazal": {"h1": "Ghazal Radio — Live Urdu & Hindi Ghazals",
-               "seo_title": "Ghazal Radio Live — Mehdi Hassan, Ghulam Ali, Jagjit Singh",
-               "description": "Listen to live ghazal radio free: Urdu and Hindi ghazals by Mehdi Hassan, Ghulam Ali, Jagjit Singh, Farida Khanum and more.",
-               "intro": "Slow down with live ghazal radio: Urdu and Hindi poetry sung by Mehdi Hassan, Ghulam Ali, Jagjit Singh, Farida Khanum, Iqbal Bano and other masters."},
-    "sufi": {"h1": "Sufi Music Radio — Live Sufi Kalam",
-             "seo_title": "Sufi Music Radio Live — Sufi Kalam, Kafi & Dhamal Online",
-             "description": "Listen to live Sufi music radio free: Sufi kalam, kafi, dhamal and spiritual songs from Pakistan and India.",
-             "intro": "Live Sufi music: the poetry of Bulleh Shah, Shah Hussain and Baba Farid, kafi, dhamal and spiritual songs that have been sung for centuries."},
-    "punjabi": {"h1": "Punjabi Radio — Live Punjabi Songs & Bhangra",
-                "seo_title": "Punjabi Radio Live — Punjabi Songs, Bhangra & Lok Geet",
-                "description": "Listen to live Punjabi radio free: new Punjabi songs, bhangra, folk lok geet and classic hits.",
-                "intro": "Live Punjabi radio: new Punjabi pop, bhangra beats, folk lok geet and the classics — from both sides of Punjab and the Punjabi diaspora."},
-    "quran": {"h1": "Quran & Islamic Radio — Live Tilawat",
-              "seo_title": "Quran Radio Live — Tilawat, Islamic Lectures & Recitation",
-              "description": "Listen to live Quran radio free: tilawat by famous qaris, translations and Islamic programmes.",
-              "intro": "Live Quran recitation by well-known qaris, with translations and Islamic programmes, around the clock."},
-    "news": {"h1": "Urdu & Hindi News Radio — Live",
-             "seo_title": "Urdu News Radio Live — Pakistani & Hindi News Online",
-             "description": "Listen to live Urdu and Hindi news radio free: news, current affairs and talk from Pakistan and India.",
-             "intro": "Live news and current affairs in Urdu and Hindi from radio stations in Pakistan and India."},
-    "old-songs": {"h1": "Old Songs Radio — Purane Geet Live",
-                  "seo_title": "Old Hindi & Urdu Songs Radio Live — Purane Geet Online Free",
-                  "description": "Listen to live old songs radio free: golden-era Hindi and Urdu film songs from the 50s to the 90s.",
-                  "intro": "Purane geet that never get old: golden-era film songs from Lata, Rafi, Kishore, Noor Jehan, Mehdi Hassan and more."},
-}
+from .topics import CONTINENTS, COUNTRY_PAGES, GENRE_PAGES, TOPICS, countries_in, grouped, topic_path  # noqa: E402
 
 
 def station_path(st):
@@ -87,6 +54,17 @@ def station_path(st):
     import re as _re
     slug = _re.sub(r"[^a-z0-9]+", "-", (st.get("name") or "station").lower()).strip("-")[:60] or "station"
     return f"/station/{st['uuid']}/{slug}"
+
+
+@bp.app_template_global("topic_href")
+def _topic_href(slug):
+    return topic_path(slug)
+
+
+@bp.app_context_processor
+def _topic_globals():
+    from .topics import CHIPS
+    return {"TOPICS": TOPICS, "TOPIC_CHIPS": CHIPS}
 
 
 @bp.app_template_global()
@@ -208,17 +186,91 @@ def category(cat):
 
 @bp.route("/genre/<slug>")
 def genre(slug):
+    """Radio by type: Naat, Quran, Qawwali, Pashto, Jazz … (see topics.py)."""
     if slug not in GENRE_PAGES:
+        if slug in COUNTRY_PAGES:
+            return redirect(topic_path(slug), code=301)
         abort(404)
-    info = GENRE_PAGES[slug]
+    return _topic_page(slug)
+
+
+@bp.route("/country/<slug>")
+def country_page(slug):
+    """Radio by country: Pakistan, India, UK, Saudi Arabia …"""
+    if slug not in COUNTRY_PAGES:
+        if slug in GENRE_PAGES:
+            return redirect(topic_path(slug), code=301)
+        abort(404)
+    return _topic_page(slug)
+
+
+def _topic_page(slug):
+    info = TOPICS[slug]
     try:
         stations, error = without_blocked(radio.genre_stations(slug)), None
     except radio.RadioError as exc:
         stations, error = [], str(exc)
-    meta = build_meta(info["seo_title"], info["description"], page=f"genre-{slug}")
+    meta = build_meta(info["seo_title"], info["description"], page=f"genre-{slug}",
+                      noindex=not stations)               # an empty page is not shown in Google
+    crumbs = [("Home", "/"), ("All radio", "/radio-stations")]
+    if info["kind"] == "country" and info["group"] in CONTINENTS:
+        crumbs.append((CONTINENTS[info["group"]][0], f"/continent/{info['group']}"))
+    crumbs.append((info["h1"].split(" — ")[0], topic_path(slug)))
     return render_template("category.html", meta=meta, stations=protect(stations), error=error, cat=slug,
-                           info=info, genre=slug,
-                           ld=[breadcrumb_ld([("Home", "/"), (info["h1"].split(" — ")[0], f"/genre/{slug}")])])
+                           info=info, genre=slug, crumbs=crumbs, ld=[breadcrumb_ld(crumbs)])
+
+
+def _listed_countries(continent, minimum=3):
+    """Countries of one continent that really have stations (all of them if the counts are not known)."""
+    counts = radio.country_counts()
+    out = []
+    for slug, t in countries_in(continent):
+        n = counts.get(t.get("code", ""), 0) if counts is not None else None
+        if n is None or n >= minimum:
+            out.append((slug, t, n))
+    return out
+
+
+def _listed_types():
+    return [(g, [(k, v) for k, v in items if not radio.known_empty(k)]) for g, items in grouped()]
+
+
+@bp.route("/accessibility")
+def accessibility():
+    """How blind and low-vision listeners use Sur Music (screen readers, keyboard)."""
+    meta = build_meta("Accessible Radio for Blind & Low-Vision Listeners — Screen Reader Friendly",
+                      "Sur Music works with screen readers (TalkBack, VoiceOver, NVDA, JAWS) and the keyboard: "
+                      "spoken station names, simple shortcuts and thousands of live radio stations.",
+                      page="accessibility")
+    return render_template("accessibility.html", meta=meta,
+                           ld=[breadcrumb_ld([("Home", "/"), ("Accessibility", "/accessibility")])])
+
+
+@bp.route("/radio-stations")
+def all_topics():
+    """One page that links to every type, continent and country — helps visitors and Google find them all."""
+    meta = build_meta("All Radio Stations — World Radio by Country, Naat, Quran, News & Music",
+                      "Live radio from every continent: Europe, America, Africa, Asia, the Middle East and Oceania, "
+                      "plus Naat, Quran, qawwali, news, pop, rock, jazz and more — free in your browser.",
+                      page="radio-stations")
+    world = [(c, CONTINENTS[c][0], _listed_countries(c)) for c in CONTINENTS]
+    return render_template("topics.html", meta=meta, groups=_listed_types(), world=world, topic_path=topic_path,
+                           ld=[breadcrumb_ld([("Home", "/"), ("All radio", "/radio-stations")])])
+
+
+@bp.route("/continent/<slug>")
+def continent(slug):
+    """Radio from one continent: a list of its countries."""
+    if slug not in CONTINENTS:
+        abort(404)
+    name, adjective = CONTINENTS[slug]
+    items = _listed_countries(slug)
+    meta = build_meta(f"{name} Radio Stations Live — {adjective} Radio by Country",
+                      f"Listen to live {adjective} radio free: choose a country in {name} and play its music, news "
+                      "and talk stations in your browser.", page=f"continent-{slug}", noindex=not items)
+    crumbs = [("Home", "/"), ("All radio", "/radio-stations"), (name, f"/continent/{slug}")]
+    return render_template("continent.html", meta=meta, name=name, adjective=adjective, items=items,
+                           topic_path=topic_path, crumbs=crumbs, ld=[breadcrumb_ld(crumbs)])
 
 
 @bp.route("/station/<uuid>")
@@ -237,22 +289,31 @@ def station_page(uuid, slug=None):
     try:
         if key in CATEGORY_PAGES:
             similar = radio.category_stations(key)
-        elif key in GENRE_PAGES:
+        elif key in TOPICS:
             similar = radio.genre_stations(key)
     except radio.RadioError:
         similar = []
     similar = [s for s in without_blocked(similar) if s["uuid"] != st["uuid"]][:12]
     place = st.get("country") or "around the world"
     tags = st.get("tags") or "music"
-    title = f"{st['name']} Live — Listen Online Free"
+    title = f"{st['name']} Live — Listen Online Free" if not st.get("country") else \
+        f"{st['name']} Live — {st['country']} Radio Online Free"
     desc = (f"Listen to {st['name']} live online free on Sur Music. A radio station from {place} playing {tags}. "
             "No download, no sign-up — press play.")
     meta = build_meta(title, desc, canonical_path=want)
-    back = (CATEGORY_PAGES.get(key) or GENRE_PAGES.get(key) or {}).get("h1", "Radio").split(" — ")[0]
-    back_href = f"/{key}" if key in CATEGORY_PAGES else (f"/genre/{key}" if key in GENRE_PAGES else "/")
-    ld = [breadcrumb_ld([("Home", "/"), (back, back_href), (st["name"], want)]), station_ld(st, want)]
+    back = (CATEGORY_PAGES.get(key) or TOPICS.get(key) or {}).get("h1", "All radio").split(" — ")[0]
+    back_href = f"/{key}" if key in CATEGORY_PAGES else (topic_path(key) if key in TOPICS else "/radio-stations")
+    crumbs = [("Home", "/")]
+    if key in TOPICS:
+        crumbs.append(("All radio", "/radio-stations"))
+        if TOPICS[key]["kind"] == "country" and TOPICS[key]["group"] in CONTINENTS:
+            crumbs.append((CONTINENTS[TOPICS[key]["group"]][0], f"/continent/{TOPICS[key]['group']}"))
+    if back_href != "/radio-stations" or key not in TOPICS:
+        crumbs.append((back, back_href))
+    crumbs.append((st["name"], want))
+    ld = [breadcrumb_ld(crumbs), station_ld(st, want)]
     return render_template("station.html", meta=meta, st=protect([st])[0], similar=protect(similar), cat=key or "",
-                           back=back, back_href=back_href, ld=ld)
+                           back=back, back_href=back_href, crumbs=crumbs, ld=ld)
 
 
 @bp.app_template_global("offers_for")
@@ -316,9 +377,9 @@ def favorites():
 @bp.route("/download")
 def download_page():
     apps = {r["platform"]: r for r in get_db().all("SELECT * FROM apps")}
-    meta = build_meta("Download Sur Music — Android App & Chrome Extension",
-                      "Get the free Sur Music app for Android and the Chrome extension: background play, "
-                      "notification controls and favourites.", page="download")
+    meta = build_meta("Sur Music Apps — Android App & Chrome Extension",
+                      "Sur Music for Android (US$5 one-time on Google Play) and the Chrome extension (7-day free "
+                      "trial, then US$1/month): background play, lock-screen controls and favourites.", page="download")
     return render_template("download.html", meta=meta, apps=apps,
                            ld=[breadcrumb_ld([("Home", "/"), ("Download", "/download")])])
 
@@ -328,19 +389,7 @@ def download_file(platform):
     app_row = get_db().one("SELECT * FROM apps WHERE platform = ?", (platform,))
     if not app_row:
         abort(404)
-    if app_row["file_name"] and file_path(app_row["file_name"]):
-        if rate_limited("download", 30, 600):
-            abort(429)
-        db = get_db()
-        db.execute("UPDATE apps SET download_count = download_count + 1 WHERE id = ?", (app_row["id"],))
-        db.commit()
-        u = current_user()
-        analytics.record("download", u["id"] if u else None, detail=platform)
-        resp = send_file(file_path(app_row["file_name"]), mimetype=software_mime(app_row["file_name"]),
-                         as_attachment=True, download_name=app_row["file_original_name"] or f"surmusic-{platform}",
-                         max_age=0)
-        resp.headers["X-Robots-Tag"] = "noindex"
-        return resp
+    # Apps are sold through Google Play / the Chrome Web Store: no free file download from the website.
     if valid_url(app_row["external_url"], https_only=True):
         u = current_user()
         analytics.record("download", u["id"] if u else None, detail=f"{platform} (store link)")
@@ -674,22 +723,38 @@ def robots():
 
 @bp.route("/sitemap.xml")
 def sitemap():
+    from . import lowdb
+    if lowdb.enabled():
+        hit, xml = lowdb.cache_get("sitemap")
+        if hit:
+            return Response(xml, mimetype="application/xml")
     site = current_app.config["SITE_URL"]
     pages = ["/", "/bollywood", "/lollywood", "/hollywood", "/download", "/donate", "/about", "/contact", "/faq",
              "/privacy", "/terms", "/disclaimer", "/donation-disclaimer", "/cookies"]
-    pages += [f"/genre/{g}" for g in GENRE_PAGES] + ["/deals"]
+    pages += ["/radio-stations", "/accessibility"] + [f"/continent/{c}" for c in CONTINENTS]
+    pages += [topic_path(k) for _, items in _listed_types() for k, _ in items]
+    pages += [topic_path(k) for c in CONTINENTS for k, _, _ in _listed_countries(c)] + ["/deals"]
     seen = set()
-    for key in list(radio.CATEGORIES) + list(radio.GENRES):          # station pages from lists already loaded
-        prefix = "cat:" if key in radio.CATEGORIES else "genre:"
-        for st in without_blocked(radio._peek(prefix + key) or []):
-            if st.get("uuid") and st["uuid"] not in seen and len(seen) < 1000:
+    keys = {"cat:" + c for c in radio.CATEGORIES} | {"genre:" + g for g in radio.GENRES}
+    for row in get_db().all("SELECT cache_key, body FROM station_cache"):    # one query for every saved list
+        if row["cache_key"] not in keys:
+            continue
+        try:
+            stations = json.loads(row["body"]) or []
+        except ValueError:
+            continue
+        for st in without_blocked(stations):
+            if isinstance(st, dict) and st.get("uuid") and st["uuid"] not in seen and len(seen) < 20000:
                 seen.add(st["uuid"])
                 pages.append(station_path(st))
     parts = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
     for p in pages:
         parts.append(f"<url><loc>{escape(site + p)}</loc></url>")
     parts.append("</urlset>")
-    return Response("\n".join(parts), mimetype="application/xml")
+    xml = "\n".join(parts)
+    if lowdb.enabled():
+        lowdb.cache_set("sitemap", xml, 3600)
+    return Response(xml, mimetype="application/xml")
 
 
 @bp.route("/ping")

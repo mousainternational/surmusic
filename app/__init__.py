@@ -16,7 +16,7 @@ from .security import csp_nonce, csrf_protect, csrf_token, current_user, securit
 from .settings import ads_active, get_settings
 from .util import human_size, render_markdown, valid_email
 
-__version__ = "1.5.1"
+__version__ = "1.7.0"
 
 
 def create_app(overrides=None):
@@ -209,6 +209,16 @@ def _apply_setting_changes(app):
         if not db.scalar("SELECT COUNT(*) FROM settings WHERE key = ?", ("_done_free_listening_v12",)):
             db.execute("DELETE FROM settings WHERE key = ?", ("play_requires_login",))
             db.execute("INSERT INTO settings (key, value) VALUES (?, ?)", ("_done_free_listening_v12", "1"))
+            db.commit()
+        # v1.6: the home page title/description name more kinds of radio (only if never changed by the owner)
+        if not db.scalar("SELECT COUNT(*) FROM settings WHERE key = ?", ("_done_seo_text_v16",)):
+            from .settings import DEFAULTS
+            for key, old in (("seo_default_title", "Sur Music — Live Bollywood, Lollywood & Hollywood Radio"),
+                             ("seo_default_description", "Listen free to live Bollywood, Lollywood (Pakistani) and "
+                              "Hollywood radio. Hindi, Urdu, Punjabi and English music stations — by Mousa "
+                              "International Software House.")):
+                db.execute("UPDATE settings SET value = ? WHERE key = ? AND value = ?", (DEFAULTS[key], key, old))
+            db.execute("INSERT INTO settings (key, value) VALUES (?, ?)", ("_done_seo_text_v16", "1"))
             db.commit()
     except Exception:  # two workers starting together
         db.rollback()

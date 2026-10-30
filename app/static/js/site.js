@@ -103,6 +103,8 @@
         closeMenu();
         window.scrollTo({ top: restoreY || 0, left: 0, behavior: "instant" });
         newMain.focus({ preventScroll: true });
+        var sr = document.getElementById("sr-announce");      // tell screen-reader users the page changed
+        if (sr) { sr.textContent = ""; setTimeout(function () { sr.textContent = "Page: " + document.title; }, 60); }
         document.dispatchEvent(new Event("page:load"));
       })
       .catch(function () { location.href = href; })

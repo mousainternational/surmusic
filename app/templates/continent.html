@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% import "_ad.html" as ads with context %}
+{% block content %}
+<div class="wrap page">
+  {{ ui.breadcrumbs(crumbs) }}
+  <header class="page-head">
+    <h1>{{ name }} Radio — Live {{ adjective }} Radio Stations</h1>
+    <p class="lead">Choose a country to hear its live radio: music, news, talk and sports stations from across {{ name }}, free in your browser with no app and no sign-up.</p>
+  </header>
+  {{ ads.ad('top') }}
+  {% if items %}
+  <ul class="country-list big">
+    {% for cslug, t, n in items %}
+    <li><a href="{{ topic_path(cslug) }}"><strong>{{ t.label }}</strong>{% if t.native %} <span class="native-name" dir="auto">{{ t.native }}</span>{% endif %}{% if n %} <span class="muted small">· {{ n }} stations</span>{% endif %}</a></li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="empty card"><p>No stations from this part of the world right now. Please try again later.</p></div>
+  {% endif %}
+  <p class="small"><a href="/radio-stations">← All countries and radio types</a></p>
+</div>
+{% endblock %}

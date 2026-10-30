@@ -4,7 +4,7 @@
 {% import "_offers.html" as partner with context %}
 {% block content %}
 <div class="wrap page">
-  {{ ui.breadcrumbs([('Home', '/'), (back, back_href), (st.name, request.path)]) }}
+  {{ ui.breadcrumbs(crumbs) }}
   <header class="station-head card">
     <span class="thumb thumb-xl {{ thumb_class(st.name) }}" data-letter="{{ (st.name or '?')[:1] | upper }}">{% if st.favicon %}<img src="{{ st.favicon }}" alt="{{ st.name }} logo" decoding="async" referrerpolicy="no-referrer" width="96" height="96">{% endif %}</span>
     <div class="station-info">

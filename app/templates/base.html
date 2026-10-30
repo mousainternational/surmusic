@@ -90,6 +90,7 @@
 </header>
 {% endblock %}
 
+<div id="sr-announce" class="sr" aria-live="polite" aria-atomic="true"></div>
 <main id="main" tabindex="-1" data-page="{{ request.endpoint }}">
   {% with msgs = get_flashed_messages(with_categories=true) %}
     {% if msgs %}<div class="wrap flashes" role="status">{% for cat, msg in msgs %}<div class="flash flash-{{ cat }}">{{ msg }}</div>{% endfor %}</div>{% endif %}
@@ -120,6 +121,9 @@
       <a href="/genre/naat">Naat radio</a>
       <a href="/genre/qawwali">Qawwali radio</a>
       <a href="/genre/ghazal">Ghazal radio</a>
+      <a href="/genre/quran">Quran radio</a>
+      <a href="/country/pakistan">Pakistan radio</a>
+      <a href="/radio-stations">All radio types &amp; countries</a>
       <a href="/deals">Deals</a>
       <a href="{{ url_for('public.search') }}">Search stations</a>
       <a href="{{ url_for('public.download_page') }}">Android app & extension</a>
@@ -128,6 +132,7 @@
       <h2>Sur Music</h2>
       <a href="{{ url_for('public.about') }}">About</a>
       <a href="{{ url_for('public.faq') }}">FAQ</a>
+      <a href="/accessibility">Accessibility &amp; blind-friendly radio</a>
       <a href="{{ url_for('public.donate') }}">Donate</a>
       <a href="{{ url_for('public.contact') }}">Contact &amp; advertising</a>
       {% if S.contact_email %}<a href="mailto:{{ S.contact_email }}">{{ S.contact_email }}</a>{% endif %}

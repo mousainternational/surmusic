@@ -1,6 +1,7 @@
 {% extends "admin/_layout.html" %}
 {% block title %}App downloads{% endblock %}
 {% block admin %}
+<div class="card notice"><p><strong>Apps are paid now.</strong> Visitors can no longer download the APK or extension file from the website. Paste the <strong>Google Play</strong> and <strong>Chrome Web Store</strong> links in “Store link” below — the Download page then shows “Get it on Google Play” / “Add to Chrome”. A file uploaded here is kept only as your own backup.</p></div>
 <div class="grid donate-grid">
   {% for key, title, exts in [('android', 'Android app (APK)', '.apk'), ('chrome', 'Chrome extension', '.zip or .crx')] %}
   {% set a = apps.get(key) %}
@@ -19,7 +20,7 @@
     <label for="f-{{ key }}">Upload file ({{ exts }})</label>
     <input id="f-{{ key }}" name="file" type="file" accept="{{ '.apk' if key == 'android' else '.zip,.crx' }}">
     {% endif %}
-    <label for="u-{{ key }}">…or a download link (https) <span class="muted">e.g. Chrome Web Store or your MISH website</span></label>
+    <label for="u-{{ key }}">Store link (https) <span class="muted">{{ "Google Play page of the app" if key == "android" else "Chrome Web Store page of the extension" }}</span></label>
     <input id="u-{{ key }}" name="external_url" type="url" value="{{ a.external_url if a else '' }}" placeholder="https://">
     <p class="help">An uploaded file is used first; the link is used when there is no file.</p>
     <button class="btn btn-primary">Save</button>

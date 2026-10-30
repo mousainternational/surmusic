@@ -5,12 +5,12 @@
   {{ ui.breadcrumbs([('Home', '/'), ('Download', '/download')]) }}
   <header class="page-head">
     <h1>Get Sur Music on your phone and browser</h1>
-    <p class="lead">Free apps with background play, favourites and more stations — by {{ S.owner_name }}.</p>
+    <p class="lead">The website is free. The apps add background play, lock-screen controls and more stations — by {{ S.owner_name }}.</p>
   </header>
   <div class="grid two-col">
     {% for key, title, desc, howto in [
-        ('android', 'Android app', 'Keeps playing with the screen off. Play, pause and stop from the notification, lock screen or Bluetooth headset. Android 8.0 and newer.', 'Open the downloaded APK on your phone. If asked, allow “Install unknown apps” for your browser, then tap Install.'),
-        ('chrome', 'Chrome extension', 'Radio in your browser toolbar that keeps playing while you browse other websites.', 'Install from the Chrome Web Store link, or unzip the file, open chrome://extensions, turn on Developer mode and choose Load unpacked.')] %}
+        ('android', 'Android app', 'Keeps playing with the screen off. Play, pause and stop from the notification, lock screen or Bluetooth headset. Android 8.0 and newer.', 'US$5 one-time on Google Play — pay once, yours for life. No ads, no subscription.'),
+        ('chrome', 'Chrome extension', 'Radio in your browser toolbar that keeps playing while you browse other websites.', '7-day free trial, then US$1 per month. Cancel any time.')] %}
     {% set a = apps.get(key) %}
     <section class="card app-card">
       <div class="app-head">
@@ -18,20 +18,13 @@
         <div><h2>{{ title }}</h2>{% if a and a.version %}<p class="muted small">Version {{ a.version }}</p>{% endif %}</div>
       </div>
       <p>{{ desc }}</p>
-      {% if a and (a.file_name or a.external_url) %}
-        <a class="btn btn-primary btn-block" href="{{ url_for('public.download_file', platform=key) }}" rel="nofollow" data-no-pjax>
-          {{ 'Download APK' if key == 'android' else ('Get the extension' if not a.file_name else 'Download extension') }}{% if a.file_size %} ({{ a.file_size | filesize }}){% endif %}
+      <p class="price-line"><strong>{{ howto }}</strong></p>
+      {% if a and a.external_url %}
+        <a class="btn btn-primary btn-block" href="{{ url_for('public.download_file', platform=key) }}" rel="nofollow noopener" data-no-pjax>
+          {{ 'Get it on Google Play' if key == 'android' else 'Add to Chrome' }}
         </a>
-        {% if a.file_sha256 %}
-        <div class="checksum">
-          <span class="small muted">SHA-256 checksum</span>
-          <code id="sha-{{ key }}">{{ a.file_sha256 }}</code>
-          <button class="btn btn-sm btn-ghost" type="button" data-copy="#sha-{{ key }}">Copy</button>
-        </div>
-        {% endif %}
-        <p class="small muted">{{ howto }}</p>
       {% else %}
-        <p class="muted">Coming soon.</p>
+        <p class="muted">Coming soon to {{ 'Google Play' if key == 'android' else 'the Chrome Web Store' }}.</p>
       {% endif %}
     </section>
     {% endfor %}
@@ -43,7 +36,7 @@
       <li>Music keeps playing in the background with notification and lock-screen controls (Android).</li>
       <li>No ads inside the apps.</li>
     </ul>
-    <p class="small muted">Download apps only from this page or the official stores. Read the <a href="{{ url_for('public.disclaimer') }}">disclaimer</a>.</p>
+    <p class="small muted">Sur Music apps are sold only through Google Play and the Chrome Web Store. Read the <a href="{{ url_for('public.disclaimer') }}">disclaimer</a>.</p>
   </section>
 </div>
 {% endblock %}
