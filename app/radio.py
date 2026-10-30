@@ -249,6 +249,20 @@ def all_lists():
     return out
 
 
+def cached_station(uuid):
+    """A station from the lists already in memory (never touches the database or the network), else None."""
+    from . import lowdb
+    if not uuid or not lowdb.enabled():
+        return None
+    for key in ["cat:" + c for c in CATEGORIES] + ["genre:" + g for g in GENRES]:
+        for prefix in ("radio:", "radio-peek:"):
+            hit, value = lowdb.cache_get(prefix + key)
+            for st in (value or []) if hit else []:
+                if st.get("uuid") == uuid:
+                    return st
+    return None
+
+
 def station_by_uuid(uuid):
     """One station for its own page: first from the cached lists, otherwise from Radio Browser (cached).
     Returns (station, list_key) or (None, '')."""

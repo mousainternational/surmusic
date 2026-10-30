@@ -150,7 +150,8 @@
   {%- import "_ad.html" as ads with context %}
   {%- if ad_slot_id('footer') %}<div class="wrap">{{ ads.ad('footer') }}</div>{% endif %}
   <div class="wrap footer-bottom">
-    <span>© {{ now_year }} {{ S.owner_name }}. All rights reserved. Station data: <a href="https://www.radio-browser.info/" rel="noopener">radio-browser.info</a>. All music belongs to its owners.{% if geoip_on %} <a href="https://db-ip.com" rel="noopener">IP Geolocation by DB-IP</a>.{% endif %}</span>
+    <span>© {{ now_year }} {{ S.owner_name }}. All rights reserved. All music belongs to its owners.</span>
+    {%- if geoip_on %}<a class="credit" href="https://db-ip.com" rel="noopener">IP Geolocation by DB-IP</a>{% endif %}
   </div>
 </footer>
 {% endblock %}

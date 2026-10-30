@@ -42,12 +42,13 @@
     {% if error and not stations %}
     <div class="empty card"><p>{{ error }} Please try again in a minute.</p></div>
     {% else %}
-    {{ ui.station_list(stations[:24], cat) }}
+    {{ ui.station_list(stations[:12], cat) }}
+    <p class="more-link"><a class="btn btn-ghost btn-block" href="{{ url_for('public.category', cat='bollywood') }}">More Bollywood stations →</a></p>
     {% endif %}
   </div>
 </section>
 
-<section class="section">
+<section class="section genre-cards-section">
   <div class="wrap grid three genre-cards">
     <a class="card genre g-bolly" href="{{ url_for('public.category', cat='bollywood') }}">
       <h2>Bollywood</h2><p>Hindi film songs, romantic hits, 90s classics and new releases.</p><span>Listen →</span>
@@ -83,7 +84,13 @@
   <div class="wrap">
     <div class="section-head"><h2>Popular on Sur Music this week</h2></div>
     <ol class="popular-list">
-      {% for p in popular %}<li><span class="pop-rank">{{ loop.index }}</span> <span class="pop-name">{{ p.station_name }}</span> <span class="muted small">{{ p.category | capitalize }} · {{ p.n }} plays</span></li>{% endfor %}
+      {% for p in popular %}<li>
+        <span class="pop-rank">{{ loop.index }}</span>
+        <span class="pop-text">
+          {% if p.href %}<a class="pop-name" href="{{ p.href }}">{{ p.station_name }}</a>{% else %}<span class="pop-name">{{ p.station_name }}</span>{% endif %}
+          <span class="pop-meta muted small">{% if p.category %}{{ (TOPICS[p.category].label if p.category in TOPICS else p.category) | capitalize }} · {% endif %}{{ p.n }} plays</span>
+        </span>
+      </li>{% endfor %}
     </ol>
   </div>
 </section>

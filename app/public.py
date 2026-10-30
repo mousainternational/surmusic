@@ -139,9 +139,22 @@ def _popular(days=7, limit=8):
 
 def _popular_query(days=7, limit=8):
     since = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
-    rows = get_db().all("SELECT station_name, category, COUNT(*) AS n FROM plays WHERE created_at > ? "
-                        "GROUP BY station_name, category ORDER BY n DESC LIMIT ?", (since, limit + 5))
-    return [r for r in rows if not is_blocked({"name": r["station_name"]})][:limit]
+    # one row per station (the same station played from two pages used to appear twice)
+    rows = get_db().all("SELECT station_name, MAX(station_uuid) AS station_uuid, MAX(category) AS category, "
+                        "COUNT(*) AS n FROM plays WHERE created_at > ? GROUP BY station_name "
+                        "ORDER BY n DESC LIMIT ?", (since, limit + 5))
+    import re as _re
+    out = []
+    for r in rows:
+        r = dict(r)
+        if is_blocked({"name": r["station_name"], "uuid": r.get("station_uuid") or ""}):
+            continue
+        uuid = r.get("station_uuid") or ""
+        # its own page only when the station is still listed (no broken links); otherwise a search for its name
+        st = radio.cached_station(uuid) if _re.fullmatch(r"[0-9a-f-]{36}", uuid) else None
+        r["href"] = station_path(st) if st else url_for("public.search", q=r["station_name"][:60])
+        out.append(r)
+    return out[:limit]
 
 
 def _json_body():

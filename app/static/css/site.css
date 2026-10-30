@@ -407,9 +407,14 @@ a.stat { color: var(--text); text-decoration: none; } a.stat:hover { border-colo
 .genre::after { content: ""; position: absolute; right: -40px; bottom: -40px; width: 140px; height: 140px; border-radius: 50%; opacity: .25; }
 .g-bolly::after { background: #ff3d86; } .g-lolly::after { background: #2ec4b6; } .g-holly::after { background: #7b5cff; }
 .genre:hover { border-color: var(--brand); }
-.popular-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; grid-template-columns: 1fr; }
-@media (min-width: 760px) { .popular-list { grid-template-columns: 1fr 1fr; } }
-.popular-list li { display: flex; gap: 10px; align-items: baseline; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.popular-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 760px) { .popular-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.popular-list li { display: flex; gap: 12px; align-items: center; min-width: 0; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.popular-list .pop-rank { flex: none; }
+.popular-list .pop-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.popular-list .pop-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); font-weight: 600; }
+.popular-list a.pop-name:hover { color: var(--brand); }
+.popular-list .pop-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pop-rank { font-weight: 800; color: var(--brand); min-width: 1.4em; }
 .pop-name { font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .seo-text { color: var(--muted); }
@@ -681,3 +686,8 @@ html.menu-open .cookie-note { display: none; }
 .country-list.big a { padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
 .country-list .native-name { margin: 0; font-size: .95rem; }
 .genre-chips .chip.chip-mine:not(.active) { border-color: var(--brand); }
+
+/* v1.7.2 — a shorter home page on phones (the Bollywood / Lollywood / Hollywood tabs are already at the top) */
+.more-link { margin: 14px 0 0; }
+@media (max-width: 640px) { .genre-cards-section { display: none; } }
+.footer-bottom .credit { display: block; margin-top: 6px; font-size: .72rem; color: var(--muted); text-decoration: none; opacity: .8; }
