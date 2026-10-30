@@ -84,5 +84,9 @@ class Config:
 
     # Number of reverse proxies in front of the app (Caddy/Render = 1) for client IPs.
     TRUSTED_PROXIES = _int("TRUSTED_PROXIES", 1)
+    # Render puts Cloudflare in front of every web service: the visitor's real address is in the True-Client-IP /
+    # CF-Connecting-IP headers that Cloudflare sets (X-Forwarded-For's last entry is a Cloudflare server).
+    # Render sets RENDER=true by itself, so this switches on automatically there.
+    BEHIND_CLOUDFLARE = _bool("BEHIND_CLOUDFLARE", os.environ.get("RENDER", "").lower() == "true")
 
     TESTING = False

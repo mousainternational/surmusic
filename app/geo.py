@@ -120,8 +120,8 @@ def _lookup_mmdb(path, ip, mtime):
 def _trust_cf_headers():
     if current_app.config.get("TRUST_CF_HEADERS"):
         return True
-    from .security import via_local_tunnel
-    return via_local_tunnel()
+    from .security import behind_cloudflare, via_local_tunnel
+    return behind_cloudflare() or via_local_tunnel()
 
 
 def _conn(path):

@@ -16,7 +16,7 @@ from .security import csp_nonce, csrf_protect, csrf_token, current_user, securit
 from .settings import ads_active, get_settings
 from .util import human_size, render_markdown, valid_email
 
-__version__ = "1.7.2"
+__version__ = "1.7.3"
 
 
 def create_app(overrides=None):

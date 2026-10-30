@@ -22,8 +22,20 @@ def via_local_tunnel():
         return False
 
 
+def behind_cloudflare():
+    """True on hosts that always put Cloudflare in front of the app (Render), or when BEHIND_CLOUDFLARE=1."""
+    return bool(current_app.config.get("BEHIND_CLOUDFLARE"))
+
+
 def client_ip():
     """The visitor's IP address (used for rate limits and approximate location; never stored)."""
+    if behind_cloudflare():
+        import ipaddress
+        for header in ("True-Client-IP", "CF-Connecting-IP"):       # set by Cloudflare's edge, not by the visitor
+            try:
+                return str(ipaddress.ip_address((request.headers.get(header) or "").strip()))
+            except ValueError:
+                continue
     if via_local_tunnel():
         import ipaddress
         cf = (request.headers.get("CF-Connecting-IP") or "").strip()
