@@ -15,7 +15,7 @@ from . import analytics, radio
 from .db import get_db, utcnow
 from .mailer import send_mail
 from .security import current_user, ip_hash, rate_limited
-from .seo import (breadcrumb_ld, build_meta, faq_ld, media_url, organization_ld, station_ld, webapp_ld,
+from .seo import (breadcrumb_ld, build_meta, faq_ld, media_url, organization_ld, page_ld, station_ld, webapp_ld,
                   website_ld)
 from .settings import (ADSENSE_CLIENT_RE, ads_active, affiliate_offers, donation_method, get_settings, is_blocked,
                        offers_for, sponsored_stations, without_blocked)
@@ -33,13 +33,13 @@ CATEGORY_PAGES = {
     },
     "lollywood": {
         "h1": "Lollywood & Pakistani Radio — Urdu, Punjabi, Ghazal & Qawwali",
-        "seo_title": "Pakistani Radio Live — Lollywood, Urdu Songs, Ghazal & Qawwali",
+        "seo_title": "Pakistani Radio Live — Urdu Songs, Ghazal & Qawwali",
         "description": "Listen to live Pakistani radio free: Lollywood film songs, Urdu pop, Punjabi music, ghazals, qawwali and FM stations from Pakistan.",
         "intro": "Listen to live Pakistani radio from Lahore, Karachi, Islamabad and beyond. These stations play Lollywood film songs, Urdu and Punjabi pop, timeless ghazals, Sufi music and qawwali, plus news and talk from FM stations across Pakistan. Wherever you are in the world, stay connected to the sound of home.",
     },
     "hollywood": {
         "h1": "Hollywood & English Hits Radio — Top 40, Pop & Soundtracks",
-        "seo_title": "English Radio Live — Top 40 Hits, Pop & Movie Soundtracks",
+        "seo_title": "English Radio Live — Top 40 Hits & Pop Online",
         "description": "Listen to live English radio free: Top 40 hits, pop, 80s and 90s classics and Hollywood movie soundtracks from stations worldwide.",
         "intro": "Enjoy live English music radio: Top 40 chart hits, pop and dance, timeless 80s and 90s classics, and Hollywood movie soundtracks from stations around the world. Perfect for work, study, workouts and long drives — free, with no download and no sign-up needed.",
     },
@@ -436,14 +436,15 @@ def download_file(platform):
 @bp.route("/donate")
 def donate():
     methods = {m: donation_method(m) for m in ("jazzcash", "nayapay", "wise")}
-    meta = build_meta("Support Sur Music", "Support Sur Music and Mousa International Software House with "
-                      "JazzCash, NayaPay or an international transfer.", page="donate")
-    return render_template("donate.html", meta=meta, methods=methods)
+    meta = build_meta("Support Sur Music — Keep Free Radio Free", "Support Sur Music and Mousa International "
+                      "Software House with JazzCash, NayaPay or an international transfer.", page="donate")
+    return render_template("donate.html", meta=meta, methods=methods,
+                           ld=[page_ld("WebPage", "Support Sur Music", meta["description"])])
 
 
 @bp.route("/about")
 def about():
-    meta = build_meta("About Sur Music", get_settings()["about_md"], page="about")
+    meta = build_meta("About Sur Music — Free Online Radio by MISH", get_settings()["about_md"], page="about")
     return render_template("about.html", meta=meta, ld=[organization_ld()])
 
 
@@ -487,9 +488,11 @@ def contact():
                 flash("Thank you — your message was received. Replies may take a little longer while email "
                       "notifications are being set up.", "success")
             return redirect(url_for("public.contact"))
-    meta = build_meta("Contact Sur Music", "Questions, feedback, station removal requests or advertising "
-                      "enquiries for Sur Music by Mousa International Software House.", page="contact")
-    return render_template("contact.html", meta=meta, form=form, errors=errors, removal=removal), (400 if errors else 200)
+    meta = build_meta("Contact Sur Music — Support, Feedback and Ads", "Questions, feedback, station removal "
+                      "requests or advertising enquiries for Sur Music by Mousa International Software House.",
+                      page="contact")
+    return render_template("contact.html", meta=meta, form=form, errors=errors, removal=removal,
+                           ld=[page_ld("ContactPage", "Contact Sur Music", meta["description"])]), (400 if errors else 200)
 
 
 def _policy(key, page, title, description, extra_ld=None):
@@ -500,35 +503,35 @@ def _policy(key, page, title, description, extra_ld=None):
 
 @bp.route("/faq")
 def faq():
-    return _policy("faq_md", "faq", "Frequently Asked Questions", "Answers about Sur Music radio, accounts, apps "
-                   "and donations.", faq_ld(get_settings()["faq_md"]))
+    return _policy("faq_md", "faq", "Frequently Asked Questions", "Answers about Sur Music: how to listen to live radio free, accounts, "
+                   "the Android app, the Chrome extension, donations and removal requests.", faq_ld(get_settings()["faq_md"]))
 
 
 @bp.route("/privacy")
 def privacy():
-    return _policy("privacy_md", "privacy", "Privacy Policy", "How Sur Music protects your data.")
+    return _policy("privacy_md", "privacy", "Privacy Policy", "How Sur Music protects your data: what we collect, how long we keep it, your choices, cookies, ads and how to contact us.")
 
 
 @bp.route("/terms")
 def terms():
-    return _policy("terms_md", "terms", "Terms of Use", "Terms for using Sur Music.")
+    return _policy("terms_md", "terms", "Terms of Use", "The terms for using Sur Music: free listening, accounts, acceptable use, third-party radio streams, apps and donations.")
 
 
 @bp.route("/disclaimer")
 def disclaimer():
-    return _policy("disclaimer_md", "disclaimer", "Disclaimer", "Sur Music plays public live radio streams; "
-                   "all music belongs to its owners.")
+    return _policy("disclaimer_md", "disclaimer", "Disclaimer", "Sur Music plays public live radio streams from stations around the "
+                   "world. All music and station names belong to their owners.")
 
 
 @bp.route("/donation-disclaimer")
 def donation_disclaimer():
     return _policy("donation_disclaimer_md", "donation-disclaimer", "Donation Disclaimer",
-                   "How donations to Sur Music work.")
+                   "How donations to Sur Music work: voluntary, not refundable, not a purchase, and how to ask us about a payment.")
 
 
 @bp.route("/cookies")
 def cookies():
-    return _policy("cookies_md", "cookies", "Cookie Policy", "Cookies and local storage used by Sur Music.")
+    return _policy("cookies_md", "cookies", "Cookie Policy", "The cookies and local browser storage Sur Music uses to keep you signed in, remember settings and show ads.")
 
 
 # ---------------------------------------------------------------- JSON API (used by player.js)
@@ -754,6 +757,29 @@ def robots():
     body = ("User-agent: *\nDisallow: /admin\nDisallow: /account\nDisallow: /api/\nDisallow: /login\n"
             "Disallow: /signup\nDisallow: /forgot\nDisallow: /reset/\nDisallow: /search\nAllow: /\n\n"
             f"Sitemap: {site}/sitemap.xml\n")
+    return Response(body, mimetype="text/plain")
+
+
+@bp.route("/llms.txt")
+def llms_txt():
+    """A short plain-text summary of the site for AI assistants and search tools."""
+    site = current_app.config["SITE_URL"]
+    s = get_settings()
+    body = (f"# {s['site_full_name']}\n\n"
+            "> Free online radio: live stations from more than 200 countries, including Quran, Naat, Qawwali, "
+            "news, Bollywood, Lollywood and English hits. No app and no sign-up. Works in any browser and with "
+            "screen readers.\n\n"
+            f"Made by {s['owner_name']}.\n\n"
+            "## Main pages\n"
+            f"- [All radio stations by country and type]({site}/radio-stations)\n"
+            f"- [Bollywood radio]({site}/bollywood)\n"
+            f"- [Pakistani radio]({site}/lollywood)\n"
+            f"- [English radio]({site}/hollywood)\n"
+            f"- [Quran radio]({site}/genre/quran)\n"
+            f"- [Naat radio]({site}/genre/naat)\n"
+            f"- [Accessibility]({site}/accessibility)\n"
+            f"- [About]({site}/about)\n"
+            f"- [Sitemap]({site}/sitemap.xml)\n")
     return Response(body, mimetype="text/plain")
 
 

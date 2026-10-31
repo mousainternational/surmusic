@@ -173,7 +173,7 @@ DEFAULTS = {
     "play_requires_login": "0",
     "require_email_verification": "0",
     # SEO / analytics
-    "seo_default_title": "Sur Music — Live Radio: Naat, Quran, Qawwali, News, Bollywood & Pakistani FM",
+    "seo_default_title": "Sur Music — Live Radio: Quran, Naat, News, Bollywood",
     "seo_default_description": "Listen free to live radio from around the world: Naat, Quran, qawwali, ghazal, Urdu news, Bollywood, Pakistani FM and English hits. No download, no sign-up.",
     "seo_og_image": "",
     "google_site_verification": "",

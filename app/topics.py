@@ -583,7 +583,7 @@ for _code, (_name, _cont, _native) in sorted(WORLD.items(), key=lambda kv: kv[1]
     TOPICS[_s] = dict(
         kind="country", group=_cont, code=_code, label=_name,
         h1=f"{_name} Radio — Live Radio Stations from {_name}", native=_native,
-        seo_title=f"{_name} Radio Live — Listen to {_name} Radio Stations Online Free",
+        seo_title=f"{_name} Radio Live — FM Stations Online Free",
         description=f"Listen to live radio from {_name} free: music, news and talk stations from {_name}, "
                     "playing right in your browser — no app and no sign-up.",
         intro=f"All the live radio stations from {_name} that play in your browser: music, news, talk, sports and "

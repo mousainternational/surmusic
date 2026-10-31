@@ -16,13 +16,32 @@ def media_url(name, absolute_url=False):
     return absolute(path) if absolute_url else path
 
 
+def fit_title(title, brand, limit=65):
+    """Add the brand name only while the title still fits in a Google result (about 60-65 characters).
+    A longer title keeps its keywords but loses the brand; a very long one keeps just its first part."""
+    full = f"{title} | {brand}"
+    if len(full) <= limit:
+        return full
+    if len(title) <= limit + 3:
+        return title
+    head = title.split(" — ")[0]
+    return f"{head} | {brand}" if len(head) + len(brand) + 3 <= limit else head
+
+
+def page_ld(kind, name, description=""):
+    """A simple schema.org page record (WebPage, ContactPage, AboutPage) for pages with nothing richer."""
+    return {"@context": "https://schema.org", "@type": kind, "name": name, "description": description,
+            "url": absolute(request.path), "inLanguage": "en",
+            "isPartOf": {"@type": "WebSite", "name": get_settings()["site_full_name"], "url": absolute("/")}}
+
+
 def build_meta(title=None, description=None, page=None, noindex=False, canonical_path=None):
     s = get_settings()
     override = page_seo(page) if page else {}
     title = override.get("title") or title or s["seo_default_title"]
     description = override.get("description") or description or s["seo_default_description"]
     if title != s["seo_default_title"] and s["site_name"] not in title:
-        title = f"{title} | {s['site_name']}"
+        title = fit_title(title, s["site_name"])
     path = canonical_path if canonical_path is not None else request.path
     img = media_url(s["seo_og_image"], True) if s.get("seo_og_image") else \
         absolute(url_for("static", filename="img/og-default.png"))

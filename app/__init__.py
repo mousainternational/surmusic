@@ -16,7 +16,7 @@ from .security import csp_nonce, csrf_protect, csrf_token, current_user, securit
 from .settings import ads_active, get_settings
 from .util import human_size, render_markdown, valid_email
 
-__version__ = "1.7.3"
+__version__ = "1.7.4"
 
 
 def create_app(overrides=None):
@@ -219,6 +219,14 @@ def _apply_setting_changes(app):
                               "International Software House.")):
                 db.execute("UPDATE settings SET value = ? WHERE key = ? AND value = ?", (DEFAULTS[key], key, old))
             db.execute("INSERT INTO settings (key, value) VALUES (?, ?)", ("_done_seo_text_v16", "1"))
+            db.commit()
+        # v1.7.4: a shorter home title that fits in a Google result (only if the owner never changed it)
+        if not db.scalar("SELECT COUNT(*) FROM settings WHERE key = ?", ("_done_seo_text_v17",)):
+            from .settings import DEFAULTS
+            db.execute("UPDATE settings SET value = ? WHERE key = ? AND value = ?",
+                       (DEFAULTS["seo_default_title"], "seo_default_title",
+                        "Sur Music — Live Radio: Naat, Quran, Qawwali, News, Bollywood & Pakistani FM"))
+            db.execute("INSERT INTO settings (key, value) VALUES (?, ?)", ("_done_seo_text_v17", "1"))
             db.commit()
     except Exception:  # two workers starting together
         db.rollback()
