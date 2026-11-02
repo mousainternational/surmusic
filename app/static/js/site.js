@@ -287,3 +287,14 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
   document.addEventListener("page:load", init);
 })();
+
+/* floating drop-downs (Language): close when you tap outside or press Escape */
+(function () {
+  document.addEventListener("click", function (e) {
+    document.querySelectorAll("details.pick.float[open]").forEach(function (d) { if (!d.contains(e.target)) d.removeAttribute("open"); });
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    document.querySelectorAll("details.pick.float[open]").forEach(function (d) { d.removeAttribute("open"); var s = d.querySelector("summary"); if (s) s.focus(); });
+  });
+})();

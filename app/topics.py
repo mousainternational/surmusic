@@ -33,7 +33,7 @@ def country(code):
 
 
 GROUPS = ["Islamic & spiritual", "Sufi, ghazal & classics", "Pakistani & South Asian languages",
-          "News, talk & sports", "World music"]
+          "News, talk & sports", "World music", "Lifestyle & learning", "World languages"]
 CONTINENTS = {          # slug: (heading, short words for the page text)
     "asia": ("Asia", "Asian"),
     "middle-east": ("Middle East & Gulf", "Middle Eastern and Gulf"),
@@ -596,6 +596,93 @@ for _code, (_name, _cont, _native) in sorted(WORLD.items(), key=lambda kv: kv[1]
 for _k, _t in TOPICS.items():                       # a hand-written country Babel did not know
     if _t["kind"] == "country" and not _t["group"]:
         _t["group"] = "asia"
+
+# ------------------------------------------------------------------ lifestyle and learning
+def _life(slug, label, h1, title, desc, intro, more, paths):
+    TOPICS[slug] = dict(kind="genre", group="Lifestyle & learning", label=label, h1=h1, native="", seo_title=title,
+                        description=desc, intro=intro, more=more, paths=paths)
+
+
+_life("debates", "Debates & politics", "Debates & Politics Radio — Live Political Talk",
+      "Debates and Politics Radio Live — Political Talk Online",
+      "Listen to live debates and political radio free: political talk shows, parliamentary coverage, interviews and discussion from around the world.",
+      "Live radio for debates and politics: political talk shows, election coverage, interviews, panel discussions and call-in programmes.",
+      "Also searched as political debate live, election debate radio, parliament live radio, political talk shows and politics news radio.",
+      [tag("debate"), tag("politics"), tag("political talk")])
+_life("health", "Health & wellness", "Health & Wellness Radio — Live Health Talk",
+      "Health and Wellness Radio Live — Health Talk Online Free",
+      "Listen to live health and wellness radio free: health talk, medical news, fitness, mental wellbeing and healthy living from stations worldwide.",
+      "Live health and wellness radio: doctors and experts answering questions, medical news, fitness, nutrition and mental wellbeing. Not a replacement for medical advice.",
+      "Also searched as health radio live, wellness podcasts radio, fitness radio, medical talk radio and healthy living radio.",
+      [tag("health"), tag("wellness"), tag("healthcare")])
+_life("meditation", "Meditation & relax", "Meditation & Relaxation Radio — Calm Live Streams",
+      "Meditation and Relaxation Radio Live — Calm Music Online",
+      "Listen to live meditation and relaxation radio free: calm ambient music, spa sounds, sleep and mindfulness streams.",
+      "Calm live streams for meditation, sleep and relaxation: ambient and spa music, soft piano and nature sounds, free in your browser.",
+      "Also searched as meditation music radio, relaxing music live, sleep music radio, spa music and ambient radio.",
+      [tag("meditation"), tag("relaxation"), tag("ambient"), tag("spa")])
+_life("cooking", "Cooking & food", "Cooking & Food Radio — Live Food Talk",
+      "Cooking and Food Radio Live — Recipes and Food Talk",
+      "Listen to live cooking and food radio free: recipes, restaurant talk, chefs, food shows and kitchen company from stations worldwide.",
+      "Live radio for people who love food: cooking shows, recipes, chefs, restaurant news and food talk to keep you company in the kitchen.",
+      "Also searched as cooking radio live, recipe radio, food talk radio and chef interviews.",
+      [tag("cooking"), tag("food"), tag("recipes")])
+_life("kids", "Kids & family", "Kids & Family Radio — Live Children's Stations",
+      "Kids and Family Radio Live — Songs and Stories Online",
+      "Listen to live kids and family radio free: children's songs, stories, nursery rhymes and family-friendly shows.",
+      "Live children's radio: songs, stories, nursery rhymes and family-friendly programmes for young listeners.",
+      "Also searched as kids radio live, children's songs radio, nursery rhymes radio and family radio.",
+      [tag("kids"), tag("children"), tag("childrens")])
+_life("education", "Education & learning", "Education & Learning Radio — Live Educational Stations",
+      "Education and Learning Radio Live — Learn on the Radio",
+      "Listen to live education and learning radio free: lectures, language lessons, science, history and school programmes.",
+      "Live educational radio: lectures, language lessons, science and history talks and learning programmes you can follow without a screen.",
+      "Also searched as educational radio live, learning radio, language learning radio and lecture radio.",
+      [tag("education"), tag("educational"), tag("learning")])
+_life("business", "Business & finance", "Business & Finance Radio — Live Market News",
+      "Business and Finance Radio Live — Market News Online",
+      "Listen to live business and finance radio free: market news, economy, investing and money talk from around the world.",
+      "Live business radio: market reports, economy news, investing and personal finance talk. For the numbers themselves, see our live gold, dollar and Bitcoin prices.",
+      "Also searched as business news radio, finance radio live, stock market radio, economy news and money talk radio.",
+      [tag("business"), tag("finance"), tag("economy")])
+_life("comedy", "Comedy", "Comedy Radio — Live Comedy & Humour",
+      "Comedy Radio Live — Stand-up and Humour Online Free",
+      "Listen to live comedy radio free: stand-up, sketches, funny talk shows and humour from stations worldwide.",
+      "Live comedy radio: stand-up, sketches, funny talk shows and light-hearted programmes to brighten your day.",
+      "Also searched as comedy radio live, stand-up comedy radio, funny radio and humour radio.",
+      [tag("comedy"), tag("humor")])
+_life("technology", "Technology & science", "Technology & Science Radio — Live Tech Talk",
+      "Technology and Science Radio Live — Tech Talk Online",
+      "Listen to live technology and science radio free: tech news, gadgets, AI, space and science talk from around the world.",
+      "Live technology and science radio: tech news, gadgets, artificial intelligence, space and science programmes.",
+      "Also searched as tech radio live, technology news radio, science radio and AI talk radio.",
+      [tag("technology"), tag("tech"), tag("science")])
+
+# ------------------------------------------------------------------ languages (the "Language" button)
+_LANGS = [("hindi", "Hindi", "हिन्दी रेडियो"), ("urdu", "Urdu", "اردو ریڈیو"), ("english", "English", ""),
+          ("spanish", "Spanish", "Radio en español"), ("french", "French", "Radio en français"),
+          ("german", "German", "Radio auf Deutsch"), ("italian", "Italian", "Radio italiana"),
+          ("portuguese", "Portuguese", "Rádio em português"), ("russian", "Russian", "Русское радио"),
+          ("turkish", "Turkish", "Türkçe radyo"), ("indonesian", "Indonesian", "Radio Indonesia"),
+          ("japanese", "Japanese", "日本語ラジオ"), ("korean", "Korean", "한국어 라디오"),
+          ("chinese", "Chinese", "中文广播"), ("swahili", "Swahili", "Redio ya Kiswahili"),
+          ("thai", "Thai", "วิทยุไทย"), ("vietnamese", "Vietnamese", "Đài phát thanh Việt Nam"),
+          ("polish", "Polish", "Radio po polsku"), ("dutch", "Dutch", "Radio in het Nederlands"),
+          ("greek", "Greek", "Ελληνικό ραδιόφωνο"), ("hebrew", "Hebrew", "רדיו בעברית")]
+for _slug, _label, _native in _LANGS:
+    if _slug not in TOPICS:
+        TOPICS[_slug] = dict(
+            kind="genre", group="World languages", label=_label,
+            h1=f"{_label} Radio — Live {_label}-Language Stations", native=_native,
+            seo_title=f"{_label} Radio Live — {_label} Stations Online Free",
+            description=f"Listen to live {_label} radio free: music, news and talk in {_label} from stations around the "
+                        "world, right in your browser.",
+            intro=f"Live radio in {_label}: music, news, talk and more from stations around the world. Pick a station, "
+                  "press play and keep browsing — the music keeps going.",
+            more=f"Also searched as {_label} radio online, {_label} FM live, {_label} songs live, {_label} news radio "
+                 f"and {_label} radio stations.",
+            paths=[lang(_slug)])
+
 
 GENRE_PAGES = {k: v for k, v in TOPICS.items() if v["kind"] == "genre"}
 COUNTRY_PAGES = {k: v for k, v in TOPICS.items() if v["kind"] == "country"}

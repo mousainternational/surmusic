@@ -93,13 +93,24 @@ def _chips_here():
 
 
 _TYPE_GROUPS = [
-    ("Music", ["pop", "rock", "hip-hop", "dance", "lofi", "jazz", "classical", "country-music", "latin", "80s-90s",
-               "reggae", "afrobeats", "k-pop", "metal"]),
-    ("News, talk and sports", ["news", "english-news", "talk", "sports"]),
-    ("Quran and faith", ["quran", "islamic", "christian", "bhajan", "gurbani", "jewish"]),
-    ("Languages and regional", ["old-songs", "arabic", "persian", "punjabi", "pashto", "sindhi", "bengali", "tamil",
-                                "telugu", "malayalam", "marathi", "gujarati", "indian-classical"]),
-    ("Other", ["naat", "qawwali", "sufi", "ghazal"]),
+    ("🎬 Entertainment", ["pop", "rock", "hip-hop", "dance", "lofi", "jazz", "classical", "country-music", "latin",
+                          "80s-90s", "reggae", "afrobeats", "k-pop", "metal", "old-songs", "comedy"]),
+    ("🕌 Religious", ["quran", "islamic", "christian", "bhajan", "gurbani", "jewish"]),
+    ("📰 News", ["news", "english-news", "business"]),
+    ("🎙️ Debates and talk", ["debates", "talk"]),
+    ("🏏 Sports", ["sports"]),
+    ("🩺 Health and calm", ["health", "meditation"]),
+    ("🍳 Cooking and food", ["cooking"]),
+    ("🧒 Kids and learning", ["kids", "education", "technology"]),
+    ("✨ Other", ["naat", "qawwali", "sufi", "ghazal"]),
+]
+_LANG_GROUPS = [
+    ("South Asia", ["hindi", "urdu", "punjabi", "pashto", "sindhi", "bengali", "tamil", "telugu", "malayalam", "marathi",
+                    "gujarati"]),
+    ("Middle East", ["arabic", "persian", "turkish", "hebrew"]),
+    ("Europe and Americas", ["english", "spanish", "french", "german", "italian", "portuguese", "russian", "dutch",
+                             "polish", "greek"]),
+    ("Asia-Pacific and Africa", ["chinese", "japanese", "korean", "indonesian", "thai", "vietnamese", "swahili"]),
 ]
 _POPULAR_COUNTRIES = ["usa", "uk", "canada", "australia", "germany", "france", "pakistan", "india", "uae",
                       "saudi-arabia", "turkey"]
@@ -107,16 +118,28 @@ _POPULAR_COUNTRIES = ["usa", "uk", "canada", "australia", "germany", "france", "
 
 @bp.app_template_global("type_menu")
 def _type_menu():
-    """Every radio type in a few short groups for the "All radio types" drop-down. Nothing is left out."""
-    placed = {s for _, slugs in _TYPE_GROUPS for s in slugs}
-    out = [("Film and pop radio", [("/bollywood", "Bollywood"), ("/lollywood", "Pakistani (Lollywood)"),
-                                    ("/hollywood", "English hits (Hollywood)")])]
+    """Every radio type in short groups for the "All radio types" drop-down. Nothing is left out."""
+    languages = {s for _, slugs in _LANG_GROUPS for s in slugs}
+    placed = {s for _, slugs in _TYPE_GROUPS for s in slugs} | languages
+    out = [("🎞️ Film and pop radio", [("/bollywood", "Bollywood"), ("/lollywood", "Pakistani (Lollywood)"),
+                                       ("/hollywood", "English hits (Hollywood)")])]
     for title, slugs in _TYPE_GROUPS:
         out.append((title, [(topic_path(s), TOPICS[s]["label"]) for s in slugs
                             if s in TOPICS and not radio.known_empty(s)]))
     out[-1][1].extend((topic_path(k), v["label"]) for k, v in GENRE_PAGES.items()
                       if k not in placed and not radio.known_empty(k))
     return [(t, items) for t, items in out if items]
+
+
+@bp.app_template_global("language_menu")
+def _language_menu():
+    """The "Language" button: stations by the language they speak or sing in."""
+    out = []
+    for title, slugs in _LANG_GROUPS:
+        items = [(topic_path(s), TOPICS[s]["label"]) for s in slugs if s in TOPICS and not radio.known_empty(s)]
+        if items:
+            out.append((title, items))
+    return out
 
 
 @bp.app_template_global("country_menu")

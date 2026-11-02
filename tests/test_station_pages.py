@@ -17,7 +17,7 @@ def test_genre_pages(client):
     strip = home.split("data-genre-chips", 1)[1].split('<div class="finder">', 1)[0]           # the quick buttons
     assert "naat" not in strip and "qawwali" not in strip and "sufi" not in strip
     menu = home.split('<div class="finder">', 1)[1].split("</nav>", 1)[0]                      # the drop-downs
-    other = menu.split("<h3>Other</h3>", 1)[1].split("</ul>", 1)[0]
+    other = menu.split("Other</h3>", 1)[1].split("</ul>", 1)[0]
     for slug in ("naat", "qawwali", "sufi", "ghazal"):                                          # inside "Other"
         assert f'href="/genre/{slug}"' in other, slug
     assert "Choose your country" in menu and 'href="/country/usa"' in menu and 'href="/continent/europe"' in menu

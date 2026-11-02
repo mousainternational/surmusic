@@ -43,11 +43,21 @@
 {%- endmacro %}
 
 {% macro cat_tabs(active) -%}
-<nav class="cat-tabs" aria-label="Music categories">
-  {%- for key, label in [('bollywood', 'Bollywood'), ('lollywood', 'Lollywood'), ('hollywood', 'Hollywood')] %}
-  <a href="/{{ key }}" class="{{ 'active' if key == active }}" {% if key == active %}aria-current="page"{% endif %}>{{ label }}</a>
-  {%- endfor %}
-</nav>
+<div class="tuner-row">
+  <details class="pick float lang-pick">
+    <summary>🌐 Language</summary>
+    <div class="pick-panel float-panel">
+      {%- for title, items in language_menu() %}
+      <div class="pick-group"><h3>{{ title }}</h3><ul class="pick-links">{% for href, label in items %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul></div>
+      {%- endfor %}
+    </div>
+  </details>
+  <nav class="cat-tabs" aria-label="Music categories">
+    {%- for key, label in [('bollywood', 'Bollywood'), ('lollywood', 'Lollywood'), ('hollywood', 'Hollywood')] %}
+    <a href="/{{ key }}" class="{{ 'active' if key == active }}" {% if key == active %}aria-current="page"{% endif %}>{{ label }}</a>
+    {%- endfor %}
+  </nav>
+</div>
 {%- endmacro %}
 
 {% macro genre_chips(active='') -%}

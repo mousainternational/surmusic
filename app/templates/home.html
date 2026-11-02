@@ -12,6 +12,7 @@
       <p class="eyebrow">Free live radio · by {{ S.owner_brand }}</p>
       <h1>{{ S.hero_title }}</h1>
       <p class="lead">{{ S.hero_subtitle }}</p>
+      <div class="dial" aria-hidden="true"><span>88</span><span>92</span><span>96</span><span>100</span><span>104</span><span>108</span><i class="needle"></i></div>
       <form class="hero-search" action="{{ url_for('public.search') }}" method="get" role="search">
         <label for="hero-q" class="sr">Search radio stations</label>
         <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
@@ -35,8 +36,10 @@
 
 <section class="section">
   <div class="wrap">
-    {{ ui.cat_tabs('bollywood') }}
-    {{ ui.genre_chips() }}
+    <div class="tuner">
+      {{ ui.cat_tabs('bollywood') }}
+      {{ ui.genre_chips() }}
+    </div>
     <div class="section-head">
       <h2>Top Bollywood stations right now</h2>
       <a href="{{ url_for('public.category', cat='bollywood') }}">All Bollywood →</a>
