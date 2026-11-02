@@ -16,7 +16,7 @@ from .security import csp_nonce, csrf_protect, csrf_token, current_user, securit
 from .settings import ads_active, get_settings
 from .util import human_size, render_markdown, valid_email
 
-__version__ = "1.7.17"
+__version__ = "1.7.18"
 
 
 def create_app(overrides=None):
@@ -52,6 +52,8 @@ def create_app(overrides=None):
     app.register_blueprint(public_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
+    from .subscriptions import bp as subs_bp
+    app.register_blueprint(subs_bp)
 
     app.teardown_appcontext(dbmod.close_db)
     app.before_request(_to_main_address)
@@ -245,6 +247,17 @@ def _apply_setting_changes(app):
                         "Bollywood hits, Pakistani songs, ghazals, qawwali and Hollywood top 40 — thousands of live "
                         "stations. No download needed."))
             db.execute("INSERT INTO settings (key, value) VALUES (?, ?)", ("_done_hero_v111", "1"))
+            db.commit()
+        # v1.7.18: the app is now sold directly (account login + payment you approve), not through Google Play
+        if not db.scalar("SELECT COUNT(*) FROM settings WHERE key = ?", ("_done_privacy_app_v118",)):
+            from .settings import DEFAULTS as _D
+            import re as _re
+            row = db.one("SELECT value FROM settings WHERE key = ?", ("privacy_md",))
+            if row and "sold through Google Play" in row["value"]:
+                new_par = _re.search(r"### Android app subscription\n\n(.+?)\n", _D["privacy_md"] + "\n", _re.S).group(1)
+                fixed = _re.sub(r"(### Android app subscription\n\n)[^\n]*", lambda m: m.group(1) + new_par, row["value"], count=1)
+                db.execute("UPDATE settings SET value = ? WHERE key = ?", (fixed, "privacy_md"))
+            db.execute("INSERT INTO settings (key, value) VALUES (?, ?)", ("_done_privacy_app_v118", "1"))
             db.commit()
         # v1.7.10: the privacy policy tells people what the Android subscription check stores
         if not db.scalar("SELECT COUNT(*) FROM settings WHERE key = ?", ("_done_privacy_app_v110",)):

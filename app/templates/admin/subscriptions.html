@@ -1,0 +1,40 @@
+{% extends "admin/_layout.html" %}
+{% block title %}App subscriptions{% endblock %}
+{% block admin %}
+<div class="card">
+  <p>The Sur Music app costs <strong>{{ price }}</strong>, one account and one phone. People pay to the verified accounts in <a href="{{ url_for('admin.donations') }}">Donations</a> and then send the transaction ID. <strong>Press Approve only after you see that payment in your own payment app.</strong></p>
+</div>
+<br>
+<h2 class="h3">Waiting to be checked ({{ pending | length }})</h2>
+{% if pending %}
+<table class="events"><thead><tr><th>When (UTC)</th><th>Account</th><th>Paid with</th><th>Transaction ID</th><th>Note</th><th></th></tr></thead><tbody>
+{% for r in pending %}
+<tr><td>{{ r.created_at[:16] }}</td><td>{{ r.email }}</td><td>{{ r.method }}</td><td><code>{{ r.reference }}</code></td><td>{{ r.note }}</td>
+<td>
+  <form class="inline" method="post" action="{{ url_for('subs.admin_action', sid=r.id, action='approve') }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-sm btn-primary">Approve (1 year)</button></form>
+  <form class="inline" method="post" action="{{ url_for('subs.admin_action', sid=r.id, action='reject') }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-sm btn-ghost">Reject</button></form>
+</td></tr>
+{% endfor %}
+</tbody></table>
+{% else %}<p class="muted">Nothing waiting.</p>{% endif %}
+
+<br><h2 class="h3">Active ({{ live | length }})</h2>
+{% if live %}
+<table class="events"><thead><tr><th>Account</th><th>Until</th><th></th></tr></thead><tbody>
+{% for r in live %}
+<tr><td>{{ r.email }}</td><td>{{ r.expires_at[:10] }}</td><td>
+  <form class="inline" method="post" action="{{ url_for('subs.admin_reset_device') }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="user_id" value="{{ r.user_id }}"><button class="btn btn-sm btn-ghost">Release phone</button></form>
+  <form class="inline" method="post" action="{{ url_for('subs.admin_action', sid=r.id, action='revoke') }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-sm btn-ghost">Switch off</button></form>
+</td></tr>
+{% endfor %}
+</tbody></table>
+{% else %}<p class="muted">No active subscriptions yet.</p>{% endif %}
+
+<br><h2 class="h3">Give access without a request</h2>
+<form class="card form" method="post" action="{{ url_for('subs.admin_grant') }}">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <label for="g-email">Account email</label><input id="g-email" name="email" type="email" required>
+  <label for="g-days">Days</label><input id="g-days" name="days" inputmode="numeric" value="365">
+  <button class="btn btn-primary">Give access</button>
+</form>
+{% endblock %}

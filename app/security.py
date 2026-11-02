@@ -72,7 +72,7 @@ def _same_origin():
 def csrf_protect():
     if request.method in ("GET", "HEAD", "OPTIONS"):
         return
-    if request.path == "/api/app/license":      # called by the Android app itself (no browser session, no cookies)
+    if request.path in ("/api/app/license", "/api/app/login", "/api/app/status", "/api/app/logout"):      # called by the Android app itself (no browser session, no cookies)
         return
     sent = request.form.get("_csrf") or request.headers.get("X-CSRF-Token", "")
     good = session.get("_csrf", "")

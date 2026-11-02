@@ -154,3 +154,34 @@ CREATE TABLE IF NOT EXISTS app_licenses (
   first_seen TEXT NOT NULL,
   last_seen TEXT NOT NULL
 );
+
+-- App subscription sold directly: one row per payment request (pending -> active / rejected), one phone per account
+CREATE TABLE IF NOT EXISTS app_subscriptions (
+  id BIGSERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  method TEXT NOT NULL DEFAULT '',
+  reference TEXT NOT NULL DEFAULT '',
+  note TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL,
+  decided_at TEXT,
+  expires_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_app_subs_user ON app_subscriptions (user_id, status);
+
+CREATE TABLE IF NOT EXISTS app_devices (
+  user_id INTEGER PRIMARY KEY,
+  install_hash TEXT NOT NULL,
+  first_seen TEXT NOT NULL,
+  last_seen TEXT NOT NULL
+);
+
+-- The Android app signs in with e-mail + password and then holds a random token (only its hash is stored here)
+CREATE TABLE IF NOT EXISTS app_tokens (
+  token_hash TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  install_hash TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  last_seen TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_app_tokens_user ON app_tokens (user_id);

@@ -63,7 +63,7 @@ Sur Music is not directed at children under 13, and we do not knowingly collect 
 
 ### Android app subscription
 
-The Android app is a yearly subscription sold through Google Play. Google handles the payment and we never see your card or bank details. To keep one subscription on one phone, the app sends a random number made when it is first opened and the Google Play purchase token to our server, which stores only a fingerprint (hash) of each, with the date it was last used. This is not used for advertising and is not shared.
+The Android app is a yearly subscription tied to your Sur Music account. You pay by JazzCash, NayaPay or Wise to the account shown on our subscription page and send us the transaction ID; we check it in our own payment app. We never see your card, PIN or bank password. The app signs in with your email and password (the password is not kept on the phone; the phone keeps a random sign-in token). To keep one subscription on one phone, the app sends a random number made when it is first opened, and our server stores only a fingerprint (hash) of it and of the token, with the date it was last used. This is not used for advertising and is not shared.
 
 ### Your rights
 

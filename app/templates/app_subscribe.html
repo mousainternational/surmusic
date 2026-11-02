@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% block content %}
+<div class="wrap page narrow">
+  <header class="page-head">
+    <h1>Sur Music app — {{ price }}</h1>
+    <p class="muted">One account, one phone. Pay once a year, then sign in on your phone with this account.</p>
+  </header>
+
+  {% if until %}
+  <div class="card ok-box"><strong>Your app is active</strong> until {{ until[:10] }}. Open the app and sign in with <strong>{{ user.email }}</strong>.</div>
+  {% endif %}
+
+  <div class="notice card">
+    <strong>How to pay:</strong> send {{ price }} to one of the accounts below, then enter the transaction ID here. We check it in our own payment app and switch the app on for your account. This is not automatic, so please allow some time.
+    Always check the account holder name in your payment app. Never send a PIN, password or OTP to anyone.
+  </div>
+
+  <h2 class="section-title">1. Pay</h2>
+  {% if methods %}
+  <div class="grid donate-grid">
+    {% for key, label, m in methods %}
+    <section class="card donate-card">
+      <h3>{{ label }}</h3>
+      <p><strong>{{ m.holder }}</strong></p>
+      {% if m.number %}<p>Number: <code>{{ m.number }}</code></p>{% endif %}
+      {% if m.details %}<p class="small">{{ m.details }}</p>{% endif %}
+      {% if m.qr %}<img src="{{ media_src(m.qr) }}" alt="{{ label }} QR code for {{ m.holder }}" width="180" height="180">{% endif %}
+    </section>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card"><p>Payment details are not available yet. Please check again soon or <a href="{{ url_for('public.contact') }}">contact us</a>.</p></div>
+  {% endif %}
+
+  {% if methods %}
+  <h2 class="section-title">2. Tell us you paid</h2>
+  <form class="card form" method="post">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <label for="method">Paid with</label>
+    <select id="method" name="method">
+      {% for key, label, m in methods %}<option value="{{ key }}" {% if form.get('method') == key %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    {% if errors.method %}<p class="field-error">{{ errors.method }}</p>{% endif %}
+    <label for="reference">Transaction ID (from your receipt)</label>
+    <input id="reference" name="reference" maxlength="80" value="{{ form.get('reference', '') }}" autocomplete="off">
+    {% if errors.reference %}<p class="field-error">{{ errors.reference }}</p>{% endif %}
+    <label for="note">Note <span class="muted">(optional, for example the name or number you paid from)</span></label>
+    <input id="note" name="note" maxlength="200" value="{{ form.get('note', '') }}">
+    <button class="btn btn-primary">I have paid</button>
+  </form>
+  {% endif %}
+
+  {% if mine %}
+  <h2 class="section-title">Your requests</h2>
+  <ul class="plain">
+    {% for r in mine %}<li>{{ r.created_at[:10] }} — {{ r.method }} {{ r.reference }} — <strong>{{ {'pending': 'waiting to be checked', 'active': 'approved', 'rejected': 'not approved', 'revoked': 'switched off'}.get(r.status, r.status) }}</strong>{% if r.status == 'active' and r.expires_at %} (until {{ r.expires_at[:10] }}){% endif %}</li>{% endfor %}
+  </ul>
+  {% endif %}
+</div>
+{% endblock %}
