@@ -678,3 +678,57 @@ def countries_in(continent):
 
 
 CODE_TO_COUNTRY.update({v: k for k, v in COUNTRY_CODES.items()})
+
+
+# --------------------------------------------------------------------------------------------
+# Extra "also searched as" words for the biggest pages: famous names, cities and common questions.
+EXTRA_MORE = {
+    "news": "Also searched as live news radio, breaking news live, world news today, US midterm elections and election night "
+            "live, congressional and senate results, Europe news and politics, European economy and energy, Ukraine and "
+            "Russia news, Middle East and Iran news, weather and storm warnings, news radio near me, war and "
+            "conflict news, world affairs, business news radio, stock market and crypto news, gold price news, "
+            "Urdu news live, Hindi news radio and Arabic news live. For the numbers behind the headlines, see our live "
+            "gold, Bitcoin and dollar-rate prices.",
+    "english-news": "Also searched as US election results radio, midterm election coverage, Europe news live, "
+                    "political debates and analysis, BBC-style world news radio, English news live, global news, breaking news, "
+                    "business and finance news radio, politics and current affairs, war and world news today.",
+    "talk": "Also searched as talk radio live, news and talk radio, political talk shows, call-in radio, business and "
+            "money talk, interviews and debates online.",
+    "sports": "Also searched as live cricket commentary, Pakistan vs India radio commentary, PSL, Asia Cup, IPL and "
+              "T20 World Cup commentary, cricket radio in Urdu and English, football radio live, NBA and NFL radio, "
+              "sports talk radio, match commentary online and live score radio.",
+    "quran": "Listeners look for recitations by Mishary Rashid Alafasy, Abdul Rahman Al-Sudais, Saud Al-Shuraim, "
+             "Maher Al Muaiqly, Abdul Basit Abdus Samad, Saad Al-Ghamdi, Yasser Al-Dosari and Mahmoud Khalil Al-Husary. "
+             "Quran stations from different countries are listed here, so the reciters differ from station to station. "
+             "Many people listen to Quran radio in the morning, in the car, at work or before sleep, in the USA, UK, "
+             "UAE, Saudi Arabia, Canada, Pakistan and everywhere else.",
+    "naat": "Popular naat khwans include Owais Raza Qadri, Junaid Jamshed, Khalid Hasnain Khalid, Syed Fasihuddin "
+            "Soharwardi, Hafiz Ahmed Raza Qadri, Sami Yusuf and Maher Zain. Titles people search for include Tajdar-e-Haram, "
+            "Mustafa Jaan-e-Rehmat, Mera Dil Badal De, Ya Nabi Salam Alayka and Hasbi Rabbi. A naat praises the Prophet "
+            "Muhammad (peace be upon him); a hamd praises Allah.",
+    "qawwali": "Great qawwali names include Nusrat Fateh Ali Khan, the Sabri Brothers, Aziz Mian, Rahat Fateh Ali Khan, "
+               "Amjad Sabri, Fareed Ayaz and Abu Muhammad, Rizwan and Muazzam, and Abida Parveen for Sufi kalam. "
+               "Titles people search for include Allah Hoo, Ali Maula, Dam Mast Qalandar, Bhar Do Jholi Meri and "
+               "Tajdar-e-Haram.",
+    "islamic": "Listeners search for bayan, dars-e-Quran, hadith lessons, Islamic lectures in Urdu, Arabic and English, "
+               "duas, Jummah khutbah and nasheed from stations in Pakistan, Saudi Arabia, the UAE, the UK and the USA.",
+    "usa": "Also searched as radio in New York, Los Angeles, Chicago, Houston and Dallas, American news and talk radio, "
+           "country music radio, hip-hop radio, Bollywood radio in the USA, Quran radio in the USA and Urdu radio in America.",
+    "uk": "Also searched as London radio live, Manchester, Birmingham and Glasgow radio, British radio online, "
+          "Asian radio UK, Urdu radio UK, Punjabi radio UK, Bollywood radio UK and Quran radio in the UK.",
+    "uae": "Also searched as Dubai radio online, Abu Dhabi radio, Sharjah radio, Arabic radio UAE, Hindi radio UAE, "
+           "Pakistani radio in Dubai, Quran radio UAE and Malayalam radio UAE.",
+    "canada": "Also searched as Toronto radio live, Vancouver, Montreal, Calgary and Ottawa radio, Punjabi radio Canada, "
+              "Urdu radio Canada, Bollywood radio Canada and CBC style news radio.",
+    "saudi-arabia": "Also searched as Makkah radio, Madinah radio, Riyadh and Jeddah radio, Quran radio Saudi Arabia, "
+                    "Arabic radio live, and Urdu and Hindi radio for people working in Saudi Arabia.",
+    "india": "Also searched as Mumbai, Delhi, Kolkata, Chennai and Bengaluru radio, Hindi radio online, Bollywood radio, "
+             "Tamil, Telugu, Malayalam and Punjabi radio, cricket commentary and old Hindi songs.",
+    "pakistan": "Also searched as Lahore, Karachi, Islamabad, Rawalpindi, Peshawar and Quetta radio, Pakistani FM radio live, "
+                "FM 100, FM 101 and FM 91, Urdu, Punjabi, Pashto and Sindhi radio, cricket commentary, naat and Quran radio.",
+    "australia": "Also searched as Sydney, Melbourne, Brisbane, Perth and Adelaide radio, Australian news radio, "
+                 "Punjabi and Hindi radio in Australia, Urdu radio Australia and Quran radio in Australia.",
+}
+for _k, _t in EXTRA_MORE.items():
+    if _k in TOPICS:
+        TOPICS[_k]["more"] = (TOPICS[_k].get("more") or "").rstrip() + " " + _t

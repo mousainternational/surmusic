@@ -150,3 +150,18 @@ def station_ld(st, path):
         data["keywords"] = st["tags"]
     return data
 
+
+
+def article_ld(post, author):
+    """schema.org Article for a guide in /blog."""
+    s = get_settings()
+    return {
+        "@context": "https://schema.org", "@type": "Article", "headline": post["title"],
+        "description": post["description"], "datePublished": post["date"],
+        "dateModified": post.get("updated", post["date"]), "inLanguage": "en",
+        "author": {"@type": "Organization", "name": s["owner_name"]},
+        "publisher": {"@type": "Organization", "name": s["owner_name"],
+                      "logo": {"@type": "ImageObject", "url": absolute(url_for("static", filename="img/mish-logo-512.png"))}},
+        "mainEntityOfPage": absolute(f"/blog/{post['slug']}"),
+        "image": absolute(url_for("static", filename="img/og-default.png")),
+    }

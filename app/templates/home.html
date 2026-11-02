@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% import "_macros.html" as ui with context %}
+{% import "_markets.html" as mk %}
+{% import "_trending.html" as tr %}
 {% import "_ad.html" as ads with context %}
 {% import "_offers.html" as partner with context %}
 {% block body_class %}page-home{% endblock %}
@@ -117,9 +119,41 @@
 </section>
 
 <section class="section">
+  <div class="wrap">
+    {{ tr.strip(trending, 'Trending now') }}
+    <div class="card mk-card mk-gadget" data-market-section="gadget" aria-labelledby="mk-gadget-h">
+      <div class="mk-head"><h2 class="h3" id="mk-gadget-h">Gold, Bitcoin and dollar rate</h2><a href="/markets">All prices →</a></div>
+      {% for s in market_sections %}{% if s.key in ('metals', 'crypto', 'forex') %}
+      {% for r in s.rows if r.id in ('xau', 'xag', 'btc', 'usd-pkr') %}
+      <div class="mk-row" data-market="{{ r.id }}"{% if not r.text %} hidden{% endif %}>
+        <span class="mk-name">{{ r.label }}<span class="mk-unit">{{ r.unit }}</span></span>
+        <span class="mk-val" data-v>{{ r.text }}</span>
+        <span class="mk-chg mk-{{ r.dir }}" data-c>{{ r.change }}</span>
+      </div>
+      {% endfor %}{% endif %}{% endfor %}
+      <p class="small muted">Live prices, for information only, not financial advice.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="card cta">
+      <div>
+        <h2>Islam: Quran, Naat and Qawwali</h2>
+        <p class="muted">Quran recitation by famous qaris, Naat Sharif, hamd, qawwali and Islamic talks, live and free.</p>
+      </div>
+      <a class="btn btn-primary" href="/islam">Open Islam section</a>
+    </div>
+  </div>
+</section>
+
+<section class="section">
   <div class="wrap prose narrow seo-text">
     <h2>Live radio from every country — free</h2>
     <p>Sur Music brings together thousands of live radio stations for Hindi, Urdu, Punjabi and English music. Listen to Bollywood hits from Mumbai, Lollywood songs and ghazals from Lahore and Karachi, qawwali and Sufi music, or the latest Top 40 from the USA and UK — right in your browser, with no app or sign-up needed. You can also listen to radio from more than 200 countries across Europe, North and South America, Africa, Asia and Oceania: news, talk, sports, Christian, Latin, jazz, classical and much more.</p>
+    <h2>Questions about Sur Music radio</h2>
+    {{ home_faq | markdown }}
     <p>Every station is a public live stream from its broadcaster, listed in the open Radio Browser directory. Sur Music is made by {{ S.owner_name }} ({{ S.owner_brand }}) and is free thanks to ads and your <a href="{{ url_for('public.donate') }}">support</a>.</p>
   </div>
 </section>

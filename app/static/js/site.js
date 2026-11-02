@@ -249,3 +249,41 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", personalChips); else personalChips();
   document.addEventListener("page:load", personalChips);
 })();
+
+/* market prices: fill the gadget and the /markets page, then refresh every minute */
+(function () {
+  var timer = null, tries = 0;
+  function apply(d) {
+    var items = (d && d.items) || {}, any = false;
+    document.querySelectorAll("[data-market]").forEach(function (row) {
+      var it = items[row.getAttribute("data-market")];
+      if (!it || !it.text) return;
+      any = true;
+      row.hidden = false;
+      row.querySelector("[data-v]").textContent = it.text;
+      var c = row.querySelector("[data-c]");
+      if (c) { c.textContent = it.change || ""; c.className = "mk-chg" + (it.dir ? " mk-" + it.dir : ""); }
+    });
+    document.querySelectorAll("[data-market-section]").forEach(function (sec) {
+      if (sec.getAttribute("data-market-section") === "gadget") return;
+      sec.hidden = !sec.querySelector("[data-market]:not([hidden])");
+    });
+    var u = document.querySelector("[data-mk-updated]");
+    if (u && d && d.updated) u.textContent = "Updated " + d.updated + ".";
+    return any;
+  }
+  function load() {
+    fetch("/api/markets", { credentials: "same-origin" }).then(function (r) { return r.json(); }).then(function (d) {
+      var ok = apply(d);
+      tries++;
+      clearTimeout(timer);
+      timer = setTimeout(load, ok ? 60000 : (tries < 6 ? 6000 : 120000));
+    }).catch(function () { clearTimeout(timer); timer = setTimeout(load, 120000); });
+  }
+  function init() {
+    clearTimeout(timer); tries = 0;
+    if (document.querySelector("[data-market]")) load();
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+  document.addEventListener("page:load", init);
+})();

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% block content %}
+<div class="wrap page narrow">
+  {{ ui.breadcrumbs(crumbs) }}
+  <header class="page-head"><h1>Radio guides and articles</h1>
+    <p class="muted">Short, practical guides from the Sur Music team: listening, finding stations and fixing problems.</p></header>
+  <div class="blog-list">
+    {% for p in posts %}
+    <article class="card blog-card">
+      <p class="small muted"><span class="blog-tag">{{ p.tag }}</span> · {{ p.date }} · {{ p.minutes }} min read</p>
+      <h2 class="h3"><a href="/blog/{{ p.slug }}">{{ p.title }}</a></h2>
+      <p>{{ p.description }}</p>
+      <p><a href="/blog/{{ p.slug }}" aria-label="Read: {{ p.title }}">Read the guide</a></p>
+    </article>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

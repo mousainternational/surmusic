@@ -691,3 +691,33 @@ html.menu-open .cookie-note { display: none; }
 .more-link { margin: 14px 0 0; }
 @media (max-width: 640px) { .genre-cards-section { display: none; } }
 .footer-bottom .credit { display: block; margin-top: 6px; font-size: .72rem; color: var(--muted); text-decoration: none; opacity: .8; }
+
+/* guides (/blog) */
+.blog-list { display: grid; gap: 14px; }
+.blog-card h2 { margin: 4px 0 6px; }
+.blog-card p { margin: 6px 0; }
+.blog-tag { font-weight: 600; }
+.blog-body { font-size: 1.04rem; line-height: 1.75; }
+.blog-body h2 { margin-top: 1.6em; }
+.blog-body p { margin: .9em 0; }
+.blog-more { padding-left: 1.2em; }
+.blog-more li + li { margin-top: .5em; }
+
+/* markets gadget and page */
+.mk-card { margin: 12px 0; }
+.mk-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.mk-head h2 { margin: 0; }
+.mk-row { display: grid; grid-template-columns: 1fr auto auto; gap: 4px 14px; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.mk-row[hidden], .mk-card[hidden] { display: none; }
+.mk-name { min-width: 0; overflow-wrap: anywhere; }
+.mk-unit { display: block; color: var(--muted, #777); font-size: .85em; }
+.mk-val { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+.mk-chg { min-width: 4.5em; text-align: right; font-size: .9em; font-variant-numeric: tabular-nums; }
+.mk-up { color: #17803d; } .mk-down { color: #c0302f; }
+@media (max-width: 520px) { .mk-row { grid-template-columns: 1fr auto; } .mk-chg { grid-column: 2; min-height: 1em; } .mk-chg:empty { display: none; } }
+
+/* trending strip and page */
+.trend-strip { margin: 12px 0; }
+.trend-list { list-style: none; margin: 8px 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.trend-list li { border: 1px solid var(--border); border-radius: 999px; padding: 6px 14px; background: var(--card, transparent); }
+.trend-list a { font-weight: 600; text-decoration: none; }

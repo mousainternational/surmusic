@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% import "_ad.html" as ads with context %}
+{% import "_trending.html" as tr %}
+{% block content %}
+<div class="wrap page narrow">
+  {{ ui.breadcrumbs([('Home', '/'), ('Live news', '/live-news')]) }}
+  <header class="page-head">
+    <h1>Live News Radio: US Midterm Elections, Europe, War and Weather</h1>
+    <p class="lead">Listen free to live news and talk radio from stations in more than 200 countries: US election coverage, news from Europe and the Middle East, war and world events, political debates and weather. No app, no sign-up.</p>
+  </header>
+  <nav class="chips" aria-label="News radio types">
+    <a class="chip" href="/genre/news">News radio</a>
+    <a class="chip" href="/genre/english-news">World news</a>
+    <a class="chip" href="/genre/talk">Talk and debates</a>
+    <a class="chip" href="/genre/sports">Sports</a>
+    <a class="chip" href="/markets">Gold, dollar, Bitcoin</a>
+  </nav>
+  {{ ads.ad('top') }}
+  {{ tr.strip(trending, 'Trending now') }}
+  <section class="card prose" aria-labelledby="ln-where">
+    <h2 id="ln-where">News radio by country and region</h2>
+    <ul class="country-list">{% for name, href in topics %}<li><a href="{{ href }}">{{ name }} radio</a></li>{% endfor %}</ul>
+    <p><a href="/radio-stations">All countries and radio types →</a></p>
+  </section>
+  <section class="card prose" aria-labelledby="ln-faq">
+    <h2 id="ln-faq">Questions about live news, elections and world events</h2>
+    {{ faq | markdown }}
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% import "_ad.html" as ads with context %}
+{% import "_markets.html" as mk %}
+{% block content %}
+<div class="wrap page narrow">
+  {{ ui.breadcrumbs([('Home', '/'), ('Markets', '/markets')]) }}
+  <header class="page-head">
+    <h1>Gold Rate Today, Dollar Rate and Bitcoin Price</h1>
+    <p class="lead">Live prices that update by themselves: gold and silver (with the rate per tola), Bitcoin and other crypto, and the US dollar against the Pakistani rupee, Indian rupee, dirham, riyal, euro and pound.</p>
+  </header>
+  {{ ads.ad('top') }}
+  <p class="muted small" data-mk-note>Prices appear here a few seconds after the page opens. <span data-mk-updated></span></p>
+  {% for s in sections %}
+  <section class="card mk-card" data-market-section="{{ s.key }}"{% if not s.ready %} hidden{% endif %} aria-labelledby="mk-{{ s.key }}">
+    <h2 class="h3" id="mk-{{ s.key }}">{{ s.title }}</h2>
+    {{ mk.rows(s) }}
+    {% if s.key == 'local' %}<p class="small muted">International spot price converted with today's exchange rate, pure (24 carat) gold and silver. A tola is 11.6638 grams. Shop rates include a premium and are different.</p>{% endif %}
+    {% if s.source %}<p class="small muted">Data: <a href="{{ s.source[1] }}" rel="nofollow noopener" target="_blank">{{ s.source[0] }}</a></p>{% endif %}
+  </section>
+  {% endfor %}
+  <p class="small muted"><strong>For information only.</strong> Prices may be delayed or unavailable and can differ from the price you can buy or sell at. This is not financial advice. Do not trade or invest based on this page alone.</p>
+
+  <section class="card prose" aria-labelledby="mk-search">
+    <h2 id="mk-search">Popular searches this page answers</h2>
+    <p>Gold rate today {{ year }} in Pakistan, 24 carat gold price per tola, gold price per gram, silver rate per tola, dollar rate today {{ year }}, USD to PKR, euro, pound, dirham and riyal rate in rupees, currency rates today, gold price in Dubai and the UAE, gold rate in India and Saudi Arabia, and Bitcoin and Ethereum price today.</p>
+  </section>
+
+  <section class="card prose" aria-labelledby="mk-news">
+    <h2 id="mk-news">Listen to live business and world news</h2>
+    <p>Follow the headlines behind the prices on live radio: <a href="/genre/news">news radio</a>, <a href="/genre/english-news">world news radio</a> and <a href="/genre/talk">talk radio</a>. You can keep listening while you check the prices.</p>
+  </section>
+
+  <section class="card prose" aria-labelledby="mk-faq">
+    <h2 id="mk-faq">Questions about gold, crypto and the dollar rate</h2>
+    {{ faq | markdown }}
+  </section>
+</div>
+{% endblock %}

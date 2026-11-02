@@ -1,0 +1,9 @@
+{% macro rows(section) -%}
+{% for r in section.rows %}
+<div class="mk-row" data-market="{{ r.id }}"{% if not r.text %} hidden{% endif %}>
+  <span class="mk-name">{{ r.label }}<span class="mk-unit">{{ r.unit }}</span></span>
+  <span class="mk-val" data-v>{{ r.text }}</span>
+  <span class="mk-chg mk-{{ r.dir }}" data-c>{{ r.change }}</span>
+</div>
+{% endfor %}
+{%- endmacro %}

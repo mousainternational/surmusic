@@ -16,7 +16,7 @@ from .security import csp_nonce, csrf_protect, csrf_token, current_user, securit
 from .settings import ads_active, get_settings
 from .util import human_size, render_markdown, valid_email
 
-__version__ = "1.7.4"
+__version__ = "1.7.9"
 
 
 def create_app(overrides=None):
@@ -227,6 +227,15 @@ def _apply_setting_changes(app):
                        (DEFAULTS["seo_default_title"], "seo_default_title",
                         "Sur Music — Live Radio: Naat, Quran, Qawwali, News, Bollywood & Pakistani FM"))
             db.execute("INSERT INTO settings (key, value) VALUES (?, ?)", ("_done_seo_text_v17", "1"))
+            db.commit()
+        # v1.7.6: home description names the big countries and music types (only if the owner never changed it)
+        if not db.scalar("SELECT COUNT(*) FROM settings WHERE key = ?", ("_done_seo_text_v18",)):
+            from .settings import DEFAULTS
+            db.execute("UPDATE settings SET value = ? WHERE key = ? AND value = ?",
+                       (DEFAULTS["seo_default_description"], "seo_default_description",
+                        "Listen free to live radio from around the world: Naat, Quran, qawwali, ghazal, Urdu news, "
+                        "Bollywood, Pakistani FM and English hits. No download, no sign-up."))
+            db.execute("INSERT INTO settings (key, value) VALUES (?, ?)", ("_done_seo_text_v18", "1"))
             db.commit()
     except Exception:  # two workers starting together
         db.rollback()

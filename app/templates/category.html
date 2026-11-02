@@ -2,6 +2,7 @@
 {% import "_macros.html" as ui with context %}
 {% import "_ad.html" as ads with context %}
 {% import "_offers.html" as partner with context %}
+{% import "_trending.html" as tr %}
 {% block content %}
 <div class="wrap page">
   {{ ui.breadcrumbs(crumbs or [('Home', '/'), (info.h1.split(' — ')[0], request.path)]) }}
@@ -14,6 +15,7 @@
   {{ ui.cat_tabs(cat) }}
   {{ ui.genre_chips(genre or '') }}
   {{ ads.ad('top') }}
+  {{ tr.strip(trending, 'Trending now: live commentary and news') }}
   <div class="with-side">
     <div>
       {% if error and not stations %}
@@ -26,6 +28,7 @@
       {% if info.more %}<section class="topic-more card">
         <h2 class="h3">About {{ info.h1.split(' — ')[0] }}</h2>
         <p>{{ info.more }}</p>
+        {% if info.group == 'Islamic & spiritual' %}<p class="small"><a href="/islam">Islam on Sur Music: famous qaris, naat khwans and qawwali artists →</a></p>{% endif %}
         <p class="small"><a href="/radio-stations">See all radio types and countries →</a></p>
       </section>{% endif %}
     </div>

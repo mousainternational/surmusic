@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% import "_ad.html" as ads with context %}
+{% block content %}
+<div class="wrap page narrow">
+  {{ ui.breadcrumbs([('Home', '/'), ('Trending now', '/trending')]) }}
+  <header class="page-head">
+    <h1>Trending Searches Now: News, Elections, Cricket, Weather, Songs and Movies</h1>
+    <p class="lead">What people in Pakistan, India, the UAE, Europe, the USA, Canada, Africa and more are searching for right now: news, elections, war and world events, debates, weather, cricket and football, gold and the dollar, songs and movies. This list updates by itself every 30 minutes. Pick a topic to find live radio commentary, news radio or prices.</p>
+  </header>
+  {{ ads.ad('top') }}
+  {% for c in countries %}
+  <section class="card" aria-labelledby="t-{{ c.geo }}">
+    <h2 class="h3" id="t-{{ c.geo }}">Trending in {{ c.name }}</h2>
+    <ul class="trend-list">
+      {% for r in c.rows %}<li><a href="{{ r.href }}">{{ r.term }}</a>{% if r.traffic %} <span class="muted small">{{ r.traffic }} searches</span>{% endif %}</li>{% endfor %}
+    </ul>
+  </section>
+  {% else %}
+  <div class="card"><p>The trending list is being loaded. Please check again in a minute.</p></div>
+  {% endfor %}
+  <p class="small muted">{% if updated %}Updated {{ updated }}. {% endif %}Source: <a href="https://trends.google.com/trending" rel="nofollow noopener" target="_blank">Google Trends</a>. Topics that are sensitive or unsuitable are left out. Tapping a topic opens the matching page: <a href="/genre/sports">sports radio</a>, <a href="/genre/news">news radio</a>, <a href="/genre/talk">talk and debate radio</a>, <a href="/markets">prices</a>, or Bollywood, Hollywood and pop music radio. Which matches or events a station covers is up to the station.</p>
+  <section class="card prose">
+    <h2>Listen while you follow the news</h2>
+    <p>Keep <a href="/genre/sports">live sports and cricket commentary</a>, <a href="/genre/news">news radio</a>, <a href="/genre/english-news">world news</a> and <a href="/genre/talk">talk radio</a> playing, and check the <a href="/markets">gold rate, dollar rate and Bitcoin price</a> any time.</p>
+  </section>
+</div>
+{% endblock %}

@@ -68,6 +68,10 @@ class Config:
     EVENT_DAYS = _int("EVENT_DAYS", 365)
     # Development/testing only: serve built-in demo stations instead of calling Radio Browser.
     RADIO_DEMO = _bool("RADIO_DEMO", False)
+    # Market prices gadget (app/markets.py): only sources that need no key. Set 0 to switch it off.
+    MARKETS_ENABLED = _bool("MARKETS_ENABLED", True)
+    # Trending searches (app/trends.py): Google Trends public feed, no key. Set 0 to switch it off.
+    TRENDS_ENABLED = _bool("TRENDS_ENABLED", True)
 
     # Optional malware scanning through a ClamAV daemon (clamd).
     CLAMAV_HOST = os.environ.get("CLAMAV_HOST", "")

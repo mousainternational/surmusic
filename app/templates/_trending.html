@@ -1,0 +1,11 @@
+{% macro strip(items, heading) -%}
+{% if items %}
+<section class="card trend-strip" aria-labelledby="trend-h">
+  <h2 class="h3" id="trend-h">{{ heading or 'Trending now' }}</h2>
+  <ul class="trend-list">
+    {% for r in items %}<li><a href="{{ r.href }}">{{ r.term }}</a>{% if r.geo %} <span class="muted small">({{ r.geo }})</span>{% endif %}</li>{% endfor %}
+  </ul>
+  <p class="small muted">Searches that are rising on Google right now. <a href="/trending">See all trending</a>. Tap one to find live radio, commentary or prices.</p>
+</section>
+{% endif %}
+{%- endmacro %}

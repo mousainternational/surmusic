@@ -46,7 +46,7 @@ def render_markdown(text):
     escaped = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     html = md.markdown(escaped, extensions=["sane_lists", "tables"], output_format="html")
     html = _HREF_RE.sub(_safe_attr, html)
-    html = html.replace("<a href=", '<a rel="nofollow noopener" href=')
+    html = re.sub(r'<a href="(https?://|mailto:)', r'<a rel="nofollow noopener" href="\1', html)    # internal links stay followed
     return Markup(html)
 
 

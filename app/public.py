@@ -15,7 +15,11 @@ from . import analytics, radio
 from .db import get_db, utcnow
 from .mailer import send_mail
 from .security import current_user, ip_hash, rate_limited
-from .seo import (breadcrumb_ld, build_meta, faq_ld, media_url, organization_ld, page_ld, station_ld, webapp_ld,
+from . import blog as blog_data
+from . import islam as islam_data
+from . import markets
+from . import trends
+from .seo import (article_ld, breadcrumb_ld, build_meta, faq_ld, media_url, organization_ld, page_ld, station_ld, webapp_ld,
                   website_ld)
 from .settings import (ADSENSE_CLIENT_RE, ads_active, affiliate_offers, donation_method, get_settings, is_blocked,
                        offers_for, sponsored_stations, without_blocked)
@@ -29,18 +33,21 @@ CATEGORY_PAGES = {
         "h1": "Bollywood Radio — Live Hindi Songs",
         "seo_title": "Bollywood Radio Live — Hindi Film Songs Online Free",
         "description": "Listen to live Bollywood radio free: Hindi film songs, romantic hits, 90s classics and new releases from stations in India and around the world.",
+        "more": "Also searched as Bollywood radio live, Hindi songs online, Hindi radio online free, Bollywood songs FM, old Hindi songs, romantic Hindi songs, 90s Bollywood songs, Punjabi and Bollywood remix. Fans of Arijit Singh, Lata Mangeshkar, Kishore Kumar, Mohammed Rafi, Asha Bhosle, Shreya Ghoshal, Sonu Nigam, Atif Aslam and Rahat Fateh Ali Khan will find stations playing Hindi film hits and classics. Listeners in the USA, UK, UAE, Canada, Australia and Saudi Arabia use this page to hear Bollywood radio from Mumbai and Delhi.",
         "intro": "Tune in to the best live Bollywood radio stations, all in one place. From the golden voices of Lata Mangeshkar and Kishore Kumar to today's chart-toppers, these stations play Hindi film music around the clock — romantic songs, dance numbers, 90s classics and devotional music. Pick a station, press play, and keep browsing: the music keeps going.",
     },
     "lollywood": {
         "h1": "Lollywood & Pakistani Radio — Urdu, Punjabi, Ghazal & Qawwali",
         "seo_title": "Pakistani Radio Live — Urdu Songs, Ghazal & Qawwali",
         "description": "Listen to live Pakistani radio free: Lollywood film songs, Urdu pop, Punjabi music, ghazals, qawwali and FM stations from Pakistan.",
+        "more": "Also searched as Pakistani radio live, Lollywood songs, Urdu songs online, Pakistani FM radio, FM 100, FM 101 and FM 91 live, Punjabi songs, Urdu radio, Pakistani drama songs and Coke Studio style music. Listeners looking for Noor Jehan, Mehdi Hassan, Nazia Hassan, Atif Aslam, Ali Zafar, Rahat Fateh Ali Khan, Abida Parveen and Nusrat Fateh Ali Khan will find Pakistani music stations here. Pakistanis in the UK, USA, UAE, Saudi Arabia and Canada use this page to hear radio from Lahore, Karachi and Islamabad.",
         "intro": "Listen to live Pakistani radio from Lahore, Karachi, Islamabad and beyond. These stations play Lollywood film songs, Urdu and Punjabi pop, timeless ghazals, Sufi music and qawwali, plus news and talk from FM stations across Pakistan. Wherever you are in the world, stay connected to the sound of home.",
     },
     "hollywood": {
         "h1": "Hollywood & English Hits Radio — Top 40, Pop & Soundtracks",
         "seo_title": "English Radio Live — Top 40 Hits & Pop Online",
         "description": "Listen to live English radio free: Top 40 hits, pop, 80s and 90s classics and Hollywood movie soundtracks from stations worldwide.",
+        "more": "Also searched as Hollywood songs online, English radio live, Top 40 radio, pop radio online, English songs free, 80s and 90s hits, movie soundtracks and US and UK chart radio. Fans of Taylor Swift, Ed Sheeran, The Weeknd, Dua Lipa, Billie Eilish, Coldplay, Adele and Bruno Mars will find pop and hits stations here. Listeners in the USA, UK, Canada, Australia, the UAE and South Africa use this page for English hit radio.",
         "intro": "Enjoy live English music radio: Top 40 chart hits, pop and dance, timeless 80s and 90s classics, and Hollywood movie soundtracks from stations around the world. Perfect for work, study, workouts and long drives — free, with no download and no sign-up needed.",
     },
 }
@@ -208,7 +215,9 @@ def home():
     stations, error = _stations_for("bollywood")
     meta = build_meta(page="home", canonical_path="/")
     return render_template("home.html", meta=meta, stations=protect(stations[:60]), error=error, cat="bollywood",
-                           popular=_popular(), ld=[website_ld(), webapp_ld(), organization_ld()])
+                           popular=_popular(), home_faq=islam_data.HOME_FAQ, market_sections=markets.view(),
+                           trending=trends.top(6),
+                           ld=[website_ld(), webapp_ld(), organization_ld(), faq_ld(islam_data.HOME_FAQ)])
 
 
 @bp.route("/<any(bollywood, lollywood, hollywood):cat>")
@@ -252,8 +261,9 @@ def _topic_page(slug):
     if info["kind"] == "country" and info["group"] in CONTINENTS:
         crumbs.append((CONTINENTS[info["group"]][0], f"/continent/{info['group']}"))
     crumbs.append((info["h1"].split(" — ")[0], topic_path(slug)))
+    trending = trends.top(8) if slug in ("sports", "news", "english-news", "talk", "pop") else []
     return render_template("category.html", meta=meta, stations=protect(stations), error=error, cat=slug,
-                           info=info, genre=slug, crumbs=crumbs, ld=[breadcrumb_ld(crumbs)])
+                           info=info, genre=slug, crumbs=crumbs, ld=[breadcrumb_ld(crumbs)], trending=trending)
 
 
 def _listed_countries(continent, minimum=3):
@@ -760,6 +770,90 @@ def robots():
     return Response(body, mimetype="text/plain")
 
 
+@bp.route("/live-news")
+def live_news_page():
+    meta = build_meta("Live News Radio: US Midterm Elections, Europe, War, Weather",
+                      "Listen free to live news and talk radio: US midterm election coverage, Europe news, war and world "
+                      "events, political debates and weather, from stations in 200+ countries.",
+                      canonical_path="/live-news")
+    crumbs = [("Home", "/"), ("Live news", "/live-news")]
+    topics = [("US midterm elections", "/country/usa"), ("Europe news", "/continent/europe"),
+              ("Middle East news", "/continent/middle-east"), ("UK news", "/country/uk"), ("Germany", "/country/germany"),
+              ("France", "/country/france"), ("Italy", "/country/italy"), ("Spain", "/country/spain"),
+              ("Ukraine", "/country/ukraine"), ("Russia", "/country/russia"), ("Israel", "/country/israel"),
+              ("Iran", "/country/iran"), ("Saudi Arabia", "/country/saudi-arabia"), ("UAE", "/country/uae"),
+              ("Turkey", "/country/turkey"), ("Pakistan", "/country/pakistan"), ("India", "/country/india"),
+              ("Canada", "/country/canada"), ("Australia", "/country/australia")]
+    return render_template("live_news.html", meta=meta, topics=topics, faq=islam_data.LIVE_NEWS_FAQ,
+                           trending=trends.top(8), ld=[breadcrumb_ld(crumbs), faq_ld(islam_data.LIVE_NEWS_FAQ)])
+
+
+@bp.route("/trending")
+def trending_page():
+    countries = trends.by_country()
+    meta = build_meta("Trending Now: News, Elections, Cricket, Weather, Songs",
+                      "What people in Pakistan, India, the UAE, Europe, the USA and more are searching for right now: "
+                      "news, elections, war, weather, cricket, gold, songs and movies. Updated every 30 minutes.",
+                      canonical_path="/trending", noindex=not countries)
+    crumbs = [("Home", "/"), ("Trending now", "/trending")]
+    return render_template("trending.html", meta=meta, countries=countries, updated=trends.updated_text(),
+                           ld=[breadcrumb_ld(crumbs)])
+
+
+@bp.route("/markets")
+def markets_page():
+    meta = build_meta("Gold Rate Today (Per Tola), Dollar Rate and Bitcoin Price",
+                      "Gold rate today per tola and gram, silver rate, USD to PKR dollar rate, euro, pound, dirham and "
+                      "riyal rates, and Bitcoin price, updated automatically. Plus live news radio.",
+                      canonical_path="/markets")
+    crumbs = [("Home", "/"), ("Markets", "/markets")]
+    return render_template("markets.html", meta=meta, sections=markets.view(), faq=islam_data.MARKETS_FAQ,
+                           year=datetime.now(timezone.utc).year,
+                           ld=[breadcrumb_ld(crumbs), faq_ld(islam_data.MARKETS_FAQ)])
+
+
+@bp.route("/api/markets")
+def api_markets():
+    resp = jsonify(markets.api_payload())
+    resp.headers["Cache-Control"] = "public, max-age=30"
+    return resp
+
+
+@bp.route("/islam")
+def islam_page():
+    meta = build_meta("Islamic Radio Live: Quran, Naat, Qawwali and Famous Qaris",
+                      "Listen free to live Quran recitation, Naat Sharif, hamd and qawwali. Famous qaris, naat khwans "
+                      "and qawwali artists, Islamic radio by country, and answers to common questions.",
+                      canonical_path="/islam")
+    crumbs = [("Home", "/"), ("Islam", "/islam")]
+    return render_template("islam.html", meta=meta, qaris=islam_data.QARIS, naats=islam_data.NAAT_KHWANS,
+                           qawwals=islam_data.QAWWALS, titles=islam_data.TITLES, countries=islam_data.COUNTRIES,
+                           faq=islam_data.ISLAM_FAQ, ld=[breadcrumb_ld(crumbs), faq_ld(islam_data.ISLAM_FAQ)])
+
+
+@bp.route("/blog")
+def blog_index():
+    meta = build_meta("Radio Guides and Articles — Quran, Naat, Qawwali, Help",
+                      "Practical guides from Sur Music: how to listen to Quran radio, find your home country's "
+                      "stations from abroad, use radio with a screen reader, and fix stopping streams.",
+                      canonical_path="/blog")
+    crumbs = [("Home", "/"), ("Guides", "/blog")]
+    return render_template("blog.html", meta=meta, posts=blog_data.posts_sorted(), crumbs=crumbs,
+                           ld=[breadcrumb_ld(crumbs)])
+
+
+@bp.route("/blog/<slug>")
+def blog_post(slug):
+    post = blog_data.BY_SLUG.get(slug)
+    if not post:
+        abort(404)
+    meta = build_meta(post["title"], post["description"], canonical_path=f"/blog/{slug}")
+    crumbs = [("Home", "/"), ("Guides", "/blog"), (post["title"], f"/blog/{slug}")]
+    return render_template("blog_post.html", meta=meta, post=post, related=blog_data.related(slug), crumbs=crumbs,
+                           author=blog_data.AUTHOR,
+                           ld=[breadcrumb_ld(crumbs), article_ld(post, blog_data.AUTHOR)])
+
+
 @bp.route("/llms.txt")
 def llms_txt():
     """A short plain-text summary of the site for AI assistants and search tools."""
@@ -775,8 +869,13 @@ def llms_txt():
             f"- [Bollywood radio]({site}/bollywood)\n"
             f"- [Pakistani radio]({site}/lollywood)\n"
             f"- [English radio]({site}/hollywood)\n"
+            f"- [Islam: Quran, Naat and Qawwali]({site}/islam)\n"
+            f"- [Gold, Bitcoin and dollar rates]({site}/markets)\n"
+            f"- [Trending searches now]({site}/trending)\n"
+            f"- [Live news radio: elections, Europe, war, weather]({site}/live-news)\n"
             f"- [Quran radio]({site}/genre/quran)\n"
             f"- [Naat radio]({site}/genre/naat)\n"
+            f"- [Guides and articles]({site}/blog)\n"
             f"- [Accessibility]({site}/accessibility)\n"
             f"- [About]({site}/about)\n"
             f"- [Sitemap]({site}/sitemap.xml)\n")
@@ -793,7 +892,7 @@ def sitemap():
     site = current_app.config["SITE_URL"]
     pages = ["/", "/bollywood", "/lollywood", "/hollywood", "/download", "/donate", "/about", "/contact", "/faq",
              "/privacy", "/terms", "/disclaimer", "/donation-disclaimer", "/cookies"]
-    pages += ["/radio-stations", "/accessibility"] + [f"/continent/{c}" for c in CONTINENTS]
+    pages += ["/radio-stations", "/accessibility", "/islam", "/markets", "/live-news", "/blog"] + (["/trending"] if trends.by_country() else []) + [f"/blog/{p['slug']}" for p in blog_data.POSTS] + [f"/continent/{c}" for c in CONTINENTS]
     pages += [topic_path(k) for _, items in _listed_types() for k, _ in items]
     pages += [topic_path(k) for c in CONTINENTS for k, _, _ in _listed_countries(c)] + ["/deals"]
     seen = set()

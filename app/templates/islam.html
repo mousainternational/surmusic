@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% import "_ad.html" as ads with context %}
+{% block content %}
+<div class="wrap page narrow">
+  {{ ui.breadcrumbs([('Home', '/'), ('Islam', '/islam')]) }}
+  <header class="page-head">
+    <h1>Islam on Sur Music: Quran, Naat, Qawwali and Islamic Radio</h1>
+    <p class="native-name" dir="auto">اسلامی ریڈیو: قرآن پاک، نعت شریف، قوالی</p>
+    <p class="lead">Live Quran recitation by famous qaris, Naat Sharif and hamd, qawwali and Sufi kalam, and Islamic talks, from stations in Pakistan, Saudi Arabia, Egypt, the UAE and around the world. Free, in your browser, with no app and no sign-up.</p>
+  </header>
+
+  <nav class="chips" aria-label="Islamic radio types">
+    <a class="chip" href="/genre/quran">Quran radio</a>
+    <a class="chip" href="/genre/naat">Naat radio</a>
+    <a class="chip" href="/genre/qawwali">Qawwali radio</a>
+    <a class="chip" href="/genre/sufi">Sufi music</a>
+    <a class="chip" href="/genre/islamic">Islamic talks</a>
+    <a class="chip" href="/genre/arabic">Arabic radio</a>
+  </nav>
+  {{ ads.ad('top') }}
+
+  <section class="card prose" aria-labelledby="qaris">
+    <h2 id="qaris">Quran recitation: famous qaris</h2>
+    <p>Quran stations broadcast the recitation of many well-known qaris. Each station decides what it plays, so what you hear depends on the station. <a href="/genre/quran">Open Quran radio</a> and try a few.</p>
+    <ul>{% for n, c, k in qaris %}<li><strong>{{ n }}</strong> ({{ c }}): {{ k }}</li>{% endfor %}</ul>
+  </section>
+
+  <section class="card prose" aria-labelledby="naat">
+    <h2 id="naat">Naat Sharif and nasheed: popular voices</h2>
+    <p>Naat is poetry in praise of the Prophet Muhammad (peace be upon him). Stations on the <a href="/genre/naat">Naat radio page</a> play naat sharif, hamd and nasheed in Urdu, Punjabi, Arabic and other languages. Names listeners often look for:</p>
+    <ul>{% for n, c in naats %}<li>{{ n }} ({{ c }})</li>{% endfor %}</ul>
+  </section>
+
+  <section class="card prose" aria-labelledby="qawwali">
+    <h2 id="qawwali">Qawwali and Sufi kalam</h2>
+    <p>Qawwali is devotional Sufi music from South Asia. Listen on the <a href="/genre/qawwali">qawwali radio page</a> or the <a href="/genre/sufi">Sufi music page</a>. Well-known names:</p>
+    <ul>{% for n, c in qawwals %}<li>{{ n }} ({{ c }})</li>{% endfor %}</ul>
+  </section>
+
+  <section class="card prose" aria-labelledby="titles">
+    <h2 id="titles">What people search for</h2>
+    {% for heading, text in titles.items() %}<h3>{{ heading }}</h3><p>{{ text }}</p>{% endfor %}
+    <p class="small muted">Titles and names are listed to help you search. Radio stations decide their own programme, so a particular recitation or song may not be playing right now.</p>
+  </section>
+
+  <section class="card prose" aria-labelledby="where">
+    <h2 id="where">Islamic radio by country</h2>
+    <p>Pick your country to find Quran, Naat and Islamic stations near you or from home:</p>
+    <ul class="country-list">{% for name, slug in countries %}<li><a href="/country/{{ slug }}">{{ name }} radio</a></li>{% endfor %}</ul>
+    <p><a href="/radio-stations">All countries and radio types →</a></p>
+  </section>
+
+  <section class="card prose" aria-labelledby="faq">
+    <h2 id="faq">Questions about Quran, Naat and Islamic radio</h2>
+    {{ faq | markdown }}
+  </section>
+
+  <p class="small muted">Sur Music lists public live streams run by their own broadcasters and is not connected to the people named on this page. All names belong to their owners.</p>
+</div>
+{% endblock %}

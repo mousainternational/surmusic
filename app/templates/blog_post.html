@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% block content %}
+<div class="wrap page narrow">
+  {{ ui.breadcrumbs(crumbs) }}
+  <article>
+    <header class="page-head">
+      <p class="small muted"><span class="blog-tag">{{ post.tag }}</span> · {{ post.date }} · {{ post.minutes }} min read</p>
+      <h1>{{ post.title }}</h1>
+      <p class="muted">By {{ author }}, {{ S.owner_name }}</p>
+    </header>
+    <div class="prose card blog-body">{{ post.body | markdown }}</div>
+  </article>
+  <section class="card" aria-labelledby="more-guides">
+    <h2 class="h3" id="more-guides">More guides</h2>
+    <ul class="blog-more">
+      {% for p in related %}<li><a href="/blog/{{ p.slug }}">{{ p.title }}</a></li>{% endfor %}
+    </ul>
+    <p><a class="btn btn-primary" href="/radio-stations">Start listening</a></p>
+  </section>
+</div>
+{% endblock %}
