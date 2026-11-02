@@ -236,3 +236,18 @@ def test_admin_can_make_a_one_time_password_reset_link(client, app):
     # an administrator's own account is never reset this way
     admin_id = re.search(r"/admin/users/(\d+)/suspend", uid)
     assert b"cannot be suspended, deleted or reset" in post(client, "/admin/users/1/reset_link", page="/admin/users", follow_redirects=True).data
+
+
+def test_messages_list_has_reply_and_delete_buttons(client, app):
+    import re
+    from conftest import post as _post
+    anon = app.test_client()
+    _post(anon, "/contact", {"name": "Spammer", "email": "spam@example.com", "subject": "Improve Your Search Engine Visibility",
+                            "message": "buy seo now please"}, page="/contact")
+    login(client)
+    page = client.get("/admin/messages").get_data(as_text=True)
+    assert "mailto:spam@example.com" in page and ">Reply<" in page
+    m = re.search(r"/admin/messages/(\d+)/delete", page)
+    assert m, "a Delete button sits in the list itself"
+    r = post(client, f"/admin/messages/{m.group(1)}/delete", page="/admin/messages", follow_redirects=True)
+    assert b"Message deleted" in r.data and b"spam@example.com" not in client.get("/admin/messages").data
