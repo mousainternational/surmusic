@@ -20,7 +20,8 @@ class Phone:
         return r
 
     def status(self, install=None):
-        return self.client.post("/api/app/status", json={"token": self.token or "x" * 30, "install": install or self.install})
+        return self.client.post("/api/app/status", json={"token": self.token or "x" * 30, "install": install or self.install,
+                                                         "device": "OPPO A57", "os": "13"})
 
 
 def status(buyer, install):
@@ -124,3 +125,14 @@ def test_regular_user_cannot_open_admin_subscriptions(app):
     buyer = paying_user(app)
     assert buyer.web.get("/admin/subscriptions").status_code == 403
     assert buyer.web.post("/admin/subscriptions/1/approve").status_code in (400, 403)
+
+
+def test_admin_sees_which_phone_an_account_is_tied_to(app):
+    buyer = paying_user(app)
+    owner = app.test_client(); login(owner)
+    post(owner, "/admin/subscriptions/grant", {"email": "buyer@example.com", "days": "30"}, page="/admin/subscriptions")
+    assert status(buyer, PHONE_A).status_code == 200
+    page = owner.get("/admin/subscriptions").get_data(as_text=True)
+    assert "OPPO A57" in page and "Android 13" in page and "buyer@example.com" in page
+    import hashlib
+    assert hashlib.sha256(PHONE_A.encode()).hexdigest()[:8] in page          # only a short fingerprint is shown

@@ -75,12 +75,12 @@ def test_app_downloads(client, app):
                                  "file": (io.BytesIO(apk_bytes()), "SurMusic-1.0.0.apk")},
          page="/admin/apps", content_type="multipart/form-data")
     page = anon.get("/download").get_data(as_text=True)
-    assert "US$5 per year" in page and "Download APK" not in page        # paid on Google Play now
+    assert "US$5 per year" in page and "mousainternational@gmail.com" in page and "Download the Android app" not in page
     assert anon.get("/download/android").status_code == 404              # the file is never given away
     post(client, "/admin/apps", {"platform": "android",
                                  "external_url": "https://play.google.com/store/apps/details?id=com.mousainternational.surmusic"},
          page="/admin/apps")
-    assert "Get it on Google Play" in anon.get("/download").get_data(as_text=True)
+    assert "Get the Android app" in anon.get("/download").get_data(as_text=True)
     assert anon.get("/download/android").headers["Location"].startswith("https://play.google.com/")
     post(client, "/admin/apps", {"platform": "chrome", "external_url": "https://chromewebstore.google.com/detail/x"},
          page="/admin/apps")
@@ -196,3 +196,16 @@ def test_station_owner_removal_request_page(client):
     html = client.get("/contact?topic=removal&station=Radio%20X").get_data(as_text=True)
     assert "Station owners: removal request" in html and 'value="Station removal request: Radio X"' in html
     assert "Station owners: remove a station" in client.get("/").get_data(as_text=True)
+
+
+def test_apk_button_appears_when_the_file_is_shipped(app, tmp_path, monkeypatch):
+    from app import public
+    apk = tmp_path / "SurMusic.apk"
+    apk.write_bytes(apk_bytes())
+    monkeypatch.setattr(public, "APK_DIR", str(tmp_path))
+    anon = app.test_client()
+    page = anon.get("/download").get_data(as_text=True)
+    assert "Download the Android app (APK)" in page and "Create a free account" in page
+    r = anon.get("/download/android")
+    assert r.status_code == 200 and r.mimetype == "application/vnd.android.package-archive"
+    assert "attachment" in r.headers["Content-Disposition"] and r.data == apk_bytes()

@@ -49,7 +49,11 @@ def active_until(db, uid):
         return None
 
 
-def license_state(db, user, install):
+def _clean(value, limit):
+    return " ".join(value.split())[:limit] if isinstance(value, str) else ""
+
+
+def license_state(db, user, install, device="", os_name=""):
     """(ok, reason, expires) for this account on this phone. Admins use the app free."""
     if user["role"] == "admin":
         until = _iso(_now() + timedelta(days=30))
@@ -61,10 +65,11 @@ def license_state(db, user, install):
     now = _now()
     row = db.one("SELECT install_hash, last_seen FROM app_devices WHERE user_id = ?", (user["id"],))
     if row is None:
-        db.execute("INSERT INTO app_devices (user_id, install_hash, first_seen, last_seen) VALUES (?, ?, ?, ?)",
-                   (user["id"], ih, _iso(now), _iso(now)))
+        db.execute("INSERT INTO app_devices (user_id, install_hash, first_seen, last_seen, device, os) VALUES (?, ?, ?, ?, ?, ?)",
+                   (user["id"], ih, _iso(now), _iso(now), device, os_name))
     elif row["install_hash"] == ih:
-        db.execute("UPDATE app_devices SET last_seen = ? WHERE user_id = ?", (_iso(now), user["id"]))
+        db.execute("UPDATE app_devices SET last_seen = ?, device = ?, os = ? WHERE user_id = ?",
+                   (_iso(now), device, os_name, user["id"]))
     else:
         try:
             idle = now - datetime.fromisoformat(row["last_seen"])
@@ -72,8 +77,8 @@ def license_state(db, user, install):
             idle = timedelta(days=999)
         if idle < timedelta(days=IDLE_DAYS):
             return False, "other_device", until
-        db.execute("UPDATE app_devices SET install_hash = ?, last_seen = ? WHERE user_id = ?",
-                   (ih, _iso(now), user["id"]))
+        db.execute("UPDATE app_devices SET install_hash = ?, last_seen = ?, device = ?, os = ?, first_seen = ? WHERE user_id = ?",
+                   (ih, _iso(now), device, os_name, _iso(now), user["id"]))
     db.commit()
     return True, "ok", until
 
@@ -147,7 +152,8 @@ def api_status():
     if row is None or row["install_hash"] != _hash(install) or not row["is_active"]:
         return jsonify({"ok": False, "reason": "login"}), 401
     db.execute("UPDATE app_tokens SET last_seen = ? WHERE token_hash = ?", (utcnow(), _hash(token)))
-    ok, reason, until = license_state(db, {"id": row["user_id"], "role": row["role"]}, install)
+    ok, reason, until = license_state(db, {"id": row["user_id"], "role": row["role"]}, install,
+                                      _clean(data.get("device"), 60), _clean(data.get("os"), 20))
     return jsonify({"ok": ok, "reason": reason, "until": until or ""}), (200 if ok else 403)
 
 
@@ -203,7 +209,8 @@ def admin_list():
     db = get_db()
     pending = db.all("SELECT s.id, s.method, s.reference, s.note, s.created_at, u.email FROM app_subscriptions s "
                      "JOIN users u ON u.id = s.user_id WHERE s.status = 'pending' ORDER BY s.id")
-    live = db.all("SELECT s.id, s.user_id, s.expires_at, u.email FROM app_subscriptions s JOIN users u ON u.id = s.user_id "
+    live = db.all("SELECT s.id, s.user_id, s.expires_at, u.email, d.device, d.os, d.install_hash, d.first_seen, d.last_seen "
+                  "FROM app_subscriptions s JOIN users u ON u.id = s.user_id LEFT JOIN app_devices d ON d.user_id = s.user_id "
                   "WHERE s.status = 'active' ORDER BY s.expires_at DESC LIMIT 200")
     now = _iso(_now())
     live = [r for r in live if (r["expires_at"] or "") > now]

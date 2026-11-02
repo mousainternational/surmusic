@@ -20,9 +20,12 @@
 
 <br><h2 class="h3">Active ({{ live | length }})</h2>
 {% if live %}
-<table class="events"><thead><tr><th>Account</th><th>Until</th><th></th></tr></thead><tbody>
+<table class="events"><thead><tr><th>Account</th><th>Until</th><th>Phone</th><th>Phone ID</th><th>First used</th><th>Last used</th><th></th></tr></thead><tbody>
 {% for r in live %}
-<tr><td>{{ r.email }}</td><td>{{ r.expires_at[:10] }}</td><td>
+<tr><td>{{ r.email }}</td><td>{{ r.expires_at[:10] }}</td>
+<td>{% if r.install_hash %}{{ r.device or 'Android phone' }}{% if r.os %} <span class="muted small">(Android {{ r.os }})</span>{% endif %}{% else %}<span class="muted">not used yet</span>{% endif %}</td>
+<td>{% if r.install_hash %}<code>{{ r.install_hash[:8] }}</code>{% endif %}</td>
+<td>{{ (r.first_seen or '')[:10] }}</td><td>{{ (r.last_seen or '')[:16] | replace('T', ' ') }}</td><td>
   <form class="inline" method="post" action="{{ url_for('subs.admin_reset_device') }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="user_id" value="{{ r.user_id }}"><button class="btn btn-sm btn-ghost">Release phone</button></form>
   <form class="inline" method="post" action="{{ url_for('subs.admin_action', sid=r.id, action='revoke') }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-sm btn-ghost">Switch off</button></form>
 </td></tr>

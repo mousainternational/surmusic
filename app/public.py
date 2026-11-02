@@ -3,7 +3,8 @@ import json
 from datetime import datetime, timedelta, timezone
 from xml.sax.saxutils import escape
 
-from flask import (Blueprint, Response, abort, current_app, flash, g, jsonify, redirect, render_template,
+import os
+from flask import (Blueprint, Response, abort, current_app, flash, g, jsonify, redirect, render_template, send_from_directory,
                    request, send_file, session, url_for)
 
 import base64
@@ -494,18 +495,33 @@ def favorites():
 def download_page():
     apps = {r["platform"]: r for r in get_db().all("SELECT * FROM apps")}
     meta = build_meta("Sur Music Apps — Android App & Chrome Extension",
-                      "Sur Music for Android (US$5 per year on Google Play) and the Chrome extension (7-day free "
+                      "Sur Music for Android (US$5 per year, download from this website) and the Chrome extension (7-day free "
                       "trial, then US$1/month): background play, lock-screen controls and favourites.", page="download")
-    return render_template("download.html", meta=meta, apps=apps,
+    return render_template("download.html", meta=meta, apps=apps, apk=apk_file(),
                            ld=[breadcrumb_ld([("Home", "/"), ("Download", "/download")])])
+
+
+APK_NAME = "SurMusic.apk"
+APK_DIR = os.path.join(os.path.dirname(__file__), "static", "downloads")
+
+
+def apk_file():
+    """The Android app file shipped with the website (app/static/downloads/SurMusic.apk), or None."""
+    return os.path.isfile(os.path.join(APK_DIR, APK_NAME))
 
 
 @bp.route("/download/<any(android, chrome):platform>")
 def download_file(platform):
+    if platform == "android" and apk_file():
+        # The app itself is not secret: it only works after signing in with a paid account (one phone per account).
+        u = current_user()
+        analytics.record("download", u["id"] if u else None, detail="android (apk)")
+        return send_from_directory(APK_DIR, APK_NAME, as_attachment=True, download_name=APK_NAME,
+                                   mimetype="application/vnd.android.package-archive", max_age=300)
     app_row = get_db().one("SELECT * FROM apps WHERE platform = ?", (platform,))
     if not app_row:
         abort(404)
-    # Apps are sold through Google Play / the Chrome Web Store: no free file download from the website.
+    # Other apps are sold through the Chrome Web Store: no free file download from the website.
     if valid_url(app_row["external_url"], https_only=True):
         u = current_user()
         analytics.record("download", u["id"] if u else None, detail=f"{platform} (store link)")

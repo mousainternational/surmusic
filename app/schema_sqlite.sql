@@ -173,7 +173,9 @@ CREATE TABLE IF NOT EXISTS app_devices (
   user_id INTEGER PRIMARY KEY,
   install_hash TEXT NOT NULL,
   first_seen TEXT NOT NULL,
-  last_seen TEXT NOT NULL
+  last_seen TEXT NOT NULL,
+  device TEXT NOT NULL DEFAULT '',
+  os TEXT NOT NULL DEFAULT ''
 );
 
 -- The Android app signs in with e-mail + password and then holds a random token (only its hash is stored here)

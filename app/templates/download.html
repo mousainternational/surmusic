@@ -9,7 +9,7 @@
   </header>
   <div class="grid two-col">
     {% for key, title, desc, howto in [
-        ('android', 'Android app', 'Keeps playing with the screen off. Play, pause and stop from the notification, lock screen or Bluetooth headset. Android 8.0 and newer.', 'US$5 per year on Google Play. One subscription works on one phone, and the app cannot be shared as a file. No ads.'),
+        ('android', 'Android app', 'Keeps playing with the screen off. Play, pause and stop from the notification, lock screen or Bluetooth headset. Android 8.0 and newer.', 'US$5 per year. One account works on one phone, so the app cannot be shared. No ads.'),
         ('chrome', 'Chrome extension', 'Radio in your browser toolbar that keeps playing while you browse other websites.', '7-day free trial, then US$1 per month. Cancel any time.')] %}
     {% set a = apps.get(key) %}
     <section class="card app-card">
@@ -19,12 +19,24 @@
       </div>
       <p>{{ desc }}</p>
       <p class="price-line"><strong>{{ howto }}</strong></p>
-      {% if a and a.external_url %}
-        <a class="btn btn-primary btn-block" href="{{ url_for('public.download_file', platform=key) }}" rel="nofollow noopener" data-no-pjax>
-          {{ 'Get it on Google Play' if key == 'android' else 'Add to Chrome' }}
-        </a>
+      {% if key == 'android' %}
+        {% if apk %}
+        <a class="btn btn-primary btn-block" href="{{ url_for('public.download_file', platform='android') }}" rel="nofollow" data-no-pjax>Download the Android app (APK)</a>
+        {% elif a and a.external_url %}
+        <a class="btn btn-primary btn-block" href="{{ url_for('public.download_file', platform='android') }}" rel="nofollow noopener" data-no-pjax>Get the Android app</a>
+        {% else %}
+        <p class="muted">The download will be here very soon. Write to us to be told first.</p>
+        {% endif %}
+        <ol class="small app-steps">
+          <li>Download the app and install it. Android may ask you to allow installs from this source.</li>
+          <li><a href="{{ url_for('auth.signup') }}">Create a free account</a> on this website.</li>
+          <li>To switch the app on, email <a href="mailto:{{ S.app_contact_email }}?subject=Sur%20Music%20app%20access">{{ S.app_contact_email }}</a> with your account email, or <a href="{{ url_for('subs.subscribe') }}">pay and send your transaction ID here</a>. Price: US$5 per year.</li>
+          <li>Open the app and sign in with the same email and password.</li>
+        </ol>
+      {% elif a and a.external_url %}
+        <a class="btn btn-primary btn-block" href="{{ url_for('public.download_file', platform=key) }}" rel="nofollow noopener" data-no-pjax>Add to Chrome</a>
       {% else %}
-        <p class="muted">Coming soon to {{ 'Google Play' if key == 'android' else 'the Chrome Web Store' }}.</p>
+        <p class="muted">Coming soon to the Chrome Web Store.</p>
       {% endif %}
     </section>
     {% endfor %}
@@ -36,7 +48,7 @@
       <li>Music keeps playing in the background with notification and lock-screen controls (Android).</li>
       <li>No ads inside the apps.</li>
     </ul>
-    <p class="small muted">Sur Music apps are sold only through Google Play and the Chrome Web Store. Read the <a href="{{ url_for('public.disclaimer') }}">disclaimer</a>.</p>
+    <p class="small muted">The Android app is sold directly by Mousa International Software House; the Chrome extension through the Chrome Web Store. Read the <a href="{{ url_for('public.disclaimer') }}">disclaimer</a>.</p>
   </section>
 </div>
 {% endblock %}

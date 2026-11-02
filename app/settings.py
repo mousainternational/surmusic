@@ -169,6 +169,7 @@ DEFAULTS = {
     "hero_subtitle": "Bollywood hits, Pakistani songs, ghazals and Hollywood top 40 — thousands of live stations. No download needed.",
     "about_md": ABOUT_MD,
     "contact_email": "",
+    "app_contact_email": "mousainternational@gmail.com",
     "contact_email_unverified": "mousainternational.gami.com",
     "support_url": "",
     "social_facebook": "", "social_youtube": "", "social_x": "", "social_instagram": "", "social_tiktok": "",

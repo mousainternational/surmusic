@@ -16,7 +16,7 @@ from .security import csp_nonce, csrf_protect, csrf_token, current_user, securit
 from .settings import ads_active, get_settings
 from .util import human_size, render_markdown, valid_email
 
-__version__ = "1.7.18"
+__version__ = "1.7.19"
 
 
 def create_app(overrides=None):
@@ -42,6 +42,7 @@ def create_app(overrides=None):
     dbmod.ensure_dirs(app)
     dbmod.migrate(app.config["DATABASE_URL"])
     _bootstrap_admin(app)
+    _migrate_app_devices(app)
     _apply_setting_changes(app)
     from . import geo as _geo
     _geo.start_auto_update(app)
@@ -202,6 +203,21 @@ def _bootstrap_admin(app):
         db.close()
 
 
+def _migrate_app_devices(app):
+    """v1.7.19: the phone model and Android version are kept next to the phone a subscription is tied to."""
+    from .db import Database
+    db = Database(app.config["DATABASE_URL"])
+    try:
+        for col in ("device", "os"):
+            try:
+                db.execute(f"ALTER TABLE app_devices ADD COLUMN {col} TEXT NOT NULL DEFAULT ''")
+                db.commit()
+            except Exception:      # already there
+                db.rollback()
+    finally:
+        db.close()
+
+
 def _apply_setting_changes(app):
     """One-time changes to saved settings when an update changes a default (each runs once per database)."""
     from .db import Database
@@ -248,7 +264,7 @@ def _apply_setting_changes(app):
                         "stations. No download needed."))
             db.execute("INSERT INTO settings (key, value) VALUES (?, ?)", ("_done_hero_v111", "1"))
             db.commit()
-        # v1.7.18: the app is now sold directly (account login + payment you approve), not through Google Play
+        # v1.7.19: the app is now sold directly (account login + payment you approve), not through Google Play
         if not db.scalar("SELECT COUNT(*) FROM settings WHERE key = ?", ("_done_privacy_app_v118",)):
             from .settings import DEFAULTS as _D
             import re as _re
