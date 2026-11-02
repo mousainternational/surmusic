@@ -230,7 +230,8 @@ def test_admin_menu_has_clear_links(client):
     from conftest import login
     login(client)
     menu = client.get("/").get_data(as_text=True)
-    assert "⚙️ Admin panel" in menu and "👤 My account" in menu and ">Admin</a>" not in menu
+    assert "⚙️ Admin panel" in menu and "My account" in menu and "Sign out" in menu and 'hd-dd hd-acct' in menu
+    assert ">Admin</a>" not in menu
 
 
 def test_android_license_allows_one_phone_per_subscription(client, app, monkeypatch):

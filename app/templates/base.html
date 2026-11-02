@@ -61,12 +61,12 @@
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu"><span></span><span></span><span></span></button>
     <nav id="menu" class="menu" aria-label="Main">
       {%- set here = request.path %}
-      <a href="{{ url_for('public.category', cat='bollywood') }}" {% if here == '/bollywood' %}aria-current="page"{% endif %}>Bollywood</a>
-      <a href="{{ url_for('public.category', cat='lollywood') }}" {% if here == '/lollywood' %}aria-current="page"{% endif %}>Lollywood</a>
-      <a href="{{ url_for('public.category', cat='hollywood') }}" {% if here == '/hollywood' %}aria-current="page"{% endif %}>Hollywood</a>
+      <a class="hd-pill hue-pink" href="{{ url_for('public.category', cat='bollywood') }}" {% if here == '/bollywood' %}aria-current="page"{% endif %}>Bollywood</a>
+      <a class="hd-pill hue-green" href="{{ url_for('public.category', cat='lollywood') }}" {% if here == '/lollywood' %}aria-current="page"{% endif %}>Lollywood</a>
+      <a class="hd-pill hue-blue" href="{{ url_for('public.category', cat='hollywood') }}" {% if here == '/hollywood' %}aria-current="page"{% endif %}>Hollywood</a>
       <span class="hd-sep" aria-hidden="true"></span>
-      <details class="hd-dd">
-        <summary>🌐 Language</summary>
+      <details class="hd-dd hue-violet">
+        <summary class="hd-pill">🌐 Language</summary>
         <div class="hd-panel">
           {%- for title, items in language_menu() %}
           <h3>{{ title }}</h3>
@@ -74,8 +74,8 @@
           {%- endfor %}
         </div>
       </details>
-      <details class="hd-dd">
-        <summary>🌍 Country</summary>
+      <details class="hd-dd hue-teal">
+        <summary class="hd-pill">🌍 Country</summary>
         <div class="hd-panel hd-tall">
           {%- set cm = country_menu() %}
           <h3>Popular</h3>
@@ -88,8 +88,8 @@
           {%- endfor %}
         </div>
       </details>
-      <details class="hd-dd">
-        <summary>📻 Types</summary>
+      <details class="hd-dd hue-orange">
+        <summary class="hd-pill">📻 Types</summary>
         <div class="hd-panel hd-tall">
           {%- for key, icon, title, items in type_menu() %}
           <h3>{{ icon }} {{ title }}</h3>
@@ -98,23 +98,28 @@
         </div>
       </details>
       <span class="hd-sep" aria-hidden="true"></span>
-      <a href="/blog" {% if here.startswith('/blog') %}aria-current="page"{% endif %}>Guides</a>
-      <a href="{{ url_for('public.favorites') }}" {% if here == '/favorites' %}aria-current="page"{% endif %}>★ Favourites</a>
-      <a href="{{ url_for('public.download_page') }}" {% if here == '/download' %}aria-current="page"{% endif %}>Get app</a>
+      <a class="hd-pill hue-violet" href="/blog" {% if here.startswith('/blog') %}aria-current="page"{% endif %}>Guides</a>
+      <a class="hd-pill hue-amber" href="{{ url_for('public.favorites') }}" {% if here == '/favorites' %}aria-current="page"{% endif %}>★ Favourites</a>
+      <a class="hd-pill hue-teal" href="{{ url_for('public.download_page') }}" {% if here == '/download' %}aria-current="page"{% endif %}>Get app</a>
       <form class="nav-search" action="{{ url_for('public.search') }}" method="get" role="search">
         <label for="nav-q" class="sr">Search stations</label>
         <input id="nav-q" name="q" type="search" placeholder="Search…" maxlength="60" autocomplete="off">
       </form>
       {%- if user %}
-        {%- if user.role == 'admin' %}
-        <a href="{{ url_for('admin.dashboard') }}" class="nav-admin">⚙️ Admin panel</a>
-        <a href="{{ url_for('auth.account') }}" class="nav-user" {% if here.startswith('/account') %}aria-current="page"{% endif %}>👤 My account</a>
-        {%- else %}
-        <a href="{{ url_for('auth.account') }}" class="nav-user" title="My account" {% if here.startswith('/account') %}aria-current="page"{% endif %}>👤 {{ user.display_name or user.email.split('@')[0] }}</a>
-        {%- endif %}
-        <form method="post" action="{{ url_for('auth.logout') }}" class="inline"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="linklike">Sign out</button></form>
+      <details class="hd-dd hd-acct hue-blue">
+        <summary class="hd-pill" aria-label="My account menu">👤<span class="acct-t"> Account</span></summary>
+        <div class="hd-panel">
+          <p class="hd-who">{{ user.display_name or user.email.split('@')[0] }}</p>
+          <ul>
+            <li><a href="{{ url_for('auth.account') }}" {% if here.startswith('/account') %}aria-current="page"{% endif %}>My account</a></li>
+            <li><a href="{{ url_for('public.favorites') }}">★ My favourites</a></li>
+            {%- if user.role == 'admin' %}<li><a href="{{ url_for('admin.dashboard') }}" class="nav-admin">⚙️ Admin panel</a></li>{% endif %}
+            <li><form method="post" action="{{ url_for('auth.logout') }}" class="inline"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="linklike">Sign out</button></form></li>
+          </ul>
+        </div>
+      </details>
       {%- else %}
-        <a href="{{ url_for('auth.login') }}" {% if here == '/login' %}aria-current="page"{% endif %}>Sign in</a>
+        <a class="hd-pill hue-blue" href="{{ url_for('auth.login') }}" {% if here == '/login' %}aria-current="page"{% endif %}>Sign in</a>
         <a class="btn btn-sm btn-primary hd-signup" href="{{ url_for('auth.signup') }}">Sign up free</a>
       {%- endif %}
       <a class="btn btn-sm btn-accent" href="{{ url_for('public.donate') }}">Donate</a>

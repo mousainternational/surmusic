@@ -35,12 +35,13 @@
 
 <section class="section">
   <div class="wrap">
-    <h2 class="section-title cat-title">Browse by category</h2>
+    <h2 class="section-title cat-title">Categories</h2>
     <div class="cat-tiles">
-      {%- for key, icon, title, items in type_menu() if key != 'film' %}
+      {%- for key, icon, title, items in (type_menu() | selectattr(0, 'ne', 'film') | list)[:6] %}
       <a class="cat-tile" href="/radio-stations#cat-{{ key }}"><span class="cat-ico" aria-hidden="true">{{ icon }}</span><span>{{ title }}</span></a>
       {%- endfor %}
     </div>
+    <p class="cat-all"><a href="/radio-stations">All radio categories →</a></p>
     <h2 class="section-title cat-title">Radio by country</h2>
     <nav class="chips world-chips" aria-label="Radio by country">
       {%- for slug in ['usa', 'uk', 'canada', 'australia', 'pakistan', 'india', 'uae', 'saudi-arabia', 'turkey', 'germany', 'france'] %}
