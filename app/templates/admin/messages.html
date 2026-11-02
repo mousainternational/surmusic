@@ -3,11 +3,17 @@
 {% block admin %}
 <div class="card table-wrap">
   {% if rows %}
+  <form id="bulk" method="post" action="{{ url_for('admin.message_delete_selected') }}" data-confirm="Delete all the ticked messages?" class="bulk-bar">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <label class="check"><input type="checkbox" id="pick-all" aria-label="Select all messages"> <span>Select all</span></label>
+    <button class="btn btn-sm btn-primary" id="bulk-del" disabled>Delete selected <span class="bulk-count">(<span id="bulk-n">0</span>)</span></button>
+  </form>
   <table>
-    <thead><tr><th>From</th><th>Subject</th><th>Email delivery</th><th>Received</th><th>Actions</th></tr></thead>
+    <thead><tr><th class="pick"></th><th>From</th><th>Subject</th><th>Email delivery</th><th>Received</th><th>Actions</th></tr></thead>
     <tbody>
     {% for m in rows %}
     <tr>
+      <td class="pick"><input type="checkbox" name="ids" value="{{ m.id }}" form="bulk" aria-label="Select message from {{ m.name }}"></td>
       <td>{% if not m.is_read %}<strong>{% endif %}{{ m.name }}{% if not m.is_read %}</strong>{% endif %}<br><span class="small muted">{{ m.email }}</span></td>
       <td><a href="{{ url_for('admin.message_view', mid=m.id) }}">{{ m.subject }}</a></td>
       <td><span class="status">{{ {'sent': 'sent', 'pending_setup': 'not set up', 'failed': 'failed'}.get(m.email_status, m.email_status) }}</span></td>

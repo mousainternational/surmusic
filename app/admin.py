@@ -216,6 +216,23 @@ def message_view(mid):
     return render_template("admin/message_view.html", meta=META, m=m)
 
 
+@bp.route("/messages/delete-selected", methods=["POST"])
+@admin_required
+def message_delete_selected():
+    """Delete the ticked messages (or all of them with 'select all'). Only numbers are accepted."""
+    ids = [int(x) for x in request.form.getlist("ids") if x.isdigit()][:500]
+    if not ids:
+        flash("Please tick at least one message first.", "error")
+        return redirect(url_for("admin.messages"))
+    db = get_db()
+    for mid in ids:
+        db.execute("DELETE FROM messages WHERE id = ?", (mid,))
+    db.commit()
+    audit("message_delete_many", f"{len(ids)} messages")
+    flash(f"{len(ids)} message{'s' if len(ids) != 1 else ''} deleted.", "success")
+    return redirect(url_for("admin.messages"))
+
+
 @bp.route("/messages/<int:mid>/delete", methods=["POST"])
 @admin_required
 def message_delete(mid):

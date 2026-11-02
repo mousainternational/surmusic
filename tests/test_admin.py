@@ -251,3 +251,22 @@ def test_messages_list_has_reply_and_delete_buttons(client, app):
     assert m, "a Delete button sits in the list itself"
     r = post(client, f"/admin/messages/{m.group(1)}/delete", page="/admin/messages", follow_redirects=True)
     assert b"Message deleted" in r.data and b"spam@example.com" not in client.get("/admin/messages").data
+
+
+def test_messages_select_all_and_delete_selected(client, app):
+    import re
+    from conftest import post as _post
+    anon = app.test_client()
+    for i in range(3):
+        _post(anon, "/contact", {"name": f"Spam {i}", "email": f"s{i}@example.com", "subject": f"Subject number {i}",
+                                "message": "buy seo now please"}, page="/contact")
+    login(client)
+    page = client.get("/admin/messages").get_data(as_text=True)
+    ids = re.findall(r'name="ids" value="(\d+)"', page)
+    assert len(ids) == 3 and 'id="pick-all"' in page and "Delete selected" in page
+    assert b"tick at least one" in post(client, "/admin/messages/delete-selected", {}, page="/admin/messages", follow_redirects=True).data
+    r = post(client, "/admin/messages/delete-selected", {"ids": ids[:2]}, page="/admin/messages", follow_redirects=True)
+    assert b"2 messages deleted" in r.data and len(re.findall(r'name="ids"', client.get("/admin/messages").get_data(as_text=True))) == 1
+    r = post(client, "/admin/messages/delete-selected", {"ids": ["abc", "1; DROP TABLE users", ids[2]]}, page="/admin/messages", follow_redirects=True)
+    assert b"1 message deleted" in r.data and b"No messages yet" in client.get("/admin/messages").data
+    assert anon.post("/admin/messages/delete-selected", data={"ids": "1"}).status_code in (302, 400, 403)

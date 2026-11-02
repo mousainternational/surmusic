@@ -180,6 +180,23 @@
     b.setAttribute("aria-label", show ? "Hide password" : "Show password");
   });
 
+  // ---------- Admin messages: select all / delete selected ----------
+  function bulkInit() {
+    var all = document.getElementById("pick-all"), btn = document.getElementById("bulk-del"), n = document.getElementById("bulk-n");
+    if (!all || !btn) return;
+    var boxes = function () { return Array.prototype.slice.call(document.querySelectorAll("input[name=ids][form=bulk]")); };
+    var update = function () {
+      var on = boxes().filter(function (b) { return b.checked; }).length;
+      n.textContent = on; btn.disabled = on === 0;
+      all.checked = on > 0 && on === boxes().length; all.indeterminate = on > 0 && on < boxes().length;
+    };
+    all.addEventListener("change", function () { boxes().forEach(function (b) { b.checked = all.checked; }); update(); });
+    boxes().forEach(function (b) { b.addEventListener("change", update); });
+    update();
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bulkInit); else bulkInit();
+  document.addEventListener("page:load", bulkInit);
+
   // ---------- confirm dangerous actions ----------
   document.addEventListener("submit", function (e) {
     var f = e.target.closest("form[data-confirm]");

@@ -992,3 +992,11 @@ h3, .h3 { font-weight: 600; letter-spacing: -.01em; }
 /* form labels: a little larger so the dot of the "i" stays clear on ordinary screens ("Email" was read as "Emaill") */
 label { font-size: 1rem; letter-spacing: .01em; }
 .report label, .filters label { font-size: inherit; }
+
+/* Admin messages: tick boxes and the bulk-delete bar */
+.bulk-bar { display: flex; align-items: center; gap: 14px; padding: 10px 14px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.bulk-bar .check { margin: 0; }
+.bulk-bar .check input, td.pick input { width: 20px; height: 20px; accent-color: var(--brand); }
+th.pick, td.pick { width: 34px; padding-right: 0; }
+#bulk-del:disabled { opacity: .45; cursor: not-allowed; }
+.bulk-count { white-space: nowrap; }
