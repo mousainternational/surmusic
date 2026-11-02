@@ -41,7 +41,7 @@ def test_prices_and_local_gold_math(monkeypatch):
     assert round(d["gold-pkr-tola"]["price"], 1) == round(28000 * 11.6638, 1)
     assert round(d["gold-inr-10g"]["price"]) == 84000
     payload = markets.api_payload()
-    assert payload["items"]["btc"] == {"text": "95,000.50", "change": "", "dir": ""}
+    assert payload["items"]["btc"] == {"text": "95,000.50", "change": "", "dir": "", "spark": ""}
     assert payload["items"]["eth"]["text"] == "3,200.00" and payload["updated"].endswith("UTC")
 
 
@@ -85,3 +85,22 @@ def test_markets_page_works_with_no_data_at_all(client):
     assert r.status_code == 200 and "Gold Rate Today" in r.get_data(as_text=True)
     assert client.get("/api/markets").get_json()["items"] == {}
     assert client.get("/").status_code == 200
+
+
+def test_ticker_has_change_and_little_chart(monkeypatch):
+    def http(url, headers=None, timeout=6):
+        if "candles" in url:                      # newest first, like the exchange sends them
+            return [[1000 + 3600 * i, 0, 0, 0, 100 + (23 - i)] for i in range(24)]
+        return fake_http(url, headers, timeout)
+    monkeypatch.setattr(markets, "_http_json", http)
+    markets._sparks.clear()
+    markets.refresh_now(CFG)
+    row = {r["id"]: r for r in markets.ticker()}["btc"]
+    assert row["text"] == "95,000.50" and row["dir"] == "up" and row["change"].startswith("+")
+    assert len(row["spark"].split()) == 25 and "sol" not in {r["id"] for r in markets.ticker() if r["text"]}
+    assert markets.spark_points([1]) == "" and markets.spark_points([1, 2, 3]).count(",") == 3
+
+
+def test_ticker_strip_renders_on_every_page(client):
+    html = client.get("/about").get_data(as_text=True) if client.get("/about").status_code == 200 else client.get("/").get_data(as_text=True)
+    assert 'data-ticker' in html and 'class="mk-set"' in html

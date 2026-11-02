@@ -263,7 +263,21 @@
       row.querySelector("[data-v]").textContent = it.text;
       var c = row.querySelector("[data-c]");
       if (c) { c.textContent = it.change || ""; c.className = "mk-chg" + (it.dir ? " mk-" + it.dir : ""); }
+      var g = row.querySelector("svg.mk-spark");
+      if (g) { g.setAttribute("class", "mk-spark" + (it.dir ? " mk-" + it.dir : "")); g.querySelector("polyline").setAttribute("points", it.spark || ""); }
     });
+    var tk = document.querySelector("[data-ticker]");
+    if (tk) {
+      tk.hidden = !tk.querySelector("[data-market]:not([hidden])");
+      var set = tk.querySelector("[data-ticker-set]"), old = tk.querySelector(".mk-dup");
+      if (old) old.remove();
+      if (set && !tk.hidden) {                       /* a second copy makes the strip loop without a gap */
+        var dup = set.cloneNode(true);
+        dup.removeAttribute("data-ticker-set"); dup.classList.add("mk-dup"); dup.setAttribute("aria-hidden", "true");
+        dup.querySelectorAll("[data-market]").forEach(function (a) { a.removeAttribute("data-market"); a.tabIndex = -1; });
+        set.parentNode.appendChild(dup);
+      }
+    }
     document.querySelectorAll("[data-market-section]").forEach(function (sec) {
       if (sec.getAttribute("data-market-section") === "gadget") return;
       sec.hidden = !sec.querySelector("[data-market]:not([hidden])");

@@ -1,0 +1,11 @@
+{#- Moving price strip under the header: filled by the server when numbers are ready, then kept fresh by site.js -#}
+{%- set tk = market_ticker() %}
+<div class="mk-ticker" data-ticker role="region" aria-label="Live prices: crypto, gold and dollar rate" {% if not tk | selectattr('text') | list %}hidden{% endif %}>
+  <div class="mk-track">
+    <div class="mk-set" data-ticker-set>
+      {%- for r in tk %}
+      <a class="mk-t" href="/markets" data-market="{{ r.id }}" {% if not r.text %}hidden{% endif %}><b class="mk-sym">{{ r.label }}</b><span class="mk-val" data-v>{{ r.text }}</span><span data-c class="mk-chg{% if r.dir %} mk-{{ r.dir }}{% endif %}">{{ r.change }}</span><svg class="mk-spark{% if r.dir %} mk-{{ r.dir }}{% endif %}" viewBox="0 0 60 22" aria-hidden="true" focusable="false"><polyline data-s points="{{ r.spark }}"/></svg></a>
+      {%- endfor %}
+    </div>
+  </div>
+</div>

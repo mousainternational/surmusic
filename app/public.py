@@ -117,6 +117,11 @@ _POPULAR_COUNTRIES = ["usa", "uk", "canada", "australia", "germany", "france", "
                       "saudi-arabia", "turkey"]
 
 
+@bp.app_template_global("market_ticker")
+def _market_ticker():
+    return markets.ticker()
+
+
 @bp.app_template_global("type_menu")
 def _type_menu():
     """Every radio type in short groups: [(key, icon, title, [(href, label)])]. Nothing is left out."""

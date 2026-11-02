@@ -32,7 +32,12 @@ SOURCES = {
     "forex": ("Exchange Rate API", "https://www.exchangerate-api.com"),
 }
 
+SPARK_TTL = 600           # candles change slowly: refetch the little charts every 10 minutes
+TICKER = [("btc", "BTC"), ("eth", "ETH"), ("sol", "SOL"), ("bnb", "BNB"), ("xrp", "XRP"), ("doge", "DOGE"),
+          ("xau", "Gold"), ("xag", "Silver"), ("usd-pkr", "USD/PKR")]
+
 _lock = threading.Lock()
+_sparks = {}
 _cache = {g: {"data": {}, "ts": 0.0, "next": 0.0, "busy": False} for g in TTL}
 
 
@@ -60,6 +65,25 @@ def _num(v):
 
 # ---------------------------------------------------------------- one fetcher per source
 
+def _spark(sym):
+    """Last 24 hourly closes for the little chart (None when the source has nothing usable)."""
+    hit = _sparks.get(sym)
+    if hit and time.time() - hit[0] < SPARK_TTL:
+        return hit[1]
+    closes = None
+    try:
+        data = _http_json(f"https://api.exchange.coinbase.com/products/{sym}-USD/candles?granularity=3600")
+        rows = sorted((r for r in data if isinstance(r, (list, tuple)) and len(r) >= 5), key=lambda r: r[0]) \
+            if isinstance(data, list) else []
+        vals = [_num(r[4]) for r in rows[-24:]]
+        vals = [v for v in vals if v]
+        closes = vals if len(vals) >= 6 else None
+    except Exception:
+        closes = None
+    _sparks[sym] = (time.time(), closes)
+    return closes
+
+
 def _fetch_crypto(cfg):
     out = {}
     for sym, key, _ in CRYPTO:
@@ -70,6 +94,10 @@ def _fetch_crypto(cfg):
         price = _num(((data or {}).get("data") or {}).get("amount")) if isinstance(data, dict) else None
         if price:
             out[key] = {"price": price, "change": None}
+            closes = _spark(sym)
+            if closes:
+                out[key]["spark"] = [round(v, 6) for v in closes] + [price]
+                out[key]["change"] = (price - closes[0]) / closes[0] * 100
     return out
 
 
@@ -203,11 +231,36 @@ def _derived(items):
     return out
 
 
+def spark_points(values, w=60, h=22, pad=2):
+    """SVG polyline points for a tiny chart (same maths as the browser script)."""
+    if not values or len(values) < 2:
+        return ""
+    lo, hi = min(values), max(values)
+    span = (hi - lo) or 1.0
+    n = len(values) - 1
+    return " ".join(f"{i * w / n:.1f},{pad + (h - 2 * pad) * (1 - (v - lo) / span):.1f}" for i, v in enumerate(values))
+
+
+def ticker():
+    """Rows for the moving price strip (every item present; ones without a price are hidden until it arrives)."""
+    try:
+        trigger_refresh()
+    except Exception:
+        pass
+    items = _all_items()
+    out = []
+    for rid, label in TICKER:
+        r = _row(items, rid, label, "")
+        out.append(r)
+    return out
+
+
 def _row(items, rid, label, unit):
     it = items.get(rid)
     text = fmt(it["price"]) if it else ""
     ctext, cdir = _chg(it["change"]) if it else ("", "")
-    return {"id": rid, "label": label, "unit": unit, "text": text, "change": ctext, "dir": cdir}
+    return {"id": rid, "label": label, "unit": unit, "text": text, "change": ctext, "dir": cdir,
+            "spark": spark_points(it.get("spark")) if it else ""}
 
 
 def sections():
@@ -249,7 +302,7 @@ def view():
 
 def api_payload():
     secs = view()
-    items = {r["id"]: {"text": r["text"], "change": r["change"], "dir": r["dir"]}
+    items = {r["id"]: {"text": r["text"], "change": r["change"], "dir": r["dir"], "spark": r["spark"]}
              for s in secs for r in s["rows"] if r["text"]}
     stamps = [st["ts"] for st in _cache.values() if st["ts"]]
     updated = datetime.fromtimestamp(max(stamps), timezone.utc).strftime("%Y-%m-%d %H:%M UTC") if stamps else ""

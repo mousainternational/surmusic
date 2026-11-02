@@ -131,6 +131,7 @@
   </div>
 </header>
 {% endblock %}
+{%- if config.get('MARKETS_ENABLED', True) %}{% include "_ticker.html" %}{% endif %}
 
 <div id="sr-announce" class="sr" aria-live="polite" aria-atomic="true"></div>
 <main id="main" tabindex="-1" data-page="{{ request.endpoint }}">
