@@ -988,3 +988,7 @@ h3, .h3 { font-weight: 600; letter-spacing: -.01em; }
 /* download page: steps for the paid Android app */
 .app-steps { margin: 12px 0 0; padding-left: 1.2em; display: grid; gap: 6px; }
 .app-steps li { overflow-wrap: anywhere; }
+
+/* form labels: a little larger so the dot of the "i" stays clear on ordinary screens ("Email" was read as "Emaill") */
+label { font-size: 1rem; letter-spacing: .01em; }
+.report label, .filters label { font-size: inherit; }

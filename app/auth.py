@@ -332,7 +332,9 @@ def forgot():
                    f"{get_settings().get('app_contact_email') or 'us'} from the email address of your account, "
                    "or use the Contact page, and we will send you a reset link.")
         flash(msg, "success" if smtp_ready() else "warning")
-        return redirect(url_for("auth.forgot"))
+        # after asking for the link, go to the sign-in page (the message stays on top): the person then opens the
+        # e-mail, chooses a new password and signs in here
+        return redirect(url_for("auth.login") if smtp_ready() else url_for("auth.forgot"))
     return render_template("auth/forgot.html", meta={"title": "Forgot password | Sur Music", "noindex": True})
 
 

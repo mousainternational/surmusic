@@ -53,8 +53,10 @@ def test_forgot_password_sends_a_reset_email_when_brevo_is_set(app):
     member = app.test_client()
     signup(member, "forgetful@example.com")
     visitor = app.test_client()
-    r = post(visitor, "/forgot", {"email": "forgetful@example.com"}, page="/forgot", follow_redirects=True)
-    assert b"we sent a reset link" in r.data.lower()
+    r = post(visitor, "/forgot", {"email": "forgetful@example.com"}, page="/forgot")
+    assert r.status_code == 302 and r.headers["Location"].endswith("/login")        # back to sign-in after asking
+    r = visitor.get("/login")
+    assert b"we sent a reset link" in r.data.lower() and b"Sign in" in r.data
     sent = [m for m in app.config.get("SENT_MAIL", []) if m["To"] == "forgetful@example.com"]
     assert sent and "/reset/" in sent[-1].get_content() and "Sur Music" in sent[-1]["From"]
     assert "Reset your" in sent[-1]["Subject"]
