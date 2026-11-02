@@ -36,6 +36,12 @@ def test_ads_settings_validation_and_rendering(client, app):
     assert "strict-dynamic" in r.headers["Content-Security-Policy"]
     assert anon.get("/ads.txt").get_data(as_text=True).strip() == \
         "google.com, pub-1234567890123456, DIRECT, f08c47fec0942fa0"
+    # the new header never holds an ad, and the home and new pages keep their ad slots
+    home = anon.get("/").get_data(as_text=True)
+    assert 'data-ad-slot="1111111111"' in home
+    assert "adsbygoogle" not in home.split("<body", 1)[1].split("</header>", 1)[0]
+    for path in ("/markets", "/islam", "/live-news", "/radio-stations", "/blog", "/blog/listen-quran-radio-online-free"):
+        assert 'data-ad-slot="1111111111"' in anon.get(path).get_data(as_text=True), path
     # never on admin or account pages
     assert "adsbygoogle" not in client.get("/admin/").get_data(as_text=True)
     assert "strict-dynamic" not in client.get("/admin/").headers["Content-Security-Policy"]

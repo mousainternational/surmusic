@@ -35,6 +35,8 @@
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo-180.png') }}">
   <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
   <link rel="preload" href="{{ url_for('static', filename='fonts/Inter-Regular.woff') }}" as="font" type="font/woff" crossorigin>
+  <link rel="preload" href="/static/fonts/Inter-Regular.woff" as="font" type="font/woff" crossorigin>
+  <link rel="preload" href="/static/fonts/Poppins-Bold.woff" as="font" type="font/woff" crossorigin>
   <link rel="stylesheet" href="{{ asset('css/site.css') }}">
   <script nonce="{{ csp_nonce() }}" src="{{ asset('js/theme.js') }}"></script>
   {%- for item in (ld or []) %}
@@ -62,9 +64,43 @@
       <a href="{{ url_for('public.category', cat='bollywood') }}" {% if here == '/bollywood' %}aria-current="page"{% endif %}>Bollywood</a>
       <a href="{{ url_for('public.category', cat='lollywood') }}" {% if here == '/lollywood' %}aria-current="page"{% endif %}>Lollywood</a>
       <a href="{{ url_for('public.category', cat='hollywood') }}" {% if here == '/hollywood' %}aria-current="page"{% endif %}>Hollywood</a>
+      <span class="hd-sep" aria-hidden="true"></span>
+      <details class="hd-dd">
+        <summary>🌐 Language</summary>
+        <div class="hd-panel">
+          {%- for title, items in language_menu() %}
+          <h3>{{ title }}</h3>
+          <ul>{% for href, label in items %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul>
+          {%- endfor %}
+        </div>
+      </details>
+      <details class="hd-dd">
+        <summary>🌍 Country</summary>
+        <div class="hd-panel hd-tall">
+          {%- set cm = country_menu() %}
+          <h3>Popular</h3>
+          <ul>{% for href, label in cm[0] %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul>
+          <h3>Regions</h3>
+          <ul>{% for href, label in cm[1] %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul>
+          {%- for title, items in cm[2] %}
+          <h3>{{ title }}</h3>
+          <ul>{% for href, label in items %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul>
+          {%- endfor %}
+        </div>
+      </details>
+      <details class="hd-dd">
+        <summary>📻 Types</summary>
+        <div class="hd-panel hd-tall">
+          {%- for key, icon, title, items in type_menu() %}
+          <h3>{{ icon }} {{ title }}</h3>
+          <ul>{% for href, label in items %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul>
+          {%- endfor %}
+        </div>
+      </details>
+      <span class="hd-sep" aria-hidden="true"></span>
       <a href="/blog" {% if here.startswith('/blog') %}aria-current="page"{% endif %}>Guides</a>
       <a href="{{ url_for('public.favorites') }}" {% if here == '/favorites' %}aria-current="page"{% endif %}>★ Favourites</a>
-      <a href="{{ url_for('public.download_page') }}" {% if here == '/download' %}aria-current="page"{% endif %}>Get the app</a>
+      <a href="{{ url_for('public.download_page') }}" {% if here == '/download' %}aria-current="page"{% endif %}>Get app</a>
       <form class="nav-search" action="{{ url_for('public.search') }}" method="get" role="search">
         <label for="nav-q" class="sr">Search stations</label>
         <input id="nav-q" name="q" type="search" placeholder="Search…" maxlength="60" autocomplete="off">
@@ -79,7 +115,7 @@
         <form method="post" action="{{ url_for('auth.logout') }}" class="inline"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="linklike">Sign out</button></form>
       {%- else %}
         <a href="{{ url_for('auth.login') }}" {% if here == '/login' %}aria-current="page"{% endif %}>Sign in</a>
-        <a class="btn btn-sm btn-primary" href="{{ url_for('auth.signup') }}">Sign up free</a>
+        <a class="btn btn-sm btn-primary hd-signup" href="{{ url_for('auth.signup') }}">Sign up free</a>
       {%- endif %}
       <a class="btn btn-sm btn-accent" href="{{ url_for('public.donate') }}">Donate</a>
       <button class="theme-toggle" type="button" aria-label="Switch light or dark theme" title="Switch theme">

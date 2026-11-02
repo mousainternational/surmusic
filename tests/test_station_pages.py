@@ -14,15 +14,18 @@ def test_genre_pages(client):
     assert "Naat Radio" in client.get("/genre/naat").get_data(as_text=True)
     assert client.get("/genre/nothing").status_code == 404
     home = client.get("/").get_data(as_text=True)
-    strip = home.split("data-genre-chips", 1)[1].split('<div class="finder">', 1)[0]           # the quick buttons
+    strip = home.split("data-genre-chips", 1)[1].split("</nav>", 1)[0]                          # the quick buttons
     assert "naat" not in strip and "qawwali" not in strip and "sufi" not in strip
-    menu = home.split('<div class="finder">', 1)[1].split("</nav>", 1)[0]                      # the drop-downs
-    other = menu.split("Other</h3>", 1)[1].split("</ul>", 1)[0]
+    header = home.split('<nav id="menu"', 1)[1].split("</nav>", 1)[0]                           # the header menu
+    assert header.count("<details") == 3 and "🌐 Language" in header and "🌍 Country" in header
+    other = header.split("📻 Types", 1)[1].split("Other</h3>", 1)[1].split("</ul>", 1)[0]
     for slug in ("naat", "qawwali", "sufi", "ghazal"):                                          # inside "Other"
         assert f'href="/genre/{slug}"' in other, slug
-    assert "Choose your country" in menu and 'href="/country/usa"' in menu and 'href="/continent/europe"' in menu
-    assert 'href="/genre/news"' in menu and 'href="/blog"' in home                              # Guides is in the menu
-    assert 'href="/genre/quran"' in home
+    assert 'href="/country/usa"' in header and 'href="/continent/europe"' in header
+    assert 'href="/genre/news"' in header and 'href="/blog"' in header                          # Guides is in the menu
+    assert 'href="/genre/hindi"' in header and 'href="/genre/health"' in header
+    assert 'href="/radio-stations#cat-religious"' in home                                       # category tiles
+    assert 'id="cat-religious"' in client.get("/radio-stations").get_data(as_text=True)
 
 
 def test_station_rows_link_to_own_page(client):

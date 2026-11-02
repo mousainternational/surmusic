@@ -43,21 +43,11 @@
 {%- endmacro %}
 
 {% macro cat_tabs(active) -%}
-<div class="tuner-row">
-  <details class="pick float lang-pick">
-    <summary>🌐 Language</summary>
-    <div class="pick-panel float-panel">
-      {%- for title, items in language_menu() %}
-      <div class="pick-group"><h3>{{ title }}</h3><ul class="pick-links">{% for href, label in items %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul></div>
-      {%- endfor %}
-    </div>
-  </details>
-  <nav class="cat-tabs" aria-label="Music categories">
-    {%- for key, label in [('bollywood', 'Bollywood'), ('lollywood', 'Lollywood'), ('hollywood', 'Hollywood')] %}
-    <a href="/{{ key }}" class="{{ 'active' if key == active }}" {% if key == active %}aria-current="page"{% endif %}>{{ label }}</a>
-    {%- endfor %}
-  </nav>
-</div>
+<nav class="cat-tabs" aria-label="Music categories">
+  {%- for key, label in [('bollywood', 'Bollywood'), ('lollywood', 'Lollywood'), ('hollywood', 'Hollywood')] %}
+  <a href="/{{ key }}" class="{{ 'active' if key == active }}" {% if key == active %}aria-current="page"{% endif %}>{{ label }}</a>
+  {%- endfor %}
+</nav>
 {%- endmacro %}
 
 {% macro genre_chips(active='') -%}
@@ -68,28 +58,7 @@
   {%- for key in here + ([active] if active and active in TOPICS and active not in here else []) %}
     <a class="chip{{ ' active' if key == active }}" href="{{ topic_href(key) }}" data-topic="{{ key }}" {% if key == active %}aria-current="page"{% endif %}>{{ TOPICS[key].label }}</a>
   {%- endfor %}
-  </div>
-  <div class="finder">
-    <details class="pick">
-      <summary>📻 All radio types</summary>
-      <div class="pick-panel">
-        {%- for title, items in type_menu() %}
-        <div class="pick-group"><h3>{{ title }}</h3><ul class="pick-links">{% for href, label in items %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul></div>
-        {%- endfor %}
-        <p class="small"><a href="/radio-stations">Everything on one page →</a></p>
-      </div>
-    </details>
-    <details class="pick">
-      <summary>🌍 Choose your country</summary>
-      <div class="pick-panel">
-        {%- set cm = country_menu() %}
-        <div class="pick-group"><h3>Popular</h3><ul class="pick-links">{% for href, label in cm[0] %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul></div>
-        <div class="pick-group"><h3>Regions</h3><ul class="pick-links">{% for href, label in cm[1] %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul></div>
-        {%- for title, items in cm[2] %}
-        <div class="pick-group"><h3>{{ title }}</h3><ul class="pick-links">{% for href, label in items %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul></div>
-        {%- endfor %}
-      </div>
-    </details>
+    <a class="chip chip-more" href="/radio-stations">All types &amp; countries →</a>
   </div>
 </nav>
 {%- endmacro %}

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% import "_macros.html" as ui with context %}
+{% import "_ad.html" as ads with context %}
 {% block content %}
 <div class="wrap page narrow">
   {{ ui.breadcrumbs(crumbs) }}
@@ -9,7 +10,9 @@
       <h1>{{ post.title }}</h1>
       <p class="muted">By {{ author }}, {{ S.owner_name }}</p>
     </header>
+    {{ ads.ad('top') }}
     <div class="prose card blog-body">{{ post.body | markdown }}</div>
+    {{ ads.ad('side') }}
   </article>
   <section class="card" aria-labelledby="more-guides">
     <h2 class="h3" id="more-guides">More guides</h2>

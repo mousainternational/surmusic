@@ -1,10 +1,12 @@
 {% extends "base.html" %}
 {% import "_macros.html" as ui with context %}
+{% import "_ad.html" as ads with context %}
 {% block content %}
 <div class="wrap page narrow">
   {{ ui.breadcrumbs(crumbs) }}
   <header class="page-head"><h1>Radio guides and articles</h1>
     <p class="muted">Short, practical guides from the Sur Music team: listening, finding stations and fixing problems.</p></header>
+  {{ ads.ad('top') }}
   <div class="blog-list">
     {% for p in posts %}
     <article class="card blog-card">
