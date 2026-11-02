@@ -146,3 +146,11 @@ CREATE TABLE IF NOT EXISTS user_2fa (
   last_step BIGINT NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL
 );
+
+-- One Android subscription may be used on one phone at a time (hashes only, no personal data).
+CREATE TABLE IF NOT EXISTS app_licenses (
+  token_hash TEXT PRIMARY KEY,
+  install_hash TEXT NOT NULL,
+  first_seen TEXT NOT NULL,
+  last_seen TEXT NOT NULL
+);

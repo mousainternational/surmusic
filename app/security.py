@@ -72,6 +72,8 @@ def _same_origin():
 def csrf_protect():
     if request.method in ("GET", "HEAD", "OPTIONS"):
         return
+    if request.path == "/api/app/license":      # called by the Android app itself (no browser session, no cookies)
+        return
     sent = request.form.get("_csrf") or request.headers.get("X-CSRF-Token", "")
     good = session.get("_csrf", "")
     if not good or not sent or not hmac.compare_digest(sent, good) or not _same_origin():

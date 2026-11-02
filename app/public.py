@@ -424,7 +424,7 @@ def favorites():
 def download_page():
     apps = {r["platform"]: r for r in get_db().all("SELECT * FROM apps")}
     meta = build_meta("Sur Music Apps — Android App & Chrome Extension",
-                      "Sur Music for Android (US$5 one-time on Google Play) and the Chrome extension (7-day free "
+                      "Sur Music for Android (US$5 per year on Google Play) and the Chrome extension (7-day free "
                       "trial, then US$1/month): background play, lock-screen controls and favourites.", page="download")
     return render_template("download.html", meta=meta, apps=apps,
                            ld=[breadcrumb_ld([("Home", "/"), ("Download", "/download")])])
@@ -583,6 +583,46 @@ def api_stream():
     if is_blocked(st):
         return jsonify({"error": "removed"}), 410
     return jsonify({"url": st["url"]})
+
+
+APP_LICENSE_IDLE_DAYS = 7          # a second phone may take over a subscription after 7 days of silence
+
+
+@bp.route("/api/app/license", methods=["POST"])
+def api_app_license():
+    """The Android app asks: may this phone use this Play subscription? One subscription, one phone.
+
+    Only hashes are stored. The app has already checked with Google Play that the subscription is real."""
+    import hashlib
+    import re as _re
+    data = _json_body()
+    token, install = data.get("token"), data.get("install")
+    if not (isinstance(token, str) and 20 <= len(token) <= 4000 and isinstance(install, str)
+            and _re.fullmatch(r"[A-Za-z0-9-]{16,80}", install)):
+        return jsonify({"ok": False, "reason": "bad_request"}), 400
+    if rate_limited("applicense", 60, 3600):
+        return jsonify({"ok": False, "reason": "slow_down"}), 429
+    th = hashlib.sha256(token.encode()).hexdigest()
+    ih = hashlib.sha256(install.encode()).hexdigest()
+    db = get_db()
+    now = datetime.now(timezone.utc)
+    stamp = now.replace(microsecond=0).isoformat()
+    row = db.one("SELECT install_hash, last_seen FROM app_licenses WHERE token_hash = ?", (th,))
+    if row is None:
+        db.execute("INSERT INTO app_licenses (token_hash, install_hash, first_seen, last_seen) VALUES (?, ?, ?, ?)",
+                   (th, ih, stamp, stamp))
+    elif row["install_hash"] == ih:
+        db.execute("UPDATE app_licenses SET last_seen = ? WHERE token_hash = ?", (stamp, th))
+    else:
+        try:
+            idle = now - datetime.fromisoformat(row["last_seen"])
+        except ValueError:
+            idle = timedelta(days=999)
+        if idle < timedelta(days=APP_LICENSE_IDLE_DAYS):
+            return jsonify({"ok": False, "reason": "other_device"}), 403
+        db.execute("UPDATE app_licenses SET install_hash = ?, last_seen = ? WHERE token_hash = ?", (ih, stamp, th))
+    db.commit()
+    return jsonify({"ok": True})
 
 
 @bp.route("/api/track", methods=["POST"])

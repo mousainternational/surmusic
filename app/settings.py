@@ -61,6 +61,10 @@ We do not sell personal data. Advertising partners receive data only as describe
 
 Sur Music is not directed at children under 13, and we do not knowingly collect their data.
 
+### Android app subscription
+
+The Android app is a yearly subscription sold through Google Play. Google handles the payment and we never see your card or bank details. To keep one subscription on one phone, the app sends a random number made when it is first opened and the Google Play purchase token to our server, which stores only a fingerprint (hash) of each, with the date it was last used. This is not used for advertising and is not shared.
+
 ### Your rights
 
 You can view, correct, download or delete your data from **My account**, or ask us through the Contact page.

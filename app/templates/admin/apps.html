@@ -1,7 +1,7 @@
 {% extends "admin/_layout.html" %}
 {% block title %}App downloads{% endblock %}
 {% block admin %}
-<div class="card notice"><p><strong>Apps are paid now.</strong> Visitors can no longer download the APK or extension file from the website. Paste the <strong>Google Play</strong> and <strong>Chrome Web Store</strong> links in “Store link” below — the Download page then shows “Get it on Google Play” / “Add to Chrome”. A file uploaded here is kept only as your own backup.</p></div>
+<div class="card notice"><p><strong>Apps are paid now.</strong> Android: US$5 per year (a Google Play subscription, one phone each). Chrome: US$1 per month. Visitors can no longer download the APK or extension file from the website. Paste the <strong>Google Play</strong> and <strong>Chrome Web Store</strong> links in “Store link” below — the Download page then shows “Get it on Google Play” / “Add to Chrome”. A file uploaded here is kept only as your own backup.</p></div>
 <div class="grid donate-grid">
   {% for key, title, exts in [('android', 'Android app (APK)', '.apk'), ('chrome', 'Chrome extension', '.zip or .crx')] %}
   {% set a = apps.get(key) %}
