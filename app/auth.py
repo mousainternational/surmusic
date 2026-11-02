@@ -328,8 +328,9 @@ def forgot():
         # Same answer whether or not the account exists (prevents email discovery).
         msg = "If an account exists for that email, we sent a reset link. Check your inbox and spam folder."
         if not smtp_ready():
-            msg = ("Password-reset emails are not available yet on this website. "
-                   "Please contact us through the Contact page for help.")
+            msg = ("Automatic reset emails are not switched on yet. Please email "
+                   f"{get_settings().get('app_contact_email') or 'us'} from the email address of your account, "
+                   "or use the Contact page, and we will send you a reset link.")
         flash(msg, "success" if smtp_ready() else "warning")
         return redirect(url_for("auth.forgot"))
     return render_template("auth/forgot.html", meta={"title": "Forgot password | Sur Music", "noindex": True})

@@ -152,15 +152,24 @@ def users():
                            places=analytics.user_locations([r["id"] for r in rows]))
 
 
-@bp.route("/users/<int:uid>/<any(suspend, activate, verify, signout, delete, reset_2fa):action>", methods=["POST"])
+@bp.route("/users/<int:uid>/<any(suspend, activate, verify, signout, delete, reset_2fa, reset_link):action>", methods=["POST"])
 @admin_required
 def user_action(uid, action):
     db = get_db()
     u = db.one("SELECT * FROM users WHERE id = ?", (uid,))
     if not u:
         abort(404)
-    if u["role"] == "admin" and action in ("suspend", "delete"):
-        flash("Administrator accounts cannot be suspended or deleted here.", "error")
+    if u["role"] == "admin" and action in ("suspend", "delete", "reset_link"):
+        flash("Administrator accounts cannot be suspended, deleted or reset here.", "error")
+        return redirect(url_for("admin.users"))
+    if action == "reset_link":
+        # For a customer who forgot the password and the site has no e-mail sending: a one-hour, one-use link
+        # that the owner passes on by WhatsApp or e-mail. It only lets that person choose a new password.
+        from .auth import _pw_fingerprint, _signer
+        token = _signer("reset").dumps({"uid": u["id"], "fp": _pw_fingerprint(u["password_hash"])})
+        link = current_app.config["SITE_URL"] + url_for("auth.reset", token=token)
+        audit("user_reset_link", u["email"])                      # the link itself is never written to the log
+        flash(f"Password reset link for {u['email']} (works once, for 1 hour). Send it to that person: {link}", "success")
         return redirect(url_for("admin.users"))
     if action == "suspend":
         db.execute("UPDATE users SET is_active = 0, session_version = session_version + 1 WHERE id = ?", (uid,))

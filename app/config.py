@@ -78,6 +78,12 @@ class Config:
     CLAMAV_PORT = _int("CLAMAV_PORT", 3310)
     CLAMAV_REQUIRED = _bool("CLAMAV_REQUIRED", False)
 
+    # Email by Brevo's web API (works on free hosting that blocks SMTP ports). Only the key is secret: set it as the
+    # BREVO_API_KEY environment variable on the host, never in the code.
+    BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
+    MAIL_FROM_EMAIL = os.environ.get("MAIL_FROM_EMAIL", "noreply@surmusicradio.com")
+    MAIL_FROM_NAME = os.environ.get("MAIL_FROM_NAME", "Sur Music")
+
     # Optional SMTP for contact-form email delivery.
     SMTP_HOST = os.environ.get("SMTP_HOST", "")
     SMTP_PORT = _int("SMTP_PORT", 587)

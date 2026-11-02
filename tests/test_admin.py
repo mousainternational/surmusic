@@ -211,3 +211,28 @@ def test_apk_button_appears_when_the_file_is_shipped(app, tmp_path, monkeypatch)
     r = anon.get("/download/android")
     assert r.status_code == 200 and r.mimetype == "application/vnd.android.package-archive"
     assert "attachment" in r.headers["Content-Disposition"] and r.data == apk_bytes()
+
+
+def test_admin_can_make_a_one_time_password_reset_link(client, app):
+    import re
+    from conftest import USER_PASSWORD, signup
+    member = app.test_client()
+    signup(member, "forgot@example.com")
+    login(client)
+    uid = client.get("/admin/users").get_data(as_text=True)
+    m = re.search(r'/admin/users/(\d+)/reset_link', uid)
+    assert m, "the button is shown for a member"
+    r = post(client, f"/admin/users/{m.group(1)}/reset_link", page="/admin/users", follow_redirects=True)
+    link = re.search(r"(http\S*/reset/[\w.\-]+)", r.get_data(as_text=True).replace("&#34;", '"'))
+    assert link, "the link is shown to the owner once"
+    path = "/reset/" + link.group(1).split("/reset/")[1]
+    visitor = app.test_client()
+    assert visitor.get(path).status_code == 200
+    new_pw = "brand-new-password-4567"
+    assert post(visitor, path, {"password": new_pw, "password2": new_pw}, page=path).status_code == 302
+    again = app.test_client()
+    assert again.get(path, follow_redirects=True).status_code == 200 and b"already used" in again.get(path, follow_redirects=True).data
+    assert post(app.test_client(), "/login", {"email": "forgot@example.com", "password": new_pw}).status_code == 302
+    # an administrator's own account is never reset this way
+    admin_id = re.search(r"/admin/users/(\d+)/suspend", uid)
+    assert b"cannot be suspended, deleted or reset" in post(client, "/admin/users/1/reset_link", page="/admin/users", follow_redirects=True).data

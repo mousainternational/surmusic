@@ -66,7 +66,7 @@ def test_password_reset_flow(client, app):
     signup(app.test_client())
     # without SMTP the site is honest about it
     r = post(client, "/forgot", {"email": "sara@example.com"}, page="/forgot", follow_redirects=True)
-    assert b"not available yet" in r.data
+    assert b"not switched on yet" in r.data
     app.config.update(SMTP_HOST="smtp.example.com", SMTP_FROM="noreply@surmusic.example", SENT_MAIL=[])
     r = post(client, "/forgot", {"email": "nobody@example.com"}, page="/forgot", follow_redirects=True)
     assert b"If an account exists" in r.data and app.config["SENT_MAIL"] == []

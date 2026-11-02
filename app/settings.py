@@ -389,8 +389,8 @@ def setup_warnings(smtp_ready):
         w.append("Contact email is not set. The address you supplied (“%s”) has no @ sign — enter the complete, "
                  "verified address in Settings → General." % s.get("contact_email_unverified", ""))
     if not smtp_ready:
-        w.append("Email (SMTP) is not configured, so password-reset and verification emails cannot be sent. "
-                 "Set the SMTP_* values in .env.")
+        w.append("Email is not set up, so password-reset and confirmation emails cannot be sent. Add the "
+                 "BREVO_API_KEY value in your host's environment settings.")
     if not ads_active():
         w.append("Ads are off. After Google AdSense approves the site, enter your publisher ID (ca-pub-…) and ad "
                  "unit IDs in Ads, then switch ads on.")
