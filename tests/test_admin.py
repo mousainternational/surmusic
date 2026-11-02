@@ -59,7 +59,9 @@ def test_sponsored_station(client, app):
     assert "City FM 89" not in app.test_client().get("/hollywood").get_data(as_text=True)
 
 
-def test_app_downloads(client, app):
+def test_app_downloads(client, app, tmp_path, monkeypatch):
+    from app import public
+    monkeypatch.setattr(public, "APK_DIR", str(tmp_path))        # no shipped APK in this test: only the uploaded-file rules
     anon = app.test_client()
     assert b"Coming soon" in anon.get("/download").data
     login(client)
