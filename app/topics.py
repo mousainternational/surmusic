@@ -648,6 +648,10 @@ CONTINENT_CHIPS = {"europe": _EUROPE, "south-america": _LATIN, "africa": _AFRICA
 CODE_TO_COUNTRY = {}            # ISO code -> country page slug (filled below, after the country list exists)
 
 
+# Shown in the page text and keywords, but not as buttons in the "Listen by type" strip.
+HIDDEN_CHIPS = ("naat", "qawwali", "sufi")
+
+
 def chips_for(code):
     """Chips for a visitor from this country: their own country first, then what people there listen to."""
     code = (code or "").upper()
@@ -658,7 +662,7 @@ def chips_for(code):
         base = CONTINENT_CHIPS.get(TOPICS[slug]["group"], _DEFAULT)
     else:
         base = _DEFAULT
-    out = ([slug] if slug else []) + [k for k in base if k in TOPICS]
+    out = ([slug] if slug else []) + [k for k in base if k in TOPICS and k not in HIDDEN_CHIPS]
     return list(dict.fromkeys(out))[:16]
 
 

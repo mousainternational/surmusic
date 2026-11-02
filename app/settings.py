@@ -166,7 +166,7 @@ DEFAULTS = {
     "owner_url": "",
     "tagline": "Live Bollywood, Lollywood & Hollywood radio — free.",
     "hero_title": "Live desi & English radio, free in your browser",
-    "hero_subtitle": "Bollywood hits, Pakistani songs, ghazals, qawwali and Hollywood top 40 — thousands of live stations. No download needed.",
+    "hero_subtitle": "Bollywood hits, Pakistani songs, ghazals and Hollywood top 40 — thousands of live stations. No download needed.",
     "about_md": ABOUT_MD,
     "contact_email": "",
     "contact_email_unverified": "mousainternational.gami.com",

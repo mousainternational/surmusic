@@ -83,7 +83,7 @@ def test_type_strip_follows_visitor_country(app):
     us = chips(**{"Accept-Language": "en-US,en;q=0.9"})
     de = chips(**{"Accept-Language": "de-DE"})
     il = chips(**{"Accept-Language": "he-IL"})
-    assert pk[0] == "pakistan" and "naat" in pk and "quran" in pk
+    assert pk[0] == "pakistan" and "quran" in pk and not {"naat", "qawwali", "sufi"} & set(pk)
     assert us[0] == "usa" and "christian" in us and "country-music" in us and "naat" not in us
     assert de[0] == "germany" and "dance" in de
     assert il[0] == "israel" and "jewish" in il

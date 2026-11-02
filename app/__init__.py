@@ -16,7 +16,7 @@ from .security import csp_nonce, csrf_protect, csrf_token, current_user, securit
 from .settings import ads_active, get_settings
 from .util import human_size, render_markdown, valid_email
 
-__version__ = "1.7.10"
+__version__ = "1.7.12"
 
 
 def create_app(overrides=None):
@@ -236,6 +236,15 @@ def _apply_setting_changes(app):
                         "Listen free to live radio from around the world: Naat, Quran, qawwali, ghazal, Urdu news, "
                         "Bollywood, Pakistani FM and English hits. No download, no sign-up."))
             db.execute("INSERT INTO settings (key, value) VALUES (?, ?)", ("_done_seo_text_v18", "1"))
+            db.commit()
+        # v1.7.11: the home sub-heading no longer lists qawwali (only if the owner never changed it)
+        if not db.scalar("SELECT COUNT(*) FROM settings WHERE key = ?", ("_done_hero_v111",)):
+            from .settings import DEFAULTS
+            db.execute("UPDATE settings SET value = ? WHERE key = ? AND value = ?",
+                       (DEFAULTS["hero_subtitle"], "hero_subtitle",
+                        "Bollywood hits, Pakistani songs, ghazals, qawwali and Hollywood top 40 — thousands of live "
+                        "stations. No download needed."))
+            db.execute("INSERT INTO settings (key, value) VALUES (?, ?)", ("_done_hero_v111", "1"))
             db.commit()
         # v1.7.10: the privacy policy tells people what the Android subscription check stores
         if not db.scalar("SELECT COUNT(*) FROM settings WHERE key = ?", ("_done_privacy_app_v110",)):

@@ -92,6 +92,46 @@ def _chips_here():
     return chips_for(visitor_country())
 
 
+_TYPE_GROUPS = [
+    ("Music", ["pop", "rock", "hip-hop", "dance", "lofi", "jazz", "classical", "country-music", "latin", "80s-90s",
+               "reggae", "afrobeats", "k-pop", "metal"]),
+    ("News, talk and sports", ["news", "english-news", "talk", "sports"]),
+    ("Quran and faith", ["quran", "islamic", "christian", "bhajan", "gurbani", "jewish"]),
+    ("Languages and regional", ["old-songs", "arabic", "persian", "punjabi", "pashto", "sindhi", "bengali", "tamil",
+                                "telugu", "malayalam", "marathi", "gujarati", "indian-classical"]),
+    ("Other", ["naat", "qawwali", "sufi", "ghazal"]),
+]
+_POPULAR_COUNTRIES = ["usa", "uk", "canada", "australia", "germany", "france", "pakistan", "india", "uae",
+                      "saudi-arabia", "turkey"]
+
+
+@bp.app_template_global("type_menu")
+def _type_menu():
+    """Every radio type in a few short groups for the "All radio types" drop-down. Nothing is left out."""
+    placed = {s for _, slugs in _TYPE_GROUPS for s in slugs}
+    out = [("Film and pop radio", [("/bollywood", "Bollywood"), ("/lollywood", "Pakistani (Lollywood)"),
+                                    ("/hollywood", "English hits (Hollywood)")])]
+    for title, slugs in _TYPE_GROUPS:
+        out.append((title, [(topic_path(s), TOPICS[s]["label"]) for s in slugs
+                            if s in TOPICS and not radio.known_empty(s)]))
+    out[-1][1].extend((topic_path(k), v["label"]) for k, v in GENRE_PAGES.items()
+                      if k not in placed and not radio.known_empty(k))
+    return [(t, items) for t, items in out if items]
+
+
+@bp.app_template_global("country_menu")
+def _country_menu():
+    """Popular countries, the continents and every country that has stations, for the drop-down."""
+    popular = [(topic_path(s), TOPICS[s]["label"]) for s in _POPULAR_COUNTRIES if s in TOPICS]
+    regions = [(f"/continent/{c}", CONTINENTS[c][0]) for c in CONTINENTS]
+    groups = []
+    for c in CONTINENTS:
+        items = [(topic_path(slug), t["label"]) for slug, t, _ in _listed_countries(c)]
+        if items:
+            groups.append((CONTINENTS[c][0], items))
+    return popular, regions, groups
+
+
 @bp.app_context_processor
 def _topic_globals():
     return {"TOPICS": TOPICS}
@@ -216,6 +256,7 @@ def home():
     meta = build_meta(page="home", canonical_path="/")
     return render_template("home.html", meta=meta, stations=protect(stations[:60]), error=error, cat="bollywood",
                            popular=_popular(), home_faq=islam_data.HOME_FAQ, market_sections=markets.view(),
+                           guides=blog_data.posts_sorted()[:3],
                            trending=trends.top(6),
                            ld=[website_ld(), webapp_ld(), organization_ld(), faq_ld(islam_data.HOME_FAQ)])
 

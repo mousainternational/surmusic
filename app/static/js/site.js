@@ -236,7 +236,7 @@
     if (!box || !list.length) return;
     for (var i = list.length - 1; i >= 0; i--) {
       var t = list[i];
-      if (!t || !/^[a-z0-9-]{1,40}$/.test(t.s) || !/^\/(genre|country)\/[a-z0-9-]{1,60}$/.test(t.h || "")) continue;
+      if (!t || t.s === "naat" || t.s === "qawwali" || t.s === "sufi" || !/^[a-z0-9-]{1,40}$/.test(t.s) || !/^\/(genre|country)\/[a-z0-9-]{1,60}$/.test(t.h || "")) continue;
       var chip = box.querySelector('[data-topic="' + t.s + '"]');
       if (!chip) {
         chip = document.createElement("a");

@@ -721,3 +721,24 @@ html.menu-open .cookie-note { display: none; }
 .trend-list { list-style: none; margin: 8px 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .trend-list li { border: 1px solid var(--border); border-radius: 999px; padding: 6px 14px; background: var(--card, transparent); }
 .trend-list a { font-weight: 600; text-decoration: none; }
+
+/* "Choose your country" and "All radio types" drop-downs, tidier home page */
+.finder { display: grid; gap: 10px; margin-top: 12px; }
+@media (min-width: 760px) { .finder { grid-template-columns: 1fr 1fr; align-items: start; } }
+.pick > summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 48px; padding: 10px 16px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); font-weight: 700; }
+.pick > summary::-webkit-details-marker { display: none; }
+.pick > summary::after { content: "▾"; font-size: 1.1em; color: var(--muted); }
+.pick[open] > summary { border-color: var(--brand); }
+.pick[open] > summary::after { content: "▴"; }
+.pick-panel { margin-top: 8px; padding: 12px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); max-height: 60vh; overflow-y: auto; }
+.pick-group + .pick-group { margin-top: 14px; }
+.pick-group h3 { margin: 0 0 6px; font-size: .8rem; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.pick-links { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.pick-links a { display: inline-block; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--border); text-decoration: none; font-weight: 600; font-size: .88rem; color: var(--text); }
+.pick-links a:hover { border-color: var(--brand); }
+.home-extras { display: grid; gap: 14px; }
+@media (min-width: 760px) { .home-extras { grid-template-columns: 1fr 1fr; align-items: start; } }
+.home-extras .card, .home-extras .trend-strip { margin: 0; }
+.guide-list { margin: 6px 0; padding-left: 1.1em; }
+.guide-list li + li { margin-top: 6px; }
+.about-details > .seo-text { margin-top: 12px; }

@@ -54,11 +54,32 @@
 <nav class="genre-chips" aria-label="Radio by type" data-genre-chips>
   <h2 class="h3">Listen by type</h2>
   <div class="chips">
-  {%- set here = chips_here() %}
+  {%- set here = chips_here()[:8] %}
   {%- for key in here + ([active] if active and active in TOPICS and active not in here else []) %}
     <a class="chip{{ ' active' if key == active }}" href="{{ topic_href(key) }}" data-topic="{{ key }}" {% if key == active %}aria-current="page"{% endif %}>{{ TOPICS[key].label }}</a>
   {%- endfor %}
-    <a class="chip chip-more" href="/radio-stations">All types &amp; countries →</a>
+  </div>
+  <div class="finder">
+    <details class="pick">
+      <summary>📻 All radio types</summary>
+      <div class="pick-panel">
+        {%- for title, items in type_menu() %}
+        <div class="pick-group"><h3>{{ title }}</h3><ul class="pick-links">{% for href, label in items %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul></div>
+        {%- endfor %}
+        <p class="small"><a href="/radio-stations">Everything on one page →</a></p>
+      </div>
+    </details>
+    <details class="pick">
+      <summary>🌍 Choose your country</summary>
+      <div class="pick-panel">
+        {%- set cm = country_menu() %}
+        <div class="pick-group"><h3>Popular</h3><ul class="pick-links">{% for href, label in cm[0] %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul></div>
+        <div class="pick-group"><h3>Regions</h3><ul class="pick-links">{% for href, label in cm[1] %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul></div>
+        {%- for title, items in cm[2] %}
+        <div class="pick-group"><h3>{{ title }}</h3><ul class="pick-links">{% for href, label in items %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul></div>
+        {%- endfor %}
+      </div>
+    </details>
   </div>
 </nav>
 {%- endmacro %}
