@@ -107,6 +107,23 @@ def webapp_ld():
     }
 
 
+def android_app_ld():
+    """The paid Android app, described for Google (Download page)."""
+    s = get_settings()
+    return {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Sur Music for Android",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "Android 8.0+",
+        "url": absolute("/download"),
+        "description": "Live radio with background play, lock-screen controls and no ads. One account, one phone.",
+        "offers": {"@type": "Offer", "price": "5.00", "priceCurrency": "USD", "url": absolute("/download"),
+                   "description": "Yearly subscription"},
+        "author": {"@type": "Organization", "name": s["owner_name"]},
+    }
+
+
 def breadcrumb_ld(items):
     return {
         "@context": "https://schema.org",

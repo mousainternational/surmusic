@@ -494,7 +494,7 @@ TOPICS = {
         kind="country", group="", label="Germany",
         h1="Germany Radio — Live German Stations", native="Deutsches Radio",
         seo_title="German Radio Live — Germany Radio Stations Online Free",
-        description="Listen to live German radio free: music, news and talk from Germany.",
+        description="Listen to live German radio free: pop, rock, schlager, news and talk from Germany, playing in your browser with no app and no sign-up.",
         intro="Live radio from Germany — pop, rock, schlager, news and talk.",
         more="Also searched as German radio online and Radio Deutschland live.",
         paths=[country("DE")]),
@@ -502,7 +502,7 @@ TOPICS = {
         kind="country", group="", label="France",
         h1="France Radio — Live French Stations", native="Radio française",
         seo_title="French Radio Live — France Radio Stations Online Free",
-        description="Listen to live French radio free: music, news and talk from France.",
+        description="Listen to live French radio free: French pop, chanson, news and talk from France, playing in your browser with no app and no sign-up.",
         intro="Live radio from France — French pop, chanson, news and talk.",
         more="Also searched as French radio online and radio France en direct.",
         paths=[country("FR")]),
@@ -583,7 +583,7 @@ for _code, (_name, _cont, _native) in sorted(WORLD.items(), key=lambda kv: kv[1]
     TOPICS[_s] = dict(
         kind="country", group=_cont, code=_code, label=_name,
         h1=f"{_name} Radio — Live Radio Stations from {_name}", native=_native,
-        seo_title=f"{_name} Radio Live — FM Stations Online Free",
+        seo_title=(f"{_name} Radio Live — FM Stations Online Free" if len(_name) < 24 else f"{_name} Radio Live — Stations Online"),
         description=f"Listen to live radio from {_name} free: music, news and talk stations from {_name}, "
                     "playing right in your browser — no app and no sign-up.",
         intro=f"All the live radio stations from {_name} that play in your browser: music, news, talk, sports and "

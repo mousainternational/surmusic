@@ -20,7 +20,7 @@ from . import blog as blog_data
 from . import islam as islam_data
 from . import markets
 from . import trends
-from .seo import (article_ld, breadcrumb_ld, build_meta, faq_ld, media_url, organization_ld, page_ld, station_ld, webapp_ld,
+from .seo import (article_ld, breadcrumb_ld, build_meta, faq_ld, media_url, organization_ld, page_ld, station_ld, webapp_ld, android_app_ld,
                   website_ld)
 from .settings import (ADSENSE_CLIENT_RE, ads_active, affiliate_offers, donation_method, get_settings, is_blocked,
                        offers_for, sponsored_stations, without_blocked)
@@ -382,7 +382,7 @@ def continent(slug):
         abort(404)
     name, adjective = CONTINENTS[slug]
     items = _listed_countries(slug)
-    meta = build_meta(f"{name} Radio Stations Live — {adjective} Radio by Country",
+    meta = build_meta(f"{name} Radio Live — {adjective} Stations by Country",
                       f"Listen to live {adjective} radio free: choose a country in {name} and play its music, news "
                       "and talk stations in your browser.", page=f"continent-{slug}", noindex=not items)
     crumbs = [("Home", "/"), ("All radio", "/radio-stations"), (name, f"/continent/{slug}")]
@@ -443,7 +443,9 @@ def deals():
     items = affiliate_offers(True) if get_settings().get("affiliate_enabled") == "1" else []
     meta = build_meta("Deals & recommendations — headphones, speakers and more",
                       "Hand-picked headphones, speakers and gadgets for better listening. Affiliate links.", page="deals")
-    return render_template("deals.html", meta=meta, items=items)
+    return render_template("deals.html", meta=meta, items=items,
+                           ld=[page_ld("CollectionPage", "Deals & recommendations", meta["description"]),
+                               breadcrumb_ld([("Home", "/"), ("Deals", "/deals")])])
 
 
 @bp.route("/go/<oid>")
@@ -498,7 +500,7 @@ def download_page():
                       "Sur Music for Android (US$5 per year, download from this website) and the Chrome extension (7-day free "
                       "trial, then US$1/month): background play, lock-screen controls and favourites.", page="download")
     return render_template("download.html", meta=meta, apps=apps, apk=apk_file(),
-                           ld=[breadcrumb_ld([("Home", "/"), ("Download", "/download")])])
+                           ld=[breadcrumb_ld([("Home", "/"), ("Download", "/download")]), android_app_ld()])
 
 
 APK_NAME = "SurMusic.apk"
@@ -610,12 +612,12 @@ def privacy():
 
 @bp.route("/terms")
 def terms():
-    return _policy("terms_md", "terms", "Terms of Use", "The terms for using Sur Music: free listening, accounts, acceptable use, third-party radio streams, apps and donations.")
+    return _policy("terms_md", "terms", "Terms of Use — Free Online Radio, Accounts and Apps", "The terms for using Sur Music: free listening, accounts, acceptable use, third-party radio streams, apps and donations.")
 
 
 @bp.route("/disclaimer")
 def disclaimer():
-    return _policy("disclaimer_md", "disclaimer", "Disclaimer", "Sur Music plays public live radio streams from stations around the "
+    return _policy("disclaimer_md", "disclaimer", "Disclaimer — Live Radio Streams and Station Content", "Sur Music plays public live radio streams from stations around the "
                    "world. All music and station names belong to their owners.")
 
 

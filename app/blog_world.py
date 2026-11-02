@@ -98,7 +98,7 @@ When you are ready, start with your own country, then try a neighbour. It is a c
     },
     {
         "slug": "african-radio-online-afrobeats-news",
-        "title": "African Radio Online: Afrobeats, Amapiano, News and Local Stations",
+        "title": "African Radio Online: Afrobeats, Amapiano, News and Local FM",
         "description": "How to listen to live African radio online for free: Afrobeats, Amapiano and gospel, plus news and local stations from Nigeria, Kenya, Ghana, South Africa and more.",
         "date": "2026-11-02",
         "tag": "Africa",
@@ -201,7 +201,7 @@ Open the page for your country or the Arabic page, press play and keep it going 
     },
     {
         "slug": "latin-america-radio-online",
-        "title": "Latin and Brazilian Radio Online: Reggaeton, Salsa, Samba and More",
+        "title": "Latin and Brazilian Radio Online: Reggaeton, Salsa, Samba, News",
         "description": "How to listen to live Latin American radio online for free: reggaeton, salsa, bachata, regional Mexican, Brazilian stations and news from Spanish-speaking countries.",
         "date": "2026-11-02",
         "tag": "Latin America",
