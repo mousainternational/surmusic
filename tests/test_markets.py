@@ -104,3 +104,9 @@ def test_ticker_has_change_and_little_chart(monkeypatch):
 def test_ticker_strip_renders_on_every_page(client):
     html = client.get("/about").get_data(as_text=True) if client.get("/about").status_code == 200 else client.get("/").get_data(as_text=True)
     assert 'data-ticker' in html and 'class="mk-set"' in html
+
+
+def test_price_strip_keeps_moving_on_slow_phones():
+    css = open("app/static/css/site.css", encoding="utf-8").read()
+    assert ".slow-net .mk-track" not in css and ".slow-net .mk-ticker" not in css      # a phone on mobile data must still see it move
+    assert "animation: mk-scroll" in css

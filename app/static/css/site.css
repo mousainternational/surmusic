@@ -1050,8 +1050,5 @@ html.np-lock, html.np-lock body { overflow: hidden; }
 @media (max-height: 520px) { .np-ui { padding-bottom: 8px; } .np-name { font-size: 1.5rem; } .np-vol { display: none; } }
 @media (prefers-reduced-motion: reduce) { .np * { animation: none !important; transition: none !important; } }
 
-/* slow connection or data saver: calmer page, less to draw */
-.slow-net .mk-track { animation: none; }
-.slow-net .mk-ticker { overflow-x: auto; }
-.slow-net .mk-dup { display: none; }
+/* slow connection or data saver: only the little "equalizer" in the player bar rests (the price strip always moves) */
 .slow-net .pl-status .eq i { animation: none; }

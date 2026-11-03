@@ -50,7 +50,7 @@
   // ---------- slow connection help ----------
   // A radio stream that has not started after 12 s gets one quiet second try; after 35 s we stop and say so plainly.
   var conn = navigator.connection || navigator.mozConnection;
-  if (conn && (conn.saveData || /^(slow-2g|2g|3g)$/.test(conn.effectiveType || ""))) document.documentElement.classList.add("slow-net");
+  if (conn && (conn.saveData || /^(slow-2g|2g)$/.test(conn.effectiveType || ""))) document.documentElement.classList.add("slow-net");
   var dogSlow = 0, dogGive = 0, retried = false, slowMsg = false;
   function clearDog() { clearTimeout(dogSlow); clearTimeout(dogGive); dogSlow = dogGive = 0; slowMsg = false; }
   function startDog() {
