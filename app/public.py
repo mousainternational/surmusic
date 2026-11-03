@@ -1111,4 +1111,6 @@ def ad_slot_id(name):
     """Return the AdSense slot ID for a placement, or '' if ads are off / slot not set."""
     if not ads_active():
         return ""
+    if name == "player" and get_settings().get("ads_player_enabled") != "1":
+        return ""                         # the big player's ad has its own switch, off until the owner turns it on
     return get_settings().get(f"ad_slot_{name}", "")

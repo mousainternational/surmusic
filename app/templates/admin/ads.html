@@ -22,7 +22,10 @@
     <div><label for="ad_slot_list">Slot: inside station lists (every 10 stations)</label><input id="ad_slot_list" name="ad_slot_list" value="{{ S.ad_slot_list }}" inputmode="numeric"></div>
     <div><label for="ad_slot_side">Slot: sidebar on category pages</label><input id="ad_slot_side" name="ad_slot_side" value="{{ S.ad_slot_side }}" inputmode="numeric"></div>
     <div><label for="ad_slot_footer">Slot: above the footer</label><input id="ad_slot_footer" name="ad_slot_footer" value="{{ S.ad_slot_footer }}" inputmode="numeric"></div>
+    <div><label for="ad_slot_player">Slot: inside the big Now Playing player (optional)</label><input id="ad_slot_player" name="ad_slot_player" value="{{ S.ad_slot_player }}" inputmode="numeric"></div>
   </div>
+  <label class="check"><input type="checkbox" name="ads_player_enabled" value="1" {% if S.ads_player_enabled == '1' %}checked{% endif %}> Also show one ad inside the big Now Playing player</label>
+  <p class="help"><strong>Read first:</strong> Google dislikes ads in pop-up windows. The big player is a full-screen panel that the visitor opens, so Google could treat it as a pop-up. It shows one ad once per opening (never refreshed), away from the buttons. If AdSense warns you about it, untick this box and save. It stays off until you tick it, and only works when ads are switched on below.</p>
   <label for="ads_txt_extra">Extra ads.txt lines <span class="muted">(only if another ad network asks you)</span></label>
   <textarea id="ads_txt_extra" name="ads_txt_extra" rows="3">{{ S.ads_txt_extra }}</textarea>
   <label class="check"><input type="checkbox" name="ads_eu_consent" value="1" {% if S.ads_eu_consent == '1' %}checked{% endif %}> I published the European consent message in AdSense (Privacy &amp; messaging → European regulations)</label>

@@ -70,6 +70,7 @@
     opener = document.activeElement; isOpen = true; ov.hidden = false;
     document.documentElement.classList.add("np-lock");
     syncText(); setSkin(skin); setLights(lights); fit(); schedule();
+    if (window.SurAds && $("np-ad")) window.SurAds.fill();      // one ad per opening, never refreshed
     $("np-close").focus();
   }
   function close() {

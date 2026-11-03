@@ -193,6 +193,8 @@ DEFAULTS = {
     "ad_slot_list": "",
     "ad_slot_side": "",
     "ad_slot_footer": "",
+    "ad_slot_player": "",
+    "ads_player_enabled": "0",
     "ads_txt_extra": "",
     # stations
     "sponsored_stations": "[]",

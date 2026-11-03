@@ -243,6 +243,8 @@
     <button id="np-lights" class="np-chip" type="button" aria-pressed="true">Lights on</button>
     <button id="np-close" class="np-chip np-x" type="button" aria-label="Close the big player">✕</button>
   </div>
+  {%- import "_ad.html" as ads with context %}
+  {%- if ad_slot_id('player') %}<div class="np-ad" id="np-ad">{{ ads.ad('player') }}</div>{% endif %}
   <div class="np-ui">
     <span class="np-live"><i></i> <span id="np-state">LIVE NOW</span></span>
     <h2 id="np-name" class="np-name">Pick a station to start listening</h2>

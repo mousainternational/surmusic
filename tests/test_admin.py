@@ -270,3 +270,22 @@ def test_messages_select_all_and_delete_selected(client, app):
     r = post(client, "/admin/messages/delete-selected", {"ids": ["abc", "1; DROP TABLE users", ids[2]]}, page="/admin/messages", follow_redirects=True)
     assert b"1 message deleted" in r.data and b"No messages yet" in client.get("/admin/messages").data
     assert anon.post("/admin/messages/delete-selected", data={"ids": "1"}).status_code in (302, 400, 403)
+
+
+def test_ad_in_the_big_player_has_its_own_switch_and_stays_out_of_the_header(client, app):
+    login(client)
+    form = {"adsense_client": "ca-pub-1234567890123456", "ad_slot_top": "1111111111", "ad_slot_player": "5555555555",
+            "ads_enabled": "1", "ads_eu_consent": "1"}
+    post(client, "/admin/ads", form, page="/admin/ads")                       # ads on, player switch not ticked
+    anon = app.test_client()
+    home = anon.get("/").get_data(as_text=True)
+    assert 'data-ad-slot="1111111111"' in home and 'data-ad-slot="5555555555"' not in home
+    post(client, "/admin/ads", dict(form, ads_player_enabled="1"), page="/admin/ads")
+    home = anon.get("/").get_data(as_text=True)
+    inside = home.split('id="np"', 1)[1].split('class="np-ui"', 1)[0]
+    assert 'data-ad-slot="5555555555"' in inside and 'id="np-ad"' in inside and "Advertisement" in inside
+    assert "adsbygoogle" not in home.split("<body", 1)[1].split("</header>", 1)[0]
+    assert "adsbygoogle" not in home.split('id="pl-audio"')[0].split('<div id="player"')[-1]     # not in the player bar
+    off = {k: v for k, v in form.items() if k != "ads_enabled"}                   # an unticked box is simply not sent
+    post(client, "/admin/ads", dict(off, ads_player_enabled="1"), page="/admin/ads")
+    assert 'data-ad-slot="5555555555"' not in anon.get("/").get_data(as_text=True)               # ads off = nothing anywhere

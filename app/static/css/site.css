@@ -1073,3 +1073,10 @@ html.np-lock, html.np-lock body { overflow: hidden; }
   .menu { gap: 1px; }
   .site-header .wrap { padding-left: 8px; padding-right: 8px; }
 }
+
+/* ad inside the big player: invisible until Google has filled it, never over the buttons */
+.np-ad { position: absolute; z-index: 2; left: 50%; transform: translateX(-50%); top: 64px; width: min(728px, 92vw); max-height: 0; overflow: hidden; opacity: 0; transition: opacity .3s; }
+.np-ad:has(ins[data-ad-status="filled"]) { max-height: 140px; opacity: 1; }
+.np-ad .ad { margin: 0; background: rgba(10, 8, 24, .72); border: 1px solid rgba(255, 255, 255, .18); border-radius: 14px; padding: 6px 8px; }
+.np-ad .ad-label { color: #cfc9e6; }
+@media (max-height: 560px) { .np-ad { display: none; } }

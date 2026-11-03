@@ -323,7 +323,7 @@ def ads():
         errors = []
         client = (request.form.get("adsense_client") or "").strip()
         slots = {k: (request.form.get(k) or "").strip() for k in ("ad_slot_top", "ad_slot_list", "ad_slot_side",
-                                                                  "ad_slot_footer")}
+                                                                  "ad_slot_footer", "ad_slot_player")}
         extra = (request.form.get("ads_txt_extra") or "").strip()[:5000]
         enabled = "1" if request.form.get("ads_enabled") else "0"
         eu = "1" if request.form.get("ads_eu_consent") else "0"
@@ -342,7 +342,8 @@ def ads():
             for e in errors:
                 flash(e, "error")
         else:
-            save_settings(dict(slots, adsense_client=client, ads_txt_extra=extra, ads_enabled=enabled, ads_eu_consent=eu))
+            save_settings(dict(slots, adsense_client=client, ads_txt_extra=extra, ads_enabled=enabled, ads_eu_consent=eu,
+                               ads_player_enabled="1" if request.form.get("ads_player_enabled") else "0"))
             audit("ads_update", f"enabled={enabled}")
             flash("Ad settings saved.", "success")
         return redirect(url_for("admin.ads"))
