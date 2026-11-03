@@ -213,3 +213,21 @@ def test_subscribe_page_shows_the_trial_end(app):
     assert status(buyer, PHONE_A).status_code == 200
     html = buyer.web.get("/app/subscribe").get_data(as_text=True)
     assert "free trial is running" in html
+
+
+def test_now_playing_themes_three_free_rest_for_app_owners(app):
+    guest = app.test_client()
+    home = guest.get("/").get_data(as_text=True)
+    assert 'data-all="0"' in home and home.count("🔒") == 12 and home.count("<option") >= 15      # 3 free, 12 locked
+    assert 'id="np-lock"' in home and 'href="/download"' in home
+    buyer = paying_user(app)                                                                   # signed up, has not paid
+    assert 'data-all="0"' in buyer.web.get("/").get_data(as_text=True)
+    db = Database(app.config["DATABASE_URL"])
+    uid = db.one("SELECT id FROM users WHERE email = ?", ("buyer@example.com",))["id"]
+    db.insert("app_subscriptions", {"user_id": uid, "status": "active", "method": "granted", "reference": "admin",
+                                    "created_at": "2026-01-01T00:00:00+00:00", "expires_at": "2099-01-01T00:00:00+00:00"})
+    db.commit(); db.close()
+    paid = buyer.web.get("/").get_data(as_text=True)
+    assert 'data-all="1"' in paid and "🔒" not in paid
+    owner = app.test_client(); login(owner)
+    assert 'data-all="1"' in owner.get("/").get_data(as_text=True)

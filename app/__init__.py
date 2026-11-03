@@ -16,7 +16,7 @@ from .security import csp_nonce, csrf_protect, csrf_token, current_user, securit
 from .settings import ads_active, get_settings
 from .util import human_size, render_markdown, valid_email
 
-__version__ = "1.7.32"
+__version__ = "1.7.33"
 
 
 def create_app(overrides=None):
@@ -92,6 +92,19 @@ def create_app(overrides=None):
             asset_hashes[filename] = cached
         return url_for("static", filename=filename, v=cached[1])
 
+    def _np_all_themes():
+        """True when the person has paid for the app (or is the owner): all 15 Now Playing themes are open."""
+        u = current_user()
+        if not u:
+            return False
+        if u["role"] == "admin":
+            return True
+        try:
+            from .subscriptions import active_until
+            return bool(active_until(dbmod.get_db(), u["id"]))
+        except Exception:
+            return False
+
     @app.context_processor
     def _globals():
         return {
@@ -104,6 +117,7 @@ def create_app(overrides=None):
             "geoip_on": _geo_available(),
             "app_version": __version__,
             "asset": asset,
+            "np_all": _np_all_themes(),
         }
 
     app.jinja_env.filters["markdown"] = render_markdown

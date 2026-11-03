@@ -259,7 +259,7 @@ def test_privacy_policy_mentions_the_android_subscription_check(client):
 
 def test_big_player_is_loaded_only_when_opened_and_static_files_are_cached_long(client):
     home = client.get("/").get_data(as_text=True)
-    assert 'id="np"' in home and 'id="np-skin"' in home and home.count("<option") >= 6
+    assert 'id="np"' in home and 'id="np-skin"' in home and home.count("<option") >= 15
     assert 'id="np-open"' in home and 'data-src="/static/js/nowplaying.js?v=' in home
     assert '<script nonce' in home and 'src="/static/js/nowplaying.js' not in home.split('id="np-open"')[0].split("<script")[-1]
     import re

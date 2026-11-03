@@ -227,22 +227,21 @@
   </div>
   <audio id="pl-audio" preload="none"></audio>
 </div>
-<div id="np" class="np" data-skin="neon" role="dialog" aria-modal="true" aria-label="Now playing" hidden>
+<div id="np" class="np" data-skin="aurora" data-all="{{ 1 if np_all else 0 }}" role="dialog" aria-modal="true" aria-label="Now playing" hidden>
   <canvas id="np-canvas" class="np-canvas" aria-hidden="true"></canvas>
   <div class="np-top">
     <label class="np-style"><span class="np-style-t">Player style</span>
       <select id="np-skin" aria-label="Player style">
-        <option value="neon">Neon Orb</option>
-        <option value="tunnel">Neon Tunnel</option>
-        <option value="glass">Glass</option>
-        <option value="vinyl">Vinyl Record</option>
-        <option value="sunset">Sunset</option>
-        <option value="edm">EDM Equalizer</option>
+        {%- set np_themes = [("aurora","Aurora Glass",1),("mint","Mint Light",1),("rose","Rose Soft Card",1),("tokyo","Neon Tokyo",0),("hud","Cyber HUD",0),("ocean","Deep Ocean",0),("emerald","Emerald Ring",0),("gold","Golden Turntable",0),("sunset","Sunset Poster",0),("arctic","Arctic Crystal",0),("galaxy","Galaxy Orbit",0),("lava","Lava Bold",0),("dunes","Desert Dunes",0),("rain","Monsoon Rain",0),("cassette","Retro Cassette",0)] %}
+        {%- for k, n, free in np_themes %}
+        <option value="{{ k }}">{{ n }}{% if not free and not np_all %} 🔒{% endif %}</option>
+        {%- endfor %}
       </select>
     </label>
     <button id="np-lights" class="np-chip" type="button" aria-pressed="true">Lights on</button>
     <button id="np-close" class="np-chip np-x" type="button" aria-label="Close the big player">✕</button>
   </div>
+  <div id="np-lock" class="np-lock-msg" hidden role="status">12 of the 15 looks come with the Sur Music Android app. <a href="/download">Get the app (free trial first)</a></div>
   {%- import "_ad.html" as ads with context %}
   {%- if ad_slot_id('player') %}<div class="np-ad" id="np-ad">{{ ads.ad('player') }}</div>{% endif %}
   <div class="np-ui">

@@ -1036,16 +1036,11 @@ html.np-lock, html.np-lock body { overflow: hidden; }
 .np-vol input { width: min(260px, 70vw); accent-color: #ff7a1a; }
 .np-bar-hint { display: none; }
 /* looks that need a different layout */
-.np[data-skin="glass"] .np-ui { top: 46%; bottom: auto; justify-content: flex-start; }
-.np[data-skin="glass"] .np-dock { background: rgba(255, 255, 255, .2); border-color: rgba(255, 255, 255, .5); }
-.np[data-skin="vinyl"] .np-name, .np[data-skin="sunset"] .np-name { text-shadow: 0 2px 16px rgba(0, 0, 0, .75); }
-.np[data-skin="vinyl"] .np-dock { background: rgba(30, 16, 6, .6); }
 @media (max-width: 620px) {
   .np-style-t { display: none; }
   .np-chip { padding: 9px 12px; }
   .np-dock { gap: 8px; padding: 8px 10px; }
   .np-b { width: 42px; height: 42px; } .np-p { width: 62px; height: 62px; }
-  .np[data-skin="glass"] .np-ui { top: 50%; }
 }
 @media (max-height: 520px) { .np-ui { padding-bottom: 8px; } .np-name { font-size: 1.5rem; } .np-vol { display: none; } }
 @media (prefers-reduced-motion: reduce) { .np * { animation: none !important; transition: none !important; } }
@@ -1080,3 +1075,18 @@ html.np-lock, html.np-lock body { overflow: hidden; }
 .np-ad .ad { margin: 0; background: rgba(10, 8, 24, .72); border: 1px solid rgba(255, 255, 255, .18); border-radius: 14px; padding: 6px 8px; }
 .np-ad .ad-label { color: #cfc9e6; }
 @media (max-height: 560px) { .np-ad { display: none; } }
+
+/* ---- Now Playing: 15 looks (colours follow the chosen look) */
+.np .np-name, .np .np-sub { color: var(--np-fg, #fff); }
+.np .np-name { text-shadow: 0 2px 14px rgba(0, 0, 0, .35); }
+.np.np-light .np-name, .np.np-light .np-sub, .np.np-light .np-live { text-shadow: none; }
+.np.np-light .np-style, .np.np-light .np-chip, .np.np-light .np-style select { color: #0b2b22; }
+.np.np-light .np-chip, .np.np-light .np-style select { background-color: rgba(255, 255, 255, .55); border-color: rgba(0, 0, 0, .25); }
+.np.np-light .np-top { background: linear-gradient(180deg, rgba(255, 255, 255, .55), transparent); }
+.np.np-light .np-dock { background: rgba(255, 255, 255, .6); border-color: rgba(0, 0, 0, .12); }
+.np.np-light .np-b { color: #0b2b22; border-color: rgba(0, 0, 0, .2); background: rgba(0, 0, 0, .06); }
+.np-p { background: linear-gradient(135deg, var(--np-acc, #ff3d86), var(--np-acc2, #ff7a1a)); }
+.np-vol input { accent-color: var(--np-acc, #ff7a1a); }
+.np-lock-msg { position: absolute; z-index: 3; left: 50%; transform: translateX(-50%); top: 64px; width: max-content; max-width: min(92vw, 520px); padding: 10px 16px; border-radius: 14px; background: rgba(20, 16, 40, .92); color: #fff; font-size: .9rem; text-align: center; border: 1px solid rgba(255, 255, 255, .25); }
+.np-lock-msg a { color: #ffd34d; font-weight: 700; }
+.np-lock-msg[hidden] { display: none; }
