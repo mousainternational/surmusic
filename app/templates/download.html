@@ -41,12 +41,26 @@
     </section>
     {% endfor %}
   </div>
+  <section class="card ios-card" id="iphone" aria-labelledby="ios-h">
+    <div class="app-head">
+      <span class="app-ic app-ic-ios" aria-hidden="true">iOS</span>
+      <div><h2 id="ios-h">iPhone and iPad: install Sur Music, free</h2><p class="muted small">No download and no App Store needed. It opens full screen with its own icon, like an app.</p></div>
+    </div>
+    <ol class="app-steps ios-steps">
+      <li>Open <strong>surmusicradio.com</strong> in <strong>Safari</strong> (it must be Safari, not another browser).</li>
+      <li>Tap the <strong>Share</strong> button (the square with an arrow pointing up) at the bottom of the screen.</li>
+      <li>Scroll down and tap <strong>Add to Home Screen</strong>, then tap <strong>Add</strong>.</li>
+      <li>Open <strong>Sur Music</strong> from your Home Screen. Pick a station and press play.</li>
+    </ol>
+    <p class="small muted">Tips: keep the volume up and the silent switch off. Apple decides how long web audio may play with the screen locked; if the music stops, open the app and press play again. iPhones cannot install the Android app file (APK).</p>
+  </section>
   <section class="card prose">
     <h2>Why use the apps?</h2>
     <ul>
       <li>More stations, including ones that stream over plain HTTP (browsers block those on secure websites).</li>
       <li>Music keeps playing in the background with notification and lock-screen controls (Android).</li>
       <li>No ads inside the apps.</li>
+      <li>On iPhone and iPad, add the website to your Home Screen and use it like an app.</li>
     </ul>
     <p class="small muted">The Android app is sold directly by Mousa International Software House; the Chrome extension through the Chrome Web Store. Read the <a href="{{ url_for('public.disclaimer') }}">disclaimer</a>.</p>
   </section>

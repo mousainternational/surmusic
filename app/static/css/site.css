@@ -1052,3 +1052,8 @@ html.np-lock, html.np-lock body { overflow: hidden; }
 
 /* slow connection or data saver: only the little "equalizer" in the player bar rests (the price strip always moves) */
 .slow-net .pl-status .eq i { animation: none; }
+
+/* Download page: iPhone card */
+.ios-card { margin: 18px 0; }
+.app-ic-ios { background: linear-gradient(135deg, #3b7bff, #8a5cf6); color: #fff; font: 800 1.05rem var(--display, inherit); }
+.ios-steps { margin-top: 6px; }

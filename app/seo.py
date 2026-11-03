@@ -117,7 +117,7 @@ def android_app_ld():
         "applicationCategory": "MultimediaApplication",
         "operatingSystem": "Android 8.0+",
         "url": absolute("/download"),
-        "description": "Live radio with background play, lock-screen controls and no ads. One account, one phone.",
+        "description": "Live radio with background play, lock-screen controls and no ads. One account, one phone. On iPhone and iPad, add Sur Music to the Home Screen from Safari.",
         "offers": {"@type": "Offer", "price": "5.00", "priceCurrency": "USD", "url": absolute("/download"),
                    "description": "Yearly subscription"},
         "author": {"@type": "Organization", "name": s["owner_name"]},

@@ -268,3 +268,10 @@ def test_big_player_is_loaded_only_when_opened_and_static_files_are_cached_long(
     r = client.get(v)
     assert r.headers["Cache-Control"] == "public, max-age=31536000, immutable"
     assert client.get("/static/css/site.css").headers["Cache-Control"] == "public, max-age=2592000"
+
+
+def test_download_page_explains_how_to_install_on_iphone(client):
+    html = client.get("/download").get_data(as_text=True)
+    assert 'id="iphone"' in html and "Add to Home Screen" in html and "Safari" in html
+    assert "APK" in html and "iPhone" in html
+    assert 'rel="apple-touch-icon"' in html and 'name="apple-mobile-web-app-capable"' in html
