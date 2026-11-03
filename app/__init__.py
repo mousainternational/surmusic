@@ -16,7 +16,7 @@ from .security import csp_nonce, csrf_protect, csrf_token, current_user, securit
 from .settings import ads_active, get_settings
 from .util import human_size, render_markdown, valid_email
 
-__version__ = "1.7.25"
+__version__ = "1.7.27"
 
 
 def create_app(overrides=None):
@@ -71,7 +71,9 @@ def create_app(overrides=None):
             ads = False
         resp = security_headers(resp, ads_enabled=ads)
         if request.path.startswith("/static/"):
-            resp.headers["Cache-Control"] = "public, max-age=604800"
+            # files linked with ?v=<hash> never change under that address: keep them for a year; fonts and images for 30 days
+            resp.headers["Cache-Control"] = ("public, max-age=31536000, immutable" if request.args.get("v")
+                                             else "public, max-age=2592000")
         return resp
 
     asset_hashes = {}
@@ -204,7 +206,7 @@ def _bootstrap_admin(app):
 
 
 def _migrate_app_devices(app):
-    """v1.7.25: the phone model and Android version are kept next to the phone a subscription is tied to."""
+    """v1.7.27: the phone model and Android version are kept next to the phone a subscription is tied to."""
     from .db import Database
     db = Database(app.config["DATABASE_URL"])
     try:
@@ -264,7 +266,7 @@ def _apply_setting_changes(app):
                         "stations. No download needed."))
             db.execute("INSERT INTO settings (key, value) VALUES (?, ?)", ("_done_hero_v111", "1"))
             db.commit()
-        # v1.7.25: the app is now sold directly (account login + payment you approve), not through Google Play
+        # v1.7.27: the app is now sold directly (account login + payment you approve), not through Google Play
         if not db.scalar("SELECT COUNT(*) FROM settings WHERE key = ?", ("_done_privacy_app_v118",)):
             from .settings import DEFAULTS as _D
             import re as _re

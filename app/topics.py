@@ -819,6 +819,23 @@ EXTRA_MORE = {
                 "FM 100, FM 101 and FM 91, Urdu, Punjabi, Pashto and Sindhi radio, cricket commentary, naat and Quran radio.",
     "australia": "Also searched as Sydney, Melbourne, Brisbane, Perth and Adelaide radio, Australian news radio, "
                  "Punjabi and Hindi radio in Australia, Urdu radio Australia and Quran radio in Australia.",
+    "pop": "Also searched as pop music player online, free online music player, pop hits radio, Top 40 radio player, "
+           "new songs player, English pop songs online, Hindi pop and Urdu pop radio, music player for songs and radio.",
+    "dance": "Also searched as EDM radio, EDM party mix, dance music player, club music radio, DJ mix radio, house and "
+             "techno radio, party beats online, Pakistani and Indian DJ party songs, workout and gym music radio.",
+    "lofi": "Also searched as relaxing music player, chill music radio, lo-fi beats to study and relax, calm instrumental "
+            "music, peaceful background music, sleep and relaxation music online, good morning relaxing beats.",
+    "meditation": "Also searched as relaxing music, meditation music player, calm instrumental music, sleep music, "
+                  "yoga and mindfulness music, stress relief music, nature sounds and peaceful music online.",
+    "old-songs": "Also searched as classic hits, old is gold songs, purane gaane, Hindi retro songs, Urdu old songs, "
+                 "vintage vinyl and gramophone-style songs, golden era music, classic songs player online.",
+    "80s-90s": "Also searched as classic hits radio, oldies music player, 80s and 90s hits online, retro music, "
+               "throwback songs, vintage vinyl era music and golden oldies.",
+    "classical": "Also searched as classical music player, instrumental music radio, piano and violin music, "
+                 "orchestra radio, relaxing classical music and study music online.",
+    "rock": "Also searched as rock music player, classic rock radio, hard rock and alternative rock online, "
+            "guitar music radio and rock songs live.",
+    "hip-hop": "Also searched as hip hop radio, rap music player, trap and R&B radio, new rap songs online.",
 }
 for _k, _t in EXTRA_MORE.items():
     if _k in TOPICS:

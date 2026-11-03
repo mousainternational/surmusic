@@ -1000,3 +1000,58 @@ label { font-size: 1rem; letter-spacing: .01em; }
 th.pick, td.pick { width: 34px; padding-right: 0; }
 #bulk-del:disabled { opacity: .45; cursor: not-allowed; }
 .bulk-count { white-space: nowrap; }
+
+/* =============== Now Playing: the big centred player with lights =============== */
+.np-open svg { width: 20px; height: 20px; fill: currentColor; }
+html.np-lock, html.np-lock body { overflow: hidden; }
+.np { position: fixed; inset: 0; z-index: 100; background: #05040c; color: #f4f2fb; font-family: var(--display, inherit); }
+.np[hidden] { display: none; }
+.np-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.np-top { position: absolute; z-index: 2; left: 0; right: 0; top: 0; display: flex; align-items: center; gap: 10px; padding: max(12px, env(safe-area-inset-top)) 16px 12px; background: linear-gradient(180deg, rgba(5, 4, 12, .75), transparent); }
+.np-style { display: flex; align-items: center; gap: 8px; margin: 0; font-size: .85rem; font-weight: 600; color: #d9d3ec; }
+.np-style select { appearance: none; -webkit-appearance: none; background: rgba(255, 255, 255, .12) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23fff' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 12px center; color: #fff; border: 1px solid rgba(255, 255, 255, .3); border-radius: 999px; padding: 9px 34px 9px 14px; font: 600 .92rem var(--display, inherit); min-height: 40px; cursor: pointer; }
+.np-style select option { color: #16121f; background: #fff; }
+.np-chip { background: rgba(255, 255, 255, .12); color: #fff; border: 1px solid rgba(255, 255, 255, .3); border-radius: 999px; padding: 9px 16px; min-height: 40px; font: 600 .88rem var(--display, inherit); cursor: pointer; }
+.np-chip[aria-pressed="true"] { background: rgba(255, 255, 255, .24); }
+.np-x { margin-left: auto; width: 40px; padding: 0; font-size: 1rem; }
+.np-chip:hover, .np-style select:hover { background-color: rgba(255, 255, 255, .22); }
+.np-chip:focus-visible, .np-style select:focus-visible, .np-b:focus-visible, .np-vol input:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.np-ui { position: absolute; z-index: 2; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 16px max(24px, env(safe-area-inset-bottom)); }
+.np-live { display: inline-flex; align-items: center; gap: 8px; font: 700 .72rem var(--display, inherit); letter-spacing: .2em; color: #35e8a8; }
+.np-live i { width: 8px; height: 8px; border-radius: 50%; background: #35e8a8; box-shadow: 0 0 0 5px rgba(53, 232, 168, .22); }
+.np[data-state="idle"] .np-live, .np[data-state="paused"] .np-live, .np[data-state="error"] .np-live { color: #c9c2e0; }
+.np[data-state="idle"] .np-live i, .np[data-state="paused"] .np-live i, .np[data-state="error"] .np-live i { background: #9a93b8; box-shadow: none; }
+.np-name { font: 700 clamp(1.7rem, 5.2vw, 3.6rem)/1.08 var(--display, inherit); margin: 8px 0 4px; max-width: 92vw; overflow-wrap: anywhere; text-shadow: 0 0 40px rgba(255, 90, 60, .45), 0 2px 12px rgba(0, 0, 0, .6); }
+.np-sub { color: #e2dcf3; font-size: .95rem; min-height: 1.4em; text-shadow: 0 1px 8px rgba(0, 0, 0, .6); }
+.np-dock { display: flex; align-items: center; gap: 14px; margin-top: 14px; padding: 10px 16px; border-radius: 999px; background: rgba(24, 20, 52, .55); border: 1px solid rgba(255, 255, 255, .16); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 20px 60px rgba(0, 0, 0, .5); }
+.np-b { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; border: 1px solid rgba(255, 255, 255, .18); background: rgba(255, 255, 255, .08); color: #fff; font-size: 1.1rem; cursor: pointer; padding: 0; }
+.np-b svg { width: 22px; height: 22px; fill: currentColor; }
+.np-b:hover { background: rgba(255, 255, 255, .2); }
+.np-b.on { color: #ffd34d; }
+.np-p { width: 68px; height: 68px; border: 0; background: linear-gradient(135deg, #ff3d86, #ff7a1a 60%, #f5a300); color: #1a0b00; box-shadow: 0 0 0 7px rgba(255, 122, 26, .16), 0 10px 40px rgba(255, 90, 60, .55); }
+.np-p svg { width: 30px; height: 30px; }
+.np-p .i-pause { display: none; }
+.np-p.on .i-play { display: none; } .np-p.on .i-pause { display: block; }
+.np-vol { margin: 14px 0 0; }
+.np-vol input { width: min(260px, 70vw); accent-color: #ff7a1a; }
+.np-bar-hint { display: none; }
+/* looks that need a different layout */
+.np[data-skin="glass"] .np-ui { top: 46%; bottom: auto; justify-content: flex-start; }
+.np[data-skin="glass"] .np-dock { background: rgba(255, 255, 255, .2); border-color: rgba(255, 255, 255, .5); }
+.np[data-skin="vinyl"] .np-name, .np[data-skin="sunset"] .np-name { text-shadow: 0 2px 16px rgba(0, 0, 0, .75); }
+.np[data-skin="vinyl"] .np-dock { background: rgba(30, 16, 6, .6); }
+@media (max-width: 620px) {
+  .np-style-t { display: none; }
+  .np-chip { padding: 9px 12px; }
+  .np-dock { gap: 8px; padding: 8px 10px; }
+  .np-b { width: 42px; height: 42px; } .np-p { width: 62px; height: 62px; }
+  .np[data-skin="glass"] .np-ui { top: 50%; }
+}
+@media (max-height: 520px) { .np-ui { padding-bottom: 8px; } .np-name { font-size: 1.5rem; } .np-vol { display: none; } }
+@media (prefers-reduced-motion: reduce) { .np * { animation: none !important; transition: none !important; } }
+
+/* slow connection or data saver: calmer page, less to draw */
+.slow-net .mk-track { animation: none; }
+.slow-net .mk-ticker { overflow-x: auto; }
+.slow-net .mk-dup { display: none; }
+.slow-net .pl-status .eq i { animation: none; }

@@ -255,3 +255,16 @@ def test_android_license_allows_one_phone_per_subscription(client, app, monkeypa
 def test_privacy_policy_mentions_the_android_subscription_check(client):
     html = client.get("/privacy").get_data(as_text=True)
     assert "Android app subscription" in html and "transaction ID" in html and "sold through Google Play" not in html
+
+
+def test_big_player_is_loaded_only_when_opened_and_static_files_are_cached_long(client):
+    home = client.get("/").get_data(as_text=True)
+    assert 'id="np"' in home and 'id="np-skin"' in home and home.count("<option") >= 6
+    assert 'id="np-open"' in home and 'data-src="/static/js/nowplaying.js?v=' in home
+    assert '<script nonce' in home and 'src="/static/js/nowplaying.js' not in home.split('id="np-open"')[0].split("<script")[-1]
+    import re
+    assert not re.search(r'<script[^>]+src="/static/js/nowplaying\.js', home)          # not on every page view
+    v = re.search(r'/static/css/site\.css\?v=[0-9a-f]+', home).group(0)
+    r = client.get(v)
+    assert r.headers["Cache-Control"] == "public, max-age=31536000, immutable"
+    assert client.get("/static/css/site.css").headers["Cache-Control"] == "public, max-age=2592000"

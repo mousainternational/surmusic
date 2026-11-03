@@ -336,3 +336,29 @@ document.addEventListener("toggle", function (e) {
   if (!d.classList || !d.classList.contains("hd-dd") || !d.open) return;
   document.querySelectorAll("details.hd-dd[open]").forEach(function (o) { if (o !== d) o.removeAttribute("open"); });
 }, true);
+
+
+/* the big "Now Playing" player is a separate file: fetched the first time it is wanted (saves data on every other page view) */
+(function () {
+  function wire() {
+    var b = document.getElementById("np-open");
+    if (!b || b.getAttribute("data-wired")) return;
+    b.setAttribute("data-wired", "1");
+    var loading = false, wantOpen = false;
+    function load(openAfter) {
+      if (openAfter) wantOpen = true;                       // remember a click made while the file is still on its way
+      if (window.SurNowPlaying) { if (wantOpen) { wantOpen = false; window.SurNowPlaying.open(); } return; }
+      if (loading) return; loading = true;
+      var sc = document.createElement("script");
+      sc.src = b.getAttribute("data-src");
+      sc.onload = function () { b.removeEventListener("click", first, true); if (wantOpen && window.SurNowPlaying) { wantOpen = false; window.SurNowPlaying.open(); } };
+      sc.onerror = function () { loading = false; };
+      document.head.appendChild(sc);
+    }
+    function first(e) { e.stopImmediatePropagation(); load(true); }
+    b.addEventListener("click", first, true);
+    ["pointerenter", "focus", "touchstart"].forEach(function (ev) { b.addEventListener(ev, function () { load(false); }, { once: true, passive: true }); });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wire); else wire();
+  document.addEventListener("page:load", wire);
+})();

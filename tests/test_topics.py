@@ -136,3 +136,20 @@ def test_llms_txt_and_page_schema(client):
     assert r.status_code == 200 and "surmusic.example/radio-stations" in r.get_data(as_text=True)
     assert "ContactPage" in client.get("/contact").get_data(as_text=True)
     assert "WebPage" in client.get("/donate").get_data(as_text=True)
+
+
+def test_music_player_keywords_are_on_the_matching_pages(client):
+    pop = client.get("/genre/pop").get_data(as_text=True)
+    assert "free online music player" in pop
+    dance = client.get("/genre/dance").get_data(as_text=True)
+    assert "EDM radio" in dance
+    assert "relaxing music player" in client.get("/genre/lofi").get_data(as_text=True)
+    assert "classic hits" in client.get("/genre/old-songs").get_data(as_text=True)
+    home = client.get("/").get_data(as_text=True)
+    assert "free online music player and radio player" in home
+
+
+def test_player_style_words_are_on_the_home_page(client):
+    home = client.get("/").get_data(as_text=True)
+    for word in ("neon music player", "vinyl record player", "glass music player", "EDM equalizer", "audio visualizer"):
+        assert word in home

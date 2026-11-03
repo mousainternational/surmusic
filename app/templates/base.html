@@ -217,10 +217,40 @@
       <button id="pl-play" class="pl-btn pl-main" type="button" aria-label="Play"><svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="i-pause" viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg></button>
       <button id="pl-next" class="pl-btn" type="button" aria-label="Next station"><svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg></button>
       <button id="pl-fav" class="pl-btn pl-fav" type="button" aria-label="Add to favourites" aria-pressed="false">★</button>
+      <button id="np-open" class="pl-btn np-open" type="button" data-src="{{ asset('js/nowplaying.js') }}" aria-label="Open the big player with lights" aria-haspopup="dialog" title="Big player with lights"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v2H6v4H4zm10 0h6v6h-2V6h-4zM4 14h2v4h4v2H4zm14 0h2v6h-6v-2h4z"/></svg></button>
     </div>
     <label class="pl-vol"><span class="sr">Volume</span><input id="pl-vol" type="range" min="0" max="1" step="0.01" value="0.8"></label>
   </div>
   <audio id="pl-audio" preload="none"></audio>
+</div>
+<div id="np" class="np" data-skin="neon" role="dialog" aria-modal="true" aria-label="Now playing" hidden>
+  <canvas id="np-canvas" class="np-canvas" aria-hidden="true"></canvas>
+  <div class="np-top">
+    <label class="np-style"><span class="np-style-t">Player style</span>
+      <select id="np-skin" aria-label="Player style">
+        <option value="neon">Neon Orb</option>
+        <option value="tunnel">Neon Tunnel</option>
+        <option value="glass">Glass</option>
+        <option value="vinyl">Vinyl Record</option>
+        <option value="sunset">Sunset</option>
+        <option value="edm">EDM Equalizer</option>
+      </select>
+    </label>
+    <button id="np-lights" class="np-chip" type="button" aria-pressed="true">Lights on</button>
+    <button id="np-close" class="np-chip np-x" type="button" aria-label="Close the big player">✕</button>
+  </div>
+  <div class="np-ui">
+    <span class="np-live"><i></i> <span id="np-state">LIVE NOW</span></span>
+    <h2 id="np-name" class="np-name">Pick a station to start listening</h2>
+    <div id="np-status" class="np-sub" aria-live="polite"></div>
+    <div class="np-dock">
+      <button id="np-prev" class="np-b" type="button" aria-label="Previous station"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg></button>
+      <button id="np-play" class="np-b np-p" type="button" aria-label="Play"><svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="i-pause" viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg></button>
+      <button id="np-next" class="np-b" type="button" aria-label="Next station"><svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg></button>
+      <button id="np-fav" class="np-b" type="button" aria-label="Add to favourites" aria-pressed="false">★</button>
+    </div>
+    <label class="np-vol"><span class="sr">Volume</span><input id="np-vol" type="range" min="0" max="1" step="0.01" value="0.8"></label>
+  </div>
 </div>
 {% endblock %}
 

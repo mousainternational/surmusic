@@ -17,6 +17,7 @@
   var beatTimer = null;
   var STATUS = {
     idle: "", loading: "Connecting…", playing: "LIVE · Playing now", paused: "Paused",
+    slow: "The connection is very slow — press Play to try again, or Next for another station",
     error: "This station is offline right now — press Next",
     removed: "This station is no longer available on Sur Music — press Next"
   };
@@ -46,9 +47,35 @@
     return Array.prototype.map.call(ul.querySelectorAll(":scope > li.st"), stationFrom).filter(Boolean);
   }
 
+  // ---------- slow connection help ----------
+  // A radio stream that has not started after 12 s gets one quiet second try; after 35 s we stop and say so plainly.
+  var conn = navigator.connection || navigator.mozConnection;
+  if (conn && (conn.saveData || /^(slow-2g|2g|3g)$/.test(conn.effectiveType || ""))) document.documentElement.classList.add("slow-net");
+  var dogSlow = 0, dogGive = 0, retried = false, slowMsg = false;
+  function clearDog() { clearTimeout(dogSlow); clearTimeout(dogGive); dogSlow = dogGive = 0; slowMsg = false; }
+  function startDog() {
+    clearDog(); retried = false;
+    dogSlow = setTimeout(function () {
+      if (bar.getAttribute("data-state") !== "loading") return;
+      slowMsg = true; $("pl-status").textContent = "Slow connection — still trying…";
+      var src = audio.getAttribute("src");
+      if (!retried && src) { retried = true; audio.src = src; var p = audio.play(); if (p && p.catch) p.catch(function () {}); }
+    }, 12000);
+    dogGive = setTimeout(function () {
+      if (bar.getAttribute("data-state") !== "loading") return;
+      audio.pause(); audio.removeAttribute("src"); audio.load();
+      stopBeats(true); setState("slow");
+    }, 35000);
+  }
+  window.addEventListener("online", function () {        // the network came back: try the same station again
+    var st = bar.getAttribute("data-state");
+    if ((st === "error" || st === "slow") && state.station) play(state.station);
+  });
+
   // ---------- UI ----------
   function setState(s) {
     bar.setAttribute("data-state", s);
+    if (s === "loading") { if (!dogSlow && !dogGive) startDog(); } else { clearDog(); }
     var st = $("pl-status");
     st.textContent = "";
     if (s === "playing") {
@@ -61,7 +88,7 @@
       who.textContent = $("pl-name").textContent + ": ";
       st.appendChild(who);
     }
-    st.appendChild(document.createTextNode(STATUS[s] || ""));
+    st.appendChild(document.createTextNode((s === "loading" && slowMsg) ? "Slow connection — still trying…" : (STATUS[s] || "")));
     $("pl-play").setAttribute("aria-label", (s === "playing" || s === "loading") ? "Pause" : "Play");
     if ("mediaSession" in navigator) {
       navigator.mediaSession.playbackState = s === "playing" ? "playing" : (s === "paused" ? "paused" : "none");
@@ -155,6 +182,7 @@
     state.station = station;
     local("sm-last", { station: station, category: state.category });
     renderNow();
+    clearDog();
     setState("loading");
     resolveUrl(station).then(function (url) {
       if (state.station !== station) return;               // user already picked another station
