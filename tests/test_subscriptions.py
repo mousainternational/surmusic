@@ -32,6 +32,13 @@ def status(buyer, install):
     return buyer.status(install)
 
 
+def set_trial_days(app, days):
+    db = Database(app.config["DATABASE_URL"])
+    db.execute("DELETE FROM settings WHERE key = 'app_trial_days'")
+    db.execute("INSERT INTO settings (key, value) VALUES ('app_trial_days', ?)", (str(days),))
+    db.commit(); db.close()
+
+
 def paying_user(app):
     web = app.test_client()                      # the person's browser on the website
     signup(web, "buyer@example.com")
@@ -57,6 +64,7 @@ def test_token_is_useless_on_another_phone(app):
 
 
 def test_not_subscribed_then_approved_then_one_phone(app):
+    set_trial_days(app, 0)                                                                   # no free trial in this flow
     buyer = paying_user(app)
     r = status(buyer, PHONE_A)
     assert r.status_code == 403 and r.get_json()["reason"] == "subscribe"
@@ -93,6 +101,7 @@ def test_not_subscribed_then_approved_then_one_phone(app):
 
 
 def test_expired_subscription_is_refused(app):
+    set_trial_days(app, 0)
     buyer = paying_user(app)
     db = Database(app.config["DATABASE_URL"])
     uid = db.one("SELECT id FROM users WHERE email = ?", ("buyer@example.com",))["id"]
@@ -136,3 +145,71 @@ def test_admin_sees_which_phone_an_account_is_tied_to(app):
     assert "OPPO A57" in page and "Android 13" in page and "buyer@example.com" in page
     import hashlib
     assert hashlib.sha256(PHONE_A.encode()).hexdigest()[:8] in page          # only a short fingerprint is shown
+
+
+# ---------------------------------------------------------------- free trial
+
+def test_new_phone_gets_a_free_trial_then_must_pay(app):
+    set_trial_days(app, 7)
+    buyer = paying_user(app)
+    first = status(buyer, PHONE_A)
+    assert first.status_code == 200 and first.get_json()["reason"] == "trial" and first.get_json()["trial"] is True
+    assert first.get_json()["until"]
+    assert status(buyer, PHONE_A).get_json()["reason"] == "trial"                       # still running the next day
+
+    db = Database(app.config["DATABASE_URL"])                                           # 8 days later the trial is over
+    old = (datetime.now(timezone.utc) - timedelta(days=8)).replace(microsecond=0).isoformat()
+    db.execute("UPDATE app_trials SET started_at = ?", (old,)); db.commit(); db.close()
+    over = status(buyer, PHONE_A)
+    assert over.status_code == 403 and over.get_json()["reason"] == "subscribe" and over.get_json()["trial"] is False
+
+
+def test_reinstall_or_another_account_on_the_same_phone_does_not_restart_the_trial(app):
+    set_trial_days(app, 7)
+    buyer = paying_user(app)
+    assert status(buyer, PHONE_A).status_code == 200
+    db = Database(app.config["DATABASE_URL"])
+    old = (datetime.now(timezone.utc) - timedelta(days=8)).replace(microsecond=0).isoformat()
+    db.execute("UPDATE app_trials SET started_at = ?", (old,)); db.commit(); db.close()
+    assert status(buyer, PHONE_A).status_code == 403
+    # a brand-new account on the same phone (same phone ID) gets no second trial
+    signup(app.test_client(), "second@example.com")
+    again = Phone(app.test_client(), "second@example.com", install=PHONE_A)
+    again.login()
+    assert again.status().status_code == 403 and again.status().get_json()["reason"] == "subscribe"
+
+
+def test_trial_days_are_set_by_the_owner_and_zero_means_no_trial(app):
+    owner = app.test_client(); login(owner)
+    assert "Free trial" in owner.get("/admin/subscriptions").get_data(as_text=True)
+    assert post(owner, "/admin/subscriptions/trial", {"days": "3"}, page="/admin/subscriptions").status_code == 302
+    buyer = paying_user(app)
+    assert status(buyer, PHONE_A).get_json()["reason"] == "trial"
+    db = Database(app.config["DATABASE_URL"])
+    row = db.one("SELECT started_at FROM app_trials"); db.close()
+    assert row["started_at"]
+    assert post(owner, "/admin/subscriptions/trial", {"days": "999"}, page="/admin/subscriptions").status_code == 302   # refused, not saved
+    assert post(owner, "/admin/subscriptions/trial", {"days": "0"}, page="/admin/subscriptions").status_code == 302
+    other = Phone(app.test_client(), "x@example.com")
+    signup(app.test_client(), "x@example.com"); other.login(install="phone-c-" + "3" * 16)
+    assert other.status().status_code == 403                                             # trial off: pay first
+
+
+def test_someone_who_already_paid_gets_no_new_trial(app):
+    set_trial_days(app, 7)
+    buyer = paying_user(app)
+    db = Database(app.config["DATABASE_URL"])
+    uid = db.one("SELECT id FROM users WHERE email = ?", ("buyer@example.com",))["id"]
+    db.insert("app_subscriptions", {"user_id": uid, "status": "active", "method": "granted", "reference": "admin",
+                                    "created_at": "2024-01-01T00:00:00+00:00", "expires_at": "2024-12-31T00:00:00+00:00"})
+    db.commit(); db.close()
+    r = status(buyer, PHONE_A)
+    assert r.status_code == 403 and r.get_json()["reason"] == "subscribe"              # last year's customer must renew
+
+
+def test_subscribe_page_shows_the_trial_end(app):
+    set_trial_days(app, 7)
+    buyer = paying_user(app)
+    assert status(buyer, PHONE_A).status_code == 200
+    html = buyer.web.get("/app/subscribe").get_data(as_text=True)
+    assert "free trial is running" in html

@@ -7,6 +7,10 @@
     <p class="muted">One account, one phone. Pay once a year, then sign in on your phone with this account.</p>
   </header>
 
+  {% if trial_until and not until %}
+  <div class="card ok-box"><strong>Your free trial is running</strong> until {{ trial_until[:10] }}. You can pay now or later. After that date the app asks for the {{ price }} payment.</div>
+  {% endif %}
+
   {% if until %}
   <div class="card ok-box"><strong>Your app is active</strong> until {{ until[:10] }}. Open the app and sign in with <strong>{{ user.email }}</strong>.</div>
   {% endif %}

@@ -502,7 +502,7 @@ def favorites():
 def download_page():
     apps = {r["platform"]: r for r in get_db().all("SELECT * FROM apps")}
     meta = build_meta("Sur Music Apps — Android App & Chrome Extension",
-                      "Sur Music for Android (US$5 per year, download from this website) and the Chrome extension (7-day free "
+                      "Sur Music for Android (free trial, then US$5 per year, download from this website) and the Chrome extension (7-day free "
                       "trial, then US$1/month), and how to install Sur Music on iPhone and iPad: background play, lock-screen controls and favourites.", page="download")
     return render_template("download.html", meta=meta, apps=apps, apk=apk_file(),
                            ld=[breadcrumb_ld([("Home", "/"), ("Download", "/download")]), android_app_ld()])

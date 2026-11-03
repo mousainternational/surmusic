@@ -23,6 +23,31 @@ Live Bollywood, Lollywood and Hollywood radio in the browser, with free accounts
 Har visitor bina sign in ke foran gaana sun sakta hai. Account sirf optional hai (favourites har device par). Aap phir bhi har visitor ka **mulk, shehar, device, kaunsa station aur kitni der** admin mein dekhte hain — account ho ya na ho ("Guest" likha aata hai).
 Kabhi sign-in zaroori karna ho: Admin → Settings → **Accounts** → "Visitors must sign in to play music" tick karein.
 
+### Har station aur har qisam ka apna page
+* Kisi station par click → gaana shuru **aur** us station ka apna page khulta hai (`/station/…`), gaana chalta rehta hai. Har page par Google ke liye apna title, tafseel, aur ads ki jagah.
+* Qisam ke pages: **/genre/naat, /genre/qawwali, /genre/ghazal, /genre/sufi, /genre/punjabi, /genre/old-songs, /genre/quran, /genre/news**. "Listen by type" chips har list par.
+* Sab pages khud `sitemap.xml` mein jate hain (Google ke liye).
+
+### Affiliate / referral links (Amazon, Daraz, AliExpress…)
+Admin → **🛍️ Partner offers** → product ka naam, **apna affiliate link** (https), tasveer ka link, qeemat → **Add offer**. Website par "Recommended for you" card "Affiliate" label ke saath dikhta hai (station pages, lists, home) aur **/deals** page par. Har click admin mein ginta hai. Koi khareede to store aap ko commission deta hai.
+* Pehle programme mein shamil hon (Amazon Associates, Daraz Affiliate, AliExpress Portals), apna link wahan se banayein.
+* "Affiliate" label aur Disclaimer mein likha disclosure na hatayein (Amazon ki shart).
+
+### Free database ko bachana (kam-database mode)
+Free hosting par (`EPHEMERAL_STORAGE=1`) website khud **kam-database mode** mein chalti hai: gaana sunte waqt, page dekhte waqt database **nahi jaagta**. "Live now", visitors ki ginti aur hifazati hadd website ki memory mein rehti hai; visitors ka data **15 minute mein ek dafa** ek saath database mein jata hai (admin panel ya My account kholne par foran). Is se Neon ke free ghante bahut der chalte hain.
+* Render par `WEB_CONCURRENCY` = **1** rakhein (ek hi process, taa ke sab ki memory ek ho).
+* Neon → project → **Settings / Compute** mein compute size **0.25** (max bhi 0.25) rakhein.
+* Mahine mein ek dafa Neon dashboard mein **Usage** dekh lein.
+
+### Station hataana (agar koi station maalik shikayat kare)
+* Admin ke taur par sign in ho kar website par koi bhi station list kholein. Har station ke saath **🚫** button nazar aayega (sirf aap ko, visitors ko nahi). Dabayein, aur woh station sab ke liye foran hat jayega. Jin logon ne usay browser mein save kiya tha, un ke liye bhi nahi chalega.
+* Wapas laana ho: Admin → **Stations (remove / sponsor)** → **Restore**.
+* Station maalik har page ke neeche **"Station owners: remove a station"** se request bhejte hain. Request Admin → **Messages** mein aati hai.
+
+### Admin panel ki hifazat — 2-step sign-in (zaroor on karein)
+My account → **2-step sign-in** → phone par Google Authenticator se QR scan karein → 6 number ka code likhein → **10 recovery codes** kaghaz par likh lein. Is ke baad sign in ke liye password ke saath phone ka code bhi chahiye hoga.
+Phone kho jaye: ek recovery code use karein. Woh bhi na hon: Render → Environment mein `ADMIN_EMAIL` (nayi email) + `ADMIN_PASSWORD` daal kar naya admin banayein, aur Admin → Users se purane account ka "Turn off 2-step" dabayein.
+
 ### Admin mein sab nazar aata hai
 * **🔴 Live now** — kaun abhi sun raha hai, kaunsa station, kahan se (mulk / shehar), kis device se, kitni der se (har 15 second mein khud update).
 * **Activity log** — har sign-up, sign-in, ghalat password, sign-out, station play, kitni der suna, download, favourite, page visit — waqt, jagah aur device ke saath.
@@ -60,6 +85,10 @@ Website live hone ke baad **adsense.google.com** par apply karein. Approval ke b
 * Dark and light themes, mobile-first, installable web-app manifest.
 
 **Owner / admin**
+* Low-database mode for free hosting (`app/lowdb.py`): listening, browsing and page views never touch the database; live listeners, visitor counts and rate limits in memory; analytics, plays and history written in one batch every 15 minutes (immediately when the admin panel or My account opens, before the free server sleeps, and on worker exit via `gunicorn.conf.py`); settings, station lists and popular lists cached in memory. On automatically with `EPHEMERAL_STORAGE=1` (or `LOW_DB_MODE=1`); run one process (`WEB_CONCURRENCY=1`, `WEB_THREADS=8`).
+* 🚫 Remove any station for everyone with one click (admin-only button on station rows), restore later; station owners' removal-request page.
+* Optional 2-step sign-in (authenticator app, QR code, 10 recovery codes; secret stored encrypted); admins can switch it off for a user who lost their phone.
+* Own domain: once SITE_URL is your domain, the old *.onrender.com address redirects to it permanently (one site for Google).
 * Dashboard with launch checklist, members, plays per day, top stations.
 * Users: search, confirm email, sign out, suspend / activate, delete.
 * Ads: AdSense publisher ID, four ad placements, automatic `ads.txt`, on/off switch.
@@ -136,4 +165,4 @@ Admin → Backup (JSON, includes members — keep it private), or `docker compos
 
 ## 9. Testing
 
-`python -m pytest` (63 tests). Browser test: start the server with `RADIO_DEMO=1` and an admin `admin@example.com` / `demo-password-123`, then `MISH_BASE=http://127.0.0.1:8100 python tests/e2e_browser.py`. PostgreSQL check: `PGCHECK_DSN="host=… user=… dbname=…" python tests/pg_check.py`.
+`python -m pytest` (82 tests). Browser test: start the server with `RADIO_DEMO=1` and an admin `admin@example.com` / `demo-password-123`, then `MISH_BASE=http://127.0.0.1:8100 python tests/e2e_browser.py`. PostgreSQL check: `PGCHECK_DSN="host=… user=… dbname=…" python tests/pg_check.py`.

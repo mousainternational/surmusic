@@ -5,6 +5,14 @@
   <p>The Sur Music app costs <strong>{{ price }}</strong>, one account and one phone. People pay to the verified accounts in <a href="{{ url_for('admin.donations') }}">Donations</a> and then send the transaction ID. <strong>Press Approve only after you see that payment in your own payment app.</strong></p>
 </div>
 <br>
+<h2 class="h3">Free trial</h2>
+<form class="card form" method="post" action="{{ url_for('subs.admin_trial') }}">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <p>A new phone can use the app free for this many days, then it asks for the {{ price }} payment. The days are counted on our server and tied to the phone, so deleting and reinstalling the app, or opening another account on the same phone, does not restart them. {{ trials }} phone{{ '' if trials == 1 else 's' }} started a trial so far.</p>
+  <label for="t-days">Free trial days (0 = no free trial)</label><input id="t-days" name="days" inputmode="numeric" value="{{ trial_days }}">
+  <button class="btn btn-primary">Save</button>
+</form>
+<br>
 <h2 class="h3">Waiting to be checked ({{ pending | length }})</h2>
 {% if pending %}
 <table class="events"><thead><tr><th>When (UTC)</th><th>Account</th><th>Paid with</th><th>Transaction ID</th><th>Note</th><th></th></tr></thead><tbody>

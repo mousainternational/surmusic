@@ -169,6 +169,14 @@ CREATE TABLE IF NOT EXISTS app_subscriptions (
 );
 CREATE INDEX IF NOT EXISTS idx_app_subs_user ON app_subscriptions (user_id, status);
 
+-- Free trial of the app: one row per phone (so a new account or a reinstall on the same phone gets no second trial)
+CREATE TABLE IF NOT EXISTS app_trials (
+  install_hash TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  started_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_app_trials_user ON app_trials (user_id);
+
 CREATE TABLE IF NOT EXISTS app_devices (
   user_id INTEGER PRIMARY KEY,
   install_hash TEXT NOT NULL,

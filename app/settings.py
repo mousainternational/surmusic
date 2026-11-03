@@ -170,6 +170,7 @@ DEFAULTS = {
     "about_md": ABOUT_MD,
     "contact_email": "",
     "app_contact_email": "mousainternational@gmail.com",
+    "app_trial_days": "7",
     "contact_email_unverified": "mousainternational.gami.com",
     "support_url": "",
     "social_facebook": "", "social_youtube": "", "social_x": "", "social_instagram": "", "social_tiktok": "",

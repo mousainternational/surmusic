@@ -1,7 +1,9 @@
-"""Paid Sur Music app, sold directly: one account, one year, one phone.
+"""Paid Sur Music app, sold directly: a free trial, then one payment for one year, one account, one phone.
 
 How it works
-* The person signs in (the same account as the website) and pays by JazzCash / NayaPay / Wise to the verified
+* A new account on a new phone gets a free trial (Admin sets the days, default 7). The trial is counted here on the
+  server and tied to the phone, so reinstalling the app or opening another account on the same phone does not restart it.
+* After the trial the person pays once for a whole year (no monthly payments) by JazzCash / NayaPay / Wise to the verified
   details set in Admin -> Donations, then sends the transaction ID on /app/subscribe.
 * The owner checks the payment in the real payment app and presses Approve (Admin -> App subscriptions).
 * The app asks /api/app/status with the sign-in cookie: active subscription + the phone it is bound to.
@@ -18,13 +20,14 @@ from flask import Blueprint, abort, flash, jsonify, redirect, render_template, r
 from .db import get_db, utcnow
 from .security import admin_required, audit, current_user, login_required, rate_limited
 from .seo import build_meta
-from .settings import donation_method
+from .settings import donation_method, get_settings, save_settings
 from .util import valid_email
 
 bp = Blueprint("subs", __name__)
 
 PRICE_TEXT = "$5 per year"
-PERIOD_DAYS = 365
+PERIOD_DAYS = 365                  # one payment = one year of the app (not monthly)
+MAX_TRIAL_DAYS = 60
 IDLE_DAYS = 7                      # a second phone may take over after this many silent days
 METHODS = (("jazzcash", "JazzCash"), ("nayapay", "NayaPay"), ("wise", "Wise (international)"))
 
@@ -53,16 +56,73 @@ def _clean(value, limit):
     return " ".join(value.split())[:limit] if isinstance(value, str) else ""
 
 
+def trial_days():
+    """Free trial length in days (Admin -> App subscriptions). 0 switches the trial off."""
+    try:
+        n = int(get_settings().get("app_trial_days") or 0)
+    except (TypeError, ValueError):
+        n = 0
+    return max(0, min(n, MAX_TRIAL_DAYS))
+
+
+def _trial_started(db, uid, ih=None):
+    """When this account's (or this phone's) free trial began, or None if it never did."""
+    if ih:
+        rows = db.all("SELECT started_at FROM app_trials WHERE install_hash = ? OR user_id = ?", (ih, uid))
+    else:
+        rows = db.all("SELECT started_at FROM app_trials WHERE user_id = ?", (uid,))
+    best = None
+    for r in rows:
+        try:
+            t = datetime.fromisoformat(r["started_at"])
+        except ValueError:
+            continue
+        best = t if best is None or t < best else best
+    return best
+
+
+def trial_end(db, uid, ih=None, start=False):
+    """End of the free trial, or None when there is none. start=True begins it on first use.
+
+    The trial belongs to the phone as well as to the account: the same phone never gets a second one by
+    reinstalling the app or by opening another account. Anyone who has already paid is not given a trial."""
+    days = trial_days()
+    if days <= 0:
+        return None
+    if db.one("SELECT 1 AS x FROM app_subscriptions WHERE user_id = ? AND status IN ('active', 'revoked')", (uid,)):
+        return None
+    started = _trial_started(db, uid, ih)
+    if started is None:
+        if not start or not ih:
+            return None
+        started = _now()
+        try:
+            db.execute("INSERT INTO app_trials (install_hash, user_id, started_at) VALUES (?, ?, ?)",
+                       (ih, uid, _iso(started)))
+            db.commit()
+        except Exception:                                   # two requests at once: the first one wins
+            db.rollback()
+            started = _trial_started(db, uid, ih) or started
+    return started + timedelta(days=days)
+
+
 def license_state(db, user, install, device="", os_name=""):
-    """(ok, reason, expires) for this account on this phone. Admins use the app free."""
+    """(ok, reason, expires) for this account on this phone.
+
+    reason: "ok" (paid), "trial" (free trial running), "subscribe" (no payment and no trial left),
+    "other_device" (the account is tied to another phone). Admins use the app free."""
+    ih = hashlib.sha256(install.encode()).hexdigest()
+    now = _now()
+    trial = False
     if user["role"] == "admin":
-        until = _iso(_now() + timedelta(days=30))
+        until = _iso(now + timedelta(days=30))
     else:
         until = active_until(db, user["id"])
         if not until:
-            return False, "subscribe", None
-    ih = hashlib.sha256(install.encode()).hexdigest()
-    now = _now()
+            end = trial_end(db, user["id"], ih, start=True)
+            if end is None or end <= now:
+                return False, "subscribe", None
+            until, trial = _iso(end), True
     row = db.one("SELECT install_hash, last_seen FROM app_devices WHERE user_id = ?", (user["id"],))
     if row is None:
         db.execute("INSERT INTO app_devices (user_id, install_hash, first_seen, last_seen, device, os) VALUES (?, ?, ?, ?, ?, ?)",
@@ -80,7 +140,7 @@ def license_state(db, user, install, device="", os_name=""):
         db.execute("UPDATE app_devices SET install_hash = ?, last_seen = ?, device = ?, os = ?, first_seen = ? WHERE user_id = ?",
                    (ih, _iso(now), device, os_name, _iso(now), user["id"]))
     db.commit()
-    return True, "ok", until
+    return True, ("trial" if trial else "ok"), until
 
 
 def _json():
@@ -154,7 +214,7 @@ def api_status():
     db.execute("UPDATE app_tokens SET last_seen = ? WHERE token_hash = ?", (utcnow(), _hash(token)))
     ok, reason, until = license_state(db, {"id": row["user_id"], "role": row["role"]}, install,
                                       _clean(data.get("device"), 60), _clean(data.get("os"), 20))
-    return jsonify({"ok": ok, "reason": reason, "until": until or ""}), (200 if ok else 403)
+    return jsonify({"ok": ok, "reason": reason, "until": until or "", "trial": reason == "trial"}), (200 if ok else 403)
 
 
 @bp.route("/api/app/logout", methods=["POST"])
@@ -165,6 +225,15 @@ def api_logout():
         db.execute("DELETE FROM app_tokens WHERE token_hash = ?", (_hash(token),))
         db.commit()
     return jsonify({"ok": True})
+
+
+def _trial_until(db, uid):
+    """ISO date the free trial ends for this account (for the page), or "" when there is none or it is over."""
+    started = _trial_started(db, uid)
+    if started is None or trial_days() <= 0:
+        return ""
+    end = started + timedelta(days=trial_days())
+    return _iso(end) if end > _now() else ""
 
 
 @bp.route("/app/subscribe", methods=["GET", "POST"])
@@ -197,7 +266,7 @@ def subscribe():
                   "WHERE user_id = ? ORDER BY id DESC LIMIT 10", (user["id"],))
     meta = build_meta("Sur Music app subscription", "Subscribe to the Sur Music Android app.", noindex=True)
     return render_template("app_subscribe.html", meta=meta, methods=methods, errors=errors, mine=mine,
-                           price=PRICE_TEXT, until=active_until(db, user["id"]), ld=[],
+                           price=PRICE_TEXT, until=active_until(db, user["id"]), ld=[], trial_until=_trial_until(db, user["id"]),
                            form=request.form if request.method == "POST" else {})
 
 
@@ -214,7 +283,8 @@ def admin_list():
                   "WHERE s.status = 'active' ORDER BY s.expires_at DESC LIMIT 200")
     now = _iso(_now())
     live = [r for r in live if (r["expires_at"] or "") > now]
-    return render_template("admin/subscriptions.html", pending=pending, live=live, price=PRICE_TEXT)
+    return render_template("admin/subscriptions.html", pending=pending, live=live, price=PRICE_TEXT, trial_days=trial_days(),
+                           trials=db.scalar("SELECT COUNT(*) FROM app_trials") or 0)
 
 
 @bp.route("/admin/subscriptions/<int:sid>/<any(approve, reject, revoke):action>", methods=["POST"])
@@ -237,6 +307,20 @@ def admin_action(sid, action):
         flash("Subscription switched off.", "ok")
     db.commit()
     audit(f"subscription_{action}", f"id={sid}")
+    return redirect(url_for("subs.admin_list"))
+
+
+@bp.route("/admin/subscriptions/trial", methods=["POST"])
+@admin_required
+def admin_trial():
+    """Set how many days a new phone may use the app free (0 = no free trial)."""
+    raw = (request.form.get("days") or "").strip()
+    if not raw.isdigit() or int(raw) > MAX_TRIAL_DAYS:
+        flash(f"Enter a number of days from 0 to {MAX_TRIAL_DAYS}.", "error")
+        return redirect(url_for("subs.admin_list"))
+    save_settings({"app_trial_days": str(int(raw))})
+    audit("subscription_trial_days", f"days={int(raw)}")
+    flash("The free trial is switched off." if int(raw) == 0 else f"New phones can now use the app free for {int(raw)} days.", "ok")
     return redirect(url_for("subs.admin_list"))
 
 
