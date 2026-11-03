@@ -16,7 +16,7 @@ from .security import csp_nonce, csrf_protect, csrf_token, current_user, securit
 from .settings import ads_active, get_settings
 from .util import human_size, render_markdown, valid_email
 
-__version__ = "1.7.29"
+__version__ = "1.7.30"
 
 
 def create_app(overrides=None):
@@ -206,7 +206,7 @@ def _bootstrap_admin(app):
 
 
 def _migrate_app_devices(app):
-    """v1.7.29: the phone model and Android version are kept next to the phone a subscription is tied to."""
+    """v1.7.30: the phone model and Android version are kept next to the phone a subscription is tied to."""
     from .db import Database
     db = Database(app.config["DATABASE_URL"])
     try:
@@ -266,7 +266,7 @@ def _apply_setting_changes(app):
                         "stations. No download needed."))
             db.execute("INSERT INTO settings (key, value) VALUES (?, ?)", ("_done_hero_v111", "1"))
             db.commit()
-        # v1.7.29: the app is now sold directly (account login + payment you approve), not through Google Play
+        # v1.7.30: the app is now sold directly (account login + payment you approve), not through Google Play
         if not db.scalar("SELECT COUNT(*) FROM settings WHERE key = ?", ("_done_privacy_app_v118",)):
             from .settings import DEFAULTS as _D
             import re as _re

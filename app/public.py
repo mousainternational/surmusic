@@ -357,10 +357,15 @@ def accessibility():
     """How blind and low-vision listeners use Sur Music (screen readers, keyboard)."""
     meta = build_meta("Accessible Radio for Blind & Low-Vision Listeners — Screen Reader Friendly",
                       "Sur Music works with screen readers (TalkBack, VoiceOver, NVDA, JAWS) and the keyboard: "
-                      "spoken station names, simple shortcuts and thousands of live radio stations.",
+                      "spoken station names, simple shortcuts, a keyboard-friendly radio player and thousands of live radio stations "
+                      "from every country.",
                       page="accessibility")
+    page = page_ld("WebPage", "Accessible radio for blind and low-vision listeners", meta["description"])
+    page["accessibilityFeature"] = ["ARIA", "structuralNavigation", "readingOrder", "tableOfContents"]
+    page["accessibilityControl"] = ["fullKeyboardControl", "fullMouseControl", "fullTouchControl"]
+    page["accessibilityAPI"] = "ARIA"
     return render_template("accessibility.html", meta=meta,
-                           ld=[breadcrumb_ld([("Home", "/"), ("Accessibility", "/accessibility")])])
+                           ld=[page, breadcrumb_ld([("Home", "/"), ("Accessibility", "/accessibility")])])
 
 
 @bp.route("/radio-stations")

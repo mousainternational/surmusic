@@ -1057,3 +1057,19 @@ html.np-lock, html.np-lock body { overflow: hidden; }
 .ios-card { margin: 18px 0; }
 .app-ic-ios { background: linear-gradient(135deg, #3b7bff, #8a5cf6); color: #fff; font: 800 1.05rem var(--display, inherit); }
 .ios-steps { margin-top: 6px; }
+
+/* Accessibility button in the header: icon only on wide screens (so nothing is pushed off the side), words in the phone menu */
+.a11y-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; flex: none; min-height: 40px; color: var(--text); text-decoration: none; font-weight: 600; border-radius: 999px; }
+.a11y-btn svg { width: 22px; height: 22px; fill: currentColor; flex: none; }
+.a11y-btn:hover { background: color-mix(in srgb, var(--c-blue, #3b7bff) 16%, transparent); }
+.a11y-btn:focus-visible { outline: 3px solid var(--focus, #3b7bff); outline-offset: 2px; }
+.a11y-btn[aria-current="page"] { box-shadow: inset 0 -2px 0 var(--c-blue, #3b7bff); }
+@media (min-width: 1200px) { .a11y-btn { width: 40px; border: 1px solid color-mix(in srgb, var(--c-blue, #3b7bff) 45%, var(--border)); } .a11y-btn .a11y-t { display: none; } }
+@media (max-width: 1199px) { .a11y-btn { justify-content: flex-start; width: 100%; padding: 12px 14px; } }
+@media (min-width: 1200px) and (max-width: 1279px) {
+  .nav-search { width: 86px; }
+  .menu a.hd-pill:not(.btn), .menu .hd-dd > summary.hd-pill { padding: 6px 6px; font-size: .74rem; }
+  .menu .btn-sm { padding: 6px 9px; font-size: .78rem; }
+  .menu { gap: 1px; }
+  .site-header .wrap { padding-left: 8px; padding-right: 8px; }
+}

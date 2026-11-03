@@ -275,3 +275,17 @@ def test_download_page_explains_how_to_install_on_iphone(client):
     assert 'id="iphone"' in html and "Add to Home Screen" in html and "Safari" in html
     assert "APK" in html and "iPhone" in html
     assert 'rel="apple-touch-icon"' in html and 'name="apple-mobile-web-app-capable"' in html
+
+
+def test_accessibility_button_in_the_header_and_its_seo(client):
+    import json, re
+    home = client.get("/").get_data(as_text=True)
+    head = home.split("</header>")[0]
+    assert 'class="a11y-btn"' in head and 'href="/accessibility"' in head and "Accessibility" in head
+    assert "screen reader friendly radio" in home
+    page = client.get("/accessibility").get_data(as_text=True)
+    assert "blind-friendly radio" in page and "TalkBack or VoiceOver radio" in page
+    kinds = [json.loads(b).get("@type") for b in re.findall(r'<script type="application/ld\+json"[^>]*>(.*?)</script>', page, re.S)]
+    assert "WebPage" in kinds and "BreadcrumbList" in kinds
+    ld = next(json.loads(b) for b in re.findall(r'<script type="application/ld\+json"[^>]*>(.*?)</script>', page, re.S) if '"WebPage"' in b)
+    assert "ARIA" in ld["accessibilityFeature"] and "fullKeyboardControl" in ld["accessibilityControl"]
