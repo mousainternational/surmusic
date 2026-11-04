@@ -101,7 +101,10 @@
   // ---------- the song that is on air (read from the stream's own title information, every 30 seconds) ----------
   var trackTimer = null;
   function showTrack(title) {
-    state.track = title || "";
+    title = title || "";
+    if (/%[0-9A-Fa-f]{2}/.test(title)) { try { title = decodeURIComponent(title.replace(/\+/g, " ")); } catch (e) { title = ""; } }
+    if (/https?:\/\/|www\./i.test(title)) title = "";
+    state.track = title;
     var st = $("pl-status"), old = st.querySelector(".trk");
     if (old) old.remove();
     if (state.track && bar.getAttribute("data-state") === "playing") {

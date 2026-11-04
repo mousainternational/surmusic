@@ -299,3 +299,12 @@ def test_news_strip_replaces_the_price_strip(client):
     assert any("topic/BUSINESS" in u for u in urls) and any("topic/SPORTS" in u for u in urls) and any("bollywood" in u for u in urls)
     mixed = headlines.mix([[{"t": "a1"}, {"t": "a2"}], [{"t": "b1"}], [{"t": "a1"}, {"t": "c1"}]])
     assert [m["t"] for m in mixed] == ["a1", "b1", "a2", "c1"]
+
+
+def test_song_name_is_clean_text():
+    from app import radio
+    enc = "Islam+Sobhi+%D8%A5%D8%B3%D9%84%D8%A7%D9%85+%D8%B5%D8%A8%D8%AD%D9%8A+-+%D8%B3%D9%88%D8%B1%D8%A9"
+    assert radio.clean_title(enc) == "Islam Sobhi إسلام صبحي - سورة"
+    assert radio.clean_title("Artist - Song") == "Artist - Song"
+    assert radio.clean_title("http://example.com/x?a=1") == "" and radio.clean_title(" - ") == ""
+    assert radio.parse_icy(b"StreamTitle='" + enc.encode() + b"';") == "Islam Sobhi إسلام صبحي - سورة"

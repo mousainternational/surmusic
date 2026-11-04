@@ -419,7 +419,22 @@ def parse_icy(block):
     import re as _re
     text = block.rstrip(b"\0").decode("utf-8", "replace") if block else ""
     m = _re.search(r"StreamTitle='(.*?)';", text, _re.S) or _re.search(r"StreamTitle='(.*)", text, _re.S)
-    return _text(m.group(1), 140) if m else ""
+    return clean_title(m.group(1)) if m else ""
+
+
+def clean_title(raw):
+    """A song name fit for people: decode %D8%A5-style text, drop links and leftover codes."""
+    import re as _re
+    t = raw or ""
+    if _re.search(r"%[0-9A-Fa-f]{2}", t):
+        try:
+            t = urllib.parse.unquote_plus(t, errors="replace")
+        except Exception:
+            return ""
+    t = _text(t, 140)
+    if not t or _re.search(r"https?://|www\.|[=&]\w+=|\ufffd", t) or _re.fullmatch(r"[\W_]*", t):
+        return ""
+    return t
 
 
 def read_track(url, timeout=6, schemes=("https",)):
