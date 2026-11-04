@@ -518,7 +518,7 @@ TOPICS = {
                name("fm 96", "&countrycode=PK"), name("fm 98", "&countrycode=PK"), name("fm 99", "&countrycode=PK"),
                name("mast fm", "&countrycode=PK"), name("hum fm", "&countrycode=PK"), name("city fm", "&countrycode=PK"),
                name("radio pakistan"), name("buraq", "&countrycode=PK"), name("power 99", "&countrycode=PK"),
-               name("apna", "&countrycode=PK"), name("sunrise", "&countrycode=PK")]),
+               name("apna", "&countrycode=PK"), name("sunrise", "&countrycode=PK"), name("city fm 89", "&countrycode=PK"), name("apna karachi", "&countrycode=PK"), name("just music", "&countrycode=PK"), name("radio awaz", "&countrycode=PK"), name("hot fm", "&countrycode=PK"), name("samaa", "&countrycode=PK"), name("dil fm", "&countrycode=PK"), name("sunrise fm", "&countrycode=PK"), name("radio1", "&countrycode=PK"), name("saraiki", "&countrycode=PK"), name("pak filmi", "&countrycode=PK"), name("pbc", "&countrycode=PK"), name("suno pakistan", "&countrycode=PK"), name("saut ul quran", "&countrycode=PK"), name("dhamaal", "&countrycode=PK"), name("dilber", "&countrycode=PK"), name("rose fm", "&countrycode=PK"), name("jan fm", "&countrycode=PK"), name("fm 106", "&countrycode=PK"), name("fm 107", "&countrycode=PK"), name("fm 105", "&countrycode=PK"), name("fm 103", "&countrycode=PK"), name("fm 97", "&countrycode=PK"), name("fm 90", "&countrycode=PK"), name("fm 88", "&countrycode=PK"), name("fm 89", "&countrycode=PK"), name("fm 92", "&countrycode=PK")]),
     "india": dict(
         kind="country", group="", label="India",
         h1="India Radio — Live Indian FM Stations", native="भारतीय रेडियो",
@@ -529,7 +529,7 @@ TOPICS = {
         paths=[country("IN"), name("radio mirchi", "&countrycode=IN"), name("red fm", "&countrycode=IN"), name("big fm", "&countrycode=IN"),
                name("radio city", "&countrycode=IN"), name("fever", "&countrycode=IN"), name("vividh bharati"),
                name("hello fm", "&countrycode=IN"), name("ishq", "&countrycode=IN"), name("my fm", "&countrycode=IN"),
-               name("radio one", "&countrycode=IN"), name("air fm", "&countrycode=IN")]),
+               name("radio one", "&countrycode=IN"), name("air fm", "&countrycode=IN"), name("fm gold"), name("fm rainbow"), name("air news"), name("all india radio"), name("air punjabi"), name("air kashmiri"), name("radio nasha", "&countrycode=IN"), name("radio indigo", "&countrycode=IN")]),
     "bangladesh": dict(
         kind="country", group="", label="Bangladesh",
         h1="Bangladesh Radio — Live Bangladeshi FM", native="বাংলাদেশ রেডিও",
@@ -890,6 +890,31 @@ for _cc, _cn, _city in _zone_cities():
         paths=[f"/json/stations/search?state={urllib.parse.quote(_label)}&countrycode={_cc}&{COMMON}", name(_label, f"&countrycode={_cc}"),
                tag(_label.lower(), f"&countrycode={_cc}")])
     CITY_SLUGS.append(_s)
+
+
+# The big cities of the world (by hand), so "radio <city>" searches land on a page for every large city.
+_BIG = """JP:Tokyo,Osaka,Nagoya,Yokohama,Sapporo,Fukuoka,Kyoto;CN:Shanghai,Beijing,Guangzhou,Shenzhen,Chengdu,Wuhan,Chongqing,Tianjin,Hangzhou,Nanjing,Xian;HK:Hong Kong;TW:Taipei;KR:Seoul,Busan,Incheon;BR:Sao Paulo,Rio de Janeiro,Brasilia,Salvador,Fortaleza,Belo Horizonte,Recife,Porto Alegre,Curitiba,Manaus;MX:Mexico City,Guadalajara,Monterrey,Puebla,Tijuana,Cancun;EG:Cairo,Alexandria,Giza;TR:Istanbul,Ankara,Izmir,Bursa;NG:Lagos,Abuja,Kano,Ibadan;PH:Manila,Cebu,Davao;RU:Moscow,Saint Petersburg,Novosibirsk,Kazan,Sochi;ID:Jakarta,Surabaya,Bandung,Medan,Bali;FR:Paris,Marseille,Lyon,Toulouse,Nice;DE:Berlin,Hamburg,Munich,Cologne,Frankfurt;IT:Rome,Milan,Naples,Turin;ES:Madrid,Barcelona,Valencia,Seville;PT:Lisbon,Porto;NL:Amsterdam,Rotterdam;BE:Brussels;AT:Vienna;CH:Zurich,Geneva;SE:Stockholm,Gothenburg;NO:Oslo;DK:Copenhagen;FI:Helsinki;IE:Dublin;GR:Athens;PL:Warsaw,Krakow;CZ:Prague;HU:Budapest;RO:Bucharest;UA:Kyiv,Kharkiv,Odesa;RS:Belgrade;BG:Sofia;HR:Zagreb;CO:Bogota,Medellin,Cali,Barranquilla;PE:Lima;CL:Santiago;AR:Buenos Aires,Cordoba,Rosario;VE:Caracas;EC:Quito,Guayaquil;UY:Montevideo;CU:Havana;DO:Santo Domingo;US:Los Angeles,Chicago,Houston,Dallas,Miami,Atlanta,Philadelphia,Washington,San Francisco,Seattle,Boston,Las Vegas,Phoenix,Detroit,Denver;CA:Montreal,Vancouver,Calgary,Ottawa,Edmonton;AU:Melbourne,Brisbane,Perth,Adelaide,Canberra;NZ:Auckland,Wellington,Christchurch;ZA:Johannesburg,Cape Town,Durban,Pretoria;KE:Nairobi,Mombasa;GH:Accra;ET:Addis Ababa;CI:Abidjan;UG:Kampala;TZ:Dar es Salaam;MA:Casablanca,Rabat,Marrakech;DZ:Algiers;TN:Tunis;SN:Dakar;SD:Khartoum;AO:Luanda;CD:Kinshasa;SA:Mecca,Medina;AE:Sharjah;KW:Kuwait City;BH:Manama;OM:Muscat;JO:Amman;LB:Beirut;SY:Damascus;IQ:Baghdad,Basra,Erbil,Najaf,Karbala;IR:Tehran,Mashhad,Isfahan,Shiraz,Tabriz,Qom;IL:Tel Aviv,Jerusalem;AZ:Baku;GE:Tbilisi;AM:Yerevan;UZ:Tashkent;KZ:Almaty;NP:Kathmandu;LK:Colombo;AF:Kabul,Kandahar,Herat;VN:Hanoi,Ho Chi Minh City;TH:Bangkok,Chiang Mai;MY:Kuala Lumpur,Penang;SG:Singapore;KH:Phnom Penh;MM:Yangon;PK:Abbottabad,Bahawalpur,Sargodha,Sukkur,Larkana,Gujrat,Sheikhupura,Mardan,Muzaffarabad,Gilgit,Skardu,Mirpur;IN:Pune,Ahmedabad,Surat,Patna,Bhopal,Indore,Nagpur,Chandigarh,Amritsar,Srinagar,Kochi,Thiruvananthapuram,Visakhapatnam,Varanasi,Kanpur,Goa;BD:Chittagong,Sylhet;GB:Glasgow,Leeds,Liverpool,Bradford,Leicester,Edinburgh,Cardiff,Belfast,Sheffield,Bristol"""
+for _grp in _BIG.split(";"):
+    _cc, _names = _grp.split(":")
+    for _city in _names.split(","):
+        _cn = WORLD.get(_cc, (_cc,))[0]
+        _s = _slug(_city)
+        if not _s or _s in TOPICS:
+            _s = f"{_s}-{_cc.lower()}" if _s else ""
+        if not _s or _s in TOPICS:
+            continue
+        _label = _city
+        TOPICS[_s] = dict(
+            kind="genre", group="Cities", label=_label,
+            h1=f"{_label} Radio — Live FM Stations from {_label}", native="",
+            seo_title=(f"{_label} Radio Live — {_label} FM Stations Online Free" if len(_label) <= 11 else
+                       (f"{_label} Radio Live — Online Stations" if len(_label) <= 26 else f"{_label} Radio Live")),
+            description=f"Listen to live radio from {_label}, {_cn} free: {_label} FM stations, music, news and talk playing in your browser.",
+            intro=f"Live radio stations from {_label}, {_cn} — FM channels, local music, news and talk that play right here. Pick a station and press play.",
+            more=f"Also searched as {_label} radio, {_label} FM live, {_label} radio stations online, FM radio {_label} and live radio {_label}.",
+            paths=[f"/json/stations/search?state={urllib.parse.quote(_label)}&countrycode={_cc}&{COMMON}", name(_label, f"&countrycode={_cc}"),
+                   tag(_label.lower(), f"&countrycode={_cc}")])
+        CITY_SLUGS.append(_s)
 
 GENRE_PAGES = {k: v for k, v in TOPICS.items() if v["kind"] == "genre"}
 COUNTRY_PAGES = {k: v for k, v in TOPICS.items() if v["kind"] == "country"}

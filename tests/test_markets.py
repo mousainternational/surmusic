@@ -101,9 +101,9 @@ def test_ticker_has_change_and_little_chart(monkeypatch):
     assert markets.spark_points([1]) == "" and markets.spark_points([1, 2, 3]).count(",") == 3
 
 
-def test_ticker_strip_renders_on_every_page(client):
+def test_news_strip_renders_on_every_page(client):
     html = client.get("/about").get_data(as_text=True) if client.get("/about").status_code == 200 else client.get("/").get_data(as_text=True)
-    assert 'data-ticker' in html and 'class="mk-set"' in html
+    assert 'id="nw-ticker"' in html and 'data-ticker' not in html      # the news strip replaced the price strip
 
 
 def test_price_strip_keeps_moving_on_slow_phones():

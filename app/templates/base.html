@@ -137,7 +137,7 @@
   </div>
 </header>
 {% endblock %}
-{%- if config.get('MARKETS_ENABLED', True) %}{% include "_ticker.html" %}{% endif %}
+{% include "_newsbar.html" %}
 
 <div id="sr-announce" class="sr" aria-live="polite" aria-atomic="true"></div>
 <main id="main" tabindex="-1" data-page="{{ request.endpoint }}">
@@ -172,7 +172,7 @@
       <a href="/islam">Islam &amp; Quran radio</a>
       <a href="/markets">Gold, Bitcoin &amp; dollar rates</a>
       <a href="/trending">Trending now</a>
-      <a href="/live-news">Live news: elections, Europe, war</a>
+      <a href="/live-news">Live news: world, Pakistan, India, sports</a>
       <a href="/country/pakistan">Pakistan radio</a>
       <a href="/radio-stations">All radio types &amp; countries</a>
       <a href="/deals">Deals</a>

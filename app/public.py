@@ -765,6 +765,20 @@ def api_me():
                     "favorites": _user_favorite_ids(), "gate": gate_active()})
 
 
+@bp.route("/api/headlines")
+def api_headlines():
+    """Headlines for the news strip: the visitor's own country (English edition), refreshed by itself."""
+    from . import headlines
+    if current_app.config.get("TESTING") or current_app.config.get("RADIO_DEMO"):
+        items = []
+    else:
+        items = headlines.get(visitor_country())
+    resp = jsonify({"items": items})
+    resp.headers["Cache-Control"] = "private, max-age=120"
+    resp.headers["Vary"] = "Accept-Language, CF-IPCountry"
+    return resp
+
+
 @bp.route("/api/stream", methods=["POST"])
 def api_stream():
     """Give the playable URL for a station token — only to signed-in members when sign-in is required."""
@@ -1035,12 +1049,12 @@ def robots():
 
 @bp.route("/live-news")
 def live_news_page():
-    meta = build_meta("Live News Radio: US Midterm Elections, Europe, War, Weather",
-                      "Listen free to live news and talk radio: US midterm election coverage, Europe news, war and world "
-                      "events, political debates and weather, from stations in 200+ countries.",
+    meta = build_meta("Live News Radio — World, Pakistan, India & US News Online",
+                      "Listen free to live news radio and see today's headlines: breaking news, politics, business, sports "
+                      "and Bollywood, in Urdu, Hindi and English.",
                       canonical_path="/live-news")
     crumbs = [("Home", "/"), ("Live news", "/live-news")]
-    topics = [("US midterm elections", "/country/usa"), ("Europe news", "/continent/europe"),
+    topics = [("US news", "/country/usa"), ("Europe news", "/continent/europe"),
               ("Middle East news", "/continent/middle-east"), ("UK news", "/country/uk"), ("Germany", "/country/germany"),
               ("France", "/country/france"), ("Italy", "/country/italy"), ("Spain", "/country/spain"),
               ("Ukraine", "/country/ukraine"), ("Russia", "/country/russia"), ("Israel", "/country/israel"),
@@ -1138,7 +1152,7 @@ def llms_txt():
             "## Main pages\n"
             f"- [All radio stations by country and type]({site}/radio-stations)\n"
             f"- [Islam: Quran, Naat and Qawwali]({site}/islam)\n"
-            f"- [Live news radio: elections, Europe, war, weather]({site}/live-news)\n"
+            f"- [Live news radio: world, Pakistan, India, US news and sports]({site}/live-news)\n"
             f"- [Trending searches now]({site}/trending)\n"
             f"- [Gold, Bitcoin and dollar rates]({site}/markets)\n"
             f"- [Guides and articles]({site}/blog)\n"

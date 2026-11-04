@@ -283,3 +283,19 @@ def test_home_has_add_to_home_screen_button_and_recent_box(client):
     html = client.get("/").get_data(as_text=True)
     assert 'id="a2hs"' in html and 'id="recent-box"' in html
     assert 'class="cat-tile"' not in html
+
+
+def test_news_strip_replaces_the_price_strip(client):
+    html = client.get("/").get_data(as_text=True)
+    assert 'id="nw-ticker"' in html and 'data-ticker' not in html
+    assert client.get("/api/headlines").get_json() == {"items": []}      # tests never touch the network
+    from app import headlines
+    xml = ("<rss><channel><item><title>Big news today - Dawn</title><link>https://news.google.com/rss/articles/x</link></item>"
+           "<item><title>Bad link - X</title><link>http://insecure.example/a</link></item></channel></rss>")
+    assert headlines.parse(xml) == [{"t": "Big news today", "s": "Dawn", "u": "https://news.google.com/rss/articles/x"}]
+    assert headlines.parse("<!DOCTYPE x [<!ENTITY a 'b'>]><rss/>") == []
+    assert "gl=IT" in headlines._feed_url("IT") and "ceid=PK%3Aen" in headlines._feed_url("PK")
+    urls = headlines._feed_urls("PK")
+    assert any("topic/BUSINESS" in u for u in urls) and any("topic/SPORTS" in u for u in urls) and any("bollywood" in u for u in urls)
+    mixed = headlines.mix([[{"t": "a1"}, {"t": "a2"}], [{"t": "b1"}], [{"t": "a1"}, {"t": "c1"}]])
+    assert [m["t"] for m in mixed] == ["a1", "b1", "a2", "c1"]

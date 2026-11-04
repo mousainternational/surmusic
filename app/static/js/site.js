@@ -424,3 +424,41 @@ document.addEventListener("toggle", function (e) {
   window.addEventListener("appinstalled", function () { var b = document.getElementById("a2hs"); if (b) b.hidden = true; });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();
+
+
+// ---------- world news strip: headlines for the visitor's own country, refreshed by themselves ----------
+(function () {
+  var bar, track, tries = 0, timer = null;
+  function build(items) {
+    track.textContent = "";
+    var set = document.createElement("div"); set.style.display = "flex";
+    items.forEach(function (it) {
+      var a = document.createElement("a"); a.className = "nw-item"; a.href = it.u; a.target = "_blank";
+      a.rel = "noopener nofollow ugc";
+      var b = document.createElement("b"); b.textContent = it.t; b.style.fontWeight = "600";
+      a.appendChild(b);
+      if (it.s) { var s = document.createElement("i"); s.textContent = it.s; a.appendChild(s); }
+      set.appendChild(a);
+    });
+    track.appendChild(set);
+    var dup = set.cloneNode(true); dup.className = "nw-dup"; dup.setAttribute("aria-hidden", "true");
+    dup.querySelectorAll("a").forEach(function (a) { a.tabIndex = -1; });
+    track.appendChild(dup);
+    bar.hidden = false;
+    var secs = Math.max(60, Math.min(220, items.length * 9));
+    track.style.setProperty("--nw-speed", secs + "s");
+  }
+  function load() {
+    clearTimeout(timer);
+    fetch("/api/headlines", { credentials: "same-origin" }).then(function (r) { return r.ok ? r.json() : { items: [] }; })
+      .then(function (d) {
+        if (d.items && d.items.length) { tries = 0; build(d.items); timer = setTimeout(load, 10 * 60 * 1000); }
+        else { tries++; timer = setTimeout(load, tries < 5 ? 8000 : 5 * 60 * 1000); }
+      }).catch(function () { timer = setTimeout(load, 5 * 60 * 1000); });
+  }
+  function init() {
+    bar = document.getElementById("nw-ticker"); track = document.getElementById("nw-track");
+    if (bar && track) load();
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+})();

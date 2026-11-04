@@ -22,12 +22,18 @@ CATEGORIES = {
     "bollywood": {
         "title": "Bollywood Radio",
         "paths": [f"/json/stations/bytag/bollywood?{COMMON}", f"/json/stations/search?tag=hindi&{COMMON}",
-                  f"/json/stations/search?tag=indian&{COMMON}"],
+                  f"/json/stations/search?tag=indian&{COMMON}",
+                  f"/json/stations/search?name=vividh%20bharati&{COMMON}", f"/json/stations/search?name=radio%20mirchi&countrycode=IN&{COMMON}",
+                  f"/json/stations/search?name=red%20fm&countrycode=IN&{COMMON}", f"/json/stations/search?name=fm%20rainbow&{COMMON}"],
     },
     "lollywood": {
         "title": "Lollywood & Pakistani Radio",
         "paths": [f"/json/stations/search?countrycode=PK&{COMMON}", f"/json/stations/search?tag=pakistani&{COMMON}",
-                  f"/json/stations/search?tag=urdu&{COMMON}", f"/json/stations/search?language=urdu&{COMMON}"],
+                  f"/json/stations/search?tag=urdu&{COMMON}", f"/json/stations/search?language=urdu&{COMMON}",
+                  f"/json/stations/search?name=fm%20100&countrycode=PK&{COMMON}", f"/json/stations/search?name=radio%20pakistan&{COMMON}",
+                  f"/json/stations/search?name=mast%20fm&countrycode=PK&{COMMON}", f"/json/stations/search?name=city%20fm&countrycode=PK&{COMMON}",
+                  f"/json/stations/search?name=hum%20fm&countrycode=PK&{COMMON}", f"/json/stations/search?name=power%2099&countrycode=PK&{COMMON}",
+                  f"/json/stations/search?name=samaa&countrycode=PK&{COMMON}", f"/json/stations/search?name=apna&countrycode=PK&{COMMON}"],
     },
     "hollywood": {
         "title": "Hollywood & English Hits Radio",
