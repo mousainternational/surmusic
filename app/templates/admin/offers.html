@@ -2,8 +2,8 @@
 {% block title %}Partner offers (affiliate){% endblock %}
 {% block admin %}
 <div class="card notice">
-  <p><strong>How it works:</strong> join an affiliate programme (Amazon Associates, Daraz, AliExpress…), copy <em>your</em> link for a product, and add it here. It appears on the website as a “Recommended” card with a clear “Affiliate” label. When a visitor buys through it, the store pays you a commission.</p>
-  <p class="small muted">Rules that keep your accounts safe: only real products you would recommend, never ask people to click, never hide the “Affiliate” label, and follow each programme's own rules (Amazon requires the disclosure that is already on the site).</p>
+  <p><strong>How it works:</strong> join an affiliate programme (Amazon Associates, Daraz, AliExpress…), copy <em>your</em> link for a product, and add it here. It appears on the website as a “Recommended” card with a small “Sponsored links” note under it. When a visitor buys through it, the store pays you a commission.</p>
+  <p class="small muted">Rules that keep your accounts safe: only real products you would recommend, never ask people to click, never remove the “Sponsored links” note, and follow each programme's own rules (Amazon requires the disclosure that is already on the site).</p>
 </div>
 
 <form class="card form" method="post">
@@ -22,6 +22,7 @@
       <td>{{ o.store }}<br><span class="small muted">{{ places.get(o.place, o.place) }}</span></td>
       <td>{{ clicks.get(o.id, 0) }}</td>
       <td class="nowrap">
+        <a class="btn btn-sm btn-ghost" href="{{ url_for('admin.offers', edit=o.id) }}#offer-form">Edit</a>
         <form method="post" class="inline"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="{{ o.id }}"><button class="btn btn-sm btn-ghost">{{ 'Hide' if o.active else 'Show' }}</button></form>
         <form method="post" class="inline" data-confirm="Remove {{ o.title }}?"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="action" value="remove"><input type="hidden" name="id" value="{{ o.id }}"><button class="btn btn-sm btn-ghost">Remove</button></form>
       </td>
@@ -29,19 +30,22 @@
     {% else %}<p class="muted">No offers yet. Add your first affiliate link on the right.</p>{% endif %}
   </div>
 
-  <form class="card form" method="post">
-    <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="action" value="add">
-    <h2 class="h3">Add an offer</h2>
-    <label for="o-title">Product title</label><input id="o-title" name="title" required maxlength="90" placeholder="Wireless earbuds — great for radio">
-    <label for="o-url">Your affiliate link (https)</label><input id="o-url" name="url" type="url" required placeholder="https://amzn.to/… or your Daraz/AliExpress link">
-    <label for="o-image">Product image link (https, optional)</label><input id="o-image" name="image" type="url" placeholder="https://… .jpg">
-    <label for="o-price">Price text (optional)</label><input id="o-price" name="price" maxlength="30" placeholder="Rs 2,499">
-    <label for="o-note">One line about it (optional)</label><input id="o-note" name="note" maxlength="140" placeholder="Long battery, clear sound">
+  {% set e = editing or {} %}
+  <form class="card form" method="post" id="offer-form">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="action" value="{{ 'edit' if editing else 'add' }}">
+    {% if editing %}<input type="hidden" name="id" value="{{ editing.id }}">{% endif %}
+    <h2 class="h3">{{ 'Edit this offer' if editing else 'Add an offer' }}</h2>
+    <label for="o-title">Product title</label><input id="o-title" name="title" required maxlength="90" value="{{ e.title }}" placeholder="Wireless earbuds — great for radio">
+    <label for="o-url">Your affiliate link (https)</label><input id="o-url" name="url" type="url" required value="{{ e.url }}" placeholder="https://amzn.to/… or your Daraz/AliExpress link">
+    <label for="o-image">Product image link (https, optional)</label><input id="o-image" name="image" type="url" value="{{ e.image }}" placeholder="https://… .jpg">
+    <label for="o-price">Price text (optional)</label><input id="o-price" name="price" maxlength="30" value="{{ e.price }}" placeholder="Rs 2,499">
+    <label for="o-note">One line about it (optional)</label><input id="o-note" name="note" maxlength="140" value="{{ e.note }}" placeholder="Long battery, clear sound">
     <label for="o-store">Store</label>
-    <select id="o-store" name="store">{% for s in stores %}<option>{{ s }}</option>{% endfor %}</select>
+    <select id="o-store" name="store">{% for s in stores %}<option {{ 'selected' if e.store == s }}>{{ s }}</option>{% endfor %}</select>
     <label for="o-place">Show on</label>
-    <select id="o-place" name="place">{% for k, v in places.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select>
-    <button class="btn btn-primary">Add offer</button>
+    <select id="o-place" name="place">{% for k, v in places.items() %}<option value="{{ k }}" {{ 'selected' if e.place == k }}>{{ v }}</option>{% endfor %}</select>
+    <button class="btn btn-primary">{{ 'Save changes' if editing else 'Add offer' }}</button>
+    {% if editing %}<a class="btn btn-ghost" href="{{ url_for('admin.offers') }}">Cancel</a>{% endif %}
   </form>
 </div>
 {% endblock %}

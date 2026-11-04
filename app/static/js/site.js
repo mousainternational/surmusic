@@ -362,3 +362,19 @@ document.addEventListener("toggle", function (e) {
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wire); else wire();
   document.addEventListener("page:load", wire);
 })();
+
+// A partner-offer picture that cannot load (wrong or blocked address) is replaced by a small bag icon, never a broken image.
+(function () {
+  function fix(img) {
+    if (!img || !img.parentNode || img.dataset.fixed) return;
+    img.dataset.fixed = "1";
+    var ph = document.createElement("span");
+    ph.className = "offer-ph"; ph.setAttribute("aria-hidden", "true"); ph.textContent = "🛍️";
+    img.parentNode.replaceChild(ph, img);
+  }
+  document.addEventListener("error", function (e) {
+    var t = e.target;
+    if (t && t.tagName === "IMG" && t.closest && t.closest(".offer")) fix(t);
+  }, true);
+  document.querySelectorAll(".offer img").forEach(function (img) { if (img.complete && img.naturalWidth === 0) fix(img); });
+})();

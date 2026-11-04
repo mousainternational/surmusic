@@ -555,7 +555,7 @@ def offers():
     rows = affiliate_offers()
     if request.method == "POST":
         action = request.form.get("action")
-        if action == "add":
+        if action in ("add", "edit"):
             o = {"id": _secrets.token_hex(4),
                  "title": " ".join((request.form.get("title") or "").split())[:90],
                  "url": (request.form.get("url") or "").strip()[:1000],
@@ -565,14 +565,26 @@ def offers():
                  "store": request.form.get("store") if request.form.get("store") in AFFILIATE_STORES else "Other",
                  "place": request.form.get("place") if request.form.get("place") in AFFILIATE_PLACES else "all",
                  "active": True, "added": utcnow()[:10]}
+            old = None
+            if action == "edit":
+                old = next((r for r in rows if r.get("id") == request.form.get("id")), None)
+                if old is None:
+                    flash("That offer was not found.", "error")
+                    return redirect(url_for("admin.offers"))
             if len(o["title"]) < 3:
                 flash("Write a short product title (3+ characters).", "error")
             elif not valid_url(o["url"], https_only=True):
                 flash("The affiliate link must start with https://", "error")
             elif o["image"] and not valid_url(o["image"], https_only=True):
                 flash("The image address must start with https:// (or leave it empty).", "error")
-            elif len(rows) >= 100:
+            elif old is None and len(rows) >= 100:
                 flash("You can keep up to 100 offers. Remove old ones first.", "error")
+            elif old is not None:
+                o.update({"id": old["id"], "active": old.get("active", True), "added": old.get("added", o["added"])})   # keep id, clicks and visibility
+                rows[rows.index(old)] = o
+                save_settings({"affiliate_offers": json.dumps(rows)})
+                audit("offer_edit", o["title"])
+                flash("Offer saved.", "success")
             else:
                 rows.append(o)
                 save_settings({"affiliate_offers": json.dumps(rows)})
@@ -598,8 +610,9 @@ def offers():
     for r in get_db().all("SELECT detail, COUNT(*) AS n FROM events WHERE kind = 'affiliate_click' AND created_at >= ? "
                           "GROUP BY detail", (since,)):
         clicks[(r["detail"] or "").split(" · ")[0]] = r["n"]
+    editing = next((r for r in rows if r.get("id") == request.args.get("edit")), None)
     return render_template("admin/offers.html", meta=META, rows=rows, clicks=clicks, stores=AFFILIATE_STORES,
-                           places=AFFILIATE_PLACES)
+                           places=AFFILIATE_PLACES, editing=editing)
 
 
 # ---------------------------------------------------------------- audit & backup

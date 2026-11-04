@@ -3,7 +3,7 @@
 {%- set items = offers_for(place, limit) %}
 {%- if items %}
 <section class="offers card" aria-label="Partner offers">
-  <div class="offers-head"><h2 class="h3">{{ title }}</h2><span class="badge">Affiliate</span></div>
+  <div class="offers-head"><h2 class="h3">{{ title }}</h2></div>
   <ul class="offer-list">
   {%- for o in items %}
     <li class="offer">
@@ -14,7 +14,7 @@
     </li>
   {%- endfor %}
   </ul>
-  <p class="tiny muted">We may earn a commission if you buy through these links, at no extra cost to you. <a href="{{ url_for('public.deals') }}">All deals</a> · <a href="{{ url_for('public.disclaimer') }}">Disclosure</a></p>
+  <p class="tiny muted">Sponsored links: we may earn a commission at no cost to you. <a href="{{ url_for('public.disclaimer') }}">Disclosure</a></p>
 </section>
 {%- endif %}
 {%- endmacro %}
