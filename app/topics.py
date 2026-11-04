@@ -52,7 +52,7 @@ TOPICS = {
         seo_title="Naat Radio Live — Naat Sharif, Hamd & Islamic Nasheed Online Free",
         description="Listen to live naat radio free: Naat Sharif, Hamd and nasheed in Urdu, Punjabi and Arabic, around the clock.",
         intro="Live naat stations playing Naat Sharif, Hamd and nasheed day and night — beautiful recitations in Urdu, Punjabi, Arabic and more. Choose a station and let it play while you work, study or rest.",
-        more="People find this page searching for naat sharif live, naat radio online, new naats, Urdu naat, Punjabi naat, hamd o naat, Islamic nasheed radio and naat sharif sunna. Every station here is free — no app and no sign-up needed.",
+        more="People find this page searching for naat sharif live, naat radio online, new naats, Urdu naat, Punjabi naat, hamd o naat, Islamic nasheed radio, naat sharif sunna, naat sharif sunao, new naat 2026 and the Urdu words نعت شریف, نعت ریڈیو and حمد و نعت. Every station here is free — no app and no sign-up needed.",
         paths=[tag("naat"), tag("naats"), tag("nasheed")]),
     "quran": dict(
         kind="genre", group="Islamic & spiritual", label="Quran",
@@ -60,7 +60,7 @@ TOPICS = {
         seo_title="Quran Radio Live — Quran Tilawat & Recitation Online 24/7 Free",
         description="Listen to live Quran radio free: Quran Pak tilawat by famous qaris, recitation with translation, 24 hours a day.",
         intro="Live Quran recitation by well-known qaris, with translations and Islamic programmes, around the clock. Keep the Quran playing at home, in the office or on the go.",
-        more="Also searched as Quran Pak live, Quran tilawat radio, Quran recitation online, Quran Sharif sunna, Holy Quran radio 24/7, Quran with Urdu translation and Arabic Quran radio.",
+        more="Also searched as Quran Pak live, Quran tilawat radio, Quran recitation online, Quran Sharif sunna, Holy Quran radio 24/7, Quran with Urdu translation, Arabic Quran radio, Quran Pak sunao, tilawat e Quran live and the Urdu words قرآن پاک, تلاوت قرآن and قرآن ریڈیو.",
         paths=[tag("quran"), tag("koran"), tag("quran recitation")]),
     "islamic": dict(
         kind="genre", group="Islamic & spiritual", label="Islamic",
@@ -102,7 +102,7 @@ TOPICS = {
         seo_title="Qawwali Radio Live — Nusrat Fateh Ali Khan, Sabri Brothers & More",
         description="Listen to live qawwali radio free: classic and modern qawwali from Nusrat Fateh Ali Khan, Sabri Brothers, Aziz Mian and more.",
         intro="Live qawwali from stations that love the tradition — the timeless voices of Nusrat Fateh Ali Khan, the Sabri Brothers, Aziz Mian, Rahat Fateh Ali Khan and today's qawwals.",
-        more="Also searched as qawwali live, Nusrat Fateh Ali Khan qawwali, Sufi qawwali radio, old qawwali, qawwali sunna and best qawwali online.",
+        more="Also searched as qawwali live, Nusrat Fateh Ali Khan qawwali, Sufi qawwali radio, old qawwali, qawwali sunna, qawwali sunao, best qawwali online and the Urdu words قوالی, صوفی قوالی and نصرت فتح علی خان.",
         paths=[tag("qawwali"), tag("qawali")]),
     "sufi": dict(
         kind="genre", group="Sufi, ghazal & classics", label="Sufi",
@@ -583,7 +583,7 @@ for _code, (_name, _cont, _native) in sorted(WORLD.items(), key=lambda kv: kv[1]
     TOPICS[_s] = dict(
         kind="country", group=_cont, code=_code, label=_name,
         h1=f"{_name} Radio — Live Radio Stations from {_name}", native=_native,
-        seo_title=(f"{_name} Radio Live — FM Stations Online Free" if len(_name) < 24 else f"{_name} Radio Live — Stations Online"),
+        seo_title=(f"Radio {_name} Live — {_name} FM & Online Stations" if len(_name) < 14 else f"Radio {_name} Live — Online Stations"),
         description=f"Listen to live radio from {_name} free: music, news and talk stations from {_name}, "
                     "playing right in your browser — no app and no sign-up.",
         intro=f"All the live radio stations from {_name} that play in your browser: music, news, talk, sports and "

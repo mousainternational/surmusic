@@ -153,3 +153,11 @@ def test_player_style_words_are_on_the_home_page(client):
     home = client.get("/").get_data(as_text=True)
     for word in ("neon music player", "vinyl record player", "glass music player", "EDM equalizer", "audio visualizer"):
         assert word in home
+
+
+def test_indexnow_key_file(client, app):
+    from app import indexnow
+    key = indexnow.key_for(app.config["SECRET_KEY"])
+    r = client.get(f"/{key}.txt")
+    assert r.status_code == 200 and r.get_data(as_text=True) == key
+    assert client.get("/" + "a" * 32 + ".txt").status_code == 404

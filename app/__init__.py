@@ -16,7 +16,7 @@ from .security import csp_nonce, csrf_protect, csrf_token, current_user, securit
 from .settings import ads_active, get_settings
 from .util import human_size, render_markdown, valid_email
 
-__version__ = "1.7.41"
+__version__ = "1.7.42"
 
 
 def create_app(overrides=None):
@@ -46,6 +46,9 @@ def create_app(overrides=None):
     _apply_setting_changes(app)
     from . import geo as _geo
     _geo.start_auto_update(app)
+    app.config["APP_VERSION"] = __version__
+    from . import indexnow as _indexnow
+    _indexnow.start(app)
 
     from .admin import bp as admin_bp
     from .auth import bp as auth_bp

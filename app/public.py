@@ -877,6 +877,15 @@ def media(name):
     return resp
 
 
+@bp.route("/<key>.txt")
+def indexnow_key(key):
+    """IndexNow ownership proof: the file name and the text inside are the same key."""
+    from . import indexnow
+    if len(key) == 32 and key == indexnow.key_for(current_app.config["SECRET_KEY"]):
+        return key, 200, {"Content-Type": "text/plain; charset=utf-8"}
+    abort(404)
+
+
 @bp.route("/ads.txt")
 @bp.route("/app-ads.txt")                # the same publisher lines authorise the Android app's AdMob ads
 def ads_txt():
