@@ -27,7 +27,7 @@ If you sign up we store your email address, display name, a securely hashed pass
 
 ### Android app: ads in the free version
 
-The free version of the Sur Music Android app shows a small banner ad from Google AdMob. Google may use your device's advertising ID to choose ads. In Europe and the UK you are first asked for your consent, and on any phone you can reset or turn off personalised ads in Settings → Google → Ads. Sur Music Pro (paid) shows no ads. We do not receive your advertising ID.
+The free version of the Sur Music Android app shows two small banner ads (top and bottom) from Google AdMob. Google may use your device's advertising ID to choose ads. In Europe and the UK you are first asked for your consent, and on any phone you can reset or turn off personalised ads in Settings → Google → Ads. Sur Music Pro (paid) shows no ads. We do not receive your advertising ID.
 
 ### Listening and activity
 
