@@ -199,3 +199,24 @@ def test_long_lists_are_paged(client, monkeypatch):
     assert p3.count('<li class="st') == 30 and "noindex" in p3.split("</head>")[0]
     assert client.get("/genre/ghazal?page=99").status_code == 200       # too high a page → the last one
     assert client.get("/genre/ghazal?page=abc").status_code == 200
+
+
+def test_ai_and_search_optimisation(client, monkeypatch):
+    import json as _json
+    from app import radio
+    fake = [{"uuid": f"id{i:04d}", "name": f"Station {i}", "url": "https://x.example/s", "favicon": "",
+             "country": "Qatar", "tags": "ghazal", "bitrate": 128, "clicks": 100 - i} for i in range(12)]
+    monkeypatch.setattr(radio, "genre_stations", lambda slug: fake)
+    html = client.get("/genre/ghazal").get_data(as_text=True)
+    assert '<meta name="keywords" content="Ghazal radio' in html
+    blocks = [_json.loads(x) for x in re.findall(r'<script type="application/ld\+json">(.*?)</script>', html, re.S)]
+    kinds = {b["@type"] for b in blocks}
+    assert {"BreadcrumbList", "CollectionPage", "FAQPage"} <= kinds
+    coll = next(b for b in blocks if b["@type"] == "CollectionPage")
+    assert coll["mainEntity"]["numberOfItems"] == 12
+    assert "Is Ghazal radio free to listen to?" in html and "Station 0, Station 1, Station 2" in html
+    robots = client.get("/robots.txt").get_data(as_text=True)
+    assert "User-agent: GPTBot" in robots and "User-agent: ClaudeBot" in robots and "Disallow: /admin" in robots
+    assert robots.strip().endswith("/sitemap.xml")
+    llms = client.get("/llms.txt").get_data(as_text=True)
+    assert "## Radio by type" in llms and "/genre/naat" in llms and "Facts for answers" in llms

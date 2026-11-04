@@ -187,6 +187,7 @@ DEFAULTS = {
     "seo_default_description": "Sur Music: free live radio from the USA, UK, UAE, Pakistan, India and 200+ countries. Quran, Naat, Qawwali, Bollywood, Hollywood and news. No app, no sign-up.",
     "seo_og_image": "",
     "google_site_verification": "",
+    "bing_site_verification": "",
     "page_seo": "{}",
     "analytics_provider": "none",
     "analytics_domain": "",

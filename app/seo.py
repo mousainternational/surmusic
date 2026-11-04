@@ -53,6 +53,7 @@ def build_meta(title=None, description=None, page=None, noindex=False, canonical
         "noindex": noindex,
         "site_name": s["site_full_name"],
         "google_verification": s.get("google_site_verification", ""),
+        "bing_verification": s.get("bing_site_verification", ""),
     }
 
 
@@ -184,3 +185,39 @@ def article_ld(post, author):
         "mainEntityOfPage": absolute(f"/blog/{post['slug']}"),
         "image": absolute(url_for("static", filename="img/og-default.png")),
     }
+
+
+def collection_ld(name, description, path, stations, limit=20):
+    """CollectionPage + ItemList of the stations on a genre / country page (helps Google and AI answer engines)."""
+    items = []
+    for i, st in enumerate(stations[:limit], 1):
+        if not st.get("uuid"):
+            continue
+        import re as _re
+        slug = _re.sub(r"[^a-z0-9]+", "-", (st.get("name") or "station").lower()).strip("-")[:60] or "station"
+        items.append({"@type": "ListItem", "position": i, "name": st.get("name", ""),
+                      "url": absolute(f"/station/{st['uuid']}/{slug}")})
+    data = {"@context": "https://schema.org", "@type": "CollectionPage", "name": name, "url": absolute(path),
+            "description": plain_text(description, 300), "inLanguage": "en", "isPartOf": {"@type": "WebSite", "name": "Sur Music", "url": absolute("/")}}
+    if items:
+        data["mainEntity"] = {"@type": "ItemList", "numberOfItems": len(items), "itemListElement": items}
+    return data
+
+
+def faq_items_ld(items):
+    """FAQPage from [(question, answer), …] that are also shown on the page."""
+    if not items:
+        return None
+    return {"@context": "https://schema.org", "@type": "FAQPage",
+            "mainEntity": [{"@type": "Question", "name": q,
+                            "acceptedAnswer": {"@type": "Answer", "text": plain_text(a, 500)}} for q, a in items]}
+
+
+def topic_keywords(info):
+    """A short keywords list (Google ignores it; some smaller search engines still read it)."""
+    label = info["label"]
+    words = [f"{label} radio", f"{label} radio live", f"{label} radio online", f"listen {label} radio free",
+             f"free {label} radio stations", "live radio", "online radio"]
+    if info.get("native"):
+        words.append(info["native"].split("·")[0].strip())
+    return ", ".join(words)[:250]

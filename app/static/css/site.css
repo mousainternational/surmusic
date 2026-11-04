@@ -1113,3 +1113,7 @@ body.guest .st-fav, body.guest .pl-fav, body.guest #np-fav, body.guest .hd-fav {
 }
 @media (max-width: 400px) { .np-style select { padding: 9px 30px 9px 12px; font-size: .86rem; } .np-chip { padding: 9px 10px; font-size: .82rem; } }
 .np-chip { white-space: nowrap; }
+
+.topic-faq details { border-top: 1px solid var(--border); padding: 10px 0; }
+.topic-faq summary { cursor: pointer; font-weight: 600; }
+.topic-faq p { margin: 8px 0 0; color: var(--muted); }

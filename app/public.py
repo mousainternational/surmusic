@@ -20,7 +20,7 @@ from . import blog as blog_data
 from . import islam as islam_data
 from . import markets
 from . import trends
-from .seo import (absolute, article_ld, breadcrumb_ld, build_meta, faq_ld, media_url, organization_ld, page_ld, station_ld, webapp_ld, android_app_ld,
+from .seo import (absolute, article_ld, breadcrumb_ld, build_meta, collection_ld, faq_items_ld, faq_ld, topic_keywords, media_url, organization_ld, page_ld, station_ld, webapp_ld, android_app_ld,
                   website_ld)
 from .settings import (ADSENSE_CLIENT_RE, ads_active, affiliate_offers, donation_method, get_settings, is_blocked,
                        offers_for, sponsored_stations, without_blocked)
@@ -341,16 +341,29 @@ def _topic_page(slug):
     except radio.RadioError as exc:
         stations, error = [], str(exc)
     total = len(stations)
+    all_stations = stations
     stations, page_no, pages = _paginate(stations)
     meta = build_meta(info["seo_title"], info["description"], page=f"genre-{slug}",
                       noindex=(not stations) or page_no > 1)      # an empty page (or page 2, 3 …) is not shown in Google
+    meta["keywords"] = topic_keywords(info)
+    label = info["label"]
+    top = [x["name"] for x in all_stations[:3] if x.get("name")]
+    faqs = [
+        (f"Is {label} radio free to listen to?", f"Yes. Every {label} radio station on Sur Music plays free in your web browser."),
+        (f"How do I listen to {label} radio online?", f"Open this page, choose a {label} station and press play. It works on a phone, tablet or computer."),
+    ]
+    if top:
+        faqs.append((f"Which are the most popular {label} radio stations?", "Right now: " + ", ".join(top) + "."))
     crumbs = [("Home", "/"), ("All radio", "/radio-stations")]
     if info["kind"] == "country" and info["group"] in CONTINENTS:
         crumbs.append((CONTINENTS[info["group"]][0], f"/continent/{info['group']}"))
     crumbs.append((info["h1"].split(" — ")[0], topic_path(slug)))
     trending = trends.top(8) if slug in ("sports", "news", "english-news", "talk", "pop") else []
+    ld = [breadcrumb_ld(crumbs), collection_ld(info["h1"], info["description"], topic_path(slug), all_stations)]
+    if page_no == 1 and faqs:
+        ld.append(faq_items_ld(faqs))
     return render_template("category.html", meta=meta, stations=protect(stations), error=error, cat=slug,
-                           info=info, genre=slug, crumbs=crumbs, ld=[breadcrumb_ld(crumbs)], trending=trending,
+                           info=info, genre=slug, crumbs=crumbs, ld=ld, trending=trending, faqs=faqs if page_no == 1 else [],
                            total=total, page_no=page_no, pages=pages, page_base=request.path)
 
 
@@ -938,9 +951,16 @@ def ads_txt():
 @bp.route("/robots.txt")
 def robots():
     site = current_app.config["SITE_URL"]
-    body = ("User-agent: *\nDisallow: /admin\nDisallow: /account\nDisallow: /api/\nDisallow: /login\n"
-            "Disallow: /signup\nDisallow: /forgot\nDisallow: /reset/\nDisallow: /search\nAllow: /\n\n"
-            f"Sitemap: {site}/sitemap.xml\n")
+    rules = ("Disallow: /admin\nDisallow: /account\nDisallow: /api/\nDisallow: /login\nDisallow: /signup\n"
+             "Disallow: /forgot\nDisallow: /reset/\nDisallow: /search\nAllow: /\n")
+    # Search and AI-answer crawlers are named on purpose (a named group must repeat the rules).
+    bots = ["Googlebot", "Bingbot", "OAI-SearchBot", "ChatGPT-User", "GPTBot", "ClaudeBot", "Claude-SearchBot",
+            "Claude-User", "PerplexityBot", "Perplexity-User", "Google-Extended", "Applebot", "Applebot-Extended",
+            "DuckDuckBot", "YandexBot", "Amazonbot"]
+    body = "User-agent: *\n" + rules + "\n"
+    for b in bots:
+        body += f"User-agent: {b}\n" + rules + "\n"
+    body += f"Sitemap: {site}/sitemap.xml\n"
     return Response(body, mimetype="text/plain")
 
 
@@ -1030,30 +1050,41 @@ def blog_post(slug):
 
 @bp.route("/llms.txt")
 def llms_txt():
-    """A short plain-text summary of the site for AI assistants and search tools."""
+    """A plain-text summary of the site for AI assistants and answer engines (llms.txt)."""
     site = current_app.config["SITE_URL"]
     s = get_settings()
+    types = [(k, v) for k, v in GENRE_PAGES.items() if not radio.known_empty(k)][:40]
+    big = ["pakistan", "india", "usa", "uk", "uae", "saudi-arabia", "canada", "australia", "germany", "france", "turkey",
+           "bangladesh", "afghanistan", "qatar", "oman"]
     body = (f"# {s['site_full_name']}\n\n"
-            "> Free online radio: live stations from more than 200 countries, including Quran, Naat, Qawwali, "
-            "news, Bollywood, Lollywood and English hits. No app and no sign-up. Works in any browser and with "
-            "screen readers.\n\n"
-            f"Made by {s['owner_name']}.\n\n"
+            "> Free online radio in the browser: thousands of live stations from more than 200 countries, including "
+            "Quran, Naat, Qawwali, Ghazal, news, Bollywood, Lollywood and English hits. Works on any phone or "
+            "computer, with screen readers. An Android app (free with ads, Pro without ads) is also available.\n\n"
+            f"Made by {s['owner_name']}. Website: {site}\n\n"
+            "## Facts for answers\n"
+            "- Listening on the website is free. Stations are public internet radio streams; Sur Music does not own them.\n"
+            "- Each station has its own page with details and a play button: /station/<id>/<name>.\n"
+            "- Station lists come from the open Radio Browser directory and update through the day.\n"
+            "- Android app: free with ads; Sur Music Pro (no ads, all themes) is US$5 per year after a free trial.\n\n"
             "## Main pages\n"
             f"- [All radio stations by country and type]({site}/radio-stations)\n"
-            f"- [Bollywood radio]({site}/bollywood)\n"
-            f"- [Pakistani radio]({site}/lollywood)\n"
-            f"- [English radio]({site}/hollywood)\n"
             f"- [Islam: Quran, Naat and Qawwali]({site}/islam)\n"
-            f"- [Gold, Bitcoin and dollar rates]({site}/markets)\n"
-            f"- [Trending searches now]({site}/trending)\n"
             f"- [Live news radio: elections, Europe, war, weather]({site}/live-news)\n"
-            f"- [Quran radio]({site}/genre/quran)\n"
-            f"- [Naat radio]({site}/genre/naat)\n"
+            f"- [Trending searches now]({site}/trending)\n"
+            f"- [Gold, Bitcoin and dollar rates]({site}/markets)\n"
             f"- [Guides and articles]({site}/blog)\n"
+            f"- [Android app and Chrome extension]({site}/download)\n"
             f"- [Accessibility]({site}/accessibility)\n"
             f"- [About]({site}/about)\n"
-            f"- [Sitemap]({site}/sitemap.xml)\n")
-    return Response(body, mimetype="text/plain")
+            f"- [Sitemap]({site}/sitemap.xml)\n\n"
+            "## Radio by type\n")
+    for k, v in types:
+        body += f"- [{v['label']} radio]({site}{topic_path(k)})\n"
+    body += "\n## Radio by country\n"
+    for k in big:
+        if k in COUNTRY_PAGES:
+            body += f"- [{COUNTRY_PAGES[k]['label']} radio]({site}{topic_path(k)})\n"
+    return Response(body, mimetype="text/plain; charset=utf-8")
 
 
 @bp.route("/sitemap.xml")

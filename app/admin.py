@@ -251,7 +251,7 @@ SECTIONS = {
                 "hero_subtitle", "about_md", "contact_email", "support_url"],
     "accounts": ["play_requires_login", "signup_enabled", "require_email_verification"],
     "social": ["social_facebook", "social_youtube", "social_x", "social_instagram", "social_tiktok"],
-    "seo": ["seo_default_title", "seo_default_description", "google_site_verification", "analytics_provider",
+    "seo": ["seo_default_title", "seo_default_description", "google_site_verification", "bing_site_verification", "analytics_provider",
             "analytics_domain"],
     "policies": ["faq_md", "privacy_md", "terms_md", "disclaimer_md", "donation_disclaimer_md", "cookies_md",
                  "policies_updated"],
@@ -279,7 +279,7 @@ def settings():
                 errors.append("Contact email is not a valid address (it must contain @ and a domain).")
             if key == "analytics_provider" and val not in ("none", "plausible"):
                 val = "none"
-            if key == "google_site_verification":
+            if key in ("google_site_verification", "bing_site_verification"):
                 val = "".join(ch for ch in val if ch.isalnum() or ch in "-_")[:100]
             values[key] = val
         if section == "seo":

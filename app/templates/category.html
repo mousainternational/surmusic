@@ -30,6 +30,10 @@
         {% if page_no < pages %}<a class="btn btn-sm" href="{{ page_base }}?page={{ page_no + 1 }}" rel="next">Next →</a>{% endif %}
       </nav>{% endif %}
       {% endif %}
+      {% if faqs %}<section class="topic-faq card">
+        <h2 class="h3">Questions about {{ info.label }} radio</h2>
+        {% for q, a in faqs %}<details><summary>{{ q }}</summary><p>{{ a }}</p></details>{% endfor %}
+      </section>{% endif %}
       {% if info.more %}<section class="topic-more card">
         <h2 class="h3">About {{ info.h1.split(' — ')[0] }}</h2>
         <p>{{ info.more }}</p>
