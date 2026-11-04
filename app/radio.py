@@ -17,7 +17,7 @@ from flask import current_app
 from .db import get_db, utcnow
 from .util import valid_url
 
-COMMON = "hidebroken=true&order=clickcount&reverse=true&limit=100"
+COMMON = "hidebroken=true&order=clickcount&reverse=true&limit=250"
 CATEGORIES = {
     "bollywood": {
         "title": "Bollywood Radio",
@@ -199,7 +199,7 @@ def _merge(paths):
     for r in results:
         if isinstance(r, list):
             merged.extend(r)
-    return normalize(merged)[:120]
+    return normalize(merged)[:250]
 
 
 def category_stations(cat):

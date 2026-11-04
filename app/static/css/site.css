@@ -1099,3 +1099,5 @@ html.np-lock, html.np-lock body { overflow: hidden; }
 
 /* Favourites (the ★ buttons and the header link) are for signed-in members only */
 body.guest .st-fav, body.guest .pl-fav, body.guest #np-fav, body.guest .hd-fav { display: none !important; }
+
+.pager { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0; align-items: center; }

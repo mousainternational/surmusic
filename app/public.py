@@ -320,21 +320,38 @@ def country_page(slug):
     return _topic_page(slug)
 
 
+PAGE_SIZE = 100
+
+
+def _paginate(stations):
+    """100 stations per page (?page=2 …) so long lists stay fast; every station is still in the sitemap."""
+    pages = max(1, -(-len(stations) // PAGE_SIZE))
+    try:
+        page = int(request.args.get("page", 1))
+    except ValueError:
+        page = 1
+    page = min(max(page, 1), pages)
+    return stations[(page - 1) * PAGE_SIZE: page * PAGE_SIZE], page, pages
+
+
 def _topic_page(slug):
     info = TOPICS[slug]
     try:
         stations, error = without_blocked(radio.genre_stations(slug)), None
     except radio.RadioError as exc:
         stations, error = [], str(exc)
+    total = len(stations)
+    stations, page_no, pages = _paginate(stations)
     meta = build_meta(info["seo_title"], info["description"], page=f"genre-{slug}",
-                      noindex=not stations)               # an empty page is not shown in Google
+                      noindex=(not stations) or page_no > 1)      # an empty page (or page 2, 3 …) is not shown in Google
     crumbs = [("Home", "/"), ("All radio", "/radio-stations")]
     if info["kind"] == "country" and info["group"] in CONTINENTS:
         crumbs.append((CONTINENTS[info["group"]][0], f"/continent/{info['group']}"))
     crumbs.append((info["h1"].split(" — ")[0], topic_path(slug)))
     trending = trends.top(8) if slug in ("sports", "news", "english-news", "talk", "pop") else []
     return render_template("category.html", meta=meta, stations=protect(stations), error=error, cat=slug,
-                           info=info, genre=slug, crumbs=crumbs, ld=[breadcrumb_ld(crumbs)], trending=trending)
+                           info=info, genre=slug, crumbs=crumbs, ld=[breadcrumb_ld(crumbs)], trending=trending,
+                           total=total, page_no=page_no, pages=pages, page_base=request.path)
 
 
 def _listed_countries(continent, minimum=3):
@@ -1054,15 +1071,17 @@ def sitemap():
     pages += [topic_path(k) for c in CONTINENTS for k, _, _ in _listed_countries(c)] + ["/deals"]
     seen = set()
     keys = {"cat:" + c for c in radio.CATEGORIES} | {"genre:" + g for g in radio.GENRES}
-    for row in get_db().all("SELECT cache_key, body FROM station_cache"):    # one query for every saved list
-        if row["cache_key"] not in keys:
+    db = get_db()
+    for key_row in db.all("SELECT cache_key FROM station_cache"):             # one list at a time: low memory
+        if key_row["cache_key"] not in keys:
             continue
+        row = db.one("SELECT body FROM station_cache WHERE cache_key = ?", (key_row["cache_key"],))
         try:
             stations = json.loads(row["body"]) or []
-        except ValueError:
+        except (ValueError, TypeError):
             continue
         for st in without_blocked(stations):
-            if isinstance(st, dict) and st.get("uuid") and st["uuid"] not in seen and len(seen) < 20000:
+            if isinstance(st, dict) and st.get("uuid") and st["uuid"] not in seen and len(seen) < 45000:
                 seen.add(st["uuid"])
                 pages.append(station_path(st))
     parts = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
