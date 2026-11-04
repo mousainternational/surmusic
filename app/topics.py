@@ -24,6 +24,10 @@ def tag(t, extra=""):
     return f"/json/stations/search?tag={urllib.parse.quote(t)}{extra}&{COMMON}"
 
 
+def name(n, extra=""):
+    return f"/json/stations/search?name={urllib.parse.quote(n)}{extra}&{COMMON}"
+
+
 def lang(language, extra=""):
     return f"/json/stations/search?language={urllib.parse.quote(language)}{extra}&{COMMON}"
 
@@ -119,7 +123,8 @@ TOPICS = {
         description="Listen to live ghazal radio free: Urdu and Hindi ghazals by Mehdi Hassan, Ghulam Ali, Jagjit Singh, Farida Khanum and more.",
         intro="Slow down with live ghazal radio: Urdu and Hindi poetry sung by Mehdi Hassan, Ghulam Ali, Jagjit Singh, Farida Khanum, Iqbal Bano and other masters.",
         more="Also searched as ghazal live, Urdu ghazal, Mehdi Hassan ghazal, Jagjit Singh ghazals, old ghazals and ghazal radio online.",
-        paths=[tag("ghazal"), tag("ghazals")]),
+        paths=[tag("ghazal"), tag("ghazals"), tag("gazal"), tag("gazals"), tag("urdu ghazal"), tag("jagjit singh"),
+               name("ghazal"), name("gazal")]),
     "old-songs": dict(
         kind="genre", group="Sufi, ghazal & classics", label="Old songs",
         h1="Old Songs Radio — Purane Geet Live", native="پرانے گانے · पुराने गाने",
