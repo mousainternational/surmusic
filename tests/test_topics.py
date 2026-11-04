@@ -224,3 +224,16 @@ def test_ai_and_search_optimisation(client, monkeypatch):
     assert robots.strip().endswith("/sitemap.xml")
     llms = client.get("/llms.txt").get_data(as_text=True)
     assert "## Radio by type" in llms and "/genre/naat" in llms and "Facts for answers" in llms
+
+
+def test_every_title_is_at_most_60_characters(client):
+    from app.topics import TOPICS
+    for slug in ("home", ):
+        pass
+    for slug, t in TOPICS.items():
+        assert len(t["seo_title"]) <= 60, (slug, len(t["seo_title"]))
+    for path in ("/", "/bollywood", "/lollywood", "/hollywood", "/genre/naat", "/genre/quran", "/genre/qawwali",
+                 "/country/pakistan", "/download", "/radio-stations", "/islam", "/live-news", "/blog"):
+        html = client.get(path).get_data(as_text=True)
+        title = re.search(r"<title>(.*?)</title>", html, re.S).group(1)
+        assert len(title.replace("&amp;", "&")) <= 60, (path, title)

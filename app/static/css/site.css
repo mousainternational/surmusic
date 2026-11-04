@@ -1138,3 +1138,14 @@ body.guest .st-fav, body.guest .pl-fav, body.guest #np-fav, body.guest .hd-fav {
 .hero2-grid { grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 960px) { .hero2-grid { grid-template-columns: 1.3fr 1fr; } }
 .hero2-grid > * { min-width: 0; }
+
+/* admin side menu: long names wrap onto a second line instead of being cut off */
+@media (min-width: 960px) {
+  .admin-shell { grid-template-columns: 270px minmax(0, 1fr); }
+  .admin-links a { white-space: normal; overflow-wrap: anywhere; line-height: 1.3; }
+}
+@media (max-width: 959px) {
+  .admin-links { mask-image: none; -webkit-mask-image: none; flex-wrap: wrap; overflow-x: visible; }
+  .admin-links a { white-space: normal; }
+}
+@media (max-width: 959px) { .admin-nav { position: static; } .admin-links a { min-height: 36px; padding: 6px 10px; } }

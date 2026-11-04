@@ -53,7 +53,7 @@ TOPICS = {
     "naat": dict(
         kind="genre", group="Islamic & spiritual", label="Naat",
         h1="Naat Radio — Live Naat Sharif & Hamd", native="نعت شریف ریڈیو",
-        seo_title="Naat Radio Live — Naat Sharif, Hamd & Islamic Nasheed Online Free",
+        seo_title="Naat Radio Live — Naat Sharif, Hamd & Nasheed Online Free",
         description="Listen to live naat radio free: Naat Sharif, Hamd and nasheed in Urdu, Punjabi and Arabic, around the clock.",
         intro="Live naat stations playing Naat Sharif, Hamd and nasheed day and night — beautiful recitations in Urdu, Punjabi, Arabic and more. Choose a station and let it play while you work, study or rest.",
         more="People find this page searching for naat sharif live, naat radio online, new naats, Urdu naat, Punjabi naat, hamd o naat, Islamic nasheed radio, naat sharif sunna, naat sharif sunao, new naat 2026 and the Urdu words نعت شریف, نعت ریڈیو and حمد و نعت. Every station here is free — no app and no sign-up needed.",
@@ -61,7 +61,7 @@ TOPICS = {
     "quran": dict(
         kind="genre", group="Islamic & spiritual", label="Quran",
         h1="Quran Radio — Live Quran Tilawat & Recitation", native="قرآن پاک تلاوت ریڈیو",
-        seo_title="Quran Radio Live — Quran Tilawat & Recitation Online 24/7 Free",
+        seo_title="Quran Radio Live — Quran Tilawat & Recitation 24/7 Free",
         description="Listen to live Quran radio free: Quran Pak tilawat by famous qaris, recitation with translation, 24 hours a day.",
         intro="Live Quran recitation by well-known qaris, with translations and Islamic programmes, around the clock. Keep the Quran playing at home, in the office or on the go.",
         more="Also searched as Quran Pak live, Quran tilawat radio, Quran recitation online, Quran Sharif sunna, Holy Quran radio 24/7, Quran with Urdu translation, Arabic Quran radio, Quran Pak sunao, tilawat e Quran live and the Urdu words قرآن پاک, تلاوت قرآن and قرآن ریڈیو.",
@@ -87,7 +87,7 @@ TOPICS = {
     "bayan": dict(
         kind="genre", group="Islamic & spiritual", label="Bayan & Taqreer",
         h1="Bayan & Taqreer Radio — Live Urdu Islamic Lectures", native="بیان اور تقریر ریڈیو",
-        seo_title="Bayan Radio Live — Urdu Bayan, Taqreer, Dars & Islamic Lectures",
+        seo_title="Bayan Radio Live — Urdu Bayan, Taqreer & Islamic Dars",
         description="Listen to live bayan radio free: Urdu bayan, taqreer, dars, Islamic lectures and religious talks from stations around the world.",
         intro="Live bayan and taqreer in Urdu and other languages: dars, Islamic lectures, Friday talks and religious programmes. Stations are listed by what they play; Sur Music does not endorse any one school of thought.",
         more="Also searched as Urdu bayan live, bayan radio, taqreer live, Islamic lectures online, dars e Quran, jumma bayan and the Urdu words بیان, تقریر and درس.",
@@ -148,7 +148,7 @@ TOPICS = {
     "qawwali": dict(
         kind="genre", group="Sufi, ghazal & classics", label="Qawwali",
         h1="Qawwali Radio — Live Sufi Qawwali", native="قوالی ریڈیو",
-        seo_title="Qawwali Radio Live — Nusrat Fateh Ali Khan, Sabri Brothers & More",
+        seo_title="Qawwali Radio Live — Nusrat Fateh Ali Khan & Sabri Brothers",
         description="Listen to live qawwali radio free: classic and modern qawwali from Nusrat Fateh Ali Khan, Sabri Brothers, Aziz Mian and more.",
         intro="Live qawwali from stations that love the tradition — the timeless voices of Nusrat Fateh Ali Khan, the Sabri Brothers, Aziz Mian, Rahat Fateh Ali Khan and today's qawwals.",
         more="Also searched as qawwali live, Nusrat Fateh Ali Khan qawwali, Sufi qawwali radio, old qawwali, qawwali sunna, qawwali sunao, best qawwali online and the Urdu words قوالی, صوفی قوالی and نصرت فتح علی خان.",
@@ -181,7 +181,7 @@ TOPICS = {
     "indian-classical": dict(
         kind="genre", group="Sufi, ghazal & classics", label="Classical (raag)",
         h1="Indian Classical Radio — Live Raag, Hindustani & Carnatic", native="शास्त्रीय संगीत",
-        seo_title="Indian Classical Music Radio Live — Raag, Hindustani & Carnatic",
+        seo_title="Indian Classical Radio Live — Raag, Hindustani & Carnatic",
         description="Listen to live Indian classical music radio free: raag, Hindustani vocal and instrumental, sitar, Carnatic music.",
         intro="Live classical music of the subcontinent: raag and khayal, sitar, sarod, flute and Carnatic concerts.",
         more="Also searched as raag radio, Hindustani classical music, sitar music, Carnatic radio and classical music India.",
@@ -281,7 +281,7 @@ TOPICS = {
     "sports": dict(
         kind="genre", group="News, talk & sports", label="Sports & cricket",
         h1="Sports & Cricket Radio — Live Commentary & Talk", native="کرکٹ ریڈیو",
-        seo_title="Sports & Cricket Radio Live — Commentary, Football & Sports Talk",
+        seo_title="Sports & Cricket Radio Live — Commentary & Sports Talk",
         description="Listen to live sports radio free: cricket, football and sports talk stations with live commentary when matches are on.",
         intro="Live sports radio: cricket and football talk, sports news and live commentary (when the station carries the match).",
         more="Also searched as cricket radio live, cricket commentary radio, sports radio online and football radio.",
@@ -348,7 +348,7 @@ TOPICS = {
     "classical": dict(
         kind="genre", group="World music", label="Classical",
         h1="Classical Music Radio — Live Orchestra & Piano", native="",
-        seo_title="Classical Music Radio Live — Mozart, Beethoven, Piano & Orchestra",
+        seo_title="Classical Music Radio Live — Mozart, Beethoven & Piano",
         description="Listen to live classical music radio free: orchestra, piano, opera and relaxing classical music.",
         intro="Live classical radio — symphonies, piano, violin and opera from Mozart, Beethoven, Bach and more. Great for focus and calm.",
         more="Also searched as classical radio online, piano music radio and music for studying.",
@@ -397,7 +397,7 @@ TOPICS = {
     "christian": dict(
         kind="genre", group="Islamic & spiritual", label="Christian",
         h1="Christian Radio — Live Worship, Gospel & Sermons", native="",
-        seo_title="Christian Radio Live — Worship Music, Gospel & Sermons Online",
+        seo_title="Christian Radio Live — Worship, Gospel & Sermons Online",
         description="Listen to live Christian radio free: worship music, gospel, contemporary Christian hits, sermons and Bible teaching.",
         intro="Live Christian radio — praise and worship, gospel, contemporary Christian music, hymns, sermons and Bible teaching from stations around the world.",
         more="Also searched as Christian music radio, gospel radio live, worship radio and Bible radio.",
@@ -454,7 +454,7 @@ TOPICS = {
     "jewish": dict(
         kind="genre", group="Islamic & spiritual", label="Jewish & Hebrew",
         h1="Jewish Radio — Live Hebrew & Jewish Music", native="רדיו יהודי",
-        seo_title="Jewish Radio Live — Hebrew Songs, Jewish Music & Israeli Radio",
+        seo_title="Jewish Radio Live — Hebrew Songs & Israeli Radio Online",
         description="Listen to live Jewish radio free: Hebrew songs, Jewish and Hasidic music, Israeli pop and Torah programmes.",
         intro="Live Jewish and Hebrew radio — Israeli pop, Hasidic and traditional Jewish music, and Torah and community programmes.",
         more="Also searched as Jewish music radio, Hebrew radio, Israeli radio online and רדיו בשידור חי.",
@@ -666,7 +666,8 @@ for _code, (_name, _cont, _native) in sorted(WORLD.items(), key=lambda kv: kv[1]
     TOPICS[_s] = dict(
         kind="country", group=_cont, code=_code, label=_name,
         h1=f"{_name} Radio — Live Radio Stations from {_name}", native=_native,
-        seo_title=(f"Radio {_name} Live — {_name} FM & Online Stations" if len(_name) < 14 else f"Radio {_name} Live — Online Stations"),
+        seo_title=(f"Radio {_name} Live — {_name} FM & Online Stations" if len(_name) < 12 else
+                   (f"Radio {_name} Live — Online Stations" if len(_name) <= 31 else f"Radio {_name} Live")),
         description=f"Listen to live radio from {_name} free: music, news and talk stations from {_name}, "
                     "playing right in your browser — no app and no sign-up.",
         intro=f"All the live radio stations from {_name} that play in your browser: music, news, talk, sports and "

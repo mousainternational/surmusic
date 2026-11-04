@@ -16,16 +16,19 @@ def media_url(name, absolute_url=False):
     return absolute(path) if absolute_url else path
 
 
-def fit_title(title, brand, limit=65):
-    """Add the brand name only while the title still fits in a Google result (about 60-65 characters).
-    A longer title keeps its keywords but loses the brand; a very long one keeps just its first part."""
+def fit_title(title, brand, limit=60):
+    """A title of at most 60 characters (what Google shows in full). The brand name is added only while it still fits;
+    a longer title keeps its first part and its keywords."""
     full = f"{title} | {brand}"
     if len(full) <= limit:
         return full
-    if len(title) <= limit + 3:
+    if len(title) <= limit:
         return title
     head = title.split(" — ")[0]
-    return f"{head} | {brand}" if len(head) + len(brand) + 3 <= limit else head
+    if len(head) <= limit:
+        return f"{head} | {brand}" if len(head) + len(brand) + 3 <= limit else head
+    cut = head[:limit].rsplit(" ", 1)[0]
+    return cut.rstrip(" ,&-:|")
 
 
 def page_ld(kind, name, description=""):
