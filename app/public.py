@@ -75,6 +75,7 @@ def _chip_active(slug):
 def _nav_tabs(active=""):
     """The category tabs (Music, News, Sports …) with what opens under each. [{key,label,on,items:[(href,label,on)]}]"""
     from .topics import CAT_PAGES, NAV, TAB_COUNTRIES, TAB_OF, ISLAMIC_FAMILY
+    real = active
     slug = "islamic" if active in ISLAMIC_FAMILY else active
     if slug in COUNTRY_PAGES or request.path.startswith("/continent/"):
         current = "countries"
@@ -85,6 +86,7 @@ def _nav_tabs(active=""):
         items = []
         if key == "countries":
             items = [(f"/continent/{c}", CONTINENTS[c][0], request.path == f"/continent/{c}") for c in CONTINENTS]
+            items = [("/near-me", "Near me", False)] + items
             items += [(topic_path(c), TOPICS[c]["label"], c == slug) for c in TAB_COUNTRIES if c in TOPICS]
         else:
             for sl in slugs:
@@ -92,6 +94,11 @@ def _nav_tabs(active=""):
                     items.append((f"/{sl}", CAT_PAGES[sl], sl == slug))
                 elif sl in TOPICS and not radio.known_empty(sl):
                     items.append((topic_path(sl), TOPICS[sl]["label"], sl == slug))
+        if key == "religious" and slug == "islamic":          # inside Islamic: easy buttons for what it holds
+            islamic = [("islamic", "All Islamic"), ("quran", "Quran"), ("naat", "Naat & Hamd"), ("bayan", "Bayan & lectures"),
+                       ("pakistan-islamic", "Pakistan Islamic"), ("majlis", "Ahl-e-Bait & Noha")]
+            items = [(topic_path(k), lb, k == real) for k, lb in islamic if k in TOPICS and not radio.known_empty(k)] + \
+                    [i for i in items if i[0] != topic_path("islamic")]
         tabs.append({"key": key, "label": label, "on": key == current, "subs": items})
     return tabs
 
@@ -119,6 +126,16 @@ def visitor_country():
     return g.sm_cc
 
 
+@bp.route("/near-me")
+def near_me():
+    """Radio for the visitor's own country (from the connection's country, else the browser language)."""
+    from .topics import CODE_TO_COUNTRY
+    slug = CODE_TO_COUNTRY.get(visitor_country())
+    resp = redirect(topic_path(slug) if slug in TOPICS else "/radio-stations", code=302)
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
+
+
 @bp.app_template_global("chips_here")
 def _chips_here():
     from .topics import chips_for
@@ -130,7 +147,7 @@ _TYPE_GROUPS = [          # (key, icon, title, types)
                                               "country-music", "latin", "80s-90s", "reggae", "afrobeats", "k-pop",
                                               "metal", "old-songs", "comedy"]),
     ("religious", "🕌", "Religious", ["islamic", "christian", "bhajan", "gurbani", "jewish"]),
-    ("news", "📰", "News", ["news", "english-news", "hindi-news", "arabic-news", "business"]),
+    ("news", "📰", "News", ["news", "business"]),
     ("debates", "🎙️", "Debates and talk", ["debates", "talk"]),
     ("sports", "🏏", "Sports", ["sports", "cricket", "football"]),
     ("health", "🩺", "Health and calm", ["health", "meditation"]),
@@ -159,8 +176,8 @@ def _market_ticker():
 def _type_menu():
     """Every radio type in short groups: [(key, icon, title, [(href, label)])]. Nothing is left out."""
     languages = {s for _, slugs in _LANG_GROUPS for s in slugs}
-    from .topics import ISLAMIC_FAMILY
-    placed = {s for _, _, _, slugs in _TYPE_GROUPS for s in slugs} | languages | set(ISLAMIC_FAMILY)   # all of these live under "Islamic"
+    from .topics import ISLAMIC_FAMILY, SECT_PAGES
+    placed = {s for _, _, _, slugs in _TYPE_GROUPS for s in slugs} | languages | set(ISLAMIC_FAMILY) | set(SECT_PAGES)   # these live under "Islamic" / "News"
     out = [("film", "🎞️", "Film and pop radio", [("/bollywood", "Bollywood"), ("/lollywood", "Pakistani (Lollywood)"),
                                                   ("/hollywood", "English hits (Hollywood)")])]
     for key, icon, title, slugs in _TYPE_GROUPS:
@@ -510,8 +527,14 @@ def station_page(uuid, slug=None):
     if back_href != "/radio-stations" or key not in TOPICS:
         crumbs.append((back, back_href))
     crumbs.append((st["name"], want))
-    ld = [breadcrumb_ld(crumbs), station_ld(st, want)]
-    return render_template("station.html", meta=meta, st=protect([st])[0], similar=protect(similar), cat=key or "",
+    faqs = [
+        (f"How can I listen to {st['name']} live?", f"Press the play button on this page. {st['name']} plays straight in your browser on Sur Music — no app, no download and no sign-up."),
+        (f"Is {st['name']} free to listen to?", f"Yes. Listening to {st['name']} on Sur Music is free. The stream comes directly from the station's own server."),
+        (f"What does {st['name']} play?", f"{st['name']} is a radio station {('from ' + st['country'] + ' ') if st.get('country') else ''}playing {st.get('tags') or 'music and programmes'}."),
+        (f"What can I do if {st['name']} stops playing?", "Stations sometimes go offline or change their address. Wait a minute and press play again, or pick another station from the list of similar stations below."),
+    ]
+    ld = [breadcrumb_ld(crumbs), station_ld(st, want), faq_items_ld(faqs)]
+    return render_template("station.html", meta=meta, st=protect([st])[0], similar=protect(similar), cat=key or "", faqs=faqs,
                            back=back, back_href=back_href, crumbs=crumbs, ld=ld)
 
 
@@ -753,6 +776,19 @@ def api_stream():
     if is_blocked(st):
         return jsonify({"error": "removed"}), 410
     return jsonify({"url": st["url"]})
+
+
+@bp.route("/api/nowplaying", methods=["POST"])
+def api_nowplaying():
+    """The song that is on air right now (from the stream's own title information), or an empty string."""
+    if gate_active() and not current_user():
+        return jsonify({"title": ""})
+    if rate_limited("nowplaying", 60, 600):
+        return jsonify({"title": ""}), 429
+    st = _unlock(_json_body().get("station"))
+    if not st or is_blocked(st):
+        return jsonify({"title": ""})
+    return jsonify({"title": radio.now_playing(st["url"])})
 
 
 APP_LICENSE_IDLE_DAYS = 7          # a second phone may take over a subscription after 7 days of silence

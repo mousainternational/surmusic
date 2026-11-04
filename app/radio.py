@@ -17,7 +17,7 @@ from flask import current_app
 from .db import get_db, utcnow
 from .util import valid_url
 
-COMMON = "hidebroken=true&order=clickcount&reverse=true&limit=500"
+COMMON = "hidebroken=true&order=clickcount&reverse=true&limit=300"
 CATEGORIES = {
     "bollywood": {
         "title": "Bollywood Radio",
@@ -180,7 +180,14 @@ def _demo(paths):
     return normalize(raw)
 
 
-def _merge(paths):
+def _best(stations, cap):
+    """Keep the stations people really listen to (clicks), not the long tail: faster pages and fewer dead streams.
+    A small list is never emptied: at least the 30 best are always kept."""
+    good = [s for s in stations if (s.get("clicks") or 0) >= 5]
+    return (good if len(good) >= 30 else stations[:30])[:cap]
+
+
+def _merge(paths, per=None, cap=300):
     if current_app.config.get("RADIO_DEMO"):
         return _demo(paths)
     app = current_app._get_current_object()
@@ -192,15 +199,26 @@ def _merge(paths):
             except RadioError:
                 return None
 
-    with ThreadPoolExecutor(max_workers=3) as ex:
+    with ThreadPoolExecutor(max_workers=6) as ex:
         results = list(ex.map(run, paths))
     if all(r is None for r in results):
         raise RadioError("The radio directory is not reachable right now.")
     merged = []
     for r in results:
         if isinstance(r, list):
-            merged.extend(r)
-    return normalize(merged)[:500]
+            merged.extend(r[:per] if per else r)
+    return _best(normalize(merged), cap)
+
+
+# On these pages the stations named like this come first (Quran Majeed before everything else)
+_QURAN_WORDS = ("quran", "qur'an", "qur an", "koran", "قرآن", "قران", "tilawat", "majeed", "kareem")
+_FIRST = {"quran": _QURAN_WORDS, "islamic": _QURAN_WORDS}
+
+
+def _first(stations, words):
+    if not words:
+        return stations
+    return sorted(stations, key=lambda st: 0 if any(w in st["name"].lower() for w in words) else 1)
 
 
 def category_stations(cat):
@@ -213,7 +231,9 @@ def category_stations(cat):
 def genre_stations(slug):
     if slug not in GENRES:
         raise KeyError(slug)
-    return _cached(f"genre:{slug}", lambda: _merge(GENRES[slug]["paths"]),
+    t = _TOPICS.get(slug, {})
+    return _cached(f"genre:{slug}", lambda: _first(_merge(GENRES[slug]["paths"], t.get("per"), t.get("cap", 300)),
+                                                  _FIRST.get(slug)),
                    current_app.config["RADIO_CACHE_MINUTES"])
 
 
@@ -308,8 +328,12 @@ def search_stations(q):
     if len(q) < 2:
         return []
     enc = urllib.parse.quote(q)
-    return _cached(f"q:{q.lower()}", lambda: _merge([f"/json/stations/search?name={enc}&{COMMON}",
-                                                     f"/json/stations/search?tag={enc}&{COMMON}"])[:60], 15)
+    words = _QURAN_WORDS if q.lower() in ("quran", "qur'an", "koran", "quran majeed", "quran pak", "quran kareem",
+                                          "قرآن", "قران", "قرآن مجید", "قران مجید") else (q.lower(),)
+    paths = [f"/json/stations/search?name={enc}&{COMMON}", f"/json/stations/search?tag={enc}&{COMMON}"]
+    if words is _QURAN_WORDS:
+        paths.append(f"/json/stations/search?tag=quran&{COMMON}")
+    return _cached(f"q:{q.lower()}", lambda: _first(_merge(paths), words)[:60], 15)
 
 
 def clean_station(data):
@@ -365,3 +389,72 @@ def known_empty(key):
         if hit and value is not None:
             return not value
     return False
+
+
+# ---------------------------------------------------------------- "what is playing now" (the song name in the stream)
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, *a, **k):
+        return None
+
+
+def _public_host(host):
+    """True only when the host name resolves to public internet addresses (never our own network)."""
+    import ipaddress
+    import socket
+    try:
+        infos = socket.getaddrinfo(host, None)
+    except OSError:
+        return False
+    return bool(infos) and all(ipaddress.ip_address(i[4][0]).is_global for i in infos)
+
+
+def parse_icy(block):
+    """StreamTitle='Artist - Song'; → 'Artist - Song' ('' when empty)."""
+    import re as _re
+    text = block.rstrip(b"\0").decode("utf-8", "replace") if block else ""
+    m = _re.search(r"StreamTitle='(.*?)';", text, _re.S) or _re.search(r"StreamTitle='(.*)", text, _re.S)
+    return _text(m.group(1), 140) if m else ""
+
+
+def read_track(url, timeout=6, schemes=("https",)):
+    """Open the stream, ask for ICY metadata, read just past the first metadata block and close. '' when none."""
+    from urllib.parse import urlparse
+    u = urlparse(url or "")
+    if u.scheme not in schemes or not u.hostname or not _public_host(u.hostname):
+        return ""
+    req = urllib.request.Request(url, headers={"Icy-MetaData": "1", "User-Agent": _user_agent(), "Accept": "*/*"})
+    opener = urllib.request.build_opener(_NoRedirect())
+    try:
+        with opener.open(req, timeout=timeout) as r:
+            try:
+                every = int(r.headers.get("icy-metaint") or 0)
+            except ValueError:
+                every = 0
+            if not 0 < every <= 65536:
+                return ""
+            left = every
+            while left > 0:
+                chunk = r.read(min(left, 8192))
+                if not chunk:
+                    return ""
+                left -= len(chunk)
+            size = r.read(1)
+            if not size or size[0] == 0:
+                return ""
+            return parse_icy(r.read(size[0] * 16))
+    except Exception:
+        return ""
+
+
+def now_playing(url):
+    """The current song name for a stream, cached for 25 seconds so many listeners cost one request."""
+    from . import lowdb
+    key = "np:" + url
+    if lowdb.enabled():
+        hit, value = lowdb.cache_get(key)
+        if hit:
+            return value
+    title = read_track(url)
+    if lowdb.enabled():
+        lowdb.cache_set(key, title, 25)
+    return title

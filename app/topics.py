@@ -17,7 +17,7 @@ So the words people type (naat sharif live, quran tilawat radio, pakistani fm �
 """
 import urllib.parse
 
-COMMON = "hidebroken=true&order=clickcount&reverse=true&limit=500"
+COMMON = "hidebroken=true&order=clickcount&reverse=true&limit=300"
 
 
 def tag(t, extra=""):
@@ -37,7 +37,7 @@ def country(code):
 
 
 GROUPS = ["Islamic & spiritual", "Sufi, ghazal & classics", "Pakistani & South Asian languages",
-          "News, talk & sports", "World music", "Lifestyle & learning", "World languages"]
+          "News, talk & sports", "World music", "Lifestyle & learning", "World languages", "Cities"]
 CONTINENTS = {          # slug: (heading, short words for the page text)
     "asia": ("Asia", "Asian"),
     "middle-east": ("Middle East & Gulf", "Middle Eastern and Gulf"),
@@ -65,7 +65,9 @@ TOPICS = {
         description="Listen to live Quran radio free: Quran Pak tilawat by famous qaris, recitation with translation, 24 hours a day.",
         intro="Live Quran recitation by well-known qaris, with translations and Islamic programmes, around the clock. Keep the Quran playing at home, in the office or on the go.",
         more="Also searched as Quran Pak live, Quran tilawat radio, Quran recitation online, Quran Sharif sunna, Holy Quran radio 24/7, Quran with Urdu translation, Arabic Quran radio, Quran Pak sunao, tilawat e Quran live and the Urdu words قرآن پاک, تلاوت قرآن and قرآن ریڈیو.",
-        paths=[tag("quran"), tag("koran"), tag("quran recitation")]),
+        paths=[tag("quran"), tag("koran"), tag("quran recitation"), tag("tilawat"), name("quran"), name("qur'an"),
+               name("holy quran"), name("quran majeed"), name("tilawat"), name("قرآن"), name("قران"), tag("quran", "&countrycode=PK"),
+               tag("quran", "&countrycode=SA"), tag("quran", "&countrycode=EG"), tag("quran", "&countrycode=IR")]),
     "islamic": dict(
         kind="genre", group="Islamic & spiritual", label="Islamic",
         h1="Islamic Radio — Live Bayan, Dars & Islamic Talks", native="اسلامی ریڈیو",
@@ -83,7 +85,12 @@ TOPICS = {
         intro="Live Islamic radio from Pakistan: Urdu bayan and taqreer, naat sharif, Quran tilawat, dars and religious programmes from stations across the country.",
         more="Also searched as Pakistani Islamic radio, Urdu Islamic radio, Pakistan Quran radio, Urdu bayan live, Islamic FM Pakistan and the Urdu words اسلامی ریڈیو پاکستان.",
         paths=[tag("islamic", "&countrycode=PK"), tag("quran", "&countrycode=PK"), tag("naat", "&countrycode=PK"),
-               tag("religion", "&countrycode=PK"), tag("religious", "&countrycode=PK"), name("islam", "&countrycode=PK")]),
+               tag("religion", "&countrycode=PK"), tag("religious", "&countrycode=PK"), name("islam", "&countrycode=PK"),
+               name("quran", "&countrycode=PK"), name("naat", "&countrycode=PK"), name("noor", "&countrycode=PK"),
+               name("madni", "&countrycode=PK"), name("paigham", "&countrycode=PK"), name("deen", "&countrycode=PK"),
+               name("huda", "&countrycode=PK"), name("rehmat", "&countrycode=PK"), name("hamd", "&countrycode=PK"),
+               name("tilawat", "&countrycode=PK"), name("islamic", "&countrycode=PK"), name("ummat", "&countrycode=PK"),
+               lang("urdu", "&tag=islamic"), lang("punjabi", "&tag=islamic")]),
     "bayan": dict(
         kind="genre", group="Islamic & spiritual", label="Bayan & Taqreer",
         h1="Bayan & Taqreer Radio — Live Urdu Islamic Lectures", native="بیان اور تقریر ریڈیو",
@@ -92,7 +99,9 @@ TOPICS = {
         intro="Live bayan and taqreer in Urdu and other languages: dars, Islamic lectures, Friday talks and religious programmes. Stations are listed by what they play; Sur Music does not endorse any one school of thought.",
         more="Also searched as Urdu bayan live, bayan radio, taqreer live, Islamic lectures online, dars e Quran, jumma bayan and the Urdu words بیان, تقریر and درس.",
         paths=[tag("bayan"), tag("dars"), tag("lecture"), name("bayan"), name("taqreer"), name("dars"),
-               tag("islamic", "&language=urdu")]),
+               tag("islamic", "&language=urdu"), tag("islamic lectures"), tag("islamic lecture"), tag("dawah"),
+               tag("islamic", "&language=english"), name("islamic lecture"), name("dawah"), name("yaqeen"),
+               name("peace tv"), name("huda"), name("sunnah"), name("seerah"), name("khutba"), name("jumma")]),
     "majlis": dict(
         kind="genre", group="Islamic & spiritual", label="Majlis & Noha",
         h1="Majlis, Noha & Ahl-e-Bait Radio — Live", native="مجلس، نوحہ اور اہل بیت ریڈیو",
@@ -101,7 +110,11 @@ TOPICS = {
         intro="Live majlis, noha, marsiya, salam and manqabat in memory of Ahl-e-Bait, with Muharram programmes. Stations are listed by what they play; Sur Music does not endorse any one school of thought.",
         more="Also searched as majlis live, noha radio, Ahl-e-Bait radio, Muharram majlis live, marsiya, manqabat, shia radio and the Urdu words مجلس, نوحہ, مرثیہ and اہل بیت.",
         paths=[tag("noha"), tag("majlis"), tag("shia"), tag("ahlebait"), tag("muharram"), name("noha"), name("majlis"),
-               name("ahlebait"), name("ahl-e-bait"), name("ahl al bayt"), name("karbala"), name("hussain")]),
+               name("ahlebait"), name("ahl-e-bait"), name("ahl al bayt"), name("ahlulbayt"), name("karbala"), name("hussain"),
+               name("najaf"), name("alkafeel"), name("kafeel"), name("ameed"), name("imam ali"), name("imam hussain"),
+               name("zahra"), name("arbaeen"), name("nauha"), name("marsiya"), name("fatima"), tag("islamic", "&countrycode=IQ"),
+               tag("islamic", "&countrycode=IR"), tag("quran", "&countrycode=IQ"), tag("ahlulbayt"), tag("ahl al bayt"),
+               tag("shia", "&language=urdu"), tag("shia", "&language=english"), lang("urdu", "&tag=noha")]),
     "madani": dict(
         kind="genre", group="Islamic & spiritual", label="Madani & Dawat-e-Islami",
         h1="Madani & Dawat-e-Islami Radio — Live Naat, Bayan & Madani Channel", native="مدنی اور دعوت اسلامی ریڈیو",
@@ -263,13 +276,25 @@ TOPICS = {
 
     # ------------------------------------------------------------------ News, talk & sports
     "news": dict(
-        kind="genre", group="News, talk & sports", label="Urdu news",
-        h1="Urdu & Hindi News Radio — Live", native="اردو خبریں · हिंदी समाचार",
-        seo_title="Urdu News Radio Live — Pakistani & Hindi News Online",
-        description="Listen to live Urdu and Hindi news radio free: news, current affairs and talk from Pakistan and India.",
-        intro="Live news and current affairs in Urdu and Hindi from radio stations in Pakistan and India.",
-        more="Also searched as Urdu news live, Pakistan news radio, Hindi samachar, khabrein, Pakistani news live and Urdu FM news.",
-        paths=[tag("news", "&language=urdu"), tag("news", "&countrycode=PK"), tag("news", "&language=hindi")]),
+        kind="genre", group="News, talk & sports", label="News", per=70, cap=800,
+        h1="News Radio — Urdu, Hindi, Indian, Arabic & World News, Live", native="اردو خبریں · हिंदी समाचार · अख़बार",
+        seo_title="News Radio Live — Urdu, Indian, Hindi & English News",
+        description="Listen to live news radio free: Urdu news, Pakistan news, Indian and Hindi news, Arabic news and world English news in one place.",
+        intro="Every live news channel in one list — Urdu and Punjabi khabrain from Pakistan, Indian and Hindi samachar, Arabic news and world English news. Pick any channel and press play.",
+        more="Also searched as Urdu news live, Pakistan news radio, Indian news live, Bharat news, Hindi news, Hindi samachar, Arabic news, world news live, English news radio, BBC and Al Jazeera live, khabrain and پاکستان خبریں.",
+        paths=[tag("news", "&countrycode=PK"), tag("news", "&language=urdu"), tag("news", "&language=punjabi"),
+               lang("urdu", "&tag=talk"), name("news", "&countrycode=PK"), name("khabar", "&countrycode=PK"),
+               name("khabrain", "&countrycode=PK"), name("geo", "&countrycode=PK"), name("ary", "&countrycode=PK"),
+               name("express", "&countrycode=PK"), name("dawn", "&countrycode=PK"), name("samaa", "&countrycode=PK"),
+               name("dunya", "&countrycode=PK"), name("92", "&countrycode=PK"), name("radio pakistan"), name("bbc urdu"), name("voa urdu"),
+               tag("news", "&language=hindi"), tag("news", "&countrycode=IN"), name("samachar"), name("aaj tak", "&countrycode=IN"),
+               name("ndtv"), name("zee news"), name("abp"), name("republic"), name("india today"), name("news18"),
+               name("all india radio"), name("akashvani"),
+               tag("news", "&language=arabic"), name("akhbar"), name("al jazeera"), name("al arabiya"), name("sky news arabia"),
+               name("bbc arabic"), name("france 24"), name("monte carlo"),
+               tag("news", "&language=english"), tag("world news"), name("bbc world"), name("cnn"), name("npr"),
+               name("sky news"), name("dw "), name("euronews"), name("abc news"), name("bloomberg"), name("cbc"),
+               name("nhk world"), name("reuters"), name("fox news"), name("lbc")]),
     "english-news": dict(
         kind="genre", group="News, talk & sports", label="World news",
         h1="World News Radio — Live English News & Talk", native="",
@@ -277,7 +302,10 @@ TOPICS = {
         description="Listen to live English news radio free: world news, business, current affairs and talk stations from the UK, USA and beyond.",
         intro="Live English-language news and talk radio: world headlines, business, politics, science and current affairs from stations around the globe.",
         more="Also searched as news radio live, world news online, English news radio, talk radio and breaking news radio.",
-        paths=[tag("news", "&language=english"), tag("talk", "&language=english"), tag("world news")]),
+        paths=[tag("news", "&language=english"), tag("talk", "&language=english"), tag("world news"),
+               name("bbc world"), name("cnn"), name("npr"), name("sky news"), name("al jazeera"), name("france 24"),
+               name("dw "), name("euronews"), name("abc news"), name("bloomberg"), name("cbc"), name("nhk world"),
+               name("reuters"), name("fox news"), name("lbc"), name("rte news")]),
     "sports": dict(
         kind="genre", group="News, talk & sports", label="Sports & cricket",
         h1="Sports & Cricket Radio — Live Commentary & Talk", native="کرکٹ ریڈیو",
@@ -285,7 +313,8 @@ TOPICS = {
         description="Listen to live sports radio free: cricket, football and sports talk stations with live commentary when matches are on.",
         intro="Live sports radio: cricket and football talk, sports news and live commentary (when the station carries the match).",
         more="Also searched as cricket radio live, cricket commentary radio, sports radio online and football radio.",
-        paths=[tag("sports"), tag("cricket"), tag("football")]),
+        paths=[tag("sports"), tag("cricket"), tag("football"), tag("sports talk"), tag("sport"), name("espn"),
+               name("sports"), name("commentary"), name("ptv sports"), name("tsn"), name("talksport")]),
 
     "cricket": dict(
         kind="genre", group="News, talk & sports", label="Cricket",
@@ -304,13 +333,16 @@ TOPICS = {
         more="Also searched as football radio live, soccer radio, live football commentary, football talk radio and sports radio online.",
         paths=[tag("football"), tag("soccer"), name("football"), name("soccer")]),
     "hindi-news": dict(
-        kind="genre", group="News, talk & sports", label="Hindi news",
+        kind="genre", group="News, talk & sports", label="Indian news",
         h1="Hindi News Radio — Live Hindi Khabar", native="हिंदी समाचार रेडियो",
         seo_title="Hindi News Radio Live — Hindi Khabar & Samachar Online",
         description="Listen to live Hindi news radio free: Hindi khabar, samachar and talk from stations in India and around the world.",
         intro="Live Hindi news and talk radio: khabar, samachar, current affairs and discussions.",
         more="Also searched as Hindi news live, Hindi samachar radio, Hindi khabar online and news radio in Hindi.",
-        paths=[tag("news", "&language=hindi"), lang("hindi", "&tag=talk"), name("samachar")]),
+        paths=[tag("news", "&language=hindi"), lang("hindi", "&tag=talk"), name("samachar"),
+               tag("news", "&countrycode=IN"), name("aaj tak", "&countrycode=IN"), name("ndtv"), name("zee news"),
+               name("abp"), name("republic"), name("india today"), name("news18"), name("all india radio"),
+               name("akashvani"), name("khabar", "&countrycode=IN")]),
     "arabic-news": dict(
         kind="genre", group="News, talk & sports", label="Arabic news",
         h1="Arabic News Radio — Live Arabic News & Talk", native="أخبار عربية مباشر",
@@ -318,7 +350,10 @@ TOPICS = {
         description="Listen to live Arabic news radio free: Arabic news, talk and current affairs from the Gulf, Egypt, the Levant and beyond.",
         intro="Live Arabic news and talk radio from the Middle East and North Africa.",
         more="Also searched as Arabic news live, Arabic radio news, Gulf news radio and Arabic talk radio.",
-        paths=[tag("news", "&language=arabic"), lang("arabic", "&tag=talk"), name("akhbar")]),
+        paths=[tag("news", "&language=arabic"), lang("arabic", "&tag=talk"), name("akhbar"),
+               name("al jazeera"), name("al arabiya"), name("sky news arabia"), name("bbc arabic"),
+               name("france 24 arabic"), name("monte carlo"), name("rt arabic"), name("nile news"), name("alhurra"),
+               name("خبر"), name("أخبار")]),
 
     # ------------------------------------------------------------------ World music
     "pop": dict(
@@ -393,7 +428,9 @@ TOPICS = {
         description="Listen to live talk radio free: talk shows, interviews, debates and phone-in programmes from the USA, UK and around the world.",
         intro="Live talk radio — talk shows, interviews, call-ins, debates and spoken-word programmes. Great company for driving, working or relaxing, and easy to follow without a screen.",
         more="Also searched as talk radio online, talk shows live, spoken word radio and AM talk radio.",
-        paths=[tag("talk"), tag("talk radio")]),
+        paths=[tag("talk"), tag("talk radio"), tag("politics"), tag("debate"), tag("comedy"), tag("interview"),
+               lang("urdu", "&tag=talk"), lang("hindi", "&tag=talk"), lang("punjabi", "&tag=talk"),
+               lang("arabic", "&tag=talk"), name("talk"), name("fm talk")]),
     "christian": dict(
         kind="genre", group="Islamic & spiritual", label="Christian",
         h1="Christian Radio — Live Worship, Gospel & Sermons", native="",
@@ -476,7 +513,12 @@ TOPICS = {
         description="Listen to live Pakistani radio free: FM stations from Lahore, Karachi, Islamabad and all of Pakistan — music, news and more.",
         intro="All the live radio stations from Pakistan we can play in your browser: FM music stations, Urdu and Punjabi songs, news, naat and more from Lahore, Karachi, Islamabad, Peshawar, Quetta and beyond.",
         more="Also searched as Pakistani radio online, Pakistan FM live, FM 100 Pakistan, Radio Pakistan live, Lahore FM, Karachi FM and Islamabad FM.",
-        paths=[country("PK")]),
+        paths=[country("PK"), name("fm 100", "&countrycode=PK"), name("fm 101", "&countrycode=PK"), name("fm 91", "&countrycode=PK"),
+               name("fm 93", "&countrycode=PK"), name("fm 94", "&countrycode=PK"), name("fm 95", "&countrycode=PK"),
+               name("fm 96", "&countrycode=PK"), name("fm 98", "&countrycode=PK"), name("fm 99", "&countrycode=PK"),
+               name("mast fm", "&countrycode=PK"), name("hum fm", "&countrycode=PK"), name("city fm", "&countrycode=PK"),
+               name("radio pakistan"), name("buraq", "&countrycode=PK"), name("power 99", "&countrycode=PK"),
+               name("apna", "&countrycode=PK"), name("sunrise", "&countrycode=PK")]),
     "india": dict(
         kind="country", group="", label="India",
         h1="India Radio — Live Indian FM Stations", native="भारतीय रेडियो",
@@ -484,7 +526,10 @@ TOPICS = {
         description="Listen to live Indian radio free: FM stations from Mumbai, Delhi and across India — Hindi songs, regional music and news.",
         intro="Live radio from India: Hindi FM, Bollywood hits, regional language stations, devotional music and news.",
         more="Also searched as Indian radio online, India FM live, Hindi FM and Mumbai FM.",
-        paths=[country("IN")]),
+        paths=[country("IN"), name("radio mirchi", "&countrycode=IN"), name("red fm", "&countrycode=IN"), name("big fm", "&countrycode=IN"),
+               name("radio city", "&countrycode=IN"), name("fever", "&countrycode=IN"), name("vividh bharati"),
+               name("hello fm", "&countrycode=IN"), name("ishq", "&countrycode=IN"), name("my fm", "&countrycode=IN"),
+               name("radio one", "&countrycode=IN"), name("air fm", "&countrycode=IN")]),
     "bangladesh": dict(
         kind="country", group="", label="Bangladesh",
         h1="Bangladesh Radio — Live Bangladeshi FM", native="বাংলাদেশ রেডিও",
@@ -753,9 +798,9 @@ _LANGS = [("hindi", "Hindi", "हिन्दी रेडियो"), ("urdu", 
           ("thai", "Thai", "วิทยุไทย"), ("vietnamese", "Vietnamese", "Đài phát thanh Việt Nam"),
           ("polish", "Polish", "Radio po polsku"), ("dutch", "Dutch", "Radio in het Nederlands"),
           ("greek", "Greek", "Ελληνικό ραδιόφωνο"), ("hebrew", "Hebrew", "רדיו בעברית")]
-for _slug, _label, _native in _LANGS:
-    if _slug not in TOPICS:
-        TOPICS[_slug] = dict(
+for _lslug, _label, _native in _LANGS:
+    if _lslug not in TOPICS:
+        TOPICS[_lslug] = dict(
             kind="genre", group="World languages", label=_label,
             h1=f"{_label} Radio — Live {_label}-Language Stations", native=_native,
             seo_title=f"{_label} Radio Live — {_label} Stations Online Free",
@@ -765,8 +810,86 @@ for _slug, _label, _native in _LANGS:
                   "press play and keep browsing — the music keeps going.",
             more=f"Also searched as {_label} radio online, {_label} FM live, {_label} songs live, {_label} news radio "
                  f"and {_label} radio stations.",
-            paths=[lang(_slug)])
+            paths=[lang(_lslug)])
 
+
+# ------------------------------------------------------------------ city pages (what "Lahore radio" searchers look for)
+_CITIES = [   # (slug, name, country code, country name)
+    ("lahore", "Lahore", "PK", "Pakistan"), ("karachi", "Karachi", "PK", "Pakistan"),
+    ("islamabad", "Islamabad", "PK", "Pakistan"), ("rawalpindi", "Rawalpindi", "PK", "Pakistan"),
+    ("faisalabad", "Faisalabad", "PK", "Pakistan"), ("multan", "Multan", "PK", "Pakistan"),
+    ("peshawar", "Peshawar", "PK", "Pakistan"), ("quetta", "Quetta", "PK", "Pakistan"),
+    ("hyderabad-sindh", "Hyderabad (Sindh)", "PK", "Pakistan"), ("sialkot", "Sialkot", "PK", "Pakistan"),
+    ("gujranwala", "Gujranwala", "PK", "Pakistan"),
+    ("mumbai", "Mumbai", "IN", "India"), ("delhi", "Delhi", "IN", "India"), ("kolkata", "Kolkata", "IN", "India"),
+    ("chennai", "Chennai", "IN", "India"), ("bangalore", "Bangalore", "IN", "India"),
+    ("hyderabad-india", "Hyderabad (India)", "IN", "India"), ("lucknow", "Lucknow", "IN", "India"),
+    ("jaipur", "Jaipur", "IN", "India"), ("dhaka", "Dhaka", "BD", "Bangladesh"),
+    ("dubai", "Dubai", "AE", "UAE"), ("abu-dhabi", "Abu Dhabi", "AE", "UAE"), ("riyadh", "Riyadh", "SA", "Saudi Arabia"),
+    ("jeddah", "Jeddah", "SA", "Saudi Arabia"), ("doha", "Doha", "QA", "Qatar"),
+    ("london", "London", "GB", "UK"), ("birmingham", "Birmingham", "GB", "UK"), ("manchester", "Manchester", "GB", "UK"),
+    ("new-york", "New York", "US", "USA"), ("toronto", "Toronto", "CA", "Canada"), ("sydney", "Sydney", "AU", "Australia"),
+]
+CITY_SLUGS = []
+for _s, _n, _cc, _cn in _CITIES:
+    if _s in TOPICS:
+        continue
+    _q = _n.split(" (")[0]
+    TOPICS[_s] = dict(
+        kind="genre", group="Cities", label=_n,
+        h1=f"{_n} Radio — Live FM Stations from {_n}", native="",
+        seo_title=(f"{_n} Radio Live — {_n} FM Stations Online Free" if len(_n) <= 11 else f"{_n} Radio Live — Online Stations"),
+        description=f"Listen to live radio from {_n}, {_cn} free: {_q} FM stations, music, news and talk playing in your browser.",
+        intro=f"Live radio stations from {_n}, {_cn} — FM channels, local music, news and talk that play right here. Pick a station and press play.",
+        more=f"Also searched as {_q} radio, {_q} FM live, {_q} radio stations online, FM radio {_q} and live radio {_q}.",
+        paths=[f"/json/stations/search?state={urllib.parse.quote(_q)}&countrycode={_cc}&{COMMON}", name(_q, f"&countrycode={_cc}"),
+               tag(_q.lower(), f"&countrycode={_cc}")])
+    CITY_SLUGS.append(_s)
+
+
+
+# More cities, every country in the world: the main cities of each country (Babel's time-zone city names).
+def _zone_cities():
+    try:
+        from babel import Locale
+        from babel.core import get_global
+    except ImportError:  # pragma: no cover
+        return []
+    zones = get_global("territory_zones")
+    names = Locale("en").time_zones
+    out = []
+    for code, (cname, _cont, _native) in WORLD.items():
+        seen = set()
+        for z in zones.get(code) or []:
+            city = (names.get(z) or {}).get("city") or z.split("/")[-1].replace("_", " ")
+            if (not city or city in seen or city == cname or "Etc" in z or "/" in city or "," in city or "(" in city or len(city) > 24
+                    or city.lower().startswith(("unknown", "utc"))):
+                continue
+            seen.add(city)
+            out.append((code, cname, city))
+    return out
+
+
+for _cc, _cn, _city in _zone_cities():
+    _s = _slug(_city)
+    if not _s or _s in TOPICS or any(_t[0] == _s for _t in _CITIES):
+        if _s and _s in TOPICS and TOPICS[_s].get("group") == "Cities" or not _s:
+            continue
+        _s = f"{_s}-{_cc.lower()}" if _s else ""
+        if not _s or _s in TOPICS:
+            continue
+    _label = _city
+    TOPICS[_s] = dict(
+        kind="genre", group="Cities", label=_label,
+        h1=f"{_label} Radio — Live FM Stations from {_label}", native="",
+        seo_title=(f"{_label} Radio Live — {_label} FM Stations Online Free" if len(_label) <= 11 else
+                   (f"{_label} Radio Live — Online Stations" if len(_label) <= 26 else f"{_label} Radio Live")),
+        description=f"Listen to live radio from {_label}, {_cn} free: {_label} FM stations, music, news and talk playing in your browser.",
+        intro=f"Live radio stations from {_label}, {_cn} — FM channels, local music, news and talk that play right here. Pick a station and press play.",
+        more=f"Also searched as {_label} radio, {_label} FM live, {_label} radio stations online, FM radio {_label} and live radio {_label}.",
+        paths=[f"/json/stations/search?state={urllib.parse.quote(_label)}&countrycode={_cc}&{COMMON}", name(_label, f"&countrycode={_cc}"),
+               tag(_label.lower(), f"&countrycode={_cc}")])
+    CITY_SLUGS.append(_s)
 
 GENRE_PAGES = {k: v for k, v in TOPICS.items() if v["kind"] == "genre"}
 COUNTRY_PAGES = {k: v for k, v in TOPICS.items() if v["kind"] == "country"}
@@ -822,7 +945,7 @@ CODE_TO_COUNTRY = {}            # ISO code -> country page slug (filled below, a
 # Shown in the page text and keywords, but not as buttons in the "Listen by type" strip.
 ISLAMIC_FAMILY = ("quran", "naat", "pakistan-islamic", "bayan", "majlis", "madani", "hadith")
 HIDDEN_CHIPS = ("naat", "qawwali", "sufi") + tuple(k for k in ISLAMIC_FAMILY if k != "naat")   # all of them live under "Islamic"
-SECT_PAGES = ("majlis", "madani", "hadith")      # kept for search engines (sitemap), not listed as buttons or in the directory
+SECT_PAGES = ("majlis", "madani", "hadith", "english-news", "hindi-news", "arabic-news")      # kept for search engines (sitemap), not listed as buttons or in the directory
 
 # One "Islamic" page that holds all of it: Quran, Naat, bayan and the other Islamic programmes.
 TOPICS["islamic"]["paths"] = list(dict.fromkeys(
@@ -940,7 +1063,7 @@ NAV = [
     ("music", "Music", ["bollywood", "lollywood", "hollywood", "ghazal", "qawwali", "sufi", "old-songs", "indian-classical",
                          "pop", "rock", "hip-hop", "jazz", "classical", "dance", "lofi", "80s-90s", "latin", "country-music",
                          "reggae", "afrobeats", "metal", "k-pop"]),
-    ("news", "News", ["english-news", "news", "hindi-news", "arabic-news"]),
+    ("news", "News", ["news"]),
     ("sports", "Sports", ["sports", "cricket", "football"]),
     ("talk", "Talk", ["talk", "debates", "comedy", "health", "meditation", "cooking", "kids", "education", "business",
                        "technology"]),
@@ -954,5 +1077,6 @@ NAV = [
 CAT_PAGES = {"bollywood": "Bollywood", "lollywood": "Lollywood", "hollywood": "Hollywood"}
 TAB_OF = {slug: key for key, _label, slugs in NAV for slug in slugs}
 TAB_OF.update({k: "religious" for k in ISLAMIC_FAMILY})
-TAB_COUNTRIES = ["pakistan", "india", "uk", "usa", "uae", "saudi-arabia", "canada", "australia", "germany", "france",
+TAB_OF.update({k: "countries" for k in CITY_SLUGS})
+TAB_COUNTRIES = ["lahore", "karachi", "islamabad", "mumbai", "delhi", "dubai", "london", "pakistan", "india", "uk", "usa", "uae", "saudi-arabia", "canada", "australia", "germany", "france",
                  "turkey", "bangladesh"]

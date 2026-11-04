@@ -89,10 +89,36 @@
       st.appendChild(who);
     }
     st.appendChild(document.createTextNode((s === "loading" && slowMsg) ? "Slow connection — still trying…" : (STATUS[s] || "")));
+    if (s === "playing" && state.track) {
+      var tr = document.createElement("span"); tr.className = "trk"; tr.textContent = " · ♪ " + state.track;
+      st.appendChild(tr);
+    }
     $("pl-play").setAttribute("aria-label", (s === "playing" || s === "loading") ? "Pause" : "Play");
     if ("mediaSession" in navigator) {
       navigator.mediaSession.playbackState = s === "playing" ? "playing" : (s === "paused" ? "paused" : "none");
     }
+  }
+  // ---------- the song that is on air (read from the stream's own title information, every 30 seconds) ----------
+  var trackTimer = null;
+  function showTrack(title) {
+    state.track = title || "";
+    var st = $("pl-status"), old = st.querySelector(".trk");
+    if (old) old.remove();
+    if (state.track && bar.getAttribute("data-state") === "playing") {
+      var tr = document.createElement("span"); tr.className = "trk"; tr.textContent = " · ♪ " + state.track;
+      st.appendChild(tr);
+    }
+    var n = $("np-status"); if (n) n.textContent = st.textContent;
+  }
+  function pollTrack() {
+    clearTimeout(trackTimer);
+    var cur = state.station;
+    if (!cur || bar.getAttribute("data-state") !== "playing") return;
+    api("POST", "/api/nowplaying", { station: cur }).then(function (r) {
+      if (state.station === cur) showTrack(r && r.title);
+    }, function () { /* no song name: just keep playing */ }).then(function () {
+      if (state.station === cur) trackTimer = setTimeout(pollTrack, 30000);
+    });
   }
   function renderNow() {
     var s = state.station;
@@ -180,7 +206,9 @@
     if (state.locked) { showGate(station); return; }
     if (state.station && state.station.uuid !== station.uuid) stopBeats(false);
     state.station = station;
+    state.track = ""; clearTimeout(trackTimer);
     local("sm-last", { station: station, category: state.category });
+    rememberRecent(station);
     renderNow();
     clearDog();
     setState("loading");
@@ -241,9 +269,18 @@
     play(next);
   }
 
-  audio.addEventListener("playing", function () { setState("playing"); markLists(); if (!beatTimer) startBeats(); });
+  audio.addEventListener("playing", function () { skips = 0; setState("playing"); pollTrack(); markLists(); if (!beatTimer) startBeats(); });
   audio.addEventListener("waiting", function () { if (audio.src) setState("loading"); });
-  audio.addEventListener("error", function () { if (audio.getAttribute("src")) { stopBeats(true); setState("error"); markLists(); } });
+  var skips = 0;
+  audio.addEventListener("error", function () {
+    if (!audio.getAttribute("src")) return;
+    stopBeats(true); setState("error"); markLists();
+    if (skips < 3 && state.list.length > 1) {               // a dead station: quietly try the next one in the list
+      skips++;
+      var dead = state.station;
+      setTimeout(function () { if (state.station === dead && bar.getAttribute("data-state") === "error") step(1); }, 1500);
+    }
+  });
   audio.addEventListener("stalled", function () { if (!audio.paused) setState("loading"); });
 
   $("pl-play").addEventListener("click", toggle);
@@ -394,9 +431,37 @@
   }, true);
 
   // ---------- start-up ----------
-  function onPage() { renderLocalFavs(); markLists(); }
+  // ---------- recently played (this browser only): shown on the home page so people can carry on in one tap ----------
+  function rememberRecent(station) {
+    try {
+      var list = (local("sm-recent") || []).filter(function (x) { return x && x.uuid !== station.uuid; });
+      list.unshift(station);
+      local("sm-recent", list.slice(0, 8));
+    } catch (e) { /* storage full or blocked */ }
+  }
+  function renderRecent() {
+    var box = document.getElementById("recent-box"), ul = document.getElementById("recent-list");
+    if (!box || !ul) return;
+    var list = local("sm-recent") || [];
+    ul.textContent = "";
+    list.forEach(function (st) {
+      if (!st || !st.uuid || !st.name) return;
+      var li = document.createElement("li"); li.className = "st";
+      li.setAttribute("data-station", JSON.stringify(st)); li.setAttribute("data-uuid", st.uuid);
+      var b = document.createElement("button"); b.type = "button"; b.className = "st-play";
+      b.setAttribute("aria-label", "Play " + st.name);
+      var th = document.createElement("span"); th.className = "thumb"; th.setAttribute("data-letter", st.name.charAt(0).toUpperCase());
+      var tx = document.createElement("span"); tx.className = "st-text";
+      var nm = document.createElement("span"); nm.className = "st-name"; nm.textContent = st.name;
+      var mt = document.createElement("span"); mt.className = "st-meta"; mt.textContent = [st.country, st.tags].filter(Boolean).join(" · ");
+      tx.appendChild(nm); tx.appendChild(mt); b.appendChild(th); b.appendChild(tx); li.appendChild(b); ul.appendChild(li);
+    });
+    box.hidden = !ul.children.length;
+  }
+  function onPage() { renderLocalFavs(); renderRecent(); markLists(); }
   document.addEventListener("page:load", onPage);
 
+  renderRecent();
   var vol = local("sm-volume");
   if (typeof vol === "number") { $("pl-vol").value = vol; audio.volume = vol; }
   var last = local("sm-last");

@@ -394,3 +394,33 @@ document.addEventListener("toggle", function (e) {
     nav.querySelectorAll(".nt-sub").forEach(function (p) { p.hidden = p.getAttribute("data-sub") !== key; });
   }, true);
 })();
+
+
+// ---------- "Add to home screen": one small button, shown only when the browser can do it (never a pop-up) ----------
+(function () {
+  var btn, help, deferred = null;
+  function standalone() {
+    return (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
+  }
+  function init() {
+    btn = document.getElementById("a2hs"); help = document.getElementById("a2hs-help");
+    if (!btn || standalone()) return;
+    var ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+    if (ios) btn.hidden = false;
+    else if (deferred) btn.hidden = false;
+    btn.addEventListener("click", function () {
+      if (deferred) {
+        deferred.prompt();
+        deferred.userChoice.then(function () { deferred = null; btn.hidden = true; }, function () { /* ignore */ });
+      } else if (help) {
+        help.hidden = !help.hidden;
+      }
+    });
+  }
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault(); deferred = e;
+    var b = document.getElementById("a2hs"); if (b && !standalone()) b.hidden = false;
+  });
+  window.addEventListener("appinstalled", function () { var b = document.getElementById("a2hs"); if (b) b.hidden = true; });
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+})();

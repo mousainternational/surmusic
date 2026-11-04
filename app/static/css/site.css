@@ -1149,3 +1149,6 @@ body.guest .st-fav, body.guest .pl-fav, body.guest #np-fav, body.guest .hd-fav {
   .admin-links a { white-space: normal; }
 }
 @media (max-width: 959px) { .admin-nav { position: static; } .admin-links a { min-height: 36px; padding: 6px 10px; } }
+
+.pl-status { flex-wrap: wrap; }
+.pl-status .trk { color: var(--text); font-weight: 600; overflow-wrap: anywhere; }

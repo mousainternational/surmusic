@@ -26,7 +26,7 @@ def test_genre_pages(client):
         assert word not in header, word
     assert 'href="/genre/news"' in header and 'href="/blog"' in header                          # Guides is in the menu
     assert 'href="/genre/hindi"' in header and 'href="/genre/health"' in header
-    assert 'href="/radio-stations#cat-religious"' in home                                       # category tiles
+    assert 'class="cat-tile"' not in home                                                       # one set of buttons, not two
     assert 'id="cat-religious"' in client.get("/radio-stations").get_data(as_text=True)
 
 

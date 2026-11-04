@@ -87,7 +87,7 @@ def test_category_tabs(client):
     nav, tabs = parts("/")
     assert [t for _, t in tabs] == ["music", "news", "sports", "talk", "religious", "languages", "countries"]
     assert [t for on, t in tabs if on] == ["music"]
-    for href in ("/bollywood", "/lollywood", "/hollywood", "/genre/ghazal", "/genre/english-news", "/genre/cricket",
+    for href in ("/bollywood", "/lollywood", "/hollywood", "/genre/ghazal", "/genre/news", "/genre/cricket",
                  "/genre/islamic", "/genre/christian", "/genre/bhajan", "/genre/punjabi", "/continent/europe"):
         assert f'href="{href}"' in nav, href
     # nothing in the buttons points at one school of thought, and Quran / Naat have no tab of their own
@@ -95,9 +95,9 @@ def test_category_tabs(client):
         assert word not in nav, word
     nav, tabs = parts("/genre/quran")                     # Quran lives under Religious → Islamic
     assert [t for on, t in tabs if on] == ["religious"]
-    assert re.search(r'class="chip active"[^>]*>Islamic<', nav)
+    assert re.search(r'class="chip active"[^>]*>Quran<', nav) and ">All Islamic<" in nav
     assert [t for on, t in parts("/country/pakistan")[1] if on] == ["countries"]
-    assert [t for on, t in parts("/genre/english-news")[1] if on] == ["news"]
+    assert [t for on, t in parts("/genre/news")[1] if on] == ["news"]
     # the pages that hold those stations are still there for Google
     xml = client.get("/sitemap.xml").get_data(as_text=True)
     assert client.get("/genre/madani").status_code == 200
@@ -237,3 +237,49 @@ def test_every_title_is_at_most_60_characters(client):
         html = client.get(path).get_data(as_text=True)
         title = re.search(r"<title>(.*?)</title>", html, re.S).group(1)
         assert len(title.replace("&amp;", "&")) <= 60, (path, title)
+
+
+def test_city_pages_near_me_and_station_faq(client):
+    for path in ("/genre/lahore", "/genre/karachi", "/genre/mumbai", "/genre/dubai", "/genre/hyderabad-sindh"):
+        r = client.get(path)
+        assert r.status_code == 200, path
+        title = re.search(r"<title>(.*?)</title>", r.get_data(as_text=True), re.S).group(1).replace("&amp;", "&")
+        assert len(title) <= 60 and "Radio" in title, (path, title)
+    assert 'href="/genre/lahore"' in client.get("/radio-stations").get_data(as_text=True)
+    assert client.get("/near-me").status_code == 302
+    html = client.get("/genre/quran").get_data(as_text=True)
+    href = re.search(r'href="(/station/[^"]+)"', html).group(1)
+    page = client.get(href).get_data(as_text=True)
+    assert "FAQPage" in page and "stops playing" in page
+
+
+def test_now_playing_reads_the_song_name(app, monkeypatch):
+    import threading, socket
+    from app import radio
+    meta = b"StreamTitle='Nusrat Fateh Ali Khan - Tere Bin';"
+    block = meta + b"\0" * ((16 - len(meta) % 16) % 16)
+    every = 1000
+    body = b"a" * every + bytes([len(block) // 16]) + block + b"b" * every
+    srv = socket.socket(); srv.bind(("127.0.0.1", 0)); srv.listen(1)
+
+    def serve():
+        c, _ = srv.accept(); c.recv(2048)
+        c.sendall(b"HTTP/1.0 200 OK\r\nicy-metaint: 1000\r\ncontent-type: audio/mpeg\r\n\r\n" + body); c.close()
+
+    threading.Thread(target=serve, daemon=True).start()
+    assert radio.parse_icy(block) == "Nusrat Fateh Ali Khan - Tere Bin"
+    with app.app_context():
+        # our own machine is never contacted (no private addresses), and http is refused
+        assert radio.read_track(f"https://127.0.0.1:{srv.getsockname()[1]}/x") == ""
+        assert radio.read_track("http://example.com/x") == ""
+        monkeypatch.setattr(radio, "_public_host", lambda h: True)
+        # plain-http fake server: read_track only talks https, so check the parser path with the fake https refusal
+        assert radio.read_track(f"http://127.0.0.1:{srv.getsockname()[1]}/x", schemes=("http", "https")) == \
+            "Nusrat Fateh Ali Khan - Tere Bin"
+    srv.close()
+
+
+def test_home_has_add_to_home_screen_button_and_recent_box(client):
+    html = client.get("/").get_data(as_text=True)
+    assert 'id="a2hs"' in html and 'id="recent-box"' in html
+    assert 'class="cat-tile"' not in html

@@ -220,7 +220,8 @@ def topic_keywords(info):
     """A short keywords list (Google ignores it; some smaller search engines still read it)."""
     label = info["label"]
     words = [f"{label} radio", f"{label} radio live", f"{label} radio online", f"listen {label} radio free",
-             f"free {label} radio stations", "live radio", "online radio"]
+             f"free {label} radio stations", f"{label} FM online", f"{label} internet radio", f"{label} radio stations near me",
+             "live radio", "online radio", "listen to radio online", "internet radio", "FM radio online", "free radio"]
     if info.get("native"):
         words.append(info["native"].split("·")[0].strip())
-    return ", ".join(words)[:250]
+    return ", ".join(words)[:330]

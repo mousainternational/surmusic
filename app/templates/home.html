@@ -21,7 +21,9 @@
       <div class="hero-actions">
         <button class="btn btn-accent" type="button" data-play-first>▶ Play Bollywood now</button>
         <a class="btn btn-ghost" href="{{ url_for('public.download_page') }}">Get the Android app</a>
+        <button class="btn btn-ghost" type="button" id="a2hs" hidden>Add to home screen</button>
       </div>
+      <p class="small muted" id="a2hs-help" hidden>On iPhone: tap the Share button in Safari, then “Add to Home Screen”.</p>
     </div>
     <div class="card now-card">
       <h2 class="h3">Top stations right now</h2>
@@ -33,22 +35,10 @@
 
 {{ ads.ad('top') }}
 
-<section class="section">
+<section class="section" id="recent-box" hidden>
   <div class="wrap">
-    <h2 class="section-title cat-title">Categories</h2>
-    <div class="cat-tiles">
-      {%- for key, icon, title, items in (type_menu() | selectattr(0, 'ne', 'film') | list)[:6] %}
-      <a class="cat-tile" href="/radio-stations#cat-{{ key }}"><span class="cat-ico" aria-hidden="true">{{ icon }}</span><span>{{ title }}</span></a>
-      {%- endfor %}
-    </div>
-    <p class="cat-all"><a href="/radio-stations">All radio categories →</a></p>
-    <h2 class="section-title cat-title">Radio by country</h2>
-    <nav class="chips world-chips" aria-label="Radio by country">
-      {%- for slug in ['usa', 'uk', 'canada', 'australia', 'pakistan', 'india', 'uae', 'saudi-arabia', 'turkey', 'germany', 'france'] %}
-      <a class="chip" href="{{ topic_href(slug) }}">{{ TOPICS[slug].label }}</a>
-      {%- endfor %}
-      <a class="chip chip-more" href="/radio-stations">All countries →</a>
-    </nav>
+    <div class="section-head"><h2>Recently played</h2></div>
+    <ul class="stations" id="recent-list" data-cat=""></ul>
   </div>
 </section>
 
@@ -64,20 +54,6 @@
     {{ ui.station_list(stations[:12], cat) }}
     <p class="more-link"><a class="btn btn-ghost btn-block" href="{{ url_for('public.category', cat='bollywood') }}">More Bollywood stations →</a></p>
     {% endif %}
-  </div>
-</section>
-
-<section class="section genre-cards-section">
-  <div class="wrap grid three genre-cards">
-    <a class="card genre g-bolly" href="{{ url_for('public.category', cat='bollywood') }}">
-      <h2>Bollywood</h2><p>Hindi film songs, romantic hits, 90s classics and new releases.</p><span>Listen →</span>
-    </a>
-    <a class="card genre g-lolly" href="{{ url_for('public.category', cat='lollywood') }}">
-      <h2>Lollywood</h2><p>Pakistani songs, Urdu &amp; Punjabi pop and ghazals.</p><span>Listen →</span>
-    </a>
-    <a class="card genre g-holly" href="{{ url_for('public.category', cat='hollywood') }}">
-      <h2>Hollywood</h2><p>Top 40 hits, pop, 80s–90s classics and movie soundtracks.</p><span>Listen →</span>
-    </a>
   </div>
 </section>
 
