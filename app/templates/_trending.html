@@ -3,9 +3,9 @@
 <section class="card trend-strip" aria-labelledby="trend-h">
   <h2 class="h3" id="trend-h">{{ heading or 'Trending now' }}</h2>
   <ul class="trend-list">
-    {% for r in items %}<li><a href="{{ r.href }}">{{ r.term }}</a>{% if r.geo %} <span class="muted small">({{ r.geo }})</span>{% endif %}</li>{% endfor %}
+    {% for r in items %}<li><a href="{{ r.href }}">{{ r.term }}{% if r.action %} <span class="trend-go">{{ r.action }}</span>{% endif %}</a>{% if r.geo %} <span class="muted small">({{ r.geo }})</span>{% endif %}</li>{% endfor %}
   </ul>
-  <p class="small muted">Searches that are rising on Google right now. <a href="/trending">See all trending</a>. Tap one to find live radio, commentary or prices.</p>
+  <p class="small muted">Searches that are rising on Google right now. <a href="/trending">See all trending</a>. Tap one to start listening to live radio or commentary, or to see prices.</p>
 </section>
 {% endif %}
 {%- endmacro %}

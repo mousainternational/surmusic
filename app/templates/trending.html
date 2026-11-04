@@ -13,7 +13,7 @@
   <section class="card" aria-labelledby="t-{{ c.geo }}">
     <h2 class="h3" id="t-{{ c.geo }}">Trending in {{ c.name }}</h2>
     <ul class="trend-list">
-      {% for r in c.rows %}<li><a href="{{ r.href }}">{{ r.term }}</a>{% if r.traffic %} <span class="muted small">{{ r.traffic }} searches</span>{% endif %}</li>{% endfor %}
+      {% for r in c.rows %}<li><a href="{{ r.href }}">{{ r.term }}{% if r.action %} <span class="trend-go">{{ r.action }}</span>{% endif %}</a>{% if r.traffic %} <span class="muted small">{{ r.traffic }} searches</span>{% endif %}</li>{% endfor %}
     </ul>
   </section>
   {% else %}

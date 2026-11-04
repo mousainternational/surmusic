@@ -97,6 +97,10 @@ def classify(term):
     return None
 
 
+ACTIONS = {"sports": "▶ Live commentary", "news": "▶ News radio", "debate": "▶ Talk radio", "markets": "See rates",
+           "movies": "▶ Film music radio", "music": "▶ Music radio"}
+
+
 def _clean(feed):
     seen, rows = set(), []
     for term, traffic in feed:
@@ -104,7 +108,7 @@ def _clean(feed):
         key = term.lower()
         if c and key not in seen:
             seen.add(key)
-            rows.append({"term": " ".join(term.split()), "traffic": traffic, "kind": c[0], "href": c[1]})
+            rows.append({"term": " ".join(term.split()), "traffic": traffic, "kind": c[0], "href": c[1], "action": ACTIONS.get(c[0], "▶ Listen")})
     return rows[:10]
 
 

@@ -1090,3 +1090,5 @@ html.np-lock, html.np-lock body { overflow: hidden; }
 .np-lock-msg { position: absolute; z-index: 3; left: 50%; transform: translateX(-50%); top: 64px; width: max-content; max-width: min(92vw, 520px); padding: 10px 16px; border-radius: 14px; background: rgba(20, 16, 40, .92); color: #fff; font-size: .9rem; text-align: center; border: 1px solid rgba(255, 255, 255, .25); }
 .np-lock-msg a { color: #ffd34d; font-weight: 700; }
 .np-lock-msg[hidden] { display: none; }
+
+.trend-go { display: inline-block; margin-left: 6px; padding: 2px 9px; border-radius: 999px; font-size: .72rem; font-weight: 700; background: var(--brand, #e0306f); color: #fff; vertical-align: middle; white-space: nowrap; }
