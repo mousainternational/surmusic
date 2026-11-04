@@ -9,7 +9,7 @@
   </header>
   <div class="grid two-col">
     {% for key, title, desc, howto in [
-        ('android', 'Android app', 'Keeps playing with the screen off. Play, pause and stop from the notification, lock screen or Bluetooth headset. Android 8.0 and newer.', 'Free trial first, then US$5 per year (one payment, not monthly). One account works on one phone, so the app cannot be shared. No ads.'),
+        ('android', 'Android app', 'Keeps playing with the screen off. Play, pause and stop from the notification, lock screen or Bluetooth headset. Android 8.0 and newer.', 'Free to download and use, with a small ad banner and 3 themes. Sur Music Pro removes the ads and unlocks all 15 themes: free Pro trial first, then US$5 per year (one payment, not monthly). One Pro account works on one phone.'),
         ('chrome', 'Chrome extension', 'Radio in your browser toolbar that keeps playing while you browse other websites.', '7-day free trial, then US$1 per month. Cancel any time.')] %}
     {% set a = apps.get(key) %}
     <section class="card app-card">
@@ -29,9 +29,9 @@
         {% endif %}
         <ol class="small app-steps">
           <li>Download the app and install it. Android may ask you to allow installs from this source.</li>
-          <li><a href="{{ url_for('auth.signup') }}">Create a free account</a> on this website.</li>
-          <li>To switch the app on, email <a href="mailto:{{ S.app_contact_email }}?subject=Sur%20Music%20app%20access">{{ S.app_contact_email }}</a> with your account email, or <a href="{{ url_for('subs.subscribe') }}">pay and send your transaction ID here</a>. Free trial first, then US$5 per year (one payment, not monthly).</li>
-          <li>Open the app and sign in with the same email and password.</li>
+          <li>Open the app and listen right away. The free version shows a small ad banner and has 3 themes.</li>
+          <li>For no ads and all 15 themes, tap <strong>Go Pro</strong> in the app. <a href="{{ url_for('auth.signup') }}">Create a free account</a> on this website and sign in in the app: every new phone gets a free Pro trial.</li>
+          <li>To keep Pro after the trial, <a href="{{ url_for('subs.subscribe') }}">pay and send your transaction ID here</a> or email <a href="mailto:{{ S.app_contact_email }}?subject=Sur%20Music%20Pro">{{ S.app_contact_email }}</a>. US$5 per year, one payment, not monthly.</li>
         </ol>
       {% elif a and a.external_url %}
         <a class="btn btn-primary btn-block" href="{{ url_for('public.download_file', platform=key) }}" rel="nofollow noopener" data-no-pjax>Add to Chrome</a>

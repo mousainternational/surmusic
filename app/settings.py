@@ -25,6 +25,10 @@ Sur Music is run by Mousa International Software House ("MISH", "we"). This poli
 
 If you sign up we store your email address, display name, a securely hashed password (we never see or store your actual password), your favourite stations and your recently played stations. You can delete your account and all of this data at any time from **My account**.
 
+### Android app: ads in the free version
+
+The free version of the Sur Music Android app shows a small banner ad from Google AdMob. Google may use your device's advertising ID to choose ads. In Europe and the UK you are first asked for your consent, and on any phone you can reset or turn off personalised ads in Settings → Google → Ads. Sur Music Pro (paid) shows no ads. We do not receive your advertising ID.
+
 ### Listening and activity
 
 Listening is free and needs no account. To run, secure and improve Sur Music we record:

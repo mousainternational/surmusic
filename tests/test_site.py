@@ -326,3 +326,8 @@ def test_old_admin_events_are_removed_once_at_start(tmp_path, monkeypatch):
     kinds = sorted((r["user_id"], r["kind"]) for r in d.all("SELECT user_id, kind FROM events"))
     assert kinds == [(1, "login_failed"), (2, "login")]
     d.close()
+
+
+def test_app_ads_txt_matches_ads_txt(client):
+    a, b = client.get("/ads.txt"), client.get("/app-ads.txt")
+    assert b.status_code == 200 and b.get_data() == a.get_data() and b.mimetype == "text/plain"
