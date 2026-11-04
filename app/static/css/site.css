@@ -1025,8 +1025,8 @@ html.np-lock, html.np-lock body { overflow: hidden; }
 .np[data-state="idle"] .np-live i, .np[data-state="paused"] .np-live i, .np[data-state="error"] .np-live i { background: #9a93b8; box-shadow: none; }
 /* the station name sits small in the top-left corner so it never covers the picture or the equalizer */
 .np-head { position: absolute; left: 16px; top: calc(max(12px, env(safe-area-inset-top)) + 62px); text-align: left; max-width: min(72vw, 520px); }
-.np-name { font: 600 .95rem/1.25 var(--display, inherit); margin: 3px 0 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 8px rgba(0, 0, 0, .7); opacity: .92; }
-.np-sub { color: #e2dcf3; font-size: .75rem; min-height: 1.2em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: .8; text-shadow: 0 1px 8px rgba(0, 0, 0, .6); }
+.np-name { font: 600 .95rem/1.25 var(--display, inherit); margin: 3px 0 1px; white-space: normal; overflow-wrap: anywhere; text-shadow: 0 1px 8px rgba(0, 0, 0, .7); opacity: .92; }
+.np-sub { color: #e2dcf3; font-size: .75rem; min-height: 1.2em; white-space: normal; overflow-wrap: anywhere; opacity: .8; text-shadow: 0 1px 8px rgba(0, 0, 0, .6); }
 .np-dock { pointer-events: auto; display: flex; align-items: center; gap: 14px; margin-top: 14px; padding: 10px 16px; border-radius: 999px; background: rgba(24, 20, 52, .55); border: 1px solid rgba(255, 255, 255, .16); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 20px 60px rgba(0, 0, 0, .5); }
 .np-b { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; border: 1px solid rgba(255, 255, 255, .18); background: rgba(255, 255, 255, .08); color: #fff; font-size: 1.1rem; cursor: pointer; padding: 0; }
 .np-b svg { width: 22px; height: 22px; fill: currentColor; }
@@ -1101,3 +1101,15 @@ html.np-lock, html.np-lock body { overflow: hidden; }
 body.guest .st-fav, body.guest .pl-fav, body.guest #np-fav, body.guest .hd-fav { display: none !important; }
 
 .pager { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0; align-items: center; }
+
+/* small phones: slimmer buttons so the station name keeps room (the share button sits in the bar too) */
+@media (max-width: 479px) {
+  .pl-now { gap: 8px; }
+  .pl-thumb { width: 40px; height: 40px; }
+  .pl-ctrl { gap: 4px; }
+  .pl-btn { width: 38px; height: 38px; }
+  .pl-btn.pl-main { width: 46px; height: 46px; }
+  .pl-name { font-size: .88rem; }
+}
+@media (max-width: 400px) { .np-style select { padding: 9px 30px 9px 12px; font-size: .86rem; } .np-chip { padding: 9px 10px; font-size: .82rem; } }
+.np-chip { white-space: nowrap; }
