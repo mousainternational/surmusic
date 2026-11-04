@@ -161,3 +161,14 @@ def test_indexnow_key_file(client, app):
     r = client.get(f"/{key}.txt")
     assert r.status_code == 200 and r.get_data(as_text=True) == key
     assert client.get("/" + "a" * 32 + ".txt").status_code == 404
+
+
+def test_favourite_stars_only_for_members(client, app):
+    from tests.conftest import signup
+    html = client.get("/").get_data(as_text=True)
+    assert re.search(r'<body class="[^"]*\bguest\b', html)
+    c2 = app.test_client()
+    signup(c2)
+    assert "guest" not in c2.get("/").get_data(as_text=True).split("<body", 1)[1].split(">", 1)[0]
+    css = open("app/static/css/site.css", encoding="utf-8").read()
+    assert "body.guest .st-fav" in css

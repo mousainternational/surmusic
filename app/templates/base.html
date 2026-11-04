@@ -49,7 +49,7 @@
   <script defer nonce="{{ csp_nonce() }}" data-domain="{{ S.analytics_domain }}" src="https://plausible.io/js/script.js"></script>
   {%- endif %}
 </head>
-<body class="{% block body_class %}{% endblock %}">
+<body class="{% block body_class %}{% endblock %}{% if not user %} guest{% endif %}">
 <a class="skip" href="#main">Skip to content</a>
 {% block header %}
 <header class="site-header">
@@ -99,7 +99,7 @@
       </details>
       <span class="hd-sep" aria-hidden="true"></span>
       <a class="hd-pill hue-violet" href="/blog" {% if here.startswith('/blog') %}aria-current="page"{% endif %}>Guides</a>
-      <a class="hd-pill hue-amber" href="{{ url_for('public.favorites') }}" {% if here == '/favorites' %}aria-current="page"{% endif %}>★ Favourites</a>
+      <a class="hd-pill hd-fav hue-amber" href="{{ url_for('public.favorites') }}" {% if here == '/favorites' %}aria-current="page"{% endif %}>★ Favourites</a>
       <a class="hd-pill hue-teal" href="{{ url_for('public.download_page') }}" {% if here == '/download' %}aria-current="page"{% endif %}>Get app</a>
       <form class="nav-search" action="{{ url_for('public.search') }}" method="get" role="search">
         <label for="nav-q" class="sr">Search stations</label>
@@ -245,9 +245,11 @@
   {%- import "_ad.html" as ads with context %}
   {%- if ad_slot_id('player') %}<div class="np-ad" id="np-ad">{{ ads.ad('player') }}</div>{% endif %}
   <div class="np-ui">
-    <span class="np-live"><i></i> <span id="np-state">LIVE NOW</span></span>
-    <h2 id="np-name" class="np-name">Pick a station to start listening</h2>
-    <div id="np-status" class="np-sub" aria-live="polite"></div>
+    <div class="np-head">
+      <span class="np-live"><i></i> <span id="np-state">LIVE NOW</span></span>
+      <h2 id="np-name" class="np-name">Pick a station to start listening</h2>
+      <div id="np-status" class="np-sub" aria-live="polite"></div>
+    </div>
     <div class="np-dock">
       <button id="np-prev" class="np-b" type="button" aria-label="Previous station"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg></button>
       <button id="np-play" class="np-b np-p" type="button" aria-label="Play"><svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="i-pause" viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg></button>

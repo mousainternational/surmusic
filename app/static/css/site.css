@@ -1016,14 +1016,16 @@ html.np-lock, html.np-lock body { overflow: hidden; }
 .np-x { margin-left: auto; width: 40px; padding: 0; font-size: 1rem; }
 .np-chip:hover, .np-style select:hover { background-color: rgba(255, 255, 255, .22); }
 .np-chip:focus-visible, .np-style select:focus-visible, .np-b:focus-visible, .np-vol input:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
-.np-ui { position: absolute; z-index: 2; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 16px max(24px, env(safe-area-inset-bottom)); }
+.np-ui { position: absolute; z-index: 2; left: 0; right: 0; top: 0; bottom: 0; justify-content: flex-end; pointer-events: none; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 16px max(24px, env(safe-area-inset-bottom)); }
 .np-live { display: inline-flex; align-items: center; gap: 8px; font: 700 .72rem var(--display, inherit); letter-spacing: .2em; color: #35e8a8; }
 .np-live i { width: 8px; height: 8px; border-radius: 50%; background: #35e8a8; box-shadow: 0 0 0 5px rgba(53, 232, 168, .22); }
 .np[data-state="idle"] .np-live, .np[data-state="paused"] .np-live, .np[data-state="error"] .np-live { color: #c9c2e0; }
 .np[data-state="idle"] .np-live i, .np[data-state="paused"] .np-live i, .np[data-state="error"] .np-live i { background: #9a93b8; box-shadow: none; }
-.np-name { font: 700 clamp(1.7rem, 5.2vw, 3.6rem)/1.08 var(--display, inherit); margin: 8px 0 4px; max-width: 92vw; overflow-wrap: anywhere; text-shadow: 0 0 40px rgba(255, 90, 60, .45), 0 2px 12px rgba(0, 0, 0, .6); }
-.np-sub { color: #e2dcf3; font-size: .95rem; min-height: 1.4em; text-shadow: 0 1px 8px rgba(0, 0, 0, .6); }
-.np-dock { display: flex; align-items: center; gap: 14px; margin-top: 14px; padding: 10px 16px; border-radius: 999px; background: rgba(24, 20, 52, .55); border: 1px solid rgba(255, 255, 255, .16); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 20px 60px rgba(0, 0, 0, .5); }
+/* the station name sits small in the top-left corner so it never covers the picture or the equalizer */
+.np-head { position: absolute; left: 16px; top: calc(max(12px, env(safe-area-inset-top)) + 62px); text-align: left; max-width: min(72vw, 520px); }
+.np-name { font: 600 .95rem/1.25 var(--display, inherit); margin: 3px 0 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 8px rgba(0, 0, 0, .7); opacity: .92; }
+.np-sub { color: #e2dcf3; font-size: .75rem; min-height: 1.2em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: .8; text-shadow: 0 1px 8px rgba(0, 0, 0, .6); }
+.np-dock { pointer-events: auto; display: flex; align-items: center; gap: 14px; margin-top: 14px; padding: 10px 16px; border-radius: 999px; background: rgba(24, 20, 52, .55); border: 1px solid rgba(255, 255, 255, .16); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 20px 60px rgba(0, 0, 0, .5); }
 .np-b { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; border: 1px solid rgba(255, 255, 255, .18); background: rgba(255, 255, 255, .08); color: #fff; font-size: 1.1rem; cursor: pointer; padding: 0; }
 .np-b svg { width: 22px; height: 22px; fill: currentColor; }
 .np-b:hover { background: rgba(255, 255, 255, .2); }
@@ -1032,7 +1034,7 @@ html.np-lock, html.np-lock body { overflow: hidden; }
 .np-p svg { width: 30px; height: 30px; }
 .np-p .i-pause { display: none; }
 .np-p.on .i-play { display: none; } .np-p.on .i-pause { display: block; }
-.np-vol { margin: 14px 0 0; }
+.np-vol { margin: 14px 0 0; pointer-events: auto; }
 .np-vol input { width: min(260px, 70vw); accent-color: #ff7a1a; }
 .np-bar-hint { display: none; }
 /* looks that need a different layout */
@@ -1042,7 +1044,7 @@ html.np-lock, html.np-lock body { overflow: hidden; }
   .np-dock { gap: 8px; padding: 8px 10px; }
   .np-b { width: 42px; height: 42px; } .np-p { width: 62px; height: 62px; }
 }
-@media (max-height: 520px) { .np-ui { padding-bottom: 8px; } .np-name { font-size: 1.5rem; } .np-vol { display: none; } }
+@media (max-height: 520px) { .np-ui { padding-bottom: 8px; } .np-vol { display: none; } }
 @media (prefers-reduced-motion: reduce) { .np * { animation: none !important; transition: none !important; } }
 
 /* slow connection or data saver: only the little "equalizer" in the player bar rests (the price strip always moves) */
@@ -1070,7 +1072,7 @@ html.np-lock, html.np-lock body { overflow: hidden; }
 }
 
 /* ad inside the big player: invisible until Google has filled it, never over the buttons */
-.np-ad { position: absolute; z-index: 2; left: 50%; transform: translateX(-50%); top: 64px; width: min(728px, 92vw); max-height: 0; overflow: hidden; opacity: 0; transition: opacity .3s; }
+.np-ad { position: absolute; z-index: 2; left: 50%; transform: translateX(-50%); top: 118px; width: min(728px, 92vw); max-height: 0; overflow: hidden; opacity: 0; transition: opacity .3s; }
 .np-ad:has(ins[data-ad-status="filled"]) { max-height: 140px; opacity: 1; }
 .np-ad .ad { margin: 0; background: rgba(10, 8, 24, .72); border: 1px solid rgba(255, 255, 255, .18); border-radius: 14px; padding: 6px 8px; }
 .np-ad .ad-label { color: #cfc9e6; }
@@ -1092,3 +1094,6 @@ html.np-lock, html.np-lock body { overflow: hidden; }
 .np-lock-msg[hidden] { display: none; }
 
 .trend-go { display: inline-block; margin-left: 6px; padding: 2px 9px; border-radius: 999px; font-size: .72rem; font-weight: 700; background: var(--brand, #e0306f); color: #fff; vertical-align: middle; white-space: nowrap; }
+
+/* Favourites (the ★ buttons and the header link) are for signed-in members only */
+body.guest .st-fav, body.guest .pl-fav, body.guest #np-fav, body.guest .hd-fav { display: none !important; }
