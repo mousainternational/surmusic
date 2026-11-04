@@ -1167,3 +1167,11 @@ body.guest .st-fav, body.guest .pl-fav, body.guest #np-fav, body.guest .hd-fav {
 @keyframes nw-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .nw-track { animation: none; } .nw-view { overflow-x: auto; } .nw-dup { display: none; } }
 @media (max-width: 520px) { .nw-label { padding: 6px 9px; font-size: .74rem; } .nw-item { font-size: .78rem; } }
+
+/* Listener reviews */
+.review-list { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; gap: .6rem; }
+.review-item p { margin: 0 0 .3rem; overflow-wrap: anywhere; }
+.review-item p:first-child { color: #f5a623; }
+.hd-reviews { white-space: nowrap; font-size: .85rem; font-weight: 600; text-decoration: none; color: inherit; padding: 0 .4rem; }
+.hd-reviews:hover, .hd-reviews[aria-current] { text-decoration: underline; }
+@media (max-width: 1100px) { .hd-reviews { display: none; } }

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% block content %}
+<div class="wrap page narrow">
+  {{ ui.breadcrumbs([('Home', '/'), ('Reviews', '/reviews')]) }}
+  <header class="page-head">
+    <h1>Listener reviews</h1>
+    <p class="muted">Tell others what you think of Sur Music. Reviews are checked by us before they appear.</p>
+  </header>
+  <section aria-labelledby="rv-list">
+    <h2 id="rv-list" class="h3">What listeners say</h2>
+    {% if items %}
+    <ul class="review-list">
+      {% for r in items %}
+      <li class="card review-item">
+        <p><span aria-hidden="true">{{ '★' * r.rating }}{{ '☆' * (5 - r.rating) }}</span><span class="sr">{{ r.rating }} out of 5 stars</span> <strong>{{ r.name }}</strong></p>
+        <p>{{ r.body }}</p>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">No reviews yet. Be the first to write one below.</p>
+    {% endif %}
+  </section>
+  <form class="card form" method="post" novalidate aria-labelledby="rv-form">
+    <h2 id="rv-form" class="h3">Write a review</h2>
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <div class="hp" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>
+    {% if errors.get('form') %}<p class="flash flash-error">{{ errors.form }}</p>{% endif %}
+    <label for="rv-name">Your first name or nickname <span class="req">*</span></label>
+    <input id="rv-name" name="name" required minlength="2" maxlength="40" autocomplete="nickname" value="{{ form.get('name', '') }}" {% if errors.get('name') %}aria-invalid="true" aria-describedby="err-name"{% endif %}>
+    {{ ui.field_error(errors, 'name') }}
+    <label for="rv-rating">Stars <span class="req">*</span></label>
+    <select id="rv-rating" name="rating" required>
+      {% for n in (5, 4, 3, 2, 1) %}<option value="{{ n }}" {% if form.get('rating') == n|string %}selected{% endif %}>{{ n }} star{{ 's' if n > 1 }}</option>{% endfor %}
+    </select>
+    {{ ui.field_error(errors, 'rating') }}
+    <label for="rv-body">Your review <span class="req">*</span></label>
+    <textarea id="rv-body" name="body" rows="5" required minlength="10" maxlength="600" {% if errors.get('body') %}aria-invalid="true" aria-describedby="err-body"{% endif %}>{{ form.get('body', '') }}</textarea>
+    {{ ui.field_error(errors, 'body') }}
+    <p class="small muted">No email is needed. Please do not add links or personal details.</p>
+    <button class="btn btn-primary">Send review</button>
+  </form>
+</div>
+{% endblock %}

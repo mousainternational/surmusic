@@ -19,7 +19,7 @@
     <li>Use the “Skip to content” link at the top of every page to jump past the menu.</li>
   </ul>
 
-  <h2>Keyboard shortcuts</h2>
+  <h2 id="keyboard-shortcuts">Keyboard shortcuts</h2>
   <table>
     <thead><tr><th scope="col">Key</th><th scope="col">What it does</th></tr></thead>
     <tbody>
@@ -45,6 +45,15 @@
 
   <h2>Listening with the screen off</h2>
   <p>On Android, the <a href="{{ url_for('public.download_page') }}">Sur Music app</a> keeps playing with the screen locked and works with headset and Bluetooth buttons. On a computer, the Chrome extension keeps playing while you use other websites.</p>
+
+  <h2>Radio in your language</h2>
+  <p>Urdu, Hindi, Arabic, Punjabi, Pashto, Bengali, Tamil and more than thirty other languages are under the <a href="/radio-stations">Languages</a> tab. For نابینا افراد کے لیے ریڈیو (Urdu), दृष्टिबाधित लोगों के लिए रेडियो (Hindi) or راديو للمكفوفين (Arabic), start with <a href="/genre/quran">Quran</a>, <a href="/genre/news">news</a> and <a href="/genre/talk">talk</a>: they are mostly speech and need no screen.</p>
+
+  <h2>Questions and answers</h2>
+  {% for q, a in faqs %}
+  <h3>{{ q }}</h3>
+  <p>{{ a }}</p>
+  {% endfor %}
 
   <h2>Tell us what does not work</h2>
   <p>We test with screen-reader labels and the keyboard, but real listeners find things we miss. If anything is hard to use, please <a href="{{ url_for('public.contact') }}">contact us</a> — accessibility problems are fixed first.</p>

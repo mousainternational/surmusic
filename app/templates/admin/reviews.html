@@ -1,0 +1,30 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Reviews{% endblock %}
+{% block admin %}
+<div class="card table-wrap">
+  <p class="small muted">New reviews wait here. Press <strong>Approve</strong> to show a review on the site; delete anything rude.</p>
+  {% if rows %}
+  <table>
+    <thead><tr><th>Who</th><th>Stars</th><th>Review</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.name }}<br><span class="small muted">{{ r.created_at | date }}</span></td>
+      <td>{{ r.rating }} / 5</td>
+      <td>{{ r.body }}</td>
+      <td><span class="status">{{ 'shown' if r.status == 'approved' else 'waiting' }}</span></td>
+      <td class="actions">
+        {% if r.status != 'approved' %}
+        <form method="post" action="{{ url_for('admin.review_action', rid=r.id, action='approve') }}" class="inline"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-sm btn-primary">Approve</button></form>
+        {% else %}
+        <form method="post" action="{{ url_for('admin.review_action', rid=r.id, action='hide') }}" class="inline"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-sm btn-ghost">Hide</button></form>
+        {% endif %}
+        <form method="post" action="{{ url_for('admin.review_action', rid=r.id, action='delete') }}" class="inline" data-confirm="Delete this review?"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-sm btn-ghost">Delete</button></form>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="muted">No reviews yet.</p>{% endif %}
+</div>
+{% endblock %}

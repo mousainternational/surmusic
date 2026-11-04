@@ -1,5 +1,6 @@
 """Public pages, the station JSON API, favourites, downloads and infrastructure routes."""
 import json
+import re
 from datetime import datetime, timedelta, timezone
 from xml.sax.saxutils import escape
 
@@ -100,6 +101,18 @@ def _nav_tabs(active=""):
             items = [(topic_path(k), lb, k == real) for k, lb in islamic if k in TOPICS and not radio.known_empty(k)] + \
                     [i for i in items if i[0] != topic_path("islamic")]
         tabs.append({"key": key, "label": label, "on": key == current, "subs": items})
+    # A tab for blind and low-vision listeners: how-to page first, then the stations that are easy to follow by ear.
+    here_a11y = request.path == "/accessibility"
+    if here_a11y:
+        for t in tabs:
+            t["on"] = False
+    subs = [("/accessibility", "Blind-friendly guide", here_a11y),
+            ("/accessibility#keyboard-shortcuts", "Keyboard shortcuts", False)]
+    for sl, lb in (("news", "News"), ("talk", "Talk"), ("sports", "Sports & cricket"),
+                   ("english-news", "World news")):
+        if sl in TOPICS and not radio.known_empty(sl):
+            subs.append((topic_path(sl), lb, False))
+    tabs.append({"key": "accessibility", "label": "Accessibility", "on": here_a11y, "subs": subs})
     return tabs
 
 
@@ -432,20 +445,51 @@ def _listed_types(visible_only=False):
     return [(g, [(k, v) for k, v in items if not radio.known_empty(k)]) for g, items in grouped(visible_only)]
 
 
+_A11Y_FAQ = [
+    ("Is there a free radio for blind and visually impaired people?",
+     "Yes. Sur Music is free and made to be used by ear: every station is a labelled button, your screen reader says the station name, "
+     "and the keyboard alone can play, pause, skip and change the volume. No sign-up is needed."),
+    ("Does Sur Music work with TalkBack, VoiceOver, NVDA and JAWS?",
+     "Yes. It works with TalkBack on Android, VoiceOver on iPhone, iPad and Mac, and NVDA, JAWS and ChromeVox on computers. "
+     "Station changes, errors and volume are announced."),
+    ("Which keyboard shortcuts can I use?",
+     "K plays or pauses, N is next station, B is previous station, M mutes, Alt with the up or down arrow changes the volume, "
+     "and the slash key jumps to search."),
+    ("Can I listen to the Quran, news and talk radio without seeing the screen?",
+     "Yes. Quran, Naat, news, talk and cricket commentary stations are listed under the Accessibility tab. They are mostly speech, "
+     "so they are easy to follow by ear."),
+    ("Does the music keep playing when I open another page?",
+     "Yes. The player stays on while you browse, and your screen reader reads the new page title."),
+    ("Can I listen with the phone screen off?",
+     "Yes. The free Sur Music Android app keeps playing with the screen locked and responds to headset and Bluetooth buttons."),
+    ("Is there radio in Urdu, Hindi and Arabic for blind listeners?",
+     "Yes. Open the Languages tab for Urdu, Hindi, Arabic, Punjabi, Pashto and more than thirty other languages, or use Near me for "
+     "stations from your own country."),
+    ("How do I report something that is hard to use?",
+     "Use the Contact page. Accessibility problems are fixed first."),
+]
+
+
 @bp.route("/accessibility")
 def accessibility():
     """How blind and low-vision listeners use Sur Music (screen readers, keyboard)."""
-    meta = build_meta("Accessible Radio for Blind & Low-Vision Listeners — Screen Reader Friendly",
-                      "Sur Music works with screen readers (TalkBack, VoiceOver, NVDA, JAWS) and the keyboard: "
-                      "spoken station names, simple shortcuts, a keyboard-friendly radio player and thousands of live radio stations "
-                      "from every country.",
+    meta = build_meta("Free Radio for the Blind & Visually Impaired — Screen Reader",
+                      "Free online radio for blind and visually impaired listeners: works with TalkBack, VoiceOver, NVDA and JAWS, "
+                      "keyboard shortcuts, spoken station names, Quran, news and talk radio from every country. No sign-up.",
                       page="accessibility")
+    meta["keywords"] = ("radio for blind people, accessible radio, screen reader radio, talking radio player, "
+                        "radio for visually impaired, keyboard radio player, TalkBack radio, VoiceOver radio, NVDA radio, "
+                        "blind friendly radio, Quran for blind, audio news for blind, free radio no sign up, "
+                        "نابینا افراد کے لیے ریڈیو, दृष्टिबाधित के लिए रेडियो, راديو للمكفوفين")
     page = page_ld("WebPage", "Accessible radio for blind and low-vision listeners", meta["description"])
-    page["accessibilityFeature"] = ["ARIA", "structuralNavigation", "readingOrder", "tableOfContents"]
+    page["accessibilityFeature"] = ["ARIA", "structuralNavigation", "readingOrder", "tableOfContents", "alternativeText"]
     page["accessibilityControl"] = ["fullKeyboardControl", "fullMouseControl", "fullTouchControl"]
     page["accessibilityAPI"] = "ARIA"
-    return render_template("accessibility.html", meta=meta,
-                           ld=[page, breadcrumb_ld([("Home", "/"), ("Accessibility", "/accessibility")])])
+    page["accessibilityHazard"] = ["noFlashingHazard"]
+    page["audience"] = {"@type": "Audience", "audienceType": "Blind and visually impaired people"}
+    return render_template("accessibility.html", meta=meta, faqs=_A11Y_FAQ,
+                           ld=[page, breadcrumb_ld([("Home", "/"), ("Accessibility", "/accessibility")]),
+                               faq_items_ld(_A11Y_FAQ)])
 
 
 @bp.route("/radio-stations")
@@ -696,6 +740,55 @@ def contact():
                       page="contact")
     return render_template("contact.html", meta=meta, form=form, errors=errors, removal=removal,
                            ld=[page_ld("ContactPage", "Contact Sur Music", meta["description"])]), (400 if errors else 200)
+
+
+def _approved_reviews(limit=40):
+    try:
+        return get_db().all("SELECT name, rating, body, created_at FROM reviews WHERE status = 'approved' "
+                            "ORDER BY created_at DESC LIMIT ?", (limit,))
+    except Exception:
+        return []
+
+
+@bp.route("/reviews", methods=["GET", "POST"])
+def reviews():
+    """Listeners' reviews of Sur Music. New reviews wait for the owner's approval before they are shown."""
+    form, errors = {"name": "", "rating": "5", "body": ""}, {}
+    if request.method == "POST":
+        form = {k: " ".join((request.form.get(k) or "").split()) for k in ("name", "rating")}
+        form["body"] = (request.form.get("body") or "").strip()
+        if not 2 <= len(form["name"]) <= 40:
+            errors["name"] = "Please enter a first name or nickname (2–40 characters)."
+        if form["rating"] not in ("1", "2", "3", "4", "5"):
+            errors["rating"] = "Please choose 1 to 5 stars."
+        if not 10 <= len(form["body"]) <= 600:
+            errors["body"] = "Please write 10–600 characters."
+        if re.search(r"https?://|www\.|@\w+\.\w+", form["body"] + " " + form["name"], re.I):
+            errors["body"] = "Please do not put links or email addresses in a review."
+        if request.form.get("website"):
+            errors["form"] = "Submission rejected."
+        if not errors and rate_limited("review", 3, 3600):
+            errors["form"] = "Too many reviews from your connection. Please try again later."
+        if not errors:
+            db = get_db()
+            db.insert("reviews", {"name": form["name"], "rating": int(form["rating"]), "body": form["body"],
+                                  "status": "pending", "ip_hash": ip_hash(), "created_at": utcnow()})
+            db.commit()
+            flash("Thank you! Your review was received and will appear after a quick check.", "success")
+            return redirect(url_for("public.reviews"))
+    items = _approved_reviews()
+    meta = build_meta("Sur Music Reviews — What Listeners Say About Our Radio",
+                      "Read what listeners say about Sur Music, the free online radio and music player, and write your own "
+                      "review. Reviews are checked by us before they appear.", page="reviews")
+    ld = [page_ld("CollectionPage", "Sur Music listener reviews", meta["description"]),
+          breadcrumb_ld([("Home", "/"), ("Reviews", "/reviews")])]
+    if len(items) >= 5:          # star rating goes to Google only once there are enough real, approved reviews
+        app_ld = webapp_ld()
+        app_ld["aggregateRating"] = {"@type": "AggregateRating",
+                                     "ratingValue": round(sum(r["rating"] for r in items) / len(items), 1),
+                                     "reviewCount": len(items), "bestRating": 5, "worstRating": 1}
+        ld.append(app_ld)
+    return render_template("reviews.html", meta=meta, items=items, form=form, errors=errors, ld=ld), (400 if errors else 200)
 
 
 def _policy(key, page, title, description, extra_ld=None):
@@ -1180,7 +1273,7 @@ def sitemap():
     site = current_app.config["SITE_URL"]
     pages = ["/", "/bollywood", "/lollywood", "/hollywood", "/download", "/donate", "/about", "/contact", "/faq",
              "/privacy", "/terms", "/disclaimer", "/donation-disclaimer", "/cookies"]
-    pages += ["/radio-stations", "/accessibility", "/islam", "/markets", "/live-news", "/blog"] + (["/trending"] if trends.by_country() else []) + [f"/blog/{p['slug']}" for p in blog_data.POSTS] + [f"/continent/{c}" for c in CONTINENTS]
+    pages += ["/radio-stations", "/accessibility", "/reviews", "/islam", "/markets", "/live-news", "/blog"] + (["/trending"] if trends.by_country() else []) + [f"/blog/{p['slug']}" for p in blog_data.POSTS] + [f"/continent/{c}" for c in CONTINENTS]
     pages += [topic_path(k) for _, items in _listed_types() for k, _ in items]
     pages += [topic_path(k) for c in CONTINENTS for k, _, _ in _listed_countries(c)] + ["/deals"]
     seen = set()

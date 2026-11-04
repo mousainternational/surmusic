@@ -194,6 +194,31 @@ def user_action(uid, action):
     return redirect(url_for("admin.users"))
 
 
+# ---------------------------------------------------------------- reviews
+
+@bp.route("/reviews")
+@admin_required
+def reviews():
+    return render_template("admin/reviews.html", meta=META,
+                           rows=get_db().all("SELECT * FROM reviews ORDER BY (status = 'pending') DESC, created_at DESC LIMIT 500"))
+
+
+@bp.route("/reviews/<int:rid>/<action>", methods=["POST"])
+@admin_required
+def review_action(rid, action):
+    if action not in ("approve", "hide", "delete"):
+        abort(404)
+    db = get_db()
+    if action == "delete":
+        db.execute("DELETE FROM reviews WHERE id = ?", (rid,))
+    else:
+        db.execute("UPDATE reviews SET status = ? WHERE id = ?", ("approved" if action == "approve" else "pending", rid))
+    db.commit()
+    audit("review_" + action, str(rid))
+    flash({"approve": "Review approved and now visible.", "hide": "Review hidden.", "delete": "Review deleted."}[action], "success")
+    return redirect(url_for("admin.reviews"))
+
+
 # ---------------------------------------------------------------- messages
 
 @bp.route("/messages")

@@ -195,3 +195,14 @@ CREATE TABLE IF NOT EXISTS app_tokens (
   last_seen TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_app_tokens_user ON app_tokens (user_id);
+
+CREATE TABLE IF NOT EXISTS reviews (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  rating INTEGER NOT NULL,
+  body TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  ip_hash TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_reviews_status ON reviews (status, created_at);

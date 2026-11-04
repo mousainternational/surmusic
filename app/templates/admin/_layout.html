@@ -25,6 +25,7 @@
       <a href="{{ url_for('subs.admin_list') }}" {% if p.startswith('/admin/subscriptions') %}aria-current="page"{% endif %}>App subscriptions</a>
       <a href="{{ url_for('admin.donations') }}" {% if p.startswith('/admin/donations') %}aria-current="page"{% endif %}>Donations</a>
       <a href="{{ url_for('admin.messages') }}" {% if p.startswith('/admin/messages') %}aria-current="page"{% endif %}>Messages</a>
+      <a href="{{ url_for('admin.reviews') }}" {% if p.startswith('/admin/reviews') %}aria-current="page"{% endif %}>Reviews</a>
       <a href="{{ url_for('admin.settings') }}" {% if p.startswith('/admin/settings') %}aria-current="page"{% endif %}>Settings &amp; SEO</a>
       <a href="{{ url_for('admin.backup') }}" {% if p.startswith('/admin/backup') %}aria-current="page"{% endif %}>Backup</a>
       <a href="{{ url_for('admin.audit_log') }}" {% if p.startswith('/admin/audit') %}aria-current="page"{% endif %}>Audit log</a>

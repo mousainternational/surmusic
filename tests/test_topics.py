@@ -85,7 +85,7 @@ def test_category_tabs(client):
         tabs = re.findall(r'<a class="nt-tab( on)?"[^>]*data-tab="([^"]+)"', nav)
         return nav, tabs
     nav, tabs = parts("/")
-    assert [t for _, t in tabs] == ["music", "news", "sports", "talk", "religious", "languages", "countries"]
+    assert [t for _, t in tabs] == ["music", "news", "sports", "talk", "religious", "languages", "countries", "accessibility"]
     assert [t for on, t in tabs if on] == ["music"]
     for href in ("/bollywood", "/lollywood", "/hollywood", "/genre/ghazal", "/genre/news", "/genre/cricket",
                  "/genre/islamic", "/genre/christian", "/genre/bhajan", "/genre/punjabi", "/continent/europe"):
@@ -308,3 +308,36 @@ def test_song_name_is_clean_text():
     assert radio.clean_title("Artist - Song") == "Artist - Song"
     assert radio.clean_title("http://example.com/x?a=1") == "" and radio.clean_title(" - ") == ""
     assert radio.parse_icy(b"StreamTitle='" + enc.encode() + b"';") == "Islam Sobhi إسلام صبحي - سورة"
+
+
+def test_accessibility_tab_and_seo(client):
+    home = client.get("/").get_data(as_text=True)
+    assert 'data-tab="accessibility"' in home and 'data-sub="accessibility"' in home
+    page = client.get("/accessibility").get_data(as_text=True)
+    assert 'id="keyboard-shortcuts"' in page
+    assert "FAQPage" in page and "radio for blind people" in page and "نابینا" in page
+    import re
+    title = re.search(r"<title>(.*?)</title>", page, re.S).group(1)
+    import html as _h
+    assert len(_h.unescape(title)) <= 60, title
+
+
+
+def test_reviews_submit_approve_show(client, app):
+    import re
+    from conftest import login, post
+    assert b"Write a review" in client.get("/reviews").data
+    assert post(client, "/reviews", {"name": "A", "rating": "9", "body": "short"}, page="/reviews").status_code == 400
+    assert post(client, "/reviews", {"name": "Sara", "rating": "5", "body": "Visit http://spam.example now"}, page="/reviews").status_code == 400
+    assert post(client, "/reviews", {"name": "Bot", "rating": "5", "body": "Great radio for everyone", "website": "x"}, page="/reviews").status_code == 400
+    r = post(client, "/reviews", {"name": "Sara", "rating": "5", "body": "Great free radio, easy to use."}, page="/reviews",
+             follow_redirects=True)
+    assert b"will appear after a quick check" in r.data
+    assert b"Great free radio" not in client.get("/reviews").data
+    login(client)
+    admin = client.get("/admin/reviews").get_data(as_text=True)
+    assert "Great free radio" in admin
+    rid = re.search(r"/admin/reviews/(\d+)/approve", admin).group(1)
+    post(client, f"/admin/reviews/{rid}/approve", {}, page="/admin/reviews")
+    assert b"Great free radio" in client.get("/reviews").data
+    assert b"/reviews" in client.get("/sitemap.xml").data
