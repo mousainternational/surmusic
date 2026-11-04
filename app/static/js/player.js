@@ -285,6 +285,22 @@
   }
   $("pl-fav").addEventListener("click", function () { if (state.station) toggleFav(state.station); });
 
+  // ---------- share: the station that is playing (or the site) with a link ----------
+  function stationUrl(st) {
+    var slug = String(st.name || "station").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "station";
+    return location.origin + "/station/" + st.uuid + "/" + slug;
+  }
+  function shareNow() {
+    var st = state.station, url = st ? stationUrl(st) : location.origin + "/";
+    var text = st ? "Listen to " + st.name + " live, free:" : "Listen to free live radio from all over the world:";
+    if (navigator.share) {
+      navigator.share({ title: st ? st.name : "Sur Music", text: text, url: url }).catch(function () { /* closed by the user */ });
+    } else {
+      window.open("https://wa.me/?text=" + encodeURIComponent(text + " " + url), "_blank", "noopener");
+    }
+  }
+  $("pl-share").addEventListener("click", shareNow);
+
   if ("mediaSession" in navigator) {
     try {
       navigator.mediaSession.setActionHandler("play", toggle);

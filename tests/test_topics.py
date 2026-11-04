@@ -172,3 +172,16 @@ def test_favourite_stars_only_for_members(client, app):
     assert "guest" not in c2.get("/").get_data(as_text=True).split("<body", 1)[1].split(">", 1)[0]
     css = open("app/static/css/site.css", encoding="utf-8").read()
     assert "body.guest .st-fav" in css
+
+
+def test_share_picture_and_button(client, monkeypatch):
+    from app import radio
+    st = {"uuid": "9062f97c-7c49-4a6a-be28-4997a06aa001", "name": "OmniRadio - Islamic Audio Library (متنوع)",
+          "country": "Qatar", "url": "https://example.com/s", "tags": "islam"}
+    monkeypatch.setattr(radio, "station_by_uuid", lambda u: (st if u == st["uuid"] else None, "naat"))
+    r = client.get(f"/og/station/{st['uuid']}.png")
+    assert r.status_code == 200 and r.mimetype == "image/png" and r.data[:4] == b"\x89PNG"
+    assert client.get("/og/station/zzzz.png").status_code == 404
+    assert client.get("/og/station/ffffffff-0000-0000-0000-000000000000.png").status_code == 404
+    page = client.get("/").get_data(as_text=True)
+    assert 'id="pl-share"' in page and 'id="np-share"' in page

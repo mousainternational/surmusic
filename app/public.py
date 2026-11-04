@@ -20,7 +20,7 @@ from . import blog as blog_data
 from . import islam as islam_data
 from . import markets
 from . import trends
-from .seo import (article_ld, breadcrumb_ld, build_meta, faq_ld, media_url, organization_ld, page_ld, station_ld, webapp_ld, android_app_ld,
+from .seo import (absolute, article_ld, breadcrumb_ld, build_meta, faq_ld, media_url, organization_ld, page_ld, station_ld, webapp_ld, android_app_ld,
                   website_ld)
 from .settings import (ADSENSE_CLIENT_RE, ads_active, affiliate_offers, donation_method, get_settings, is_blocked,
                        offers_for, sponsored_stations, without_blocked)
@@ -395,6 +395,19 @@ def continent(slug):
                            topic_path=topic_path, crumbs=crumbs, ld=[breadcrumb_ld(crumbs)])
 
 
+@bp.route("/og/station/<uuid>.png")
+def station_card(uuid):
+    """Share picture of one station (shown next to the link in WhatsApp, Facebook, …)."""
+    from . import ogcard
+    if not ogcard.UUID_RE.match(uuid):
+        abort(404)
+    st, _key = radio.station_by_uuid(uuid)
+    if not st or is_blocked(st):
+        abort(404)
+    png = ogcard.render((st.get("name") or "Radio").strip()[:90], (st.get("country") or "").strip()[:40])
+    return Response(png, mimetype="image/png", headers={"Cache-Control": "public, max-age=86400"})
+
+
 @bp.route("/station/<uuid>")
 @bp.route("/station/<uuid>/<slug>")
 def station_page(uuid, slug=None):
@@ -423,6 +436,7 @@ def station_page(uuid, slug=None):
     desc = (f"Listen to {st['name']} live online free on Sur Music. A radio station from {place} playing {tags}. "
             "No download, no sign-up — press play.")
     meta = build_meta(title, desc, canonical_path=want)
+    meta["image"] = absolute(f"/og/station/{st['uuid']}.png")
     back = (CATEGORY_PAGES.get(key) or TOPICS.get(key) or {}).get("h1", "All radio").split(" — ")[0]
     back_href = f"/{key}" if key in CATEGORY_PAGES else (topic_path(key) if key in TOPICS else "/radio-stations")
     crumbs = [("Home", "/")]

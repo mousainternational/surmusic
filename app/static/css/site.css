@@ -440,6 +440,8 @@ a.stat { color: var(--text); text-decoration: none; } a.stat:hover { border-colo
 .player[data-state="playing"] .pl-main .i-play, .player[data-state="loading"] .pl-main .i-play { display: none; }
 .player[data-state="playing"] .pl-main .i-pause, .player[data-state="loading"] .pl-main .i-pause { display: block; }
 .pl-fav { font-size: 1.1rem; color: var(--muted); }
+.pl-share { color: var(--muted); }
+.pl-share svg { width: 20px; height: 20px; fill: currentColor; }
 .pl-fav.on { color: var(--accent); }
 .pl-vol { display: none; }
 @media (min-width: 760px) { .pl-vol { display: block; } }

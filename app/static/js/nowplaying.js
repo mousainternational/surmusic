@@ -337,6 +337,7 @@
   $("np-prev").addEventListener("click", function () { $("pl-prev").click(); });
   $("np-next").addEventListener("click", function () { $("pl-next").click(); });
   $("np-fav").addEventListener("click", function () { $("pl-fav").click(); });
+  $("np-share").addEventListener("click", function () { $("pl-share").click(); });
   $("np-vol").addEventListener("input", function (e) {
     var v = $("pl-vol"); v.value = e.target.value; v.dispatchEvent(new Event("input"));
   });
