@@ -12,8 +12,7 @@
     <p class="lead">{{ info.intro }}</p>
     <button class="btn btn-accent" type="button" data-play-first>▶ Play top station</button>
   </header>
-  {{ ui.cat_tabs(cat) }}
-  {{ ui.genre_chips(genre or '') }}
+  {{ ui.genre_chips(genre or cat) }}
   {{ ads.ad('top') }}
   {{ tr.strip(trending, 'Trending now: live commentary and news') }}
   <div class="with-side">

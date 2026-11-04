@@ -42,24 +42,32 @@
   {%- if errors and errors.get(key) %}<p class="field-error" id="err-{{ key }}">{{ errors[key] }}</p>{% endif -%}
 {%- endmacro %}
 
-{% macro cat_tabs(active) -%}
-<nav class="cat-tabs" aria-label="Music categories">
-  {%- for key, label in [('bollywood', 'Bollywood'), ('lollywood', 'Lollywood'), ('hollywood', 'Hollywood')] %}
-  <a href="/{{ key }}" class="{{ 'active' if key == active }}" {% if key == active %}aria-current="page"{% endif %}>{{ label }}</a>
-  {%- endfor %}
-</nav>
-{%- endmacro %}
+{% macro cat_tabs(active) -%}{%- endmacro %}
 
 {% macro genre_chips(active='') -%}
-<nav class="genre-chips" aria-label="Radio by type" data-genre-chips>
-  <h2 class="h3">Listen by type</h2>
-  <div class="chips">
-  {%- set here = chips_here()[:8] %}
-  {%- for key in here + ([active] if active and active in TOPICS and active not in here else []) %}
-    <a class="chip{{ ' active' if key == active }}" href="{{ topic_href(key) }}" data-topic="{{ key }}" {% if key == active %}aria-current="page"{% endif %}>{{ TOPICS[key].label }}</a>
+<nav class="nav-tabs" aria-label="Radio categories" data-nav-tabs>
+  <div class="nt-main" role="tablist">
+  {%- for t in nav_tabs(active) %}
+    <a class="nt-tab{{ ' on' if t.on }}" href="/radio-stations" role="tab" data-tab="{{ t.key }}" aria-selected="{{ 'true' if t.on else 'false' }}">{{ t.label }}</a>
   {%- endfor %}
+  </div>
+  {%- for t in nav_tabs(active) %}
+  <div class="nt-sub chips" data-sub="{{ t.key }}" role="tabpanel" aria-label="{{ t.label }}"{% if not t.on %} hidden{% endif %}>
+    {%- for href, label, on in t.subs[:12] %}
+    <a class="chip{{ ' active' if on }}" href="{{ href }}"{% if on %} aria-current="page"{% endif %}>{{ label }}</a>
+    {%- endfor %}
+    {%- if t.subs | length > 12 %}
+    <details class="nt-more"><summary class="chip chip-more">More</summary>
+      <div class="chips">
+      {%- for href, label, on in t.subs[12:] %}
+        <a class="chip{{ ' active' if on }}" href="{{ href }}"{% if on %} aria-current="page"{% endif %}>{{ label }}</a>
+      {%- endfor %}
+      </div>
+    </details>
+    {%- endif %}
     <a class="chip chip-more" href="/radio-stations">All types &amp; countries →</a>
   </div>
+  {%- endfor %}
 </nav>
 {%- endmacro %}
 

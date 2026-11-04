@@ -1117,3 +1117,24 @@ body.guest .st-fav, body.guest .pl-fav, body.guest #np-fav, body.guest .hd-fav {
 .topic-faq details { border-top: 1px solid var(--border); padding: 10px 0; }
 .topic-faq summary { cursor: pointer; font-weight: 600; }
 .topic-faq p { margin: 8px 0 0; color: var(--muted); }
+
+/* category tabs: Music | News | Sports | Talk | Religious | Languages | Countries, each opens its own buttons */
+.nav-tabs { margin: 10px 0 18px; }
+.nt-main { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.nt-tab { flex: 0 0 auto; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-weight: 700; font-size: .92rem; text-decoration: none; white-space: nowrap; }
+.nt-tab.on { background: var(--grad); color: #2a0a17; border-color: transparent; }
+.nt-sub[hidden] { display: none !important; }
+.nt-sub.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.nt-sub .chip { padding: 7px 13px; min-height: 38px; font-size: .88rem; }
+.nt-sub .chip.active { background: var(--grad); color: #2a0a17; border-color: transparent; }
+.nt-more { display: contents; }
+.nt-more summary { list-style: none; cursor: pointer; }
+.nt-more summary::-webkit-details-marker { display: none; }
+.nt-more[open] > summary { display: none; }
+.nt-more > .chips { display: contents; }
+.nav-tabs, .nt-main { min-width: 0; max-width: 100%; }
+.hero-grid > *, .with-side > * { min-width: 0; }
+.hero-chips { min-width: 0; max-width: 100%; }
+.hero2-grid { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 960px) { .hero2-grid { grid-template-columns: 1.3fr 1fr; } }
+.hero2-grid > * { min-width: 0; }

@@ -378,3 +378,19 @@ document.addEventListener("toggle", function (e) {
   }, true);
   document.querySelectorAll(".offer img").forEach(function (img) { if (img.complete && img.naturalWidth === 0) fix(img); });
 })();
+
+/* category tabs (Music, News, Sports …): a tab shows its own buttons underneath */
+(function () {
+  document.addEventListener("click", function (e) {
+    var tab = e.target.closest && e.target.closest("[data-nav-tabs] .nt-tab");
+    if (!tab) return;
+    e.preventDefault(); e.stopPropagation();
+    var nav = tab.closest("[data-nav-tabs]"), key = tab.getAttribute("data-tab");
+    nav.querySelectorAll(".nt-tab").forEach(function (t) {
+      var on = t === tab;
+      t.classList.toggle("on", on);
+      t.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    nav.querySelectorAll(".nt-sub").forEach(function (p) { p.hidden = p.getAttribute("data-sub") !== key; });
+  }, true);
+})();

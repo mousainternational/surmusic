@@ -71,8 +71,8 @@ TOPICS = {
         h1="Islamic Radio — Live Bayan, Dars & Islamic Talks", native="اسلامی ریڈیو",
         seo_title="Islamic Radio Live — Bayan, Dars, Islamic Lectures & Nasheed",
         description="Listen to live Islamic radio free: bayan, dars-e-Quran, hadith, Islamic lectures, duas and nasheed from stations worldwide.",
-        intro="Live Islamic radio from around the world: bayan and dars, Quran and hadith lessons, Islamic lectures, duas, nasheed and programmes for the whole family.",
-        more="Also searched as Islamic radio live, Islamic bayan, Urdu bayan radio, dars e Quran, Islamic lectures online, Islam radio and Muslim radio station.",
+        intro="Live Islamic radio from around the world: Quran recitation, naat sharif, bayan and dars, hadith lessons, Islamic lectures, duas, nasheed and programmes for the whole family.",
+        more="Also searched as Islamic radio live, Islamic bayan, Urdu bayan radio, dars e Quran, Quran radio, naat radio, Islamic lectures online, Islam radio and Muslim radio station.",
         paths=[tag("islamic"), tag("islam"), tag("muslim"), tag("islamic", "&countrycode=PK"), tag("religion", "&countrycode=PK"),
                tag("bayan"), name("bayan"), name("islamic")]),
     "pakistan-islamic": dict(
@@ -286,6 +286,39 @@ TOPICS = {
         intro="Live sports radio: cricket and football talk, sports news and live commentary (when the station carries the match).",
         more="Also searched as cricket radio live, cricket commentary radio, sports radio online and football radio.",
         paths=[tag("sports"), tag("cricket"), tag("football")]),
+
+    "cricket": dict(
+        kind="genre", group="News, talk & sports", label="Cricket",
+        h1="Cricket Radio — Live Cricket Commentary", native="کرکٹ کمنٹری",
+        seo_title="Cricket Radio Live — Live Commentary & Cricket Talk",
+        description="Listen to live cricket radio free: ball-by-ball commentary when matches are on, cricket talk, news and analysis.",
+        intro="Live cricket radio: commentary when the station carries the match, plus cricket talk, news and analysis.",
+        more="Also searched as cricket commentary live, live cricket radio, cricket radio online, Pakistan cricket radio, ball by ball commentary and the Urdu words کرکٹ کمنٹری.",
+        paths=[tag("cricket"), name("cricket"), name("commentary")]),
+    "football": dict(
+        kind="genre", group="News, talk & sports", label="Football",
+        h1="Football Radio — Live Football Commentary & Talk", native="",
+        seo_title="Football Radio Live — Commentary, Soccer & Sports Talk",
+        description="Listen to live football radio free: match commentary, soccer talk and sports news from stations around the world.",
+        intro="Live football (soccer) radio: match commentary when the station carries the game, plus football talk and news.",
+        more="Also searched as football radio live, soccer radio, live football commentary, football talk radio and sports radio online.",
+        paths=[tag("football"), tag("soccer"), name("football"), name("soccer")]),
+    "hindi-news": dict(
+        kind="genre", group="News, talk & sports", label="Hindi news",
+        h1="Hindi News Radio — Live Hindi Khabar", native="हिंदी समाचार रेडियो",
+        seo_title="Hindi News Radio Live — Hindi Khabar & Samachar Online",
+        description="Listen to live Hindi news radio free: Hindi khabar, samachar and talk from stations in India and around the world.",
+        intro="Live Hindi news and talk radio: khabar, samachar, current affairs and discussions.",
+        more="Also searched as Hindi news live, Hindi samachar radio, Hindi khabar online and news radio in Hindi.",
+        paths=[tag("news", "&language=hindi"), lang("hindi", "&tag=talk"), name("samachar")]),
+    "arabic-news": dict(
+        kind="genre", group="News, talk & sports", label="Arabic news",
+        h1="Arabic News Radio — Live Arabic News & Talk", native="أخبار عربية مباشر",
+        seo_title="Arabic News Radio Live — Arabic News & Talk Online",
+        description="Listen to live Arabic news radio free: Arabic news, talk and current affairs from the Gulf, Egypt, the Levant and beyond.",
+        intro="Live Arabic news and talk radio from the Middle East and North Africa.",
+        more="Also searched as Arabic news live, Arabic radio news, Gulf news radio and Arabic talk radio.",
+        paths=[tag("news", "&language=arabic"), lang("arabic", "&tag=talk"), name("akhbar")]),
 
     # ------------------------------------------------------------------ World music
     "pop": dict(
@@ -755,7 +788,7 @@ _LATIN = ["latin", "pop", "christian", "rock", "80s-90s", "dance", "talk", "spor
 _AFRICA = ["afrobeats", "pop", "christian", "islamic", "quran", "reggae", "english-news", "talk", "sports",
            "hip-hop", "dance"]
 _EAST_ASIA = ["k-pop", "pop", "jazz", "classical", "lofi", "rock", "dance", "english-news", "christian"]
-_DEFAULT = ["pop", "naat", "quran", "english-news", "christian", "latin", "jazz", "classical", "rock", "talk",
+_DEFAULT = ["pop", "islamic", "english-news", "christian", "latin", "jazz", "classical", "rock", "talk",
             "lofi", "old-songs"]
 REGION_CHIPS = {
     "PK": _SOUTH_ASIA_MUSLIM,
@@ -786,7 +819,13 @@ CODE_TO_COUNTRY = {}            # ISO code -> country page slug (filled below, a
 
 
 # Shown in the page text and keywords, but not as buttons in the "Listen by type" strip.
-HIDDEN_CHIPS = ("naat", "qawwali", "sufi")
+ISLAMIC_FAMILY = ("quran", "naat", "pakistan-islamic", "bayan", "majlis", "madani", "hadith")
+HIDDEN_CHIPS = ("naat", "qawwali", "sufi") + tuple(k for k in ISLAMIC_FAMILY if k != "naat")   # all of them live under "Islamic"
+SECT_PAGES = ("majlis", "madani", "hadith")      # kept for search engines (sitemap), not listed as buttons or in the directory
+
+# One "Islamic" page that holds all of it: Quran, Naat, bayan and the other Islamic programmes.
+TOPICS["islamic"]["paths"] = list(dict.fromkeys(
+    TOPICS["islamic"]["paths"] + [p for k in ISLAMIC_FAMILY for p in TOPICS[k]["paths"]]))
 
 
 def chips_for(code):
@@ -808,9 +847,10 @@ def topic_path(slug):
     return f"/country/{slug}" if t["kind"] == "country" else f"/genre/{slug}"
 
 
-def grouped():
+def grouped(visible_only=False):
     """[(group heading, [(slug, topic), …]), …] — radio types (for the "All radio stations" page)."""
-    return [(g, [(k, v) for k, v in TOPICS.items() if v["group"] == g]) for g in GROUPS]
+    return [(g, [(k, v) for k, v in TOPICS.items() if v["group"] == g and not (visible_only and k in SECT_PAGES)])
+            for g in GROUPS]
 
 
 def countries_in(continent):
@@ -890,3 +930,28 @@ EXTRA_MORE = {
 for _k, _t in EXTRA_MORE.items():
     if _k in TOPICS:
         TOPICS[_k]["more"] = (TOPICS[_k].get("more") or "").rstrip() + " " + _t
+
+
+# ---------------------------------------------------------------------------------------------
+# The category tabs (Music, News, Sports, Talk, Religious, Languages, Countries) and what opens under each.
+# Everything about a kind of radio sits under one tab; nothing points at one school of thought.
+NAV = [
+    ("music", "Music", ["bollywood", "lollywood", "hollywood", "ghazal", "qawwali", "sufi", "old-songs", "indian-classical",
+                         "pop", "rock", "hip-hop", "jazz", "classical", "dance", "lofi", "80s-90s", "latin", "country-music",
+                         "reggae", "afrobeats", "metal", "k-pop"]),
+    ("news", "News", ["english-news", "news", "hindi-news", "arabic-news"]),
+    ("sports", "Sports", ["sports", "cricket", "football"]),
+    ("talk", "Talk", ["talk", "debates", "comedy", "health", "meditation", "cooking", "kids", "education", "business",
+                       "technology"]),
+    ("religious", "Religious", ["islamic", "christian", "bhajan", "gurbani", "jewish"]),
+    ("languages", "Languages", ["punjabi", "pashto", "sindhi", "hindi", "urdu", "english", "arabic", "bengali", "tamil",
+                                "telugu", "malayalam", "marathi", "gujarati", "persian", "spanish", "french", "german",
+                                "italian", "portuguese", "russian", "turkish", "indonesian", "japanese", "korean",
+                                "chinese", "swahili", "thai", "vietnamese", "polish", "dutch", "greek", "hebrew"]),
+    ("countries", "Countries", []),     # filled by the page code: continents and the biggest countries
+]
+CAT_PAGES = {"bollywood": "Bollywood", "lollywood": "Lollywood", "hollywood": "Hollywood"}
+TAB_OF = {slug: key for key, _label, slugs in NAV for slug in slugs}
+TAB_OF.update({k: "religious" for k in ISLAMIC_FAMILY})
+TAB_COUNTRIES = ["pakistan", "india", "uk", "usa", "uae", "saudi-arabia", "canada", "australia", "germany", "france",
+                 "turkey", "bangladesh"]

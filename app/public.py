@@ -64,6 +64,38 @@ def station_path(st):
     return f"/station/{st['uuid']}/{slug}"
 
 
+@bp.app_template_global("chip_active")
+def _chip_active(slug):
+    """On Quran, Naat, bayan … pages the highlighted button is "Islamic" (they all live under it)."""
+    from .topics import ISLAMIC_FAMILY
+    return "islamic" if slug in ISLAMIC_FAMILY else slug
+
+
+@bp.app_template_global("nav_tabs")
+def _nav_tabs(active=""):
+    """The category tabs (Music, News, Sports …) with what opens under each. [{key,label,on,items:[(href,label,on)]}]"""
+    from .topics import CAT_PAGES, NAV, TAB_COUNTRIES, TAB_OF, ISLAMIC_FAMILY
+    slug = "islamic" if active in ISLAMIC_FAMILY else active
+    if slug in COUNTRY_PAGES or request.path.startswith("/continent/"):
+        current = "countries"
+    else:
+        current = TAB_OF.get(slug) or ("music" if slug in CAT_PAGES or not slug else "music")
+    tabs = []
+    for key, label, slugs in NAV:
+        items = []
+        if key == "countries":
+            items = [(f"/continent/{c}", CONTINENTS[c][0], request.path == f"/continent/{c}") for c in CONTINENTS]
+            items += [(topic_path(c), TOPICS[c]["label"], c == slug) for c in TAB_COUNTRIES if c in TOPICS]
+        else:
+            for sl in slugs:
+                if sl in CAT_PAGES:
+                    items.append((f"/{sl}", CAT_PAGES[sl], sl == slug))
+                elif sl in TOPICS and not radio.known_empty(sl):
+                    items.append((topic_path(sl), TOPICS[sl]["label"], sl == slug))
+        tabs.append({"key": key, "label": label, "on": key == current, "subs": items})
+    return tabs
+
+
 @bp.app_template_global("topic_href")
 def _topic_href(slug):
     return topic_path(slug)
@@ -97,14 +129,14 @@ _TYPE_GROUPS = [          # (key, icon, title, types)
     ("entertainment", "🎬", "Entertainment", ["pop", "rock", "hip-hop", "dance", "lofi", "jazz", "classical",
                                               "country-music", "latin", "80s-90s", "reggae", "afrobeats", "k-pop",
                                               "metal", "old-songs", "comedy"]),
-    ("religious", "🕌", "Religious", ["quran", "islamic", "christian", "bhajan", "gurbani", "jewish"]),
-    ("news", "📰", "News", ["news", "english-news", "business"]),
+    ("religious", "🕌", "Religious", ["islamic", "christian", "bhajan", "gurbani", "jewish"]),
+    ("news", "📰", "News", ["news", "english-news", "hindi-news", "arabic-news", "business"]),
     ("debates", "🎙️", "Debates and talk", ["debates", "talk"]),
-    ("sports", "🏏", "Sports", ["sports"]),
+    ("sports", "🏏", "Sports", ["sports", "cricket", "football"]),
     ("health", "🩺", "Health and calm", ["health", "meditation"]),
     ("cooking", "🍳", "Cooking and food", ["cooking"]),
     ("kids", "🧒", "Kids and learning", ["kids", "education", "technology"]),
-    ("other", "✨", "Other", ["naat", "qawwali", "sufi", "ghazal"]),
+    ("other", "✨", "Other", ["qawwali", "sufi", "ghazal"]),
 ]
 _LANG_GROUPS = [
     ("South Asia", ["hindi", "urdu", "punjabi", "pashto", "sindhi", "bengali", "tamil", "telugu", "malayalam", "marathi",
@@ -127,7 +159,8 @@ def _market_ticker():
 def _type_menu():
     """Every radio type in short groups: [(key, icon, title, [(href, label)])]. Nothing is left out."""
     languages = {s for _, slugs in _LANG_GROUPS for s in slugs}
-    placed = {s for _, _, _, slugs in _TYPE_GROUPS for s in slugs} | languages
+    from .topics import ISLAMIC_FAMILY
+    placed = {s for _, _, _, slugs in _TYPE_GROUPS for s in slugs} | languages | set(ISLAMIC_FAMILY)   # all of these live under "Islamic"
     out = [("film", "🎞️", "Film and pop radio", [("/bollywood", "Bollywood"), ("/lollywood", "Pakistani (Lollywood)"),
                                                   ("/hollywood", "English hits (Hollywood)")])]
     for key, icon, title, slugs in _TYPE_GROUPS:
@@ -378,8 +411,8 @@ def _listed_countries(continent, minimum=3):
     return out
 
 
-def _listed_types():
-    return [(g, [(k, v) for k, v in items if not radio.known_empty(k)]) for g, items in grouped()]
+def _listed_types(visible_only=False):
+    return [(g, [(k, v) for k, v in items if not radio.known_empty(k)]) for g, items in grouped(visible_only)]
 
 
 @bp.route("/accessibility")
@@ -406,7 +439,7 @@ def all_topics():
                       "plus Naat, Quran, qawwali, news, pop, rock, jazz and more — free in your browser.",
                       page="radio-stations")
     world = [(c, CONTINENTS[c][0], _listed_countries(c)) for c in CONTINENTS]
-    return render_template("topics.html", meta=meta, groups=_listed_types(), world=world, topic_path=topic_path,
+    return render_template("topics.html", meta=meta, groups=_listed_types(True), world=world, topic_path=topic_path,
                            ld=[breadcrumb_ld([("Home", "/"), ("All radio", "/radio-stations")])])
 
 

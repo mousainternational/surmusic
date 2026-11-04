@@ -25,7 +25,11 @@ def test_page_text_for_search(client):
 
 def test_all_radio_page_links_everything(client):
     html = client.get("/radio-stations").get_data(as_text=True)
+    from app.topics import SECT_PAGES
     for slug, t in TOPICS.items():
+        if slug in SECT_PAGES:                      # kept for search engines only (sitemap), not shown as a button
+            assert "/genre/" + slug + '"' not in html
+            continue
         assert ("/country/" if t["kind"] == "country" else "/genre/") + slug + '"' in html
 
 
@@ -74,29 +78,29 @@ def test_accessibility_page_and_world_links(client):
         assert client.get(f"/genre/{slug}").status_code == 200
 
 
-def test_type_strip_follows_visitor_country(app):
-    def chips(**headers):
-        html = app.test_client().get("/", headers=headers).get_data(as_text=True)
-        strip = html.split("data-genre-chips", 1)[1].split("</nav>", 1)[0]
-        return re.findall(r'data-topic="([^"]+)"', strip)
-    pk = chips(**{"Accept-Language": "ur-PK,ur;q=0.9"})
-    us = chips(**{"Accept-Language": "en-US,en;q=0.9"})
-    de = chips(**{"Accept-Language": "de-DE"})
-    il = chips(**{"Accept-Language": "he-IL"})
-    assert pk[0] == "pakistan" and "quran" in pk and not {"naat", "qawwali", "sufi"} & set(pk)
-    assert us[0] == "usa" and "christian" in us and "country-music" in us and "naat" not in us
-    assert de[0] == "germany" and "dance" in de
-    assert il[0] == "israel" and "jewish" in il
-    assert "pop" in chips()                                     # unknown country: a mix for everyone
-    # the time zone the browser reported wins over the language
-    c = app.test_client()
-    c.get("/")
-    import json
-    with c.session_transaction() as s:
-        s["geo_c"] = "IN"
-    html = c.get("/", headers={"Accept-Language": "en-US"}).get_data(as_text=True)
-    strip = html.split("data-genre-chips", 1)[1].split("</nav>", 1)[0]
-    assert re.findall(r'data-topic="([^"]+)"', strip)[:2] == ["india", "bhajan"]
+def test_category_tabs(client):
+    def parts(path):
+        html = client.get(path).get_data(as_text=True)
+        nav = html.split("data-nav-tabs", 1)[1].split("</nav>", 1)[0]
+        tabs = re.findall(r'<a class="nt-tab( on)?"[^>]*data-tab="([^"]+)"', nav)
+        return nav, tabs
+    nav, tabs = parts("/")
+    assert [t for _, t in tabs] == ["music", "news", "sports", "talk", "religious", "languages", "countries"]
+    assert [t for on, t in tabs if on] == ["music"]
+    for href in ("/bollywood", "/lollywood", "/hollywood", "/genre/ghazal", "/genre/english-news", "/genre/cricket",
+                 "/genre/islamic", "/genre/christian", "/genre/bhajan", "/genre/punjabi", "/continent/europe"):
+        assert f'href="{href}"' in nav, href
+    # nothing in the buttons points at one school of thought, and Quran / Naat have no tab of their own
+    for word in ("madani", "majlis", "hadith", "Dawat", "/genre/quran", "/genre/naat"):
+        assert word not in nav, word
+    nav, tabs = parts("/genre/quran")                     # Quran lives under Religious → Islamic
+    assert [t for on, t in tabs if on] == ["religious"]
+    assert re.search(r'class="chip active"[^>]*>Islamic<', nav)
+    assert [t for on, t in parts("/country/pakistan")[1] if on] == ["countries"]
+    assert [t for on, t in parts("/genre/english-news")[1] if on] == ["news"]
+    # the pages that hold those stations are still there for Google
+    xml = client.get("/sitemap.xml").get_data(as_text=True)
+    assert client.get("/genre/madani").status_code == 200
 
 
 def test_popular_list_merges_duplicates_and_never_links_to_a_missing_page(client, app):

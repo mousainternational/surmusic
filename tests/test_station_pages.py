@@ -10,18 +10,20 @@ def test_genre_pages(client):
         r = client.get(f"/genre/{slug}")
         assert r.status_code == 200, slug
         html = r.get_data(as_text=True)
-        assert 'rel="canonical"' in html and "Listen by type" in html and 'aria-current="page"' in html
+        assert 'rel="canonical"' in html and "Radio categories" in html and 'aria-current="page"' in html
     assert "Naat Radio" in client.get("/genre/naat").get_data(as_text=True)
     assert client.get("/genre/nothing").status_code == 404
     home = client.get("/").get_data(as_text=True)
-    strip = home.split("data-genre-chips", 1)[1].split("</nav>", 1)[0]                          # the quick buttons
-    assert "naat" not in strip and "qawwali" not in strip and "sufi" not in strip
+    strip = home.split("data-nav-tabs", 1)[1].split("</nav>", 1)[0]                             # the category tabs
+    assert "/genre/naat" not in strip and "/genre/quran" not in strip
     header = home.split('<nav id="menu"', 1)[1].split("</nav>", 1)[0]                           # the header menu
     assert header.count("<details") == 3 and "🌐 Language" in header and "🌍 Country" in header
     other = header.split("📻 Types", 1)[1].split("Other</h3>", 1)[1].split("</ul>", 1)[0]
-    for slug in ("naat", "qawwali", "sufi", "ghazal"):                                          # inside "Other"
+    for slug in ("qawwali", "sufi", "ghazal"):                                                  # inside "Other"
         assert f'href="/genre/{slug}"' in other, slug
     assert 'href="/country/usa"' in header and 'href="/continent/europe"' in header
+    for word in ("Madani", "Dawat", "Majlis", "Hadith", "Noha", "/genre/naat", "/genre/quran"):                 # all live under Islamic
+        assert word not in header, word
     assert 'href="/genre/news"' in header and 'href="/blog"' in header                          # Guides is in the menu
     assert 'href="/genre/hindi"' in header and 'href="/genre/health"' in header
     assert 'href="/radio-stations#cat-religious"' in home                                       # category tiles
