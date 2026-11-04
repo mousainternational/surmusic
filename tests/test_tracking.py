@@ -245,7 +245,7 @@ def test_retention_purge(client, app):
     a = app.test_client()
     login(a)
     a.get("/admin/")  # dashboard runs the purge
-    assert [e["kind"] for e in _events(app)] == ["login"]
+    assert [e["kind"] for e in _events(app)] == []          # the owner's own sign-in is never counted
 
 
 # ---------------------------------------------------------------- city database (.mmdb) and Cloudflare Tunnel

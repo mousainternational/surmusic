@@ -107,9 +107,22 @@ def remember_timezone(tz):
     return code, city
 
 
+def is_admin_user(user_id):
+    """True when this account is the owner/admin: the owner's own clicks, sign-ins and downloads are never counted."""
+    if not user_id:
+        return False
+    try:
+        return get_db().scalar("SELECT COUNT(*) FROM users WHERE id = ? AND role = 'admin'", (user_id,)) > 0
+    except Exception:
+        return False
+
+
 def record(kind, user_id=None, path="", detail="", referrer=""):
-    """Store one analytics event (skipped for bots)."""
+    """Store one analytics event (skipped for bots and for the admin's own activity)."""
     if kind not in KINDS or is_bot():
+        return
+    # failed sign-ins stay visible (someone else may be trying the admin account); everything the admin does is left out
+    if kind != "login_failed" and is_admin_user(user_id or session.get("uid")):
         return
     device, browser, os_name = parse_ua(request.headers.get("User-Agent", ""))
     code, city = _location()
@@ -145,7 +158,7 @@ def close_session(row, extra=30):
     except (TypeError, ValueError):
         return
     secs = max(0, int(secs)) + extra
-    if secs < 45:
+    if secs < 45 or is_admin_user(row["user_id"]):
         return
     mins = max(1, round(secs / 60))
     sql = ("INSERT INTO events (kind, visitor_id, user_id, path, referrer, country, region, device, browser, os, "

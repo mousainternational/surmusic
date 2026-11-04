@@ -289,3 +289,40 @@ def test_accessibility_button_in_the_header_and_its_seo(client):
     assert "WebPage" in kinds and "BreadcrumbList" in kinds
     ld = next(json.loads(b) for b in re.findall(r'<script type="application/ld\+json"[^>]*>(.*?)</script>', page, re.S) if '"WebPage"' in b)
     assert "ARIA" in ld["accessibilityFeature"] and "fullKeyboardControl" in ld["accessibilityControl"]
+
+
+def test_admin_own_activity_is_not_counted_but_visitors_are(app):
+    from conftest import login, signup
+    from app.db import Database
+    owner, visitor = app.test_client(), app.test_client()
+    login(owner)                                              # the owner signs in, browses and downloads
+    owner.get("/"); owner.get("/hollywood"); owner.get("/download/android")
+    signup(visitor, "sara@example.com")
+    visitor.get("/"); visitor.get("/hollywood")
+    db = Database(app.config["DATABASE_URL"])
+    admin_id = db.one("SELECT id FROM users WHERE role = 'admin'")["id"]
+    assert db.scalar("SELECT COUNT(*) FROM events WHERE user_id = ?", (admin_id,)) == 0         # nothing from the owner
+    assert db.scalar("SELECT COUNT(*) FROM events WHERE kind = 'signup'") == 1                   # visitors still counted
+    again = app.test_client()
+    login(again, "sara@example.com", "listen-to-ghazals-42")
+    assert db.scalar("SELECT COUNT(*) FROM events WHERE kind = 'login'") >= 1
+    db.close()
+
+
+def test_old_admin_events_are_removed_once_at_start(tmp_path, monkeypatch):
+    from app import db as dbmod
+    from app.db import Database, utcnow
+    url = f"sqlite:///{tmp_path / 'x.db'}"
+    dbmod.migrate(url)
+    d = Database(url)
+    d.execute("INSERT INTO users (email, password_hash, role, display_name, created_at, is_active) VALUES ('a@x.com', 'h', 'admin', 'A', ?, 1)", (utcnow(),))
+    d.execute("INSERT INTO users (email, password_hash, role, display_name, created_at, is_active) VALUES ('b@x.com', 'h', 'user', 'B', ?, 1)", (utcnow(),))
+    d.execute("DELETE FROM schema_migrations WHERE version = 2")
+    for uid, kind in ((1, "login"), (1, "page_view"), (1, "login_failed"), (2, "login")):
+        d.execute("INSERT INTO events (kind, visitor_id, user_id, created_at) VALUES (?, 'v', ?, ?)", (kind, uid, utcnow()))
+    d.commit(); d.close()
+    dbmod.migrate(url)
+    d = Database(url)
+    kinds = sorted((r["user_id"], r["kind"]) for r in d.all("SELECT user_id, kind FROM events"))
+    assert kinds == [(1, "login_failed"), (2, "login")]
+    d.close()

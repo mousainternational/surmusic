@@ -122,6 +122,10 @@ def migrate(url):
         if not done:
             db.execute("INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)",
                        (SCHEMA_VERSION, utcnow()))
+        # one time: remove the owner's own earlier activity (sign-ins, page views, downloads…) from the statistics
+        if not db.scalar("SELECT COUNT(*) FROM schema_migrations WHERE version = 2"):
+            db.execute("DELETE FROM events WHERE kind != 'login_failed' AND user_id IN (SELECT id FROM users WHERE role = 'admin')")
+            db.execute("INSERT INTO schema_migrations (version, applied_at) VALUES (2, ?)", (utcnow(),))
         db.commit()
     finally:
         db.close()
