@@ -17,21 +17,22 @@ from flask import current_app
 from .db import get_db, utcnow
 from .util import valid_url
 
-COMMON = "hidebroken=true&order=clickcount&reverse=true&limit=250"
+COMMON = "hidebroken=true&order=clickcount&reverse=true&limit=500"
 CATEGORIES = {
     "bollywood": {
         "title": "Bollywood Radio",
-        "paths": [f"/json/stations/bytag/bollywood?{COMMON}", f"/json/stations/search?tag=hindi&{COMMON}"],
+        "paths": [f"/json/stations/bytag/bollywood?{COMMON}", f"/json/stations/search?tag=hindi&{COMMON}",
+                  f"/json/stations/search?tag=indian&{COMMON}"],
     },
     "lollywood": {
         "title": "Lollywood & Pakistani Radio",
         "paths": [f"/json/stations/search?countrycode=PK&{COMMON}", f"/json/stations/search?tag=pakistani&{COMMON}",
-                  f"/json/stations/search?tag=urdu&{COMMON}"],
+                  f"/json/stations/search?tag=urdu&{COMMON}", f"/json/stations/search?language=urdu&{COMMON}"],
     },
     "hollywood": {
         "title": "Hollywood & English Hits Radio",
         "paths": [f"/json/stations/search?tag=top%2040&{COMMON}", f"/json/stations/search?tag=hits&countrycode=US&{COMMON}",
-                  f"/json/stations/search?tag=soundtrack&{COMMON}"],
+                  f"/json/stations/search?tag=soundtrack&{COMMON}", f"/json/stations/search?tag=pop&countrycode=US&{COMMON}"],
     },
 }
 # Genre and country pages (/genre/<slug>, /country/<slug>): each has its own stations (see topics.py)
@@ -199,7 +200,7 @@ def _merge(paths):
     for r in results:
         if isinstance(r, list):
             merged.extend(r)
-    return normalize(merged)[:250]
+    return normalize(merged)[:500]
 
 
 def category_stations(cat):

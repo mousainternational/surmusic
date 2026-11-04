@@ -17,7 +17,7 @@ So the words people type (naat sharif live, quran tilawat radio, pakistani fm â€
 """
 import urllib.parse
 
-COMMON = "hidebroken=true&order=clickcount&reverse=true&limit=250"
+COMMON = "hidebroken=true&order=clickcount&reverse=true&limit=500"
 
 
 def tag(t, extra=""):
