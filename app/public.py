@@ -863,6 +863,20 @@ def donate():
                            ld=[page_ld("WebPage", "Support Sur Music", meta["description"])])
 
 
+@bp.route("/for-stations")
+def for_stations():
+    """For radio station owners: put the free Sur Music player (with a link back) on their own website."""
+    meta = build_meta("Free Radio Player for Your Station's Website",
+                      "Radio stations: add a free live player of your station to your own website in one minute. "
+                      "No account, no fee. Works on phones and with screen readers.", page="for-stations")
+    site = current_app.config["SITE_URL"]
+    badge_code = (f'<a href="{site}/" title="Listen live on Sur Music Radio" '
+                  f'style="display:inline-block;padding:8px 14px;border-radius:999px;background:#e11d48;color:#fff;'
+                  f'font:600 14px sans-serif;text-decoration:none">&#9654; Listen on Sur Music Radio</a>')
+    return render_template("for_stations.html", meta=meta, badge_code=badge_code,
+                           ld=[breadcrumb_ld([("Home", "/"), ("For radio stations", "/for-stations")])])
+
+
 @bp.route("/about")
 def about():
     meta = build_meta("About Sur Music — Free Online Radio by MISH", get_settings()["about_md"], page="about")
@@ -1518,7 +1532,7 @@ def sitemap():
     site = current_app.config["SITE_URL"]
     pages = ["/", "/bollywood", "/lollywood", "/hollywood", "/download", "/donate", "/about", "/contact", "/faq",
              "/privacy", "/terms", "/disclaimer", "/donation-disclaimer", "/cookies"]
-    pages += ["/radio-stations", "/top-100", "/pakistan-fm-radio", "/accessibility", "/reviews", "/islam", "/markets", "/live-news", "/blog"] + (["/trending"] if trends.by_country() else []) + [f"/blog/{p['slug']}" for p in blog_data.POSTS] + [f"/continent/{c}" for c in CONTINENTS]
+    pages += ["/for-stations", "/radio-stations", "/top-100", "/pakistan-fm-radio", "/accessibility", "/reviews", "/islam", "/markets", "/live-news", "/blog"] + (["/trending"] if trends.by_country() else []) + [f"/blog/{p['slug']}" for p in blog_data.POSTS] + [f"/continent/{c}" for c in CONTINENTS]
     pages += [topic_path(k) for _, items in _listed_types() for k, _ in items]
     pages += [topic_path(k) for c in CONTINENTS for k, _, _ in _listed_countries(c)] + ["/deals"]
     seen = set()

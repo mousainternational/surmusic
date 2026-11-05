@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% block content %}
+<div class="wrap page narrow">
+  {{ ui.breadcrumbs([('Home', '/'), ('For radio stations', '/for-stations')]) }}
+  <header class="page-head">
+    <h1>Free player for your radio station</h1>
+    <p class="lead">Your station is already on Sur Music Radio. Put a free live player on your own website in one minute — no account, no fee, no ads inside the player.</p>
+  </header>
+
+  <div class="card prose">
+    <h2>What you get</h2>
+    <ul>
+      <li><strong>A live player for your website</strong> with your logo and name. Listeners press play and hear you, on phones and computers.</li>
+      <li><strong>Your own page on Sur Music</strong> where listeners from many countries find you, save you to favourites and share you on WhatsApp and Facebook.</li>
+      <li><strong>Blind-friendly</strong> — the player works with screen readers (TalkBack, VoiceOver, NVDA, JAWS).</li>
+      <li><strong>Free for ever.</strong> We do not ask for money, a login or your stream details.</li>
+    </ul>
+
+    <h2>How to add the player (1 minute)</h2>
+    <ol>
+      <li>Find your station with the search box below and open its page.</li>
+      <li>Scroll to <em>"Add … to your website"</em> and copy the short code.</li>
+      <li>Paste the code into your website (in WordPress: add a <em>Custom HTML</em> block). That is all.</li>
+    </ol>
+  </div>
+
+  <form class="hero-search card" action="{{ url_for('public.search') }}" method="get" role="search">
+    <label for="fs-q">Find your station</label>
+    <input id="fs-q" name="q" type="search" placeholder="Station name, e.g. FM 91, Radio Mirchi, BBC" maxlength="60" required>
+    <button class="btn btn-primary" type="submit">Find my station</button>
+  </form>
+
+  <div class="card prose">
+    <h2>Or add a small "Listen on Sur Music" badge</h2>
+    <p>If you prefer a simple link, copy this:</p>
+    <label for="badge-code" class="small">Badge code</label>
+    <textarea id="badge-code" class="embed-code" readonly rows="3">{{ badge_code }}</textarea>
+
+    <h2>Your station is missing or has old details?</h2>
+    <p>Stations come from the free, open <a href="https://www.radio-browser.info" rel="noopener">Radio Browser</a> directory, which anyone can update.
+      You can also <a href="{{ url_for('public.contact', topic='update') }}">write to us</a> and we will help — for free.</p>
+    <p>Only stations with a secure (https) stream play in web browsers. If your stream is http only, ask your streaming host for an https link; our <a href="{{ url_for('public.download_page') }}">Android app</a> plays both.</p>
+  </div>
+</div>
+{% endblock %}

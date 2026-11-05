@@ -227,3 +227,11 @@ def test_pakistan_fm_is_on_pakistan_pages_not_in_a_to_z(client):
     az = home.split('data-sub="az"', 1)[1].split("</div>", 1)[0]
     assert "Pakistan FM" not in az and "Top 100" in az
     assert 'href="/pakistan-fm-radio"' in client.get("/country/pakistan").get_data(as_text=True)
+
+
+def test_for_stations_page(client):
+    r = client.get("/for-stations")
+    html = r.get_data(as_text=True)
+    assert r.status_code == 200 and "Free player for your radio station" in html and "Listen on Sur Music Radio" in html
+    assert "/for-stations" in client.get("/sitemap.xml").get_data(as_text=True)
+    assert 'href="/for-stations"' in client.get("/").get_data(as_text=True)

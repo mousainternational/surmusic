@@ -58,6 +58,7 @@
         <p>Run a blog, community or station website? Copy this code into your page to show a free {{ st.name }} live player.</p>
         <label class="small" for="embed-code">Embed code</label>
         <textarea id="embed-code" class="embed-code" rows="4" readonly spellcheck="false">{{ embed_code }}</textarea>
+        <p class="small">Is this your station? <a href="{{ url_for('public.for_stations') }}">See how the free player works</a>.</p>
       </section>
       <section class="card prose">
         <h2 class="h3">Questions about {{ st.name }}</h2>
