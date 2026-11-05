@@ -698,7 +698,7 @@ def station_page(uuid, slug=None):
         ("Genres", st.get("tags")),
         ("Stream quality", " ".join(x for x in [f"{st['bitrate']} kbps" if st.get("bitrate") else "", st.get("codec") or ""] if x)),
         ("Listeners", f"{st['clicks']:,} recent plays worldwide" if st.get("clicks") else ""),
-        ("Likes", f"{st['votes']:,}" if st.get("votes") else ""),
+        ("Worldwide votes", f"{st['votes']:,} on the Radio Browser directory" if st.get("votes") else ""),
     ] if value]
     likes, dislikes = like_counts(st["uuid"])
     return render_template("station.html", meta=meta, st=protect([st])[0], similar=protect(similar), cat=key or "", faqs=faqs,
