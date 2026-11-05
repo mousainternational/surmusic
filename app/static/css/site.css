@@ -1190,3 +1190,18 @@ body.guest .st-fav, body.guest .pl-fav, body.guest #np-fav, body.guest .hd-fav {
 
 /* touch targets: small text links get at least 24px of height (WCAG 2.5.8) */
 p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24px; line-height: 24px; }
+
+/* v6: header with fewer items — larger, easier-to-read words and lined up with the page below */
+@media (min-width: 1280px) {
+  .menu { gap: 3px; }
+  .menu a.hd-pill:not(.btn), .menu .hd-dd > summary.hd-pill { padding: 7px 10px; font-size: .86rem; }
+  .menu .btn-sm { padding: 7px 14px; font-size: .86rem; }
+  .hd-sep { margin: 0 4px; }
+}
+@media (min-width: 1400px) {
+  .site-header .wrap { max-width: 1320px; padding-left: 16px; padding-right: 16px; }
+  .menu { gap: 6px; }
+  .menu a.hd-pill:not(.btn), .menu .hd-dd > summary.hd-pill { padding: 8px 12px; font-size: .92rem; }
+  .menu .btn-sm { padding: 8px 18px; font-size: .9rem; }
+  .hd-acct .acct-t { display: inline; }
+}
