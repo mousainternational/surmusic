@@ -1217,3 +1217,6 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
   .menu a.hd-pill[aria-current="page"] { background: color-mix(in srgb, var(--h) 26%, var(--surface)); border-color: var(--h); box-shadow: none; }
   .hd-sep { display: none; }
 }
+
+/* the brand name on the home page heading (small line above the big words) */
+.hero-brand { display: block; font-size: clamp(1rem, 1.6vw, 1.25rem); letter-spacing: .02em; color: var(--link, var(--brand)); margin-bottom: 6px; }

@@ -183,8 +183,8 @@ DEFAULTS = {
     "play_requires_login": "0",
     "require_email_verification": "0",
     # SEO / analytics
-    "seo_default_title": "Sur Music — Live Radio: Quran, Naat, News, Bollywood",
-    "seo_default_description": "Sur Music: free live radio from the USA, UK, UAE, Pakistan, India and 200+ countries. Quran, Naat, Qawwali, Bollywood, Hollywood and news. No app, no sign-up.",
+    "seo_default_title": "Sur Music Radio — Live Quran, Naat, News & Bollywood FM",
+    "seo_default_description": "Sur Music Radio (surmusicradio.com): free live radio from the USA, UK, UAE, Pakistan, India and 200+ countries. Quran, Naat, Qawwali, Bollywood, Hollywood and news. No app, no sign-up.",
     "seo_og_image": "",
     "google_site_verification": "",
     "bing_site_verification": "",

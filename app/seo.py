@@ -68,6 +68,8 @@ def organization_ld():
         "name": s["owner_name"],
         "alternateName": s["owner_brand"],
         "logo": absolute(url_for("static", filename="img/mish-logo-512.png")),
+        "brand": {"@type": "Brand", "name": "Sur Music Radio", "alternateName": "Sur Music", "url": absolute("/"),
+                  "logo": absolute(url_for("static", filename="img/surmusic-logo.svg"))},
     }
     if s.get("owner_url"):
         data["url"] = s["owner_url"]
@@ -85,8 +87,8 @@ def website_ld():
     return {
         "@context": "https://schema.org",
         "@type": "WebSite",
-        "name": s["site_full_name"],
-        "alternateName": s["site_name"],
+        "name": "Sur Music Radio",
+        "alternateName": [s["site_name"], s["site_full_name"], "SurMusic", "Sur Music Player", "surmusicradio.com"],
         "url": absolute("/"),
         "publisher": {"@type": "Organization", "name": s["owner_name"]},
         "potentialAction": {

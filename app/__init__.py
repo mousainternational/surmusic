@@ -283,6 +283,15 @@ def _apply_setting_changes(app):
                         "stations. No download needed."))
             db.execute("INSERT INTO settings (key, value) VALUES (?, ?)", ("_done_hero_v111", "1"))
             db.commit()
+        # brand: "Sur Music Radio" first in the home title so Google ties the name to the site
+        if not db.scalar("SELECT COUNT(*) FROM settings WHERE key = ?", ("_done_brand_title_v1",)):
+            from .settings import DEFAULTS as _D
+            db.execute("UPDATE settings SET value = ? WHERE key = ? AND value = ?",
+                       (_D["seo_default_title"], "seo_default_title", "Sur Music — Live Radio: Quran, Naat, News, Bollywood"))
+            db.execute("UPDATE settings SET value = ? WHERE key = ? AND value LIKE ?",
+                       (_D["seo_default_description"], "seo_default_description", "Sur Music: free live radio%"))
+            db.execute("INSERT INTO settings (key, value) VALUES (?, ?)", ("_done_brand_title_v1", "1"))
+            db.commit()
         # v1.7.31: the app is now sold directly (account login + payment you approve), not through Google Play
         if not db.scalar("SELECT COUNT(*) FROM settings WHERE key = ?", ("_done_privacy_app_v118",)):
             from .settings import DEFAULTS as _D
