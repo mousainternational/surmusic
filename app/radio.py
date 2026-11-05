@@ -257,7 +257,7 @@ def _fits(slug, st):
     text = f"{st.get('name') or ''} {st.get('tags') or ''}"
     if slug in ("news", "english-news"):
         return not _RELIGIOUS_RE.search(text) and (bool(_NEWS_RE.search(text)) or not _MUSIC_RE.search(text)) \
-            and not _MUSIC_RE.search(st.get("name") or "")
+            and not _MUSIC_RE.search(st.get("name") or "") and not _SPORT_RE.search(st.get("name") or "")
     if slug in ("sports", "cricket", "football"):
         return not _RELIGIOUS_RE.search(text) and (bool(_SPORT_RE.search(text)) or not _MUSIC_RE.search(text))
     if slug == "talk":
