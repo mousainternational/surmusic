@@ -63,10 +63,6 @@
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu"><span></span><span></span><span></span></button>
     <nav id="menu" class="menu" aria-label="Main">
       {%- set here = request.path %}
-      <a class="hd-pill hue-pink" href="{{ url_for('public.category', cat='bollywood') }}" {% if here == '/bollywood' %}aria-current="page"{% endif %}>Bollywood</a>
-      <a class="hd-pill hue-green" href="{{ url_for('public.category', cat='lollywood') }}" {% if here == '/lollywood' %}aria-current="page"{% endif %}>Lollywood</a>
-      <a class="hd-pill hue-blue" href="{{ url_for('public.category', cat='hollywood') }}" {% if here == '/hollywood' %}aria-current="page"{% endif %}>Hollywood</a>
-      <span class="hd-sep" aria-hidden="true"></span>
       <details class="hd-dd hue-violet">
         <summary class="hd-pill">🌐 Language</summary>
         <div class="hd-panel">
@@ -102,11 +98,6 @@
       <span class="hd-sep" aria-hidden="true"></span>
       <a class="hd-pill hue-violet" href="/blog" {% if here.startswith('/blog') %}aria-current="page"{% endif %}>Guides</a>
       <a class="hd-pill hd-fav hue-amber" href="{{ url_for('public.favorites') }}" {% if here == '/favorites' %}aria-current="page"{% endif %}>★ Favourites</a>
-      <a class="hd-pill hue-teal" href="{{ url_for('public.download_page') }}" {% if here == '/download' %}aria-current="page"{% endif %}>Get app</a>
-      <form class="nav-search" action="{{ url_for('public.search') }}" method="get" role="search">
-        <label for="nav-q" class="sr">Search stations</label>
-        <input id="nav-q" name="q" type="search" placeholder="Search…" maxlength="60" autocomplete="off">
-      </form>
       {%- if user %}
       <details class="hd-dd hd-acct hue-blue">
         <summary class="hd-pill" aria-label="My account menu">👤<span class="acct-t"> Account</span></summary>
@@ -124,16 +115,21 @@
         <a class="hd-pill hue-blue" href="{{ url_for('auth.login') }}" {% if here == '/login' %}aria-current="page"{% endif %}>Sign in</a>
         <a class="btn btn-sm btn-primary hd-signup" href="{{ url_for('auth.signup') }}">Sign up free</a>
       {%- endif %}
-      <a class="btn btn-sm btn-accent" href="{{ url_for('public.donate') }}">Donate</a>
-      <a class="hd-reviews" href="/reviews" {% if here == '/reviews' %}aria-current="page"{% endif %}>★ Reviews</a>
+      <a class="hd-pill hue-teal" href="{{ url_for('public.download_page') }}" {% if here == '/download' %}aria-current="page"{% endif %}>Get app</a>
       <a class="a11y-btn" href="{{ url_for('public.accessibility') }}" aria-label="Accessibility: help and keyboard shortcuts for blind and low-vision listeners" title="Accessibility (blind-friendly radio)" {% if here == '/accessibility' %}aria-current="page"{% endif %}>
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="4.2" r="2.2"/><path d="M4 8.5l1 2c3.4-.9 10.6-.9 14 0l1-2c-4.4-1.3-11.6-1.3-16 0zM11 11.2v3.6l-2.6 6 1.9.8 2.7-5.4 2.7 5.4 1.9-.8-2.6-6v-3.6z"/></svg>
         <span class="a11y-t">Accessibility</span>
       </a>
+      <a class="hd-reviews" href="/reviews" {% if here == '/reviews' %}aria-current="page"{% endif %}>★ Reviews</a>
+      <a class="btn btn-sm btn-accent" href="{{ url_for('public.donate') }}">Donate</a>
       <button class="theme-toggle" type="button" aria-label="Switch light or dark theme" title="Switch theme">
         <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
         <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"/></svg>
       </button>
+      <form class="nav-search" action="{{ url_for('public.search') }}" method="get" role="search">
+        <label for="nav-q" class="sr">Search stations</label>
+        <input id="nav-q" name="q" type="search" placeholder="Search…" maxlength="60" autocomplete="off">
+      </form>
     </nav>
   </div>
 </header>
