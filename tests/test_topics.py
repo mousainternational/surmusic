@@ -85,10 +85,10 @@ def test_category_tabs(client):
         tabs = re.findall(r'<a class="nt-tab( on)?"[^>]*data-tab="([^"]+)"', nav)
         return nav, tabs
     nav, tabs = parts("/")
-    assert [t for _, t in tabs] == ["music", "news", "sports", "talk", "religious", "languages", "countries", "accessibility", "az"]
+    assert [t for _, t in tabs] == ["music", "news", "sports", "talk", "religious", "accessibility", "az"]
     assert [t for on, t in tabs if on] == ["music"]
     for href in ("/bollywood", "/lollywood", "/hollywood", "/genre/ghazal", "/genre/news", "/genre/cricket",
-                 "/genre/islamic", "/genre/christian", "/genre/bhajan", "/genre/punjabi", "/continent/europe"):
+                 "/genre/islamic", "/genre/christian", "/genre/bhajan"):
         assert f'href="{href}"' in nav, href
     # nothing in the buttons points at one school of thought, and Quran / Naat have no tab of their own
     for word in ("madani", "majlis", "hadith", "Dawat", "/genre/quran", "/genre/naat"):
@@ -96,7 +96,8 @@ def test_category_tabs(client):
     nav, tabs = parts("/genre/quran")                     # Quran lives under Religious → Islamic
     assert [t for on, t in tabs if on] == ["religious"]
     assert re.search(r'class="chip active"[^>]*>Quran<', nav) and ">All Islamic<" in nav
-    assert [t for on, t in parts("/country/pakistan")[1] if on] == ["countries"]
+    assert [t for on, t in parts("/country/pakistan")[1] if on] == []          # countries live in the header menu
+    assert 'data-tab="languages"' not in nav and 'data-tab="countries"' not in nav
     assert [t for on, t in parts("/genre/news")[1] if on] == ["news"]
     # the pages that hold those stations are still there for Google
     xml = client.get("/sitemap.xml").get_data(as_text=True)

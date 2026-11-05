@@ -86,6 +86,8 @@ def _nav_tabs(active=""):
         current = TAB_OF.get(slug) or ("music" if slug in CAT_PAGES or not slug else "music")
     tabs = []
     for key, label, slugs in NAV:
+        if key in ("languages", "countries"):          # these two are already in the header menus (Language, Country)
+            continue
         items = []
         if key == "countries":
             items = [(f"/continent/{c}", CONTINENTS[c][0], request.path == f"/continent/{c}") for c in CONTINENTS]
