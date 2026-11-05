@@ -103,6 +103,7 @@
       <a class="hd-pill hd-fav hue-amber" href="{{ url_for('public.favorites') }}" {% if here == '/favorites' %}aria-current="page"{% endif %}>★ Favourites</a>
       <a class="hd-pill hue-violet" href="/blog" {% if here.startswith('/blog') %}aria-current="page"{% endif %}>Guides</a>
       <a class="hd-pill hue-teal" href="{{ url_for('public.download_page') }}" {% if here == '/download' %}aria-current="page"{% endif %}>Get app</a>
+      <a class="hd-pill hue-green" href="{{ url_for('public.contact') }}" {% if here == '/contact' %}aria-current="page"{% endif %}>Support</a>
       {%- if user %}
       <details class="hd-dd hd-acct hue-blue">
         <summary class="hd-pill" aria-label="My account menu">👤<span class="acct-t"> Account</span></summary>
