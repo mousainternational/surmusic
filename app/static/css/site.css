@@ -693,7 +693,7 @@ html.menu-open .cookie-note { display: none; }
 /* v1.7.2 — a shorter home page on phones (the Bollywood / Lollywood / Hollywood tabs are already at the top) */
 .more-link { margin: 14px 0 0; }
 @media (max-width: 640px) { .genre-cards-section { display: none; } }
-.footer-bottom .credit { display: block; margin-top: 6px; font-size: .72rem; color: var(--muted); text-decoration: none; opacity: .8; }
+.footer-bottom .credit { display: block; margin-top: 6px; font-size: .72rem; color: var(--muted); text-decoration: none; }
 
 /* guides (/blog) */
 .blog-list { display: grid; gap: 14px; }
@@ -930,7 +930,7 @@ h3, .h3 { font-weight: 600; letter-spacing: -.01em; }
 .now-card { border-color: color-mix(in srgb, var(--brand) 30%, var(--border)); background: linear-gradient(160deg, color-mix(in srgb, var(--brand) 10%, var(--surface)), var(--surface) 55%); }
 .cat-title::after, .section-head h2::after { content: ""; display: block; width: 44px; height: 4px; border-radius: 4px; margin-top: 6px; background: var(--grad); }
 .mk-card h2 { color: var(--text); }
-.site-footer h2 { color: var(--brand); }
+.site-footer h2 { color: var(--link, var(--brand)); }
 
 /* v4b: neat category tiles (3 across, icon beside text) + tighter header pills so Donate/theme always fit */
 .cat-tiles { grid-template-columns: repeat(2, 1fr); gap: 12px; }
