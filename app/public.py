@@ -1443,7 +1443,10 @@ def llms_txt():
             f"- [Gold, Bitcoin and dollar rates]({site}/markets)\n"
             f"- [Guides and articles]({site}/blog)\n"
             f"- [Android app and Chrome extension]({site}/download)\n"
-            f"- [Accessibility]({site}/accessibility)\n"
+            f"- [Top 100 most listened stations]({site}/top-100)\n"
+            f"- [Pakistan FM radio by frequency and city]({site}/pakistan-fm-radio)\n"
+            f"- [A-Z station directory]({site}/stations/a)\n"
+            f"- [Accessibility: radio for blind and low-vision listeners (TalkBack, VoiceOver, NVDA, JAWS)]({site}/accessibility)\n"
             f"- [About]({site}/about)\n"
             f"- [Sitemap]({site}/sitemap.xml)\n\n"
             "## Radio by type\n")
@@ -1453,6 +1456,25 @@ def llms_txt():
     for k in big:
         if k in COUNTRY_PAGES:
             body += f"- [{COUNTRY_PAGES[k]['label']} radio]({site}{topic_path(k)})\n"
+    from .topics import PROVINCE_SLUGS
+    body += "\n## Radio by province and state\n"
+    for k in PROVINCE_SLUGS:
+        body += f"- [{TOPICS[k]['label']} radio]({site}{topic_path(k)})\n"
+    try:
+        popular = [x for x in without_blocked(radio.known_stations()) if x.get("name")]
+    except Exception:              # the list is a bonus; never break the file
+        popular = []
+    popular.sort(key=lambda x: -(x.get("clicks") or 0))
+    if popular:
+        body += "\n## Popular stations (listen live free)\n"
+        seen = set()
+        for st in popular:
+            if st["uuid"] in seen:
+                continue
+            seen.add(st["uuid"])
+            body += f"- [{st['name']} live]({site}{station_path(st)})" + (f" - {st['country']}" if st.get("country") else "") + "\n"
+            if len(seen) >= 40:
+                break
     return Response(body, mimetype="text/plain; charset=utf-8")
 
 

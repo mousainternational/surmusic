@@ -145,3 +145,10 @@ def test_like_and_dislike_a_station(client):
     assert r.get_json()["dislikes"] == 0
     assert api(client, "POST", "/api/like", {"uuid": uuid, "value": 5}, page=href).status_code == 400
     assert api(client, "POST", "/api/like", {"uuid": "nope", "value": 1}, page=href).status_code == 404
+
+
+def test_llms_txt_lists_provinces_directory_and_popular_stations(client):
+    client.get("/genre/qawwali")                       # a station list has been loaded once
+    txt = client.get("/llms.txt").get_data(as_text=True)
+    assert "/top-100" in txt and "/pakistan-fm-radio" in txt and "/stations/a" in txt
+    assert "Sindh radio" in txt and "Popular stations" in txt and "/station/" in txt
