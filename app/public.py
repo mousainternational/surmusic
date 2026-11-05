@@ -225,8 +225,11 @@ def _footer_places():
     countries = [(topic_path(s), TOPICS[s]["label"]) for s in
                  ["pakistan", "india", "saudi-arabia", "uae", "uk", "usa", "canada", "bangladesh", "afghanistan", "turkey"]
                  if s in TOPICS]
-    provinces = [(topic_path(s), TOPICS[s]["label"]) for s in PROVINCE_SLUGS
-                 if TOPICS[s].get("description", "").find("Pakistan") >= 0]
+    # neutral: Indian states and Pakistani provinces side by side
+    pk = [s for s in PROVINCE_SLUGS if "Pakistan" in TOPICS[s].get("description", "")]
+    other = [s for s in PROVINCE_SLUGS if s not in pk]
+    mixed = [x for pair in zip(other, pk) for x in pair] + other[len(pk):] + pk[len(other):]
+    provinces = [(topic_path(s), TOPICS[s]["label"]) for s in mixed[:10]]
     return countries, provinces
 
 

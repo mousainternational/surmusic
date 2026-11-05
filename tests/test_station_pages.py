@@ -106,7 +106,7 @@ def test_az_tab_next_to_categories_and_not_in_footer(client):
     assert 'data-tab="az"' in tabs and 'href="/stations/a"' in tabs and 'href="/stations/z"' in tabs and 'href="/top-100"' in tabs
     footer = html.split('<footer', 1)[1]
     assert "A–Z stations" not in footer
-    assert "Radio by country" in footer and "Pakistan by province" in footer and "Sindh radio" in footer
+    assert "Radio by country" in footer and "Radio by state &amp; province" in footer and "Sindh radio" in footer and "Maharashtra radio" in footer
 
 
 def test_province_pages(client):
