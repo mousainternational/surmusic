@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, follow">
+<title>{{ st.name }} — live radio player | Sur Music</title>
+<link rel="canonical" href="{{ page_url }}">
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: transparent; }
+  .w { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid #8884; border-radius: 12px; background: Canvas; color: CanvasText; max-width: 480px; }
+  .logo { width: 56px; height: 56px; border-radius: 10px; object-fit: cover; background: #8882; flex: none; }
+  .t { flex: 1; min-width: 0; }
+  .n { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .m { opacity: .75; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .b { flex: none; width: 48px; height: 48px; border-radius: 50%; border: 0; background: #e11d48; color: #fff; font-size: 20px; cursor: pointer; text-decoration: none; display: grid; place-items: center; }
+  .b:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+  a.by { color: inherit; font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="w">
+  {% if st.favicon %}<img class="logo" src="{{ st.favicon }}" alt="" referrerpolicy="no-referrer" width="56" height="56">{% else %}<span class="logo" aria-hidden="true"></span>{% endif %}
+  <div class="t">
+    <div class="n">{{ st.name }}</div>
+    <div class="m">{{ [st.country, st.tags] | select | join(' · ') }}</div>
+    <div><a class="by" href="{{ page_url }}" target="_blank" rel="noopener">Listen on Sur Music</a> <span id="s" class="m" role="status" aria-live="polite"></span></div>
+  </div>
+  {% if playable %}
+  <button id="p" class="b" type="button" aria-label="Play {{ st.name }}">▶</button>
+  <audio id="a" preload="none" src="{{ st.url }}"></audio>
+  <script nonce="{{ csp_nonce() }}">
+    (function () {
+      var a = document.getElementById("a"), p = document.getElementById("p"), s = document.getElementById("s");
+      var name = {{ st.name | tojson }};
+      p.addEventListener("click", function () {
+        if (a.paused) { s.textContent = "Loading…"; a.play().catch(function () { s.textContent = "Station offline"; }); }
+        else { a.pause(); }
+      });
+      a.addEventListener("playing", function () { p.textContent = "❚❚"; p.setAttribute("aria-label", "Pause " + name); s.textContent = "Playing"; });
+      a.addEventListener("pause", function () { p.textContent = "▶"; p.setAttribute("aria-label", "Play " + name); s.textContent = "Paused"; });
+      a.addEventListener("error", function () { s.textContent = "Station offline"; });
+    })();
+  </script>
+  {% else %}
+  <a class="b" href="{{ page_url }}" target="_blank" rel="noopener" aria-label="Play {{ st.name }} on Sur Music">▶</a>
+  {% endif %}
+</div>
+</body>
+</html>

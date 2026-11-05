@@ -63,3 +63,38 @@ def test_sitemap_lists_genres_and_station_pages(client):
     client.get("/genre/ghazal")                                           # loads (caches) that list
     xml = client.get("/sitemap.xml").get_data(as_text=True)
     assert "/genre/naat</loc>" in xml and "/station/" in xml
+
+
+def test_station_page_share_embed_and_details(client):
+    """Like the big directories: station details, share buttons and an "add to your website" player."""
+    html = client.get("/genre/qawwali").get_data(as_text=True)
+    href = re.findall(r'data-href="(/station/[^"]+)"', html)[0]
+    page = client.get(href).get_data(as_text=True)
+    uuid = href.split("/")[2]
+    assert "station details" in page and "<dt>Country</dt>" in page and "Suggest an update" in page
+    assert "https://wa.me/?text=" in page and "facebook.com/sharer" in page and "t.me/share" in page
+    assert 'id="embed-code"' in page and f"/embed/station/{uuid}" in page
+    assert "&lt;iframe" in page                                              # shown as text, not a live frame
+    assert 'href="/contact?topic=update' in page
+    r = client.get(f"/embed/station/{uuid}")
+    assert r.status_code == 200
+    body = r.get_data(as_text=True)
+    assert "Listen on Sur Music" in body and href in body                     # always links back to the station page
+    assert "frame-ancestors *" in r.headers["Content-Security-Policy"]
+    assert r.headers["X-Frame-Options"] != "DENY" and "noindex" in r.headers["X-Robots-Tag"]
+    assert client.get("/embed/station/does-not-exist").status_code == 404
+    assert client.get(href).headers["X-Frame-Options"] == "DENY"            # normal pages still cannot be framed
+    subject = client.get("/contact?topic=update&station=Test+FM").get_data(as_text=True)
+    assert "Station details update: Test FM" in subject
+
+
+def test_station_details_from_radio_browser():
+    from app import radio
+    raw = [{"stationuuid": "abc-1", "name": "Test FM", "url_resolved": "https://s.example/live", "lastcheckok": 1,
+            "homepage": "http://testfm.example/", "language": "urdu,punjabi", "state": "Lahore", "codec": "mp3",
+            "votes": 42, "clickcount": 7, "bitrate": 128}]
+    st = radio.normalize(raw)[0]
+    assert st["homepage"] == "http://testfm.example/" and st["language"] == "Urdu, Punjabi"
+    assert st["state"] == "Lahore" and st["codec"] == "MP3" and st["votes"] == 42
+    bad = radio.normalize([dict(raw[0], homepage="javascript:alert(1)")])[0]
+    assert bad["homepage"] == ""

@@ -100,6 +100,7 @@ def normalize(raw, https_only=True):
             continue
         seen.add(uuid)
         fav = s.get("favicon") or ""
+        home = s.get("homepage") if isinstance(s.get("homepage"), str) else ""
         out.append({
             "uuid": uuid,
             "name": _text(s.get("name"), 120) or "Unknown station",
@@ -109,6 +110,12 @@ def normalize(raw, https_only=True):
             "tags": ", ".join(t.strip() for t in _text(s.get("tags"), 200).split(",")[:3] if t.strip()),
             "bitrate": s.get("bitrate") if isinstance(s.get("bitrate"), int) else 0,
             "clicks": s.get("clickcount") if isinstance(s.get("clickcount"), int) else 0,
+            # extra details for the station page (like the big directories show)
+            "homepage": home if valid_url(home, https_only=False) else "",
+            "language": ", ".join(x.strip().title() for x in _text(s.get("language"), 80).split(",")[:2] if x.strip()),
+            "state": _text(s.get("state"), 60),
+            "codec": _text(s.get("codec"), 12).upper(),
+            "votes": s.get("votes") if isinstance(s.get("votes"), int) else 0,
         })
     out.sort(key=lambda x: -x["clicks"])
     return out

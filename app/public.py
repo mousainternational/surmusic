@@ -5,7 +5,9 @@ from datetime import datetime, timedelta, timezone
 from xml.sax.saxutils import escape
 
 import os
-from flask import (Blueprint, Response, abort, current_app, flash, g, jsonify, redirect, render_template, send_from_directory,
+from urllib.parse import quote, urlencode
+from markupsafe import escape as html_escape
+from flask import (Blueprint, Response, abort, current_app, flash, g, jsonify, make_response, redirect, render_template, send_from_directory,
                    request, send_file, session, url_for)
 
 import base64
@@ -16,7 +18,7 @@ from cryptography.fernet import Fernet, InvalidToken
 from . import analytics, radio
 from .db import get_db, utcnow
 from .mailer import send_mail
-from .security import current_user, ip_hash, rate_limited
+from .security import csp_nonce, current_user, ip_hash, rate_limited
 from . import blog as blog_data
 from . import islam as islam_data
 from . import markets
@@ -655,8 +657,50 @@ def station_page(uuid, slug=None):
         (f"What can I do if {st['name']} stops playing?", "Stations sometimes go offline or change their address. Wait a minute and press play again, or pick another station from the list of similar stations below."),
     ]
     ld = [breadcrumb_ld(crumbs), station_ld(st, want), faq_items_ld(faqs)]
+    page_url = absolute(want)
+    share_text = f"Listen to {st['name']} live on Sur Music: {page_url}"
+    share = [
+        ("WhatsApp", "https://wa.me/?" + urlencode({"text": share_text})),
+        ("Facebook", "https://www.facebook.com/sharer/sharer.php?" + urlencode({"u": page_url})),
+        ("X", "https://twitter.com/intent/tweet?" + urlencode({"text": f"Listen to {st['name']} live", "url": page_url})),
+        ("Telegram", "https://t.me/share/url?" + urlencode({"url": page_url, "text": f"Listen to {st['name']} live"})),
+        ("Email", "mailto:?" + urlencode({"subject": f"{st['name']} live radio", "body": share_text}, quote_via=quote)),
+    ]
+    embed_code = (f'<iframe src="{absolute("/embed/station/" + st["uuid"])}" title="{html_escape(st["name"])} live radio player" '
+                  f'width="100%" height="120" style="border:0;max-width:480px" loading="lazy"></iframe>'
+                  f'<p style="font:13px sans-serif">Listen to <a href="{page_url}">{html_escape(st["name"])} live</a> on Sur Music</p>')
+    details = [(label, value) for label, value in [
+        ("Country", st.get("country")),
+        ("City / region", st.get("state")),
+        ("Language", st.get("language")),
+        ("Genres", st.get("tags")),
+        ("Stream quality", " ".join(x for x in [f"{st['bitrate']} kbps" if st.get("bitrate") else "", st.get("codec") or ""] if x)),
+        ("Listeners", f"{st['clicks']:,} recent plays worldwide" if st.get("clicks") else ""),
+        ("Likes", f"{st['votes']:,}" if st.get("votes") else ""),
+    ] if value]
     return render_template("station.html", meta=meta, st=protect([st])[0], similar=protect(similar), cat=key or "", faqs=faqs,
-                           back=back, back_href=back_href, crumbs=crumbs, ld=ld)
+                           back=back, back_href=back_href, crumbs=crumbs, ld=ld, share=share, embed_code=embed_code,
+                           details=details, homepage=st.get("homepage") or "")
+
+
+@bp.route("/embed/station/<uuid>")
+def station_embed(uuid):
+    """A small player other websites can put on their pages (like the "add this radio to your website" widgets
+    of the big directories). It always links back to the station's page on Sur Music."""
+    st, _key = radio.station_by_uuid(uuid)
+    if not st or is_blocked(st):
+        abort(404)
+    page_url = absolute(station_path(st))
+    playable = not gate_active()          # when sign-in is required the widget only links to the station page
+    resp = make_response(render_template("embed_station.html", st=st, page_url=page_url, playable=playable))
+    nonce = csp_nonce()
+    resp.headers["Content-Security-Policy"] = (
+        "default-src 'none'; " f"script-src 'nonce-{nonce}'; style-src 'unsafe-inline'; img-src https: data:; "
+        "media-src https: blob:; base-uri 'none'; form-action 'none'; frame-ancestors *")
+    resp.headers["X-Frame-Options"] = "ALLOWALL"
+    resp.headers["X-Robots-Tag"] = "noindex, follow"
+    resp.headers["Cache-Control"] = "public, max-age=3600"
+    return resp
 
 
 @bp.app_template_global("offers_for")
@@ -778,9 +822,11 @@ def contact():
     u = current_user()
     removal = request.args.get("topic") == "removal"
     form = {"name": (u["display_name"] if u else ""), "email": (u["email"] if u else "")}
+    station = " ".join((request.args.get("station") or "").split())[:100]
     if removal:
-        station = " ".join((request.args.get("station") or "").split())[:100]
         form["subject"] = ("Station removal request: " + station) if station else "Station removal request"
+    elif request.args.get("topic") == "update":
+        form["subject"] = ("Station details update: " + station) if station else "Station details update"
     errors = {}
     if request.method == "POST":
         form = {k: (request.form.get(k) or "").strip() for k in ("name", "email", "subject", "message")}

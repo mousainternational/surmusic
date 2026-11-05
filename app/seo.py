@@ -171,6 +171,14 @@ def station_ld(st, path):
         data["areaServed"] = st["country"]
     if st.get("tags"):
         data["keywords"] = st["tags"]
+    if st.get("homepage"):
+        data["sameAs"] = st["homepage"]
+    if st.get("language"):
+        data["knowsLanguage"] = st["language"]
+    if st.get("state") or st.get("country"):
+        data["address"] = {"@type": "PostalAddress",
+                           **({"addressLocality": st["state"]} if st.get("state") else {}),
+                           **({"addressCountry": st["country"]} if st.get("country") else {})}
     return data
 
 
