@@ -1355,6 +1355,9 @@ def robots():
     for b in bots:
         body += f"User-agent: {b}\n" + rules + "\n"
     body += f"Sitemap: {site}/sitemap.xml\n"
+    from . import directory
+    for k in directory.chunk_keys(get_db()):
+        body += f"Sitemap: {site}/sitemap-stations-{k[4:]}.xml\n"
     return Response(body, mimetype="text/plain")
 
 
@@ -1539,6 +1542,33 @@ def sitemap():
     xml = "\n".join(parts)
     if lowdb.enabled():
         lowdb.cache_set("sitemap", xml, 3600)
+    return Response(xml, mimetype="application/xml")
+
+
+@bp.route("/sitemap-stations-<int:n>.xml")
+def sitemap_stations(n):
+    """One chunk of the world station directory (see directory.py): a real page for every station."""
+    from . import lowdb
+    if lowdb.enabled():
+        hit, xml = lowdb.cache_get(f"sitemap-dir:{n}")
+        if hit:
+            return Response(xml, mimetype="application/xml")
+    row = get_db().one("SELECT body FROM station_cache WHERE cache_key = ?", (f"dir:{n}",))
+    if not row:
+        abort(404)
+    try:
+        stations = json.loads(row["body"]) or []
+    except (ValueError, TypeError):
+        stations = []
+    site = current_app.config["SITE_URL"]
+    parts = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for st in without_blocked(stations):
+        if isinstance(st, dict) and st.get("uuid"):
+            parts.append(f"<url><loc>{escape(site + station_path(st))}</loc></url>")
+    parts.append("</urlset>")
+    xml = "\n".join(parts)
+    if lowdb.enabled():
+        lowdb.cache_set(f"sitemap-dir:{n}", xml, 6 * 3600)
     return Response(xml, mimetype="application/xml")
 
 

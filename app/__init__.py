@@ -49,6 +49,8 @@ def create_app(overrides=None):
     app.config["APP_VERSION"] = __version__
     from . import indexnow as _indexnow
     _indexnow.start(app)
+    from . import directory as _directory
+    _directory.start(app)
 
     from .admin import bp as admin_bp
     from .auth import bp as auth_bp

@@ -179,3 +179,44 @@ def test_each_list_keeps_its_own_kind():
     assert not _fits("news", {"name": "50s 60s Retro Hits", "tags": "news"})
     assert _fits("sports", {"name": "talkSPORT", "tags": "sports"})
     assert not _fits("talk", {"name": "Naat Sharif Radio", "tags": "talk"})
+
+
+def test_world_directory_chunks_give_station_pages_and_sitemaps(app, client):
+    import json as _json
+    from app.db import get_db, utcnow
+    st = {"uuid": "aaaaaaaa-1111-2222-3333-444444444444", "name": "Directory Test FM", "url": "https://example.com/s.mp3",
+          "favicon": "", "country": "Kenya", "countrycode": "KE", "tags": "pop", "bitrate": 128, "clicks": 50}
+    with app.app_context():
+        db = get_db()
+        db.execute("INSERT INTO station_cache (cache_key, body, fetched_at) VALUES (?, ?, ?)",
+                   ("dir:0", _json.dumps([st]), utcnow()))
+        db.commit()
+    assert "Sitemap: https://surmusic.example/sitemap-stations-0.xml" in client.get("/robots.txt").get_data(as_text=True)
+    xml = client.get("/sitemap-stations-0.xml").get_data(as_text=True)
+    assert "/station/aaaaaaaa-1111-2222-3333-444444444444/directory-test-fm" in xml
+    assert client.get("/sitemap-stations-7.xml").status_code == 404
+    page = client.get("/station/aaaaaaaa-1111-2222-3333-444444444444/directory-test-fm")
+    assert page.status_code == 200 and "Directory Test FM" in page.get_data(as_text=True)
+
+
+def test_directory_refresh_saves_only_browser_playable_stations(app, monkeypatch):
+    from app import directory, radio
+    from app.db import get_db
+    calls = []
+
+    def fake(path):
+        calls.append(path)
+        if "offset=0" not in path:
+            return []
+        return [{"stationuuid": "bbbbbbbb-1111-2222-3333-444444444444", "name": "Good FM", "url_resolved": "https://x.example/a.mp3",
+                 "lastcheckok": 1, "hls": 0, "clickcount": 9, "tags": "news", "country": "Kenya"},
+                {"stationuuid": "cccccccc-1111-2222-3333-444444444444", "name": "Old FM", "url_resolved": "http://x.example/b.mp3",
+                 "lastcheckok": 1, "hls": 0, "clickcount": 9}]
+    monkeypatch.setattr(radio, "_fetch_json", fake)
+    directory.refresh(app, pause=0)
+    with app.app_context():
+        assert directory.chunk_keys(get_db()) == ["dir:0"]
+        body = get_db().one("SELECT body FROM station_cache WHERE cache_key = ?", ("dir:0",))["body"]
+    assert "Good FM" in body and "Old FM" not in body
+    directory.refresh(app, pause=0)                     # locked / not due: no second fetch
+    assert len(calls) == 2
