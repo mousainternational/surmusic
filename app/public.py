@@ -102,8 +102,10 @@ def _nav_tabs(active=""):
         if key == "religious" and slug == "islamic":          # inside Islamic: easy buttons for what it holds
             islamic = [("islamic", "All Islamic"), ("quran", "Quran"), ("naat", "Naat & Hamd"), ("bayan", "Bayan & lectures"),
                        ("pakistan-islamic", "Pakistan Islamic"), ("majlis", "Ahl-e-Bait & Noha")]
-            items = [(topic_path(k), lb, k == real) for k, lb in islamic if k in TOPICS and not radio.known_empty(k)] + \
-                    [i for i in items if i[0] != topic_path("islamic")]
+            # only Islamic topics here; Christian, Bhajan, Gurbani and Jewish show on their own pages, not inside Islamic
+            items = [(topic_path(k), lb, k == real) for k, lb in islamic if k in TOPICS and not radio.known_empty(k)]
+        if key == "news":                                     # News: the news channels themselves, not one more "News" button
+            items = _news_channels(slug) or [(topic_path("news"), "All news channels", slug == "news")]
         tabs.append({"key": key, "label": label, "on": key == current, "subs": items})
     # A tab for blind and low-vision listeners: how-to page first, then the stations that are easy to follow by ear.
     here_a11y = request.path == "/accessibility"
@@ -128,6 +130,27 @@ def _nav_tabs(active=""):
     az.append(("/stations/0", "0–9", request.path == "/stations/0"))
     tabs.append({"key": "az", "label": "A–Z", "on": here_az, "subs": az})
     return tabs
+
+
+def _news_channels(slug):
+    """Most-listened news stations already in the cache (never fetches), then 'All news channels' at the end."""
+    seen, out = set(), []
+    for key in ("genre:news", "genre:english-news"):
+        try:
+            data = radio._peek(key) or []
+        except Exception:
+            data = []
+        for st in data:
+            if isinstance(st, dict) and st.get("uuid") and st.get("name") and st["uuid"] not in seen:
+                seen.add(st["uuid"])
+                out.append(st)
+    if not out:
+        return []
+    out.sort(key=lambda x: -(x.get("clicks") or 0))
+    here = request.path
+    items = [(station_path(st), st["name"][:40], here.startswith(f"/station/{st['uuid']}")) for st in out[:30]]
+    items.insert(min(11, len(items)), (topic_path("news"), "All news channels →", slug == "news"))  # stays visible, before "More"
+    return items
 
 
 @bp.app_template_global("topic_href")

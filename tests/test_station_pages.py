@@ -152,3 +152,20 @@ def test_llms_txt_lists_provinces_directory_and_popular_stations(client):
     txt = client.get("/llms.txt").get_data(as_text=True)
     assert "/top-100" in txt and "/pakistan-fm-radio" in txt and "/stations/a" in txt
     assert "Sindh radio" in txt and "Popular stations" in txt and "/station/" in txt
+
+
+def test_news_tab_lists_channels_not_another_news_button(client):
+    client.get("/genre/news")                       # fills the news list (demo data in tests)
+    html = client.get("/").get_data(as_text=True)
+    panel = html.split('data-sub="news"', 1)[1].split("</div>", 1)[0]
+    assert "/station/" in panel                     # the channels themselves
+    assert ">News<" not in panel                    # no second "News" button inside News
+    assert "All news channels" in panel
+
+
+def test_islamic_page_shows_only_islamic_topics(client):
+    html = client.get("/genre/islamic").get_data(as_text=True)
+    panel = html.split('data-sub="religious"', 1)[1].split("</div>", 1)[0]
+    assert "Quran" in panel and "Naat" in panel
+    for other in ("Christian", "Bhajan", "Gurbani", "Jewish"):
+        assert other not in panel
