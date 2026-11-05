@@ -276,6 +276,22 @@ def all_lists():
     return out
 
 
+def known_stations():
+    """Every station already cached on any list, no duplicates, best-listened first (never hits the network)."""
+    seen, out = set(), []
+    for key in ["cat:" + c for c in CATEGORIES] + ["genre:" + g for g in GENRES]:
+        try:
+            data = _peek(key)
+        except Exception:
+            data = None
+        for st in data or []:
+            if isinstance(st, dict) and st.get("uuid") and st["uuid"] not in seen:
+                seen.add(st["uuid"])
+                out.append(st)
+    out.sort(key=lambda x: -(x.get("clicks") or 0))
+    return out
+
+
 def cached_station(uuid):
     """A station from the lists already in memory (never touches the database or the network), else None."""
     from . import lowdb

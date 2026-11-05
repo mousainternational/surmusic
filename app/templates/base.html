@@ -9,7 +9,7 @@
   <meta name="robots" content="{{ 'noindex, nofollow' if m.noindex else 'index, follow, max-image-preview:large' }}">
   {%- if m.canonical %}<link rel="canonical" href="{{ m.canonical }}">{% endif %}
   {%- if m.title and not m.noindex %}
-  <meta property="og:type" content="website">
+  <meta property="og:type" content="{{ m.og_type or 'website' }}">
   <meta property="og:locale" content="en_US">
   <meta property="og:site_name" content="{{ m.site_name }}">
   <meta property="og:title" content="{{ m.title }}">
@@ -176,6 +176,9 @@
       <a href="/live-news">Live news: world, Pakistan, India, sports</a>
       <a href="/country/pakistan">Pakistan radio</a>
       <a href="/radio-stations">All radio types &amp; countries</a>
+      <a href="/top-100">Top 100 stations</a>
+      <a href="/pakistan-fm-radio">Pakistan FM by city</a>
+      <a href="/stations/a">A–Z stations</a>
       <a href="/deals">Deals</a>
       <a href="{{ url_for('public.search') }}">Search stations</a>
       <a href="{{ url_for('public.download_page') }}">Android app & extension</a>

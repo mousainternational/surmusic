@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% block content %}
+<div class="wrap page">
+  {{ ui.breadcrumbs(crumbs) }}
+  <header class="page-head">
+    <h1>Pakistan FM Radio Live — by Frequency and City</h1>
+    <p class="lead">Pakistan's FM stations in one list: FM 100, City FM 89, Mast FM 103, Hot FM 105, Hum FM and more. Each is on a different frequency in each city, but online they play the same way: press Listen, free, in your browser.</p>
+  </header>
+  <div class="card">
+    <table class="fm-table">
+      <thead><tr><th scope="col">Station</th><th scope="col">FM</th><th scope="col">Cities</th><th scope="col">Plays</th><th scope="col">Listen</th></tr></thead>
+      <tbody>{% for name, mhz, cities, kind in rows %}
+        <tr><th scope="row">{{ name }}</th><td>{{ mhz }} MHz</td><td>{{ cities }}</td><td>{{ kind }}</td>
+        <td><a class="btn btn-sm btn-primary" href="/search?q={{ name.split(' FM')[0].split(' (')[0] | urlencode }}" aria-label="Listen to {{ name }}">Listen</a></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <section class="card">
+    <h2 class="h3">Questions about Pakistan FM radio</h2>
+    {% for q, a in faqs %}<details><summary>{{ q }}</summary><p>{{ a }}</p></details>{% endfor %}
+    <p class="small"><a href="/country/pakistan">All Pakistan radio stations →</a> · <a href="/radio-stations">All countries →</a></p>
+  </section>
+</div>
+{% endblock %}

@@ -411,6 +411,7 @@ def _topic_page(slug):
     meta["keywords"] = topic_keywords(info)
     label = info["label"]
     top = [x["name"] for x in all_stations[:3] if x.get("name")]
+    popular = [x for x in all_stations[:8] if x.get("name")]
     faqs = [
         (f"Is {label} radio free to listen to?", f"Yes. Every {label} radio station on Sur Music plays free in your web browser."),
         (f"How do I listen to {label} radio online?", f"Open this page, choose a {label} station and press play. It works on a phone, tablet or computer."),
@@ -426,7 +427,7 @@ def _topic_page(slug):
     if page_no == 1 and faqs:
         ld.append(faq_items_ld(faqs))
     return render_template("category.html", meta=meta, stations=protect(stations), error=error, cat=slug,
-                           info=info, genre=slug, crumbs=crumbs, ld=ld, trending=trending, faqs=faqs if page_no == 1 else [],
+                           info=info, genre=slug, crumbs=crumbs, ld=ld, trending=trending, faqs=faqs if page_no == 1 else [], popular=popular if page_no == 1 else [],
                            total=total, page_no=page_no, pages=pages, page_base=request.path)
 
 
@@ -490,6 +491,80 @@ def accessibility():
     return render_template("accessibility.html", meta=meta, faqs=_A11Y_FAQ,
                            ld=[page, breadcrumb_ld([("Home", "/"), ("Accessibility", "/accessibility")]),
                                faq_items_ld(_A11Y_FAQ)])
+
+
+LETTERS = "abcdefghijklmnopqrstuvwxyz"
+
+# Pakistani FM stations people search for as "<name> <frequency> <city>" (public frequency lists)
+PK_FM = [
+    ("FM 100 Pakistan", "100", "Karachi, Lahore, Islamabad, Hyderabad, Multan, Rahim Yar Khan, Gujrat, Jhelum, Abbottabad", "Pop and film music"),
+    ("City FM 89", "89", "Karachi, Lahore, Islamabad, Faisalabad", "English and Urdu pop"),
+    ("Mast FM 103", "103", "Karachi, Lahore, Faisalabad, Multan", "Pakistani and Indian hits"),
+    ("Hot FM 105", "105", "Karachi, Hyderabad, Quetta, Larkana, Nawabshah, Badin", "Urdu music and talk"),
+    ("Hum FM 106.2", "106.2", "Karachi, Lahore, Islamabad, Peshawar, Sukkur", "Entertainment"),
+    ("Apna Karachi FM 107", "107", "Karachi", "Karachi city radio"),
+    ("Radio 1 FM 91", "91", "Karachi, Lahore, Islamabad", "Music and news"),
+    ("Power 99 FM", "99", "Islamabad, Abbottabad, Vehari", "Pop music"),
+    ("Samaa FM 107.4", "107.4", "Karachi, Lahore, Islamabad, Bahawalpur", "News and music"),
+    ("Radio Pakistan (PBC) FM 101", "101", "Karachi, Lahore, Islamabad, Multan, Faisalabad, Quetta, Hyderabad", "National broadcaster"),
+    ("Suno FM 89.4", "89.4", "Karachi, Hyderabad", "Urdu music"),
+    ("Radio Awaz FM 99", "99", "Karachi, Hyderabad, Jamshoro, Gujrat, Lahore", "Local voices"),
+    ("Dil FM 102", "102", "Gujrat, Sahiwal, Kasur, Okara", "Punjabi and Urdu"),
+    ("Radio Buraq FM 104", "104", "Peshawar, Sialkot, Mardan", "Pashto and Urdu"),
+]
+
+
+@bp.route("/pakistan-fm-radio")
+def pakistan_fm():
+    """Pakistani FM stations by frequency and city: the exact words people type into Google."""
+    meta = build_meta("Pakistan FM Radio Live — FM 100, City FM 89, Mast FM 103, Hot FM 105 by City",
+                      "Listen live to Pakistani FM radio online: FM 100, City FM 89, Mast FM 103, Hot FM 105, Hum FM, Radio Pakistan by frequency and city. Free, no app.",
+                      page="pakistan-fm")
+    faqs = [
+        ("Which FM channel is best for Pakistani songs online?", "FM 100, City FM 89, Mast FM 103 and Hot FM 105 are among the most listened. Search them here and press play."),
+        ("Can I listen to FM 100 Karachi or Lahore online?", "Yes. Search \"FM 100\" on Sur Music and play it free in your browser from any country."),
+        ("Do I need an app to listen to Pakistan FM radio?", "No. It plays in your browser. The free Android app adds background play with the screen off."),
+    ]
+    crumbs = [("Home", "/"), ("Pakistan radio", "/country/pakistan"), ("Pakistan FM by frequency", "/pakistan-fm-radio")]
+    return render_template("pakistan_fm.html", meta=meta, rows=PK_FM, faqs=faqs, crumbs=crumbs,
+                           ld=[breadcrumb_ld(crumbs), faq_items_ld(faqs)])
+
+
+@bp.route("/top-100")
+def top_100():
+    """The 100 most-listened stations across every list on the site."""
+    stations = without_blocked(radio.known_stations())[:100]
+    meta = build_meta("Top 100 Radio Stations — Most Listened Live Radio Online",
+                      "The 100 most popular live radio stations on Sur Music: Pakistani, Indian, Arabic, English, Naat, Quran, news and music. Free, no sign-up.",
+                      page="top-100", noindex=not stations)
+    crumbs = [("Home", "/"), ("Top 100 radio stations", "/top-100")]
+    return render_template("directory.html", meta=meta, stations=protect(stations), crumbs=crumbs, letters=LETTERS, letter=None,
+                           h1="Top 100 Radio Stations — Most Listened Live Online",
+                           lead="The 100 most popular live radio stations on Sur Music right now, ranked by how many people listen. Press play on any station; it works free in your browser.",
+                           ld=[breadcrumb_ld(crumbs), collection_ld("Top 100 radio stations", "Most listened live radio stations", "/top-100", stations)])
+
+
+@bp.route("/stations/<letter>")
+def stations_az(letter):
+    """A–Z station directory: one page per first letter (0 = numbers)."""
+    letter = letter.lower()
+    if letter != "0" and (len(letter) != 1 or letter not in LETTERS):
+        abort(404)
+
+    def first(st):
+        c = (st.get("name") or "?").strip()[:1].lower()
+        return c if c in LETTERS else "0"
+    stations = [x for x in without_blocked(radio.known_stations()) if first(x) == letter]
+    stations.sort(key=lambda x: x["name"].lower())
+    shown = "numbers" if letter == "0" else letter.upper()
+    meta = build_meta(f"Radio Stations Starting with {shown} — A–Z Radio Directory",
+                      f"All live radio stations whose name starts with {shown}: free A–Z radio directory with Pakistani, Indian, Arabic and world stations.",
+                      noindex=not stations)
+    crumbs = [("Home", "/"), ("Top 100", "/top-100"), (f"Stations {shown}", f"/stations/{letter}")]
+    return render_template("directory.html", meta=meta, stations=protect(stations), crumbs=crumbs, letters=LETTERS, letter=letter,
+                           h1=f"Radio Stations Starting with {shown}",
+                           lead=f"{len(stations)} live radio stations from A to Z that start with {shown}. Choose one and press play, free in your browser.",
+                           ld=[breadcrumb_ld(crumbs)])
 
 
 @bp.route("/radio-stations")
@@ -561,6 +636,8 @@ def station_page(uuid, slug=None):
             "No download, no sign-up — press play.")
     meta = build_meta(title, desc, canonical_path=want)
     meta["image"] = absolute(f"/og/station/{st['uuid']}.png")
+    meta["og_type"] = "music.radio_station"
+    meta["keywords"] = ", ".join(x for x in [st["name"], f"{st['name']} live", f"{st['name']} online", f"{st.get('country') or ''} radio".strip(), tags] if x)
     back = (CATEGORY_PAGES.get(key) or TOPICS.get(key) or {}).get("h1", "All radio").split(" — ")[0]
     back_href = f"/{key}" if key in CATEGORY_PAGES else (topic_path(key) if key in TOPICS else "/radio-stations")
     crumbs = [("Home", "/")]
@@ -1273,7 +1350,7 @@ def sitemap():
     site = current_app.config["SITE_URL"]
     pages = ["/", "/bollywood", "/lollywood", "/hollywood", "/download", "/donate", "/about", "/contact", "/faq",
              "/privacy", "/terms", "/disclaimer", "/donation-disclaimer", "/cookies"]
-    pages += ["/radio-stations", "/accessibility", "/reviews", "/islam", "/markets", "/live-news", "/blog"] + (["/trending"] if trends.by_country() else []) + [f"/blog/{p['slug']}" for p in blog_data.POSTS] + [f"/continent/{c}" for c in CONTINENTS]
+    pages += ["/radio-stations", "/top-100", "/pakistan-fm-radio", "/accessibility", "/reviews", "/islam", "/markets", "/live-news", "/blog"] + (["/trending"] if trends.by_country() else []) + [f"/blog/{p['slug']}" for p in blog_data.POSTS] + [f"/continent/{c}" for c in CONTINENTS]
     pages += [topic_path(k) for _, items in _listed_types() for k, _ in items]
     pages += [topic_path(k) for c in CONTINENTS for k, _, _ in _listed_countries(c)] + ["/deals"]
     seen = set()
@@ -1291,6 +1368,7 @@ def sitemap():
             if isinstance(st, dict) and st.get("uuid") and st["uuid"] not in seen and len(seen) < 45000:
                 seen.add(st["uuid"])
                 pages.append(station_path(st))
+    pages += [f"/stations/{c}" for c in "0" + LETTERS]
     parts = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
     for p in pages:
         parts.append(f"<url><loc>{escape(site + p)}</loc></url>")
