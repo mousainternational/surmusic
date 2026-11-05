@@ -5,6 +5,7 @@ and speed). Only HTTPS streams are listed on the website, because browsers block
 (http) audio on an https page.
 """
 import json
+import re
 import random
 import time
 import urllib.parse
@@ -241,9 +242,38 @@ def category_stations(cat):
                    current_app.config["RADIO_CACHE_MINUTES"])
 
 
+# Each list keeps only its own kind of channel: no Quran or song stations under News, no songs under Talk or Sports.
+_RELIGIOUS_RE = re.compile(r"quran|qur'an|koran|قرآن|قران|islam|naat|nasheed|tilawat|bayan|sunnah|hadith|masjid|"
+                           r"madina|makkah|mecca|gospel|christian|church|jesus|bhajan|kirtan|gurbani|sikh|bible|worship", re.I)
+_MUSIC_RE = re.compile(r"music|songs?\b|hits|bollywood|lollywood|ghazal|qawwali|\bpop\b|rock|jazz|lofi|lo-fi|classical|melod|"
+                       r"gaana|geet|naghm|dance|house|deep|chart|retro|[0-9]0'?s|mix\b|remix|oldies|club|ibiza|\bedm\b|"
+                       r"top ?40|radio mirchi|\bfm ?(8|9|10)[0-9]", re.I)
+_NEWS_RE = re.compile(r"news|khabar|akhbar|خبر|أخبار|samachar|current affair|world service|\bcnn\b|\bbbc\b|\bnpr\b|"
+                      r"\blbc\b|sky news|al jazeera|al arabiya|france 24|\bdw\b|\bvoa\b|haber|times radio|bloomberg|reuters", re.I)
+_SPORT_RE = re.compile(r"sport|cricket|football|soccer|talksport|espn|\bnba\b|\bnfl\b|\bf1\b", re.I)
+
+
+def _fits(slug, st):
+    text = f"{st.get('name') or ''} {st.get('tags') or ''}"
+    if slug in ("news", "english-news"):
+        return not _RELIGIOUS_RE.search(text) and (bool(_NEWS_RE.search(text)) or not _MUSIC_RE.search(text)) \
+            and not _MUSIC_RE.search(st.get("name") or "")
+    if slug in ("sports", "cricket", "football"):
+        return not _RELIGIOUS_RE.search(text) and (bool(_SPORT_RE.search(text)) or not _MUSIC_RE.search(text))
+    if slug == "talk":
+        return not _RELIGIOUS_RE.search(text) and not _MUSIC_RE.search(st.get("name") or "")
+    return True
+
+
 def genre_stations(slug):
     if slug not in GENRES:
         raise KeyError(slug)
+    if slug in ("news", "english-news", "sports", "cricket", "football", "talk"):
+        return [st for st in _genre_stations(slug) if _fits(slug, st)]
+    return _genre_stations(slug)
+
+
+def _genre_stations(slug):
     t = _TOPICS.get(slug, {})
     return _cached(f"genre:{slug}", lambda: _first(_merge(GENRES[slug]["paths"], t.get("per"), t.get("cap", 300)),
                                                   _FIRST.get(slug)),

@@ -249,7 +249,8 @@ def test_city_pages_near_me_and_station_faq(client):
     assert 'href="/genre/lahore"' in client.get("/radio-stations").get_data(as_text=True)
     assert client.get("/near-me").status_code == 302
     html = client.get("/genre/quran").get_data(as_text=True)
-    href = re.search(r'href="(/station/[^"]+)"', html).group(1)
+    listing = html.split("data-nav-tabs", 1)[1].split("</nav>", 1)[1]     # the station list, not the News tab chips
+    href = re.search(r'href="(/station/[^"]+)"', listing).group(1)
     page = client.get(href).get_data(as_text=True)
     assert "FAQPage" in page and "stops playing" in page
 

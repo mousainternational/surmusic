@@ -132,35 +132,26 @@ def _nav_tabs(active=""):
     return tabs
 
 
+# News tab: real news-only channels that play in the browser (checked by hand on Radio Browser, Nov 2026).
+# Radio Pakistan's city channels and Samaa FM mostly play songs, so they are not here.
+NEWS_CHANNELS = [
+    ("34cdd9d2-fba9-4a1e-a0d0-35d70252d349", "Radio Pakistan News (Lahore)"),
+    ("7423d8e7-7da9-4e0c-bc66-32e2f22830ef", "Radio Pakistan World Service"),
+    ("a347209e-6ce6-4c94-81ed-003c1275188f", "BBC World Service"),
+    ("33178054-56cd-449c-8cf7-412cc7be936a", "CNN"),
+    ("7094b698-b1ac-4f08-a6cd-ac35f906765d", "CNN International"),
+    ("1653b791-7005-4e95-be20-4e7b626a4a20", "Sky News"),
+    ("9a8f2d50-fca3-4d7c-99ee-c5e0e97f4d1b", "Times Radio (UK)"),
+    ("8e32c763-b926-4e57-9b8f-d60f1c5b48e3", "LBC News (UK)"),
+    ("9ed85a92-9fb4-4ae8-baca-59347adc782c", "TRT Haber (Turkey)"),
+]
+
+
 def _news_channels(slug):
-    """Most-listened news stations already in the cache (never fetches), then 'All news channels' at the end."""
-    import re as _re
-    is_news = _re.compile(r"news|akhbar|khabar|خبر|أخبار|bbc|cnn|msnbc|sky|world service|times radio|\bgeo\b|\bary\b|\bdawn\b|samaa|"
-                          r"radio pakistan|all india radio|akashvani|\bnpr\b|public media|al araby|al jazeera|\bvoa\b|\bdw\b", _re.I)
-    not_news = _re.compile(r"hits|house|deep|chart|retro|[0-9]0s|mix|music|coran|quran|sport|club|dance|ibiza|kexp|\bhd\b", _re.I)
-    seen, names, out = set(), set(), []
-    for key in ("genre:news", "genre:english-news"):
-        try:
-            data = radio._peek(key) or []
-        except Exception:
-            data = []
-        for st in data:
-            if not (isinstance(st, dict) and st.get("uuid") and st.get("name")) or st["uuid"] in seen:
-                continue
-            text = f"{st['name']} {st.get('tags') or ''}"
-            name_key = _re.sub(r"\W+", "", st["name"].lower())
-            if not is_news.search(text) or not_news.search(st["name"]) or name_key in names:
-                continue
-            seen.add(st["uuid"])
-            names.add(name_key)
-            out.append(st)
-    if not out:
-        return []
-    # Pakistan and India first (most of our listeners), then the most listened
-    out.sort(key=lambda x: (0 if (x.get("country") or "") in ("Pakistan", "India") else 1, -(x.get("clicks") or 0)))
+    """The News tab: Pakistan's news channels first, then world news, then 'All news channels'."""
     here = request.path
-    items = [(station_path(st), st["name"][:40], here.startswith(f"/station/{st['uuid']}")) for st in out[:30]]
-    items.insert(min(11, len(items)), (topic_path("news"), "All news channels →", slug == "news"))  # stays visible, before "More"
+    items = [(station_path({"uuid": u, "name": n}), n, here.startswith(f"/station/{u}")) for u, n in NEWS_CHANNELS]
+    items.append((topic_path("news"), "All news channels →", slug == "news"))
     return items
 
 

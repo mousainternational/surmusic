@@ -169,3 +169,13 @@ def test_islamic_page_shows_only_islamic_topics(client):
     assert "Quran" in panel and "Naat" in panel
     for other in ("Christian", "Bhajan", "Gurbani", "Jewish"):
         assert other not in panel
+
+
+def test_each_list_keeps_its_own_kind():
+    from app.radio import _fits
+    assert _fits("news", {"name": "BBC World Service", "tags": "news"})
+    assert not _fits("news", {"name": "Quran Kareem Radio", "tags": "quran,news"})
+    assert not _fits("news", {"name": "Radio Mirchi 98.3", "tags": "bollywood,news"})
+    assert not _fits("news", {"name": "50s 60s Retro Hits", "tags": "news"})
+    assert _fits("sports", {"name": "talkSPORT", "tags": "sports"})
+    assert not _fits("talk", {"name": "Naat Sharif Radio", "tags": "talk"})
