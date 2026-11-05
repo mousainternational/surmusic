@@ -17,6 +17,14 @@
     </table>
   </div>
   <section class="card">
+    <h2 class="h3">Pakistan radio by province</h2>
+    <ul class="chips share-links">
+      {%- for href, label in footer_places()[1] %}
+      <li><a class="chip" href="{{ href }}">{{ label }}</a></li>
+      {%- endfor %}
+    </ul>
+  </section>
+  <section class="card">
     <h2 class="h3">Questions about Pakistan FM radio</h2>
     {% for q, a in faqs %}<details><summary>{{ q }}</summary><p>{{ a }}</p></details>{% endfor %}
     <p class="small"><a href="/country/pakistan">All Pakistan radio stations →</a> · <a href="/radio-stations">All countries →</a></p>

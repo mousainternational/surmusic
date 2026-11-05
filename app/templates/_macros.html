@@ -53,13 +53,14 @@
   </div>
   {%- for t in nav_tabs(active) %}
   <div class="nt-sub chips" data-sub="{{ t.key }}" role="tabpanel" aria-label="{{ t.label }}"{% if not t.on %} hidden{% endif %}>
-    {%- for href, label, on in t.subs[:12] %}
+    {%- set cut = 40 if t.key == 'az' else 12 %}
+    {%- for href, label, on in t.subs[:cut] %}
     <a class="chip{{ ' active' if on }}" href="{{ href }}"{% if on %} aria-current="page"{% endif %}>{{ label }}</a>
     {%- endfor %}
-    {%- if t.subs | length > 12 %}
+    {%- if t.subs | length > cut %}
     <details class="nt-more"><summary class="chip chip-more">More</summary>
       <div class="chips">
-      {%- for href, label, on in t.subs[12:] %}
+      {%- for href, label, on in t.subs[cut:] %}
         <a class="chip{{ ' active' if on }}" href="{{ href }}"{% if on %} aria-current="page"{% endif %}>{{ label }}</a>
       {%- endfor %}
       </div>

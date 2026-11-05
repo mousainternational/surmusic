@@ -1184,3 +1184,5 @@ body.guest .st-fav, body.guest .pl-fav, body.guest #np-fav, body.guest .hd-fav {
 .share-links { list-style: none; padding: 0 !important; margin: 0; }
 .embed-code { display: block; width: 100%; margin-top: 6px; padding: 10px; font: .85rem/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--text); background: var(--bg, transparent); border: 1px solid var(--border); border-radius: 8px; resize: vertical; }
 @media (max-width: 480px) { .details { grid-template-columns: 1fr; } .details dd { margin-bottom: 6px; } }
+.likes { display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+.like-btn[aria-pressed="true"] { border-color: var(--brand); color: var(--brand); font-weight: 700; }

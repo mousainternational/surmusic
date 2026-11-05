@@ -206,3 +206,11 @@ CREATE TABLE IF NOT EXISTS reviews (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_reviews_status ON reviews (status, created_at);
+
+CREATE TABLE IF NOT EXISTS station_likes (
+  station_uuid TEXT NOT NULL,
+  ip_hash TEXT NOT NULL,
+  value INTEGER NOT NULL,
+  created_at TEXT NOT NULL,
+  PRIMARY KEY (station_uuid, ip_hash)
+);

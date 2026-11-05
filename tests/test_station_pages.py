@@ -98,3 +98,50 @@ def test_station_details_from_radio_browser():
     assert st["state"] == "Lahore" and st["codec"] == "MP3" and st["votes"] == 42
     bad = radio.normalize([dict(raw[0], homepage="javascript:alert(1)")])[0]
     assert bad["homepage"] == ""
+
+
+def test_az_tab_next_to_categories_and_not_in_footer(client):
+    html = client.get("/").get_data(as_text=True)
+    tabs = html.split("data-nav-tabs", 1)[1].split("</nav>", 1)[0]
+    assert 'data-tab="az"' in tabs and 'href="/stations/a"' in tabs and 'href="/stations/z"' in tabs and 'href="/top-100"' in tabs
+    footer = html.split('<footer', 1)[1]
+    assert "A–Z stations" not in footer
+    assert "Radio by country" in footer and "Pakistan by province" in footer and "Sindh radio" in footer
+
+
+def test_province_pages(client):
+    for slug in ("punjab-pakistan", "sindh", "khyber-pakhtunkhwa", "balochistan", "maharashtra"):
+        r = client.get(f"/genre/{slug}")
+        assert r.status_code == 200, slug
+    page = client.get("/genre/sindh").get_data(as_text=True)
+    assert "Sindh Radio" in page and "Karachi" in page
+    assert 'href="/genre/sindh"' in client.get("/pakistan-fm-radio").get_data(as_text=True)
+
+
+def test_station_page_hides_official_website_but_keeps_it_for_search_engines(client, app):
+    from app import seo
+    st = {"name": "Test FM", "homepage": "http://testfm.example/", "country": "Pakistan", "state": "Lahore"}
+    with app.test_request_context("/"):
+        ld = seo.station_ld(st, "/station/x/test-fm")
+    assert ld["sameAs"] == "http://testfm.example/" and ld["address"]["addressLocality"] == "Lahore"
+    html = client.get("/genre/qawwali").get_data(as_text=True)
+    href = re.findall(r'data-href="(/station/[^"]+)"', html)[0]
+    assert "Official website" not in client.get(href).get_data(as_text=True)
+
+
+def test_like_and_dislike_a_station(client):
+    html = client.get("/genre/qawwali").get_data(as_text=True)
+    href = re.findall(r'data-href="(/station/[^"]+)"', html)[0]
+    uuid = href.split("/")[2]
+    page = client.get(href).get_data(as_text=True)
+    assert f'data-like-uuid="{uuid}"' in page and 'data-like="1"' in page and 'data-like="-1"' in page
+    r = api(client, "POST", "/api/like", {"uuid": uuid, "value": 1}, page=href)
+    assert r.status_code == 200 and r.get_json()["likes"] == 1
+    r = api(client, "POST", "/api/like", {"uuid": uuid, "value": 1}, page=href)     # same visitor: still one vote
+    assert r.get_json()["likes"] == 1
+    r = api(client, "POST", "/api/like", {"uuid": uuid, "value": -1}, page=href)    # changes the vote
+    assert r.get_json()["likes"] == 0 and r.get_json()["dislikes"] == 1
+    r = api(client, "POST", "/api/like", {"uuid": uuid, "value": 0}, page=href)
+    assert r.get_json()["dislikes"] == 0
+    assert api(client, "POST", "/api/like", {"uuid": uuid, "value": 5}, page=href).status_code == 400
+    assert api(client, "POST", "/api/like", {"uuid": "nope", "value": 1}, page=href).status_code == 404

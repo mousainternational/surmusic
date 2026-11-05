@@ -178,10 +178,19 @@
       <a href="/radio-stations">All radio types &amp; countries</a>
       <a href="/top-100">Top 100 stations</a>
       <a href="/pakistan-fm-radio">Pakistan FM by city</a>
-      <a href="/stations/a">A–Z stations</a>
       <a href="/deals">Deals</a>
       <a href="{{ url_for('public.search') }}">Search stations</a>
       <a href="{{ url_for('public.download_page') }}">Android app & extension</a>
+    </nav>
+    <nav aria-label="Radio by country">
+      <h2>Radio by country</h2>
+      {%- for href, label in footer_places()[0] %}
+      <a href="{{ href }}">{{ label }} radio</a>
+      {%- endfor %}
+      <h2>Pakistan by province</h2>
+      {%- for href, label in footer_places()[1] %}
+      <a href="{{ href }}">{{ label }} radio</a>
+      {%- endfor %}
     </nav>
     <nav aria-label="Sur Music">
       <h2>Sur Music</h2>

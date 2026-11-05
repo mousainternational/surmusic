@@ -847,6 +847,41 @@ for _s, _n, _cc, _cn in _CITIES:
     CITY_SLUGS.append(_s)
 
 
+# Provinces and states (myTuner and Streema list stations by province too): Pakistan first, then India.
+_PROVINCES = [
+    ("punjab-pakistan", "Punjab", "PK", "Pakistan", ["Punjab"], "Lahore, Faisalabad, Rawalpindi, Multan, Gujranwala and Sialkot"),
+    ("sindh", "Sindh", "PK", "Pakistan", ["Sindh"], "Karachi, Hyderabad, Sukkur and Larkana"),
+    ("khyber-pakhtunkhwa", "Khyber Pakhtunkhwa", "PK", "Pakistan", ["Khyber Pakhtunkhwa", "KPK", "NWFP"], "Peshawar, Mardan, Abbottabad and Swat"),
+    ("balochistan", "Balochistan", "PK", "Pakistan", ["Balochistan"], "Quetta, Gwadar and Turbat"),
+    ("islamabad-capital-territory", "Islamabad Capital Territory", "PK", "Pakistan", ["Islamabad", "Islamabad Capital Territory"], "Islamabad"),
+    ("azad-kashmir", "Azad Kashmir", "PK", "Pakistan", ["Azad Kashmir", "Azad Jammu and Kashmir", "AJK"], "Muzaffarabad and Mirpur"),
+    ("gilgit-baltistan", "Gilgit-Baltistan", "PK", "Pakistan", ["Gilgit-Baltistan", "Gilgit Baltistan"], "Gilgit and Skardu"),
+    ("maharashtra", "Maharashtra", "IN", "India", ["Maharashtra"], "Mumbai, Pune and Nagpur"),
+    ("uttar-pradesh", "Uttar Pradesh", "IN", "India", ["Uttar Pradesh"], "Lucknow, Kanpur and Varanasi"),
+    ("punjab-india", "Punjab (India)", "IN", "India", ["Punjab"], "Amritsar, Ludhiana and Jalandhar"),
+    ("tamil-nadu", "Tamil Nadu", "IN", "India", ["Tamil Nadu"], "Chennai, Coimbatore and Madurai"),
+    ("kerala", "Kerala", "IN", "India", ["Kerala"], "Kochi, Thiruvananthapuram and Kozhikode"),
+    ("karnataka", "Karnataka", "IN", "India", ["Karnataka"], "Bangalore and Mysore"),
+    ("west-bengal", "West Bengal", "IN", "India", ["West Bengal"], "Kolkata"),
+    ("gujarat", "Gujarat", "IN", "India", ["Gujarat"], "Ahmedabad and Surat"),
+    ("delhi-ncr", "Delhi NCR", "IN", "India", ["Delhi", "NCT of Delhi"], "New Delhi"),
+]
+PROVINCE_SLUGS = []
+for _s, _n, _cc, _cn, _states, _cities in _PROVINCES:
+    if _s in TOPICS:
+        continue
+    _plain = _n.split(" (")[0]
+    TOPICS[_s] = dict(
+        kind="genre", group="Cities", label=_n,
+        h1=f"{_n} Radio — Live FM Stations from {_plain}, {_cn}", native="",
+        seo_title=(f"{_n} Radio Live — FM Stations Online Free" if len(_n) <= 14 else f"{_n} Radio Live — FM Stations"),
+        description=f"Listen to live radio from {_plain}, {_cn} free: FM stations from {_cities}, music, news and talk in your browser.",
+        intro=f"Live radio stations from the province of {_plain} in {_cn} — FM channels from {_cities}. Pick a station and press play.",
+        more=f"Also searched as {_plain} radio, {_plain} FM live, {_plain} radio stations online and FM radio in {_plain}.",
+        paths=[f"/json/stations/search?state={urllib.parse.quote(st)}&countrycode={_cc}&{COMMON}" for st in _states])
+    PROVINCE_SLUGS.append(_s)
+
+
 
 # More cities, every country in the world: the main cities of each country (Babel's time-zone city names).
 def _zone_cities():

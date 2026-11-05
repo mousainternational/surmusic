@@ -462,3 +462,41 @@ document.addEventListener("toggle", function (e) {
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();
+
+/* Like / dislike a station (station pages). One vote per visitor; remembered in this browser. */
+(function () {
+  "use strict";
+  function store() { try { return JSON.parse(localStorage.getItem("sm-likes") || "{}"); } catch (e) { return {}; } }
+  function save(v) { try { localStorage.setItem("sm-likes", JSON.stringify(v)); } catch (e) {} }
+  function paint(box) {
+    var mine = store()[box.getAttribute("data-like-uuid")] || 0;
+    box.querySelectorAll("[data-like]").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(Number(b.getAttribute("data-like")) === mine));
+    });
+  }
+  function paintAll() { document.querySelectorAll("[data-like-uuid]").forEach(paint); }
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest && e.target.closest("[data-like]");
+    if (!btn) return;
+    var box = btn.closest("[data-like-uuid]"), uuid = box.getAttribute("data-like-uuid");
+    var votes = store(), want = Number(btn.getAttribute("data-like"));
+    var value = votes[uuid] === want ? 0 : want;
+    var meta = document.querySelector("meta[name=csrf-token]"), status = box.querySelector("[data-like-status]");
+    fetch("/api/like", { method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json", "X-CSRF-Token": meta ? meta.content : "" },
+      body: JSON.stringify({ uuid: uuid, value: value }) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d.ok) { if (status) status.textContent = "Please try again later."; return; }
+        if (value) votes[uuid] = value; else delete votes[uuid];
+        save(votes);
+        box.querySelector('[data-like-count="1"]').textContent = d.likes;
+        box.querySelector('[data-like-count="-1"]').textContent = d.dislikes;
+        paint(box);
+        if (status) status.textContent = value === 1 ? "Thanks, you liked this station." : value === -1 ? "Thanks for your feedback." : "Vote removed.";
+      })
+      .catch(function () { if (status) status.textContent = "Please try again later."; });
+  });
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", paintAll); else paintAll();
+  document.addEventListener("page:load", paintAll);
+})();

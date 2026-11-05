@@ -85,7 +85,7 @@ def test_category_tabs(client):
         tabs = re.findall(r'<a class="nt-tab( on)?"[^>]*data-tab="([^"]+)"', nav)
         return nav, tabs
     nav, tabs = parts("/")
-    assert [t for _, t in tabs] == ["music", "news", "sports", "talk", "religious", "languages", "countries", "accessibility"]
+    assert [t for _, t in tabs] == ["music", "news", "sports", "talk", "religious", "languages", "countries", "accessibility", "az"]
     assert [t for on, t in tabs if on] == ["music"]
     for href in ("/bollywood", "/lollywood", "/hollywood", "/genre/ghazal", "/genre/news", "/genre/cricket",
                  "/genre/islamic", "/genre/christian", "/genre/bhajan", "/genre/punjabi", "/continent/europe"):

@@ -115,6 +115,16 @@ def _nav_tabs(active=""):
         if sl in TOPICS and not radio.known_empty(sl):
             subs.append((topic_path(sl), lb, False))
     tabs.append({"key": "accessibility", "label": "Accessibility", "on": here_a11y, "subs": subs})
+    # A–Z directory next to the categories (like the big directories): every letter, plus Top 100 and Pakistan FM.
+    here_az = request.path.startswith("/stations/") or request.path in ("/top-100", "/pakistan-fm-radio")
+    if here_az:
+        for t in tabs:
+            t["on"] = False
+    az = [("/top-100", "Top 100", request.path == "/top-100"),
+          ("/pakistan-fm-radio", "Pakistan FM", request.path == "/pakistan-fm-radio")]
+    az += [(f"/stations/{c}", c.upper(), request.path == f"/stations/{c}") for c in LETTERS]
+    az.append(("/stations/0", "0–9", request.path == "/stations/0"))
+    tabs.append({"key": "az", "label": "A–Z", "on": here_az, "subs": az})
     return tabs
 
 
@@ -180,6 +190,18 @@ _LANG_GROUPS = [
 ]
 _POPULAR_COUNTRIES = ["usa", "uk", "canada", "australia", "germany", "france", "pakistan", "india", "uae",
                       "saudi-arabia", "turkey"]
+
+
+@bp.app_template_global("footer_places")
+def _footer_places():
+    """Footer lists like the big directories: popular countries, and Pakistan's provinces."""
+    from .topics import PROVINCE_SLUGS
+    countries = [(topic_path(s), TOPICS[s]["label"]) for s in
+                 ["pakistan", "india", "saudi-arabia", "uae", "uk", "usa", "canada", "bangladesh", "afghanistan", "turkey"]
+                 if s in TOPICS]
+    provinces = [(topic_path(s), TOPICS[s]["label"]) for s in PROVINCE_SLUGS
+                 if TOPICS[s].get("description", "").find("Pakistan") >= 0]
+    return countries, provinces
 
 
 @bp.app_template_global("market_ticker")
@@ -678,9 +700,11 @@ def station_page(uuid, slug=None):
         ("Listeners", f"{st['clicks']:,} recent plays worldwide" if st.get("clicks") else ""),
         ("Likes", f"{st['votes']:,}" if st.get("votes") else ""),
     ] if value]
+    likes, dislikes = like_counts(st["uuid"])
     return render_template("station.html", meta=meta, st=protect([st])[0], similar=protect(similar), cat=key or "", faqs=faqs,
+                           likes=likes, dislikes=dislikes,
                            back=back, back_href=back_href, crumbs=crumbs, ld=ld, share=share, embed_code=embed_code,
-                           details=details, homepage=st.get("homepage") or "")
+                           details=details)
 
 
 @bp.route("/embed/station/<uuid>")
@@ -1144,6 +1168,50 @@ def api_play():
             db.execute("DELETE FROM history WHERE id = ?", (r["id"],))
     db.commit()
     return jsonify({"ok": True})
+
+
+def like_counts(uuid):
+    """(likes, dislikes) of one station from listeners on Sur Music (cached, so pages do not wake the database)."""
+    from . import lowdb
+    key = "likes:" + uuid
+    if lowdb.enabled():
+        hit, value = lowdb.cache_get(key)
+        if hit:
+            return tuple(value)
+    row = get_db().one("SELECT SUM(CASE WHEN value = 1 THEN 1 ELSE 0 END) AS up, "
+                       "SUM(CASE WHEN value = -1 THEN 1 ELSE 0 END) AS down FROM station_likes WHERE station_uuid = ?", (uuid,))
+    out = (int((row or {}).get("up") or 0), int((row or {}).get("down") or 0)) if row else (0, 0)
+    if lowdb.enabled():
+        lowdb.cache_set(key, list(out), 600)
+    return out
+
+
+@bp.route("/api/like", methods=["POST"])
+def api_like():
+    """Like (1), dislike (-1) or clear (0) a station — one vote per visitor, like myTuner's thumbs."""
+    data = _json_body()
+    uuid = data.get("uuid") if isinstance(data.get("uuid"), str) else ""
+    value = data.get("value")
+    if not re.fullmatch(r"[A-Za-z0-9-]{1,64}", uuid) or value not in (1, -1, 0):
+        abort(400)
+    st, _key = radio.station_by_uuid(uuid)
+    if not st or is_blocked(st):
+        abort(404)
+    if rate_limited("like", 60, 3600):
+        return jsonify({"error": "rate_limited"}), 429
+    db, who = get_db(), ip_hash()
+    db.execute("DELETE FROM station_likes WHERE station_uuid = ? AND ip_hash = ?", (uuid, who))
+    if value:
+        db.execute("INSERT INTO station_likes (station_uuid, ip_hash, value, created_at) VALUES (?, ?, ?, ?)",
+                   (uuid, who, value, utcnow()))
+    db.commit()
+    from . import lowdb
+    row = db.one("SELECT SUM(CASE WHEN value = 1 THEN 1 ELSE 0 END) AS up, "
+                 "SUM(CASE WHEN value = -1 THEN 1 ELSE 0 END) AS down FROM station_likes WHERE station_uuid = ?", (uuid,))
+    up, down = int((row or {}).get("up") or 0), int((row or {}).get("down") or 0)
+    if lowdb.enabled():
+        lowdb.cache_set("likes:" + uuid, [up, down], 600)
+    return jsonify({"ok": True, "likes": up, "dislikes": down, "value": value})
 
 
 @bp.route("/api/favorites", methods=["GET", "POST"])
