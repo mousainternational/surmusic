@@ -220,3 +220,10 @@ def test_directory_refresh_saves_only_browser_playable_stations(app, monkeypatch
     assert "Good FM" in body and "Old FM" not in body
     directory.refresh(app, pause=0)                     # locked / not due: no second fetch
     assert len(calls) == 2
+
+
+def test_pakistan_fm_is_on_pakistan_pages_not_in_a_to_z(client):
+    home = client.get("/").get_data(as_text=True)
+    az = home.split('data-sub="az"', 1)[1].split("</div>", 1)[0]
+    assert "Pakistan FM" not in az and "Top 100" in az
+    assert 'href="/pakistan-fm-radio"' in client.get("/country/pakistan").get_data(as_text=True)

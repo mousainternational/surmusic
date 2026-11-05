@@ -120,12 +120,11 @@ def _nav_tabs(active=""):
             subs.append((topic_path(sl), lb, False))
     tabs.append({"key": "accessibility", "label": "Accessibility", "on": here_a11y, "subs": subs})
     # A–Z directory next to the categories (like the big directories): every letter, plus Top 100 and Pakistan FM.
-    here_az = request.path.startswith("/stations/") or request.path in ("/top-100", "/pakistan-fm-radio")
+    here_az = request.path.startswith("/stations/") or request.path == "/top-100"
     if here_az:
         for t in tabs:
             t["on"] = False
-    az = [("/top-100", "Top 100", request.path == "/top-100"),
-          ("/pakistan-fm-radio", "Pakistan FM", request.path == "/pakistan-fm-radio")]
+    az = [("/top-100", "Top 100", request.path == "/top-100")]     # Pakistan FM lives on the Pakistan pages, not here
     az += [(f"/stations/{c}", c.upper(), request.path == f"/stations/{c}") for c in LETTERS]
     az.append(("/stations/0", "0–9", request.path == "/stations/0"))
     tabs.append({"key": "az", "label": "A–Z", "on": here_az, "subs": az})
