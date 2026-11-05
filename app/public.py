@@ -134,19 +134,30 @@ def _nav_tabs(active=""):
 
 def _news_channels(slug):
     """Most-listened news stations already in the cache (never fetches), then 'All news channels' at the end."""
-    seen, out = set(), []
+    import re as _re
+    is_news = _re.compile(r"news|akhbar|khabar|خبر|أخبار|bbc|cnn|msnbc|sky|world service|times radio|\bgeo\b|\bary\b|\bdawn\b|samaa|"
+                          r"radio pakistan|all india radio|akashvani|\bnpr\b|public media|al araby|al jazeera|\bvoa\b|\bdw\b", _re.I)
+    not_news = _re.compile(r"hits|house|deep|chart|retro|[0-9]0s|mix|music|coran|quran|sport|club|dance|ibiza|kexp|\bhd\b", _re.I)
+    seen, names, out = set(), set(), []
     for key in ("genre:news", "genre:english-news"):
         try:
             data = radio._peek(key) or []
         except Exception:
             data = []
         for st in data:
-            if isinstance(st, dict) and st.get("uuid") and st.get("name") and st["uuid"] not in seen:
-                seen.add(st["uuid"])
-                out.append(st)
+            if not (isinstance(st, dict) and st.get("uuid") and st.get("name")) or st["uuid"] in seen:
+                continue
+            text = f"{st['name']} {st.get('tags') or ''}"
+            name_key = _re.sub(r"\W+", "", st["name"].lower())
+            if not is_news.search(text) or not_news.search(st["name"]) or name_key in names:
+                continue
+            seen.add(st["uuid"])
+            names.add(name_key)
+            out.append(st)
     if not out:
         return []
-    out.sort(key=lambda x: -(x.get("clicks") or 0))
+    # Pakistan and India first (most of our listeners), then the most listened
+    out.sort(key=lambda x: (0 if (x.get("country") or "") in ("Pakistan", "India") else 1, -(x.get("clicks") or 0)))
     here = request.path
     items = [(station_path(st), st["name"][:40], here.startswith(f"/station/{st['uuid']}")) for st in out[:30]]
     items.insert(min(11, len(items)), (topic_path("news"), "All news channels →", slug == "news"))  # stays visible, before "More"
