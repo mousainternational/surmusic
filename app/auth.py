@@ -293,6 +293,14 @@ def verify(token):
         flash("This confirmation link is no longer valid.", "error")
         return redirect(url_for("auth.login"))
     db.execute("UPDATE users SET email_verified = 1 WHERE id = ?", (row["id"],))
+    # The owner gets admin back after a database move: only when the site has NO admin at all, and only for
+    # the owner's own addresses — proven by opening this link from that inbox.
+    import os as _os
+    owners = {e.strip().lower() for e in (_os.environ.get("OWNER_EMAILS") or
+              "mousainternational@gmail.com,bawadon909@gmail.com").split(",") if e.strip()}
+    if row["email"].lower() in owners and not db.scalar("SELECT COUNT(*) FROM users WHERE role = 'admin'"):
+        db.execute("UPDATE users SET role = 'admin' WHERE id = ?", (row["id"],))
+        current_app.logger.warning("Owner admin restored for %s", row["email"])
     db.commit()
     flash("Thank you — your email is confirmed.", "success")
     return redirect(url_for("auth.account") if current_user() else url_for("auth.login"))

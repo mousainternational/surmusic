@@ -340,3 +340,24 @@ def test_unreachable_postgres_falls_back_to_sqlite_on_disk(tmp_path):
     a.config.update(DATABASE_URL="postgresql://u:p@127.0.0.1:1/none", STORAGE_DIR=str(tmp_path))
     _database_or_fallback(a)
     assert a.config["DATABASE_URL"].startswith("sqlite:///") and a.config["DB_FALLBACK_ACTIVE"]
+
+
+def test_owner_gets_admin_back_by_confirming_email_when_no_admin_exists(app, client):
+    from app.auth import _signer
+    from app.db import get_db
+    with app.app_context():
+        db = get_db()
+        db.execute("DELETE FROM users WHERE role = 'admin'")
+        uid = db.insert("users", {"email": "mousainternational@gmail.com", "password_hash": "x", "display_name": "",
+                                  "role": "user", "is_active": 1, "email_verified": 0, "created_at": "2026-01-01"})
+        other = db.insert("users", {"email": "someone@example.com", "password_hash": "x", "display_name": "",
+                                    "role": "user", "is_active": 1, "email_verified": 0, "created_at": "2026-01-01"})
+        db.commit()
+        t1 = _signer("verify").dumps({"uid": other, "email": "someone@example.com"})
+        t2 = _signer("verify").dumps({"uid": uid, "email": "mousainternational@gmail.com"})
+    client.get(f"/verify/{t1}")
+    client.get(f"/verify/{t2}")
+    with app.app_context():
+        db = get_db()
+        assert db.scalar("SELECT role FROM users WHERE id = ?", (other,)) == "user"
+        assert db.scalar("SELECT role FROM users WHERE id = ?", (uid,)) == "admin"
