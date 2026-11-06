@@ -331,3 +331,12 @@ def test_old_admin_events_are_removed_once_at_start(tmp_path, monkeypatch):
 def test_app_ads_txt_matches_ads_txt(client):
     a, b = client.get("/ads.txt"), client.get("/app-ads.txt")
     assert b.status_code == 200 and b.get_data() == a.get_data() and b.mimetype == "text/plain"
+
+
+def test_unreachable_postgres_falls_back_to_sqlite_on_disk(tmp_path):
+    from flask import Flask
+    from app import _database_or_fallback
+    a = Flask("t")
+    a.config.update(DATABASE_URL="postgresql://u:p@127.0.0.1:1/none", STORAGE_DIR=str(tmp_path))
+    _database_or_fallback(a)
+    assert a.config["DATABASE_URL"].startswith("sqlite:///") and a.config["DB_FALLBACK_ACTIVE"]

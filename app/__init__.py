@@ -40,6 +40,7 @@ def create_app(overrides=None):
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     dbmod.ensure_dirs(app)
+    _database_or_fallback(app)
     dbmod.migrate(app.config["DATABASE_URL"])
     _bootstrap_admin(app)
     _migrate_app_devices(app)
@@ -320,6 +321,23 @@ def _apply_setting_changes(app):
         db.rollback()
     finally:
         db.close()
+
+
+def _database_or_fallback(app):
+    """If the Postgres database cannot be reached (e.g. a free Render database that expired), keep the site up
+    with a SQLite file on the permanent disk instead of crashing. Turn off with DB_FALLBACK_SQLITE=0."""
+    url = app.config["DATABASE_URL"]
+    if not dbmod._is_pg(url) or os.environ.get("DB_FALLBACK_SQLITE", "1") == "0" or app.config.get("TESTING"):
+        return
+    try:
+        import psycopg
+        psycopg.connect(url, connect_timeout=6).close()
+        return
+    except Exception as exc:  # database down, expired or deleted
+        fallback = "sqlite:///" + os.path.join(app.config["STORAGE_DIR"], "surmusic-fallback.db")
+        logging.getLogger(__name__).error("Postgres not reachable (%s) — using %s", exc.__class__.__name__, fallback)
+        app.config["DATABASE_URL"] = fallback
+        app.config["DB_FALLBACK_ACTIVE"] = True
 
 
 def _to_main_address():
