@@ -1372,8 +1372,8 @@ def robots():
         body += f"User-agent: {b}\n" + rules + "\n"
     body += f"Sitemap: {site}/sitemap.xml\n"
     from . import directory
-    for k in directory.chunk_keys(get_db()):
-        body += f"Sitemap: {site}/sitemap-stations-{k[4:]}.xml\n"
+    for n in directory.chunks():
+        body += f"Sitemap: {site}/sitemap-stations-{n}.xml\n"
     return Response(body, mimetype="text/plain")
 
 
@@ -1569,13 +1569,10 @@ def sitemap_stations(n):
         hit, xml = lowdb.cache_get(f"sitemap-dir:{n}")
         if hit:
             return Response(xml, mimetype="application/xml")
-    row = get_db().one("SELECT body FROM station_cache WHERE cache_key = ?", (f"dir:{n}",))
-    if not row:
+    from . import directory
+    stations = directory.chunk_stations(n)
+    if not stations:
         abort(404)
-    try:
-        stations = json.loads(row["body"]) or []
-    except (ValueError, TypeError):
-        stations = []
     site = current_app.config["SITE_URL"]
     parts = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
     for st in without_blocked(stations):

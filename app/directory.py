@@ -1,12 +1,15 @@
 # © 2026 Mousa International Software House. All rights reserved.
 """World station directory: the most-listened stations on Radio Browser that play in a browser (https, not HLS).
 
-Every one of them gets its own real page (/station/<id>/<name>) and is listed in /sitemap-stations-N.xml,
-so people searching a station's name can find it on Sur Music. Fetched in the background once a week,
-one small page at a time (never while a visitor waits), and kept in the station_cache table as "dir:N".
+Every one of them gets its own real page (/station/<id>/<name>) and is listed in /sitemap-stations-N.xml.
+Fetched in the background once a week, one page at a time. Kept in its OWN small SQLite file on the
+permanent disk (STORAGE_DIR/directory.sqlite) — never in the main database — so station pages and
+sitemaps never cost database network transfer (a free hosted database has a monthly transfer limit).
 """
 import json
 import logging
+import os
+import sqlite3
 import threading
 import time
 from datetime import datetime, timedelta, timezone
@@ -16,36 +19,80 @@ log = logging.getLogger(__name__)
 PAGES = 16            # 16 x 2,500 = up to 40,000 directory entries (before removing http and HLS streams)
 PER_PAGE = 2500
 EVERY_DAYS = 7
-KEY = "dir:{}"
 
 
-def chunk_keys(db):
-    """The saved directory chunks, in order: ['dir:0', 'dir:1', ...]."""
-    rows = db.all("SELECT cache_key FROM station_cache WHERE cache_key LIKE ?", ("dir:%",))
-    keys = [r["cache_key"] for r in rows if r["cache_key"][4:].isdigit()]
-    return sorted(keys, key=lambda k: int(k[4:]))
+def _path(app):
+    return os.path.join(app.config["STORAGE_DIR"], "directory.sqlite")
 
 
-def _due(db):
-    row = db.one("SELECT fetched_at FROM station_cache WHERE cache_key = ?", (KEY.format(0),))
-    lock = db.one("SELECT fetched_at FROM station_cache WHERE cache_key = ?", ("dir-lock",))
-    now = datetime.now(timezone.utc)
-    if lock and datetime.fromisoformat(lock["fetched_at"]) > now - timedelta(hours=2):
-        return False                                  # another worker is fetching right now
-    return not row or datetime.fromisoformat(row["fetched_at"]) < now - timedelta(days=EVERY_DAYS)
+def _open(app):
+    conn = sqlite3.connect(_path(app), timeout=15)
+    conn.execute("CREATE TABLE IF NOT EXISTS stations (uuid TEXT PRIMARY KEY, chunk INTEGER NOT NULL, body TEXT NOT NULL)")
+    conn.execute("CREATE INDEX IF NOT EXISTS stations_chunk ON stations (chunk)")
+    conn.execute("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
+    return conn
+
+
+def _app():
+    from flask import current_app
+    return current_app._get_current_object()
+
+
+def chunks(app=None):
+    """Chunk numbers that have stations, in order: [0, 1, ...]."""
+    app = app or _app()
+    if not os.path.exists(_path(app)):
+        return []
+    with _open(app) as conn:
+        return [r[0] for r in conn.execute("SELECT DISTINCT chunk FROM stations ORDER BY chunk")]
+
+
+def chunk_stations(n, app=None):
+    app = app or _app()
+    if not os.path.exists(_path(app)):
+        return []
+    with _open(app) as conn:
+        return [json.loads(r[0]) for r in conn.execute("SELECT body FROM stations WHERE chunk = ? ORDER BY rowid", (n,))]
+
+
+def find(uuid, app=None):
+    """One station by id, or None (a local file lookup: fast, no database traffic)."""
+    app = app or _app()
+    if not os.path.exists(_path(app)):
+        return None
+    with _open(app) as conn:
+        row = conn.execute("SELECT body FROM stations WHERE uuid = ?", (uuid,)).fetchone()
+    return json.loads(row[0]) if row else None
+
+
+def save_chunk(app, n, stations):
+    with _open(app) as conn:
+        conn.execute("DELETE FROM stations WHERE chunk = ?", (n,))
+        conn.executemany("INSERT OR REPLACE INTO stations (uuid, chunk, body) VALUES (?, ?, ?)",
+                         [(st["uuid"], n, json.dumps(st)) for st in stations if st.get("uuid")])
+
+
+def _get(conn, key):
+    row = conn.execute("SELECT value FROM meta WHERE key = ?", (key,)).fetchone()
+    return datetime.fromisoformat(row[0]) if row else None
+
+
+def _set(conn, key):
+    conn.execute("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)", (key, datetime.now(timezone.utc).isoformat()))
 
 
 def refresh(app, pause=4.0):
     from . import radio
-    from .db import Database, utcnow
+    now = datetime.now(timezone.utc)
     with app.app_context():
-        db = Database(app.config["DATABASE_URL"])
         try:
-            if not _due(db):
-                return
-            db.execute("DELETE FROM station_cache WHERE cache_key = ?", ("dir-lock",))
-            db.execute("INSERT INTO station_cache (cache_key, body, fetched_at) VALUES (?, ?, ?)", ("dir-lock", "1", utcnow()))
-            db.commit()
+            with _open(app) as conn:
+                done, lock = _get(conn, "done"), _get(conn, "lock")
+                if lock and lock > now - timedelta(hours=2):
+                    return                                   # another worker is fetching right now
+                if done and done > now - timedelta(days=EVERY_DAYS):
+                    return
+                _set(conn, "lock")
             total = 0
             for i in range(PAGES):
                 try:
@@ -56,21 +103,16 @@ def refresh(app, pause=4.0):
                 if not isinstance(raw, list) or not raw:
                     break
                 stations = radio.normalize(raw)
-                for st in stations:                      # only what a station page needs: smaller rows
-                    st.pop("tags_full", None)
-                db.execute("DELETE FROM station_cache WHERE cache_key = ?", (KEY.format(i),))
-                db.execute("INSERT INTO station_cache (cache_key, body, fetched_at) VALUES (?, ?, ?)",
-                           (KEY.format(i), json.dumps(stations), utcnow()))
-                db.commit()
+                save_chunk(app, i, stations)
                 total += len(stations)
                 del raw, stations
-                time.sleep(pause)                        # gentle on Radio Browser and on our small server
+                time.sleep(pause)                            # gentle on Radio Browser and on our small server
+            with _open(app) as conn:
+                _set(conn, "done")
+                conn.execute("DELETE FROM meta WHERE key = 'lock'")
             log.info("Station directory saved: %d stations", total)
-        except Exception as exc:                          # never break the site for this
-            db.rollback()
+        except Exception as exc:                              # never break the site for this
             log.info("Station directory not refreshed: %s", exc)
-        finally:
-            db.close()
 
 
 def start(app):
@@ -80,7 +122,7 @@ def start(app):
         return
 
     def loop():
-        time.sleep(90)                                    # let the site start first
+        time.sleep(90)                                        # let the site start first
         while True:
             refresh(app)
             time.sleep(6 * 3600)

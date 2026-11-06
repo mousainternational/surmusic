@@ -329,15 +329,26 @@ def _database_or_fallback(app):
     url = app.config["DATABASE_URL"]
     if not dbmod._is_pg(url) or os.environ.get("DB_FALLBACK_SQLITE", "1") == "0" or app.config.get("TESTING"):
         return
-    try:
-        import psycopg
-        psycopg.connect(url, connect_timeout=6).close()
-        return
-    except Exception as exc:  # database down, expired or deleted
-        fallback = "sqlite:///" + os.path.join(app.config["STORAGE_DIR"], "surmusic-fallback.db")
-        logging.getLogger(__name__).error("Postgres not reachable (%s) — using %s", exc.__class__.__name__, fallback)
+    fallback = "sqlite:///" + os.path.join(app.config["STORAGE_DIR"], "surmusic-fallback.db")
+    marker = os.path.join(app.config["STORAGE_DIR"], ".use-sqlite")
+    if os.path.exists(marker):              # once switched, stay on the disk database (no more remote transfer)
         app.config["DATABASE_URL"] = fallback
         app.config["DB_FALLBACK_ACTIVE"] = True
+        return
+    try:
+        import psycopg
+        with psycopg.connect(url, connect_timeout=6) as conn:
+            conn.execute("SELECT 1").fetchone()
+        return
+    except Exception as exc:  # database down, over its free quota, expired or deleted
+        logging.getLogger(__name__).error("Postgres not usable (%s) — switching to %s", exc.__class__.__name__, fallback)
+        app.config["DATABASE_URL"] = fallback
+        app.config["DB_FALLBACK_ACTIVE"] = True
+        try:
+            with open(marker, "w", encoding="utf-8") as fh:
+                fh.write("switched to the disk database because Postgres was not usable\n")
+        except OSError:
+            pass
 
 
 def _to_main_address():

@@ -362,17 +362,21 @@ def station_by_uuid(uuid):
                 for st in (value or []) if hit else []:
                     if st.get("uuid") == uuid:
                         return st, key
-        hit, value = lowdb.cache_get("st-hit:" + uuid)   # found here before (world directory pages)
-        if hit and value:
-            return value[0], value[1]
-    # one query over the saved lists (never fetch dozens of lists here)
-    for row in get_db().all("SELECT cache_key, body FROM station_cache WHERE body LIKE ?", (f'%"{uuid}"%',)):
-        if row["cache_key"] in names or row["cache_key"].startswith("dir:"):   # a list, or the world directory
-            for st in json.loads(row["body"]) or []:
+    # the world directory: a local file on the disk (no database traffic at all)
+    from . import directory
+    try:
+        st = directory.find(uuid)
+    except Exception:
+        st = None
+    if st:
+        return st, ""
+    # one query over the saved lists: only the list NAMES come back, then the one matching list is read
+    for row in get_db().all("SELECT cache_key FROM station_cache WHERE body LIKE ?", (f'%"{uuid}"%',)):
+        if row["cache_key"] in names:
+            body = get_db().one("SELECT body FROM station_cache WHERE cache_key = ?", (row["cache_key"],))
+            for st in json.loads(body["body"]) if body else []:
                 if st.get("uuid") == uuid:
-                    if lowdb.enabled():
-                        lowdb.cache_set("st-hit:" + uuid, [st, names.get(row["cache_key"], "")], 6 * 3600)
-                    return st, names.get(row["cache_key"], "")
+                    return st, names[row["cache_key"]]
     if current_app.config.get("RADIO_DEMO"):
         for key, stations in all_lists():
             for st in stations:
