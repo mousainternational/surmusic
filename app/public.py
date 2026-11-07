@@ -332,10 +332,14 @@ def _popular(days=7, limit=8):
 
 def _popular_query(days=7, limit=8):
     since = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
-    # one row per station (the same station played from two pages used to appear twice)
-    rows = get_db().all("SELECT station_name, MAX(station_uuid) AS station_uuid, MAX(category) AS category, "
-                        "COUNT(*) AS n FROM plays WHERE created_at > ? GROUP BY station_name "
-                        "ORDER BY n DESC LIMIT ?", (since, limit + 5))
+    try:
+        # one row per station (the same station played from two pages used to appear twice)
+        rows = get_db().all("SELECT station_name, MAX(station_uuid) AS station_uuid, MAX(category) AS category, "
+                            "COUNT(*) AS n FROM plays WHERE created_at > ? GROUP BY station_name "
+                            "ORDER BY n DESC LIMIT ?", (since, limit + 5))
+    except Exception:
+        # Popularity is optional; never let a temporary database outage break the homepage.
+        return []
     import re as _re
     out = []
     for r in rows:
