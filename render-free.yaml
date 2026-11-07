@@ -29,6 +29,8 @@ services:
         value: /data/storage/geoip.sqlite
       - key: WEB_CONCURRENCY
         value: "1"                  # one process: low-database mode keeps listeners/visits in its memory
+      - key: WEB_THREADS
+        value: "4"                  # cap thread overhead on the 512 MB Free instance; blocking I/O remains concurrent
       - key: TRUSTED_PROXIES
         value: "1"
       - key: SESSION_COOKIE_SECURE
