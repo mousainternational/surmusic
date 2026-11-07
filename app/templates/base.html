@@ -136,16 +136,24 @@
 {% endblock %}
 <div class="utility-row">
   <div class="utility-news">{% include "_newsbar.html" %}</div>
-  <div class="mk-ticker" data-ticker role="region" aria-label="Live market prices" hidden>
+  <aside class="mk-ticker mk-side-ticker" data-ticker role="region" aria-label="Live market prices" hidden>
     <div class="mk-track">
       <div class="mk-set" data-ticker-set>
-        <a class="mk-t" href="/markets" data-market="xau"><span class="mk-sym">Gold</span><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
-        <a class="mk-t" href="/markets" data-market="btc"><span class="mk-sym">Bitcoin</span><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
-        <a class="mk-t" href="/markets" data-market="usd-pkr"><span class="mk-sym">USD/PKR</span><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
-        <a class="mk-t" href="/markets" data-market="xag"><span class="mk-sym">Silver</span><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+        <a class="mk-t" href="/markets" data-market="btc"><span class="mk-sym">BTC</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+        <a class="mk-t" href="/markets" data-market="eth"><span class="mk-sym">ETH</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+        <a class="mk-t" href="/markets" data-market="sol"><span class="mk-sym">SOL</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+        <a class="mk-t" href="/markets" data-market="xau"><span class="mk-sym">Gold</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+        <a class="mk-t" href="/markets" data-market="xag"><span class="mk-sym">Silver</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+        <a class="mk-t" href="/markets" data-market="xpt"><span class="mk-sym">Platinum</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+        <a class="mk-t" href="/markets" data-market="xpd"><span class="mk-sym">Palladium</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+        <a class="mk-t" href="/markets" data-market="usd-pkr"><span class="mk-sym">USD/PKR</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+        <a class="mk-t" href="/markets" data-market="eur-pkr"><span class="mk-sym">EUR/PKR</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+        <a class="mk-t" href="/markets" data-market="gbp-pkr"><span class="mk-sym">GBP/PKR</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+        <a class="mk-t" href="/markets" data-market="aed-pkr"><span class="mk-sym">AED/PKR</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+        <a class="mk-t" href="/markets" data-market="sar-pkr"><span class="mk-sym">SAR/PKR</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
       </div>
     </div>
-  </div>
+  </aside>
 </div>
 
 <div id="sr-announce" class="sr" aria-live="polite" aria-atomic="true"></div>
