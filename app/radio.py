@@ -213,7 +213,7 @@ def _merge(paths, per=None, cap=300):
             except RadioError:
                 return None
 
-    with ThreadPoolExecutor(max_workers=6) as ex:
+    with ThreadPoolExecutor(max_workers=3) as ex:
         results = list(ex.map(run, paths))
     if all(r is None for r in results):
         raise RadioError("The radio directory is not reachable right now.")
