@@ -82,6 +82,7 @@ def cache_drop(prefix):
 
 MAX_QUEUE = 5000
 MAX_VISITORS = 20000
+MAX_RATE_BUCKETS = 10000
 
 
 def defer(sql, params):
@@ -176,9 +177,18 @@ def rate_limited(bucket, limit, window_seconds):
         hit = st.hits.get(bucket)
         if hit is None or hit[1] <= now:
             st.hits[bucket] = [1, now + window_seconds]
-            if len(st.hits) > 10000:
-                for k in [k for k, v in st.hits.items() if v[1] <= now]:
+            if len(st.hits) > MAX_RATE_BUCKETS:
+                # First remove expired buckets; if a burst creates only active buckets,
+                # still enforce a hard ceiling so attacker-controlled bucket keys cannot
+                # grow this dictionary without bound.
+                expired = [k for k, v in st.hits.items() if v[1] <= now]
+                for k in expired:
                     st.hits.pop(k, None)
+                if len(st.hits) > MAX_RATE_BUCKETS:
+                    excess = len(st.hits) - MAX_RATE_BUCKETS
+                    oldest = sorted(st.hits, key=lambda k: st.hits[k][1])[:excess]
+                    for k in oldest:
+                        st.hits.pop(k, None)
             return False
         if hit[0] >= limit:
             return True
