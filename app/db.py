@@ -37,7 +37,13 @@ class Database:
             # Render Free can reach Neon over IPv4 while an IPv6 DNS result may
             # be unreachable. Keep the hostname for TLS verification, but pin
             # the connection to a resolved IPv4 address when one is available.
-            connect_kwargs = {"row_factory": dict_row, "autocommit": False}
+            # Keep database connection attempts bounded and tolerate a short Neon
+            # wake-up/network hiccup. This does not create a local fallback database.
+            connect_kwargs = {
+                "row_factory": dict_row,
+                "autocommit": False,
+                "connect_timeout": 8,
+            }
             try:
                 parsed = urlsplit(url)
                 host = parsed.hostname
@@ -52,7 +58,18 @@ class Database:
                 # Fall back to libpq's normal DNS/address selection.
                 pass
 
-            self.conn = psycopg.connect(url, **connect_kwargs)
+            last_error = None
+            for attempt in range(3):
+                try:
+                    self.conn = psycopg.connect(url, **connect_kwargs)
+                    break
+                except Exception as exc:
+                    last_error = exc
+                    if attempt < 2:
+                        import time
+                        time.sleep(1.0 * (attempt + 1))
+            else:
+                raise last_error
         else:
             path = url.replace("sqlite:///", "", 1)
             Path(path).parent.mkdir(parents=True, exist_ok=True)
