@@ -80,7 +80,7 @@ def cache_drop(prefix):
 
 # ---------------------------------------------------------------- deferred writes
 
-MAX_QUEUE = 5000
+MAX_QUEUE = 1200
 MAX_VISITORS = 20000
 MAX_RATE_BUCKETS = 10000
 MAX_LIVE = 10000
@@ -90,7 +90,7 @@ def defer(sql, params):
     st = state()
     with st.lock:
         if len(st.queue) >= MAX_QUEUE:      # database unreachable for a long time: drop the oldest
-            del st.queue[:1000]
+            del st.queue[:300]
         st.queue.append((sql, tuple(params)))
         if st.oldest is None:
             st.oldest = time.time()
