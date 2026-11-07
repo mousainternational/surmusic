@@ -5,7 +5,9 @@ placeholders are converted to '%s' and psycopg (v3) is used.
 """
 import os
 import re
+import socket
 import sqlite3
+from urllib.parse import urlsplit
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -31,7 +33,26 @@ class Database:
         if self.pg:
             import psycopg  # noqa: provided via requirements.txt in production
             from psycopg.rows import dict_row
-            self.conn = psycopg.connect(url, row_factory=dict_row, autocommit=False)
+
+            # Render Free can reach Neon over IPv4 while an IPv6 DNS result may
+            # be unreachable. Keep the hostname for TLS verification, but pin
+            # the connection to a resolved IPv4 address when one is available.
+            connect_kwargs = {"row_factory": dict_row, "autocommit": False}
+            try:
+                parsed = urlsplit(url)
+                host = parsed.hostname
+                port = parsed.port or 5432
+                if host:
+                    ipv4 = socket.getaddrinfo(
+                        host, port, family=socket.AF_INET, type=socket.SOCK_STREAM
+                    )
+                    if ipv4:
+                        connect_kwargs.update({"host": host, "hostaddr": ipv4[0][4][0]})
+            except (OSError, ValueError):
+                # Fall back to libpq's normal DNS/address selection.
+                pass
+
+            self.conn = psycopg.connect(url, **connect_kwargs)
         else:
             path = url.replace("sqlite:///", "", 1)
             Path(path).parent.mkdir(parents=True, exist_ok=True)
