@@ -41,10 +41,18 @@ def create_app(overrides=None):
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     dbmod.ensure_dirs(app)
     _database_or_fallback(app)
-    dbmod.migrate(app.config["DATABASE_URL"])
-    _bootstrap_admin(app)
-    _migrate_app_devices(app)
-    _apply_setting_changes(app)
+    app.config["DATABASE_DEGRADED"] = False
+    try:
+        dbmod.migrate(app.config["DATABASE_URL"])
+    except Exception:
+        # Do not replace Neon with a new local database. Start in public read-only/degraded
+        # mode so a short database outage does not take the whole website offline.
+        app.config["DATABASE_DEGRADED"] = True
+        app.logger.exception("Database unavailable during startup; starting in degraded public mode")
+    if not app.config["DATABASE_DEGRADED"]:
+        _bootstrap_admin(app)
+        _migrate_app_devices(app)
+        _apply_setting_changes(app)
     from . import geo as _geo
     _geo.start_auto_update(app)
     app.config["APP_VERSION"] = __version__
