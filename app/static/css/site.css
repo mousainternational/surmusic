@@ -1236,7 +1236,7 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 @media (max-width: 760px) { .home-discovery .trend-strip { margin-top: 0; } }
 
 
-/* ---------- polished utility strip ---------- */
+/* ---------- header utility area: news + promo tickers + vertical market strip ---------- */
 .utility-row {
   width: 100%;
   display: flex;
@@ -1246,19 +1246,103 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
   background: color-mix(in srgb, var(--surface) 94%, transparent);
   border-bottom: 1px solid var(--border);
 }
-.utility-news { min-width: 0; flex: 1 1 auto; }
-.utility-news .nw-ticker { margin: 0; border: 0; border-radius: 10px; }
-.utility-row .mk-ticker {
-  flex: 0 0 min(390px, 34vw);
-  width: auto;
-  min-width: 260px;
+.utility-main {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: grid;
+  gap: 6px;
+}
+.utility-news { min-width: 0; }
+.utility-news .nw-ticker {
   margin: 0;
   border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
+  border-radius: 9px;
 }
-.utility-row .mk-track { min-height: 42px; }
-.utility-row .mk-t { padding: 7px 10px; font-size: .78rem; }
+.promo-ticker {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--brand) 7%, var(--surface));
+}
+.promo-track {
+  display: flex;
+  width: max-content;
+  animation: promo-scroll 28s linear infinite;
+}
+.promo-ticker:hover .promo-track,
+.promo-ticker:focus-within .promo-track { animation-play-state: paused; }
+.promo-set {
+  display: flex;
+  flex: 0 0 auto;
+  min-width: 100%;
+}
+.promo-item {
+  min-width: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 7px 18px;
+  color: var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+  font-size: .8rem;
+}
+.promo-item strong { color: var(--brand); }
+.promo-item span { color: var(--muted); font-weight: 600; }
+@keyframes promo-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.utility-row .mk-side-ticker {
+  flex: 0 0 190px;
+  width: 190px;
+  min-width: 170px;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+}
+.mk-side-ticker .mk-track {
+  display: block;
+  width: 100%;
+  animation: mk-vertical-scroll 28s linear infinite;
+}
+.mk-side-ticker:hover .mk-track,
+.mk-side-ticker:focus-within .mk-track { animation-play-state: paused; }
+.mk-side-ticker .mk-set {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  width: 100%;
+  justify-content: initial;
+}
+.mk-side-ticker .mk-t {
+  width: 100%;
+  min-height: 54px;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 52px 46px 1fr;
+  grid-template-areas:
+    "sym spark val"
+    "sym spark chg";
+  align-items: center;
+  column-gap: 7px;
+  padding: 6px 9px;
+  border-bottom: 1px solid var(--border);
+}
+.mk-side-ticker .mk-t:last-child { border-bottom: 0; }
+.mk-side-ticker .mk-sym { grid-area: sym; font-size: .72rem; }
+.mk-side-ticker .mk-spark { grid-area: spark; width: 42px; height: 20px; }
+.mk-side-ticker .mk-val { grid-area: val; justify-self: end; font-size: .75rem; }
+.mk-side-ticker .mk-chg { grid-area: chg; justify-self: end; font-size: .68rem; }
+@keyframes mk-vertical-scroll {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
+}
+.utility-row .mk-side-ticker .mk-dup { display: flex; }
 .home-quick-links {
   display: flex;
   flex-wrap: wrap;
@@ -1282,9 +1366,14 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
   border-bottom: 1px solid var(--border);
 }
 .about-inline-links a { font-weight: 600; text-decoration: none; font-size: .9rem; }
+@media (prefers-reduced-motion: reduce) {
+  .promo-track, .mk-side-ticker .mk-track { animation: none; }
+}
 @media (max-width: 760px) {
   .utility-row { padding: 6px 10px; gap: 6px; }
-  .utility-row .mk-ticker { flex: 0 0 100%; min-width: 0; }
-  .utility-row { flex-wrap: wrap; }
-  .utility-news { flex-basis: 100%; }
+  .utility-main { min-width: 0; flex: 1 1 100%; }
+  .utility-row .mk-side-ticker { flex: 0 0 100%; width: 100%; min-width: 0; }
+  .mk-side-ticker .mk-set { flex-direction: row; }
+  .mk-side-ticker .mk-t { min-width: 170px; border-bottom: 0; border-right: 1px solid var(--border); }
+  .mk-side-ticker .mk-track { width: max-content; display: flex; animation: mk-scroll 45s linear infinite; }
 }
