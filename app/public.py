@@ -98,12 +98,9 @@ def _nav_tabs(active=""):
                 if sl in CAT_PAGES:
                     items.append((f"/{sl}", CAT_PAGES[sl], sl == slug))
                 elif sl in TOPICS and not radio.known_empty(sl):
-                    items.append((topic_path(sl), TOPICS[sl]["label"], sl == slug))
-        if key == "religious" and slug == "islamic":
-            # Keep one fast "All Islamic" destination. Quran, Naat/Hamd, Bayan,
-            # Pakistan Islamic and Ahl-e-Bait/Noha remain indexable standalone
-            # pages and retain their SEO content, but are no longer navigation tabs.
-            items = [(topic_path("islamic"), "All Islamic", True)]
+                    # Keep every sibling category visible. On a family page (Islamic,
+                    # Quran, Naat, etc.) highlight the exact page that was clicked.
+                    items.append((topic_path(sl), TOPICS[sl]["label"], sl == real))
         if key == "news":                                     # News: the news channels themselves, not one more "News" button
             items = _news_channels(slug) or [(topic_path("news"), "All news channels", slug == "news")]
         tabs.append({"key": key, "label": label, "on": key == current, "subs": items})
