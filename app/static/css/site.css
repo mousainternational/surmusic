@@ -1586,3 +1586,24 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 }
 .home-info-menu a { display: block; padding: 8px 10px; color: var(--text); text-decoration: none; font-size: .74rem; border-radius: 8px; }
 .home-info-menu a:hover { background: color-mix(in srgb, var(--brand) 9%, transparent); }
+
+
+.home-info-dropdown[open] {
+  width: min(920px, 100%);
+}
+.home-info-dropdown[open] > summary {
+  margin: 0 auto;
+}
+.home-info-dropdown[open] .home-info-menu {
+  position: static;
+  transform: none;
+  min-width: 0;
+  width: min(100%, 420px);
+  margin: 8px auto 12px;
+}
+.home-info-dropdown[open] .seo-text {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 10px 8px 18px;
+  text-align: left;
+}
