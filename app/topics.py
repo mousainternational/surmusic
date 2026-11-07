@@ -1136,7 +1136,7 @@ NAV = [
                          "k-pop", "ghazal", "qawwali", "sufi", "old-songs", "indian-classical"]),
     ("news", "News", ["news", "english-news", "hindi-news", "business"]),
     ("sports", "Sports", ["sports", "cricket", "football"]),
-    ("talk", "Talk", ["talk", "debates"]),
+    ("talk", "Talk & Lifestyle", ["talk", "debates", "comedy", "health", "meditation", "cooking", "kids", "education", "business", "technology"]),
     ("religious", "Religious", ["islamic", "christian", "bhajan", "gurbani", "jewish"]),
     # Languages and Countries are deliberately not main tabs. They remain available through
     # their dedicated header menus and SEO landing pages.
