@@ -1434,56 +1434,8 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 .station-promo .home-promo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 .now-card { position: relative; min-height: 260px; }
-.now-card > .stations { padding-right: 156px; }
-.now-community-rail {
-  position: absolute; top: 46px; right: 10px; width: 142px; height: 205px;
-  overflow: hidden; border-left: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
-  background: color-mix(in srgb, var(--surface) 62%, transparent); z-index: 2;
-  border-radius: 12px;
-}
-.now-community-head {
-  height: 28px; display: flex; align-items: center; justify-content: space-between;
-  padding: 0 8px; font-size: .58rem; font-weight: 800; color: var(--muted);
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 35%, transparent);
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
-  position: relative; z-index: 3;
-}
-.now-live-dot { width: 6px; height: 6px; border-radius: 50%; background: #18c98b; box-shadow: 0 0 0 3px color-mix(in srgb, #18c98b 18%, transparent); }
-.now-community-window { height: 177px; overflow: hidden; }
-.now-community-track { display: block; width: 100%; animation: now-community-scroll 30s linear infinite; }
-.now-community-rail:hover .now-community-track, .now-community-rail:focus-within .now-community-track { animation-play-state: paused; }
-.now-community-set { display: flex; flex-direction: column; width: 100%; }
-.now-community-person {
-  width: 100%; min-height: 43px; height: 43px; box-sizing: border-box;
-  display: flex; align-items: center; gap: 7px; padding: 4px 7px;
-  text-decoration: none; color: var(--text); border-bottom: 1px solid color-mix(in srgb, var(--border) 22%, transparent);
-}
-.now-community-person:hover { background: color-mix(in srgb, var(--brand) 8%, transparent); }
-.now-community-avatar {
-  width: 28px; height: 28px; flex: 0 0 28px; border-radius: 50%; overflow: hidden;
-  display: grid; place-items: center; background: linear-gradient(135deg, #7b61ff, #20c997);
-  color: #fff; font-size: .62rem; font-weight: 900;
-}
-.now-community-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.now-community-copy { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.now-community-copy strong { font-size: .61rem; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.now-community-copy small { font-size: .52rem; line-height: 1.15; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-@keyframes now-community-scroll { from { transform: translateY(-50%); } to { transform: translateY(0); } }
+.now-card > .stations { padding-right: 0; }
 
-@media (max-width: 959px) {
-  .now-card > .stations { padding-right: 0; }
-  .now-community-rail {
-    position: static; width: 100%; height: 118px; margin: 8px 0 8px;
-    border-left: 0; border-top: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
-    border-radius: 0; background: transparent;
-  }
-  .now-community-head { height: 26px; }
-  .now-community-window { height: 92px; }
-  .now-community-track { display: flex; width: max-content; animation: now-community-horizontal 42s linear infinite; }
-  .now-community-set { flex-direction: row; width: max-content; }
-  .now-community-person { min-width: 142px; width: 142px; height: 66px; min-height: 66px; border-bottom: 0; }
-}
-@keyframes now-community-horizontal { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
 
 /* Brand polish: compact, image-led promo ribbon and clean home information row. */

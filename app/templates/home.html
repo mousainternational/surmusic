@@ -60,29 +60,6 @@
       <h2 class="h3">Top stations right now</h2>
       {% if stations %}{{ ui.station_list(stations[:4], cat) }}{% else %}<p class="muted">Stations are loading. Please try again in a minute.</p>{% endif %}
       <p class="small"><a href="{{ url_for('public.category', cat='bollywood') }}">All Bollywood stations →</a></p>
-      <aside class="now-community-rail" aria-label="Live radio community">
-        <div class="now-community-head"><span>Live community</span><span class="now-live-dot" aria-hidden="true"></span></div>
-        <div class="now-community-window">
-          <div class="now-community-track">
-            <div class="now-community-set">
-              {% for st in stations[4:12] %}
-              <a class="now-community-person" href="{{ station_href(st) }}">
-                <span class="now-community-avatar" aria-hidden="true">{% if st.favicon %}<img src="{{ st.favicon }}" alt="" loading="lazy" width="32" height="32" referrerpolicy="no-referrer">{% else %}<span>{{ (st.name or '?')[:1] | upper }}</span>{% endif %}</span>
-                <span class="now-community-copy"><strong>{{ st.name }}</strong><small>{{ st.country or 'Worldwide' }}</small></span>
-              </a>
-              {% endfor %}
-            </div>
-            <div class="now-community-set" aria-hidden="true">
-              {% for st in stations[4:12] %}
-              <a class="now-community-person" href="{{ station_href(st) }}" tabindex="-1">
-                <span class="now-community-avatar">{% if st.favicon %}<img src="{{ st.favicon }}" alt="" loading="lazy" width="32" height="32" referrerpolicy="no-referrer">{% else %}<span>{{ (st.name or '?')[:1] | upper }}</span>{% endif %}</span>
-                <span class="now-community-copy"><strong>{{ st.name }}</strong><small>{{ st.country or 'Worldwide' }}</small></span>
-              </a>
-              {% endfor %}
-            </div>
-          </div>
-        </div>
-      </aside>
     </div>
   </div>
 </section>
