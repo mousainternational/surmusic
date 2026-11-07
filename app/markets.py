@@ -303,6 +303,14 @@ def view():
 
 
 def api_payload():
+    # On a cold worker the background refresh can still be empty when the
+    # browser asks for prices. Fetch the lightweight FX + metals groups once
+    # so currency/metal values can appear on the first request.
+    if not _all_items():
+        try:
+            refresh_now(groups=["forex", "metals"])
+        except Exception:
+            pass
     secs = view()
     items = {r["id"]: {"text": r["text"], "change": r["change"], "dir": r["dir"], "spark": r["spark"]}
              for s in secs for r in s["rows"] if r["text"]}
