@@ -65,9 +65,9 @@ def cache_set(key, value, ttl):
     st = state()
     with st.lock:
         st.cache[key] = (time.time() + ttl, value)
-        if len(st.cache) > 500:                       # keep it small: drop expired / oldest
+        if len(st.cache) > 100:                       # hard cap: cached station lists can otherwise consume tens of MB
             now = time.time()
-            for k in [k for k, v in st.cache.items() if v[0] <= now][:250] or list(st.cache)[:100]:
+            for k in [k for k, v in st.cache.items() if v[0] <= now][:50] or list(st.cache)[:50]:
                 st.cache.pop(k, None)
 
 
@@ -176,7 +176,7 @@ def rate_limited(bucket, limit, window_seconds):
         hit = st.hits.get(bucket)
         if hit is None or hit[1] <= now:
             st.hits[bucket] = [1, now + window_seconds]
-            if len(st.hits) > 50000:
+            if len(st.hits) > 10000:
                 for k in [k for k, v in st.hits.items() if v[1] <= now]:
                     st.hits.pop(k, None)
             return False
