@@ -87,19 +87,21 @@ def _spark(sym):
 
 
 def _fetch_crypto(cfg):
+    # One Coinbase exchange-rates request is much lighter than one HTTP request
+    # per coin, so the homepage can receive real crypto prices promptly.
     out = {}
-    for sym, key, _ in CRYPTO:
-        try:
-            data = _http_json(f"https://api.coinbase.com/v2/prices/{sym}-USD/spot")
-        except Exception:        # one coin missing must not hide the others
-            continue
-        price = _num(((data or {}).get("data") or {}).get("amount")) if isinstance(data, dict) else None
-        if price:
-            out[key] = {"price": price, "change": None}
-            closes = _spark(sym)
-            if closes:
-                out[key]["spark"] = [round(v, 6) for v in closes] + [price]
-                out[key]["change"] = (price - closes[0]) / closes[0] * 100
+    try:
+        data = _http_json("https://api.coinbase.com/v2/exchange-rates?currency=USD", timeout=4)
+        rates = ((data or {}).get("data") or {}).get("rates") if isinstance(data, dict) else None
+        if not isinstance(rates, dict):
+            return out
+        for _, key, _ in CRYPTO:
+            r = _num(rates.get(key.upper()))
+            if r:
+                price = 1 / r
+                out[key] = {"price": price, "change": None}
+    except Exception:
+        return out
     return out
 
 

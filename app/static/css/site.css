@@ -1607,3 +1607,27 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
   padding: 10px 8px 18px;
   text-align: left;
 }
+
+/* Compact About heading: keep the title small and put the dropdown affordance beside it. */
+.about-summary-compact {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: auto;
+  max-width: 100%;
+  padding: 7px 11px;
+  font-size: .78rem;
+  font-weight: 700;
+}
+.about-summary-arrow {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: .7rem;
+  opacity: .78;
+}
+.about-details[open] .about-summary-arrow { transform: rotate(180deg); }
+.a2hs-header { display: inline-flex !important; align-items: center; justify-content: center; }
