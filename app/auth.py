@@ -146,7 +146,6 @@ def login():
             current_app.logger.exception("Database unavailable during sign-in")
             error = "Sign-in is temporarily unavailable. Please try again in a moment."
             db = None
-        if db is not None:
         if db is not None and not _form_ok():
             error = "Sign-in rejected."
         elif db is not None and rate_limited("login", 20, 900):
