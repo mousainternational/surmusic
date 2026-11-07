@@ -34,7 +34,9 @@ SOURCES = {
 
 SPARK_TTL = 600           # candles change slowly: refetch the little charts every 10 minutes
 TICKER = [("btc", "BTC"), ("eth", "ETH"), ("sol", "SOL"), ("bnb", "BNB"), ("xrp", "XRP"), ("doge", "DOGE"),
-          ("xau", "Gold"), ("xag", "Silver"), ("usd-pkr", "USD/PKR")]
+          ("xau", "Gold"), ("xag", "Silver"), ("xpt", "Platinum"), ("xpd", "Palladium"),
+          ("usd-pkr", "USD/PKR"), ("eur-pkr", "EUR/PKR"), ("gbp-pkr", "GBP/PKR"),
+          ("aed-pkr", "AED/PKR"), ("sar-pkr", "SAR/PKR")]
 
 _lock = threading.Lock()
 _sparks = {}
