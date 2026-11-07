@@ -308,7 +308,7 @@ def api_payload():
     # so currency/metal values can appear on the first request.
     if not _all_items():
         try:
-            refresh_now(groups=["forex", "metals"])
+            refresh_now(groups=["forex", "metals", "crypto"])
         except Exception:
             pass
     secs = view()
