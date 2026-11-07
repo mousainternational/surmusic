@@ -384,11 +384,16 @@ document.addEventListener("toggle", function (e) {
   document.addEventListener("click", function (e) {
     var tab = e.target.closest && e.target.closest("[data-nav-tabs] .nt-tab");
     if (!tab) return;
-    // The active main tab is a real navigation target back to the directory.
-    // Other main tabs still switch their sub-tabs instantly without a page reload.
+    // Clicking an already-active main tab keeps the current page and
+    // reopens its own sub-tabs instead of jumping to another directory page.
     if (tab.classList.contains("on")) {
-      var href = tab.getAttribute("href");
-      if (href) window.location.assign(href);
+      e.preventDefault(); e.stopPropagation();
+      var activeNav = tab.closest("[data-nav-tabs]");
+      if (activeNav) {
+        activeNav.querySelectorAll(".nt-sub").forEach(function (p) {
+          p.hidden = p.getAttribute("data-sub") !== tab.getAttribute("data-tab");
+        });
+      }
       return;
     }
     e.preventDefault(); e.stopPropagation();
@@ -412,15 +417,17 @@ document.addEventListener("toggle", function (e) {
   function init() {
     btn = document.getElementById("a2hs"); help = document.getElementById("a2hs-help");
     if (!btn || standalone()) return;
-    var ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
-    if (ios) btn.hidden = false;
-    else if (deferred) btn.hidden = false;
+    // Keep it visible like the other header actions. The browser controls when
+    // the native install prompt is available.
+    btn.hidden = false;
     btn.addEventListener("click", function () {
       if (deferred) {
         deferred.prompt();
-        deferred.userChoice.then(function () { deferred = null; btn.hidden = true; }, function () { /* ignore */ });
+        deferred.userChoice.then(function () { deferred = null; }, function () { /* ignore */ });
       } else if (help) {
         help.hidden = !help.hidden;
+      } else {
+        btn.title = "If Chrome does not show the install prompt, use the browser menu and choose Add to Home screen.";
       }
     });
   }
