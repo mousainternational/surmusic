@@ -58,19 +58,6 @@
     </div>
     <div class="card now-card">
       <h2 class="h3">Top stations right now</h2>
-      <aside class="now-market-rail" data-ticker aria-label="Live market prices" hidden>
-        <div class="mk-track"><div class="mk-set" data-ticker-set>
-          <a class="mk-t" href="/markets" data-market="btc"><span class="mk-sym">BTC</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
-          <a class="mk-t" href="/markets" data-market="eth"><span class="mk-sym">ETH</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
-          <a class="mk-t" href="/markets" data-market="xau"><span class="mk-sym">Gold</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
-          <a class="mk-t" href="/markets" data-market="xag"><span class="mk-sym">Silver</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
-          <a class="mk-t" href="/markets" data-market="usd-pkr"><span class="mk-sym">USD/PKR</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
-          <a class="mk-t" href="/markets" data-market="eur-pkr"><span class="mk-sym">EUR/PKR</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
-          <a class="mk-t" href="/markets" data-market="gbp-pkr"><span class="mk-sym">GBP/PKR</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
-          <a class="mk-t" href="/markets" data-market="aed-pkr"><span class="mk-sym">AED/PKR</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
-          <a class="mk-t" href="/markets" data-market="sar-pkr"><span class="mk-sym">SAR/PKR</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
-        </div></div>
-      </aside>
       <h2 class="h3">Top stations right now</h2>
       {% if stations %}{{ ui.station_list(stations[:4], cat) }}{% else %}<p class="muted">Stations are loading. Please try again in a minute.</p>{% endif %}
       <p class="small"><a href="{{ url_for('public.category', cat='bollywood') }}">All Bollywood stations →</a></p>
@@ -110,20 +97,4 @@
 
 <div class="wrap">{{ partner.offers('home', 4, 'Better listening — recommended') }}</div>
 
-<section class="section home-about-section">
-  <div class="wrap narrow">
-   <details class="pick about-details">
-    <summary class="about-summary-compact">About Sur Music &amp; common questions <span class="about-summary-arrow" aria-hidden="true">▾</span></summary>
-   <div class="prose seo-text">
-    <h2>Live radio from every country — free</h2>
-    <p>Sur Music brings together thousands of live radio stations for Hindi, Urdu, Punjabi and English music. Listen to Bollywood hits from Mumbai, Lollywood songs and ghazals from Lahore and Karachi, qawwali and Sufi music, or the latest Top 40 from the USA and UK — right in your browser, with no app or sign-up needed. You can also listen to radio from more than 200 countries across Europe, North and South America, Africa, Asia and Oceania: news, talk, sports, Christian, Latin, jazz, classical and much more.</p>
-    <h2>A free online music player and radio player</h2>
-    <p>Sur Music works as a free online music player for live radio: press play, keep browsing, and the music keeps going. Use the player to listen to relaxing music, classic hits, EDM and party mixes, pop, rock, jazz and instrumental stations, with favourites, next and previous station buttons and a volume control. It also works as an FM radio player for phones and laptops, so people search for it as an online radio player, a web music player, a live radio player or a free radio streaming player. Open the big player and choose a player style from the drop-down: a neon music player with glowing lights, a neon tunnel, a glass music player, a vinyl record player with a turntable, a sunset player or an EDM equalizer with a live audio visualizer. The lights can be switched off to save data and battery. Blind and low-vision listeners can use the Accessibility button in the top bar: a screen reader friendly radio with spoken station names, keyboard shortcuts and TalkBack and VoiceOver support. For background play with the screen off, use the Sur Music Android app.</p>
-    <h2>Questions about Sur Music radio</h2>
-    {{ home_faq | markdown }}
-    <p>Every station is a public live stream from its broadcaster, listed in the open Radio Browser directory. Sur Music is made by {{ S.owner_name }} ({{ S.owner_brand }}) and is free thanks to ads and your <a href="{{ url_for('public.donate') }}">support</a>.</p>
-   </div>
-   </details>
-  </div>
-</section>
 {% endblock %}
