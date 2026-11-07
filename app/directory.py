@@ -69,7 +69,7 @@ def save_chunk(app, n, stations):
     with _open(app) as conn:
         conn.execute("DELETE FROM stations WHERE chunk = ?", (n,))
         conn.executemany("INSERT OR REPLACE INTO stations (uuid, chunk, body) VALUES (?, ?, ?)",
-                         [(st["uuid"], n, json.dumps(st)) for st in stations if st.get("uuid")])
+                         ((st["uuid"], n, json.dumps(st)) for st in stations if st.get("uuid")))
 
 
 def _get(conn, key):
