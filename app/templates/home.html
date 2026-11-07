@@ -53,11 +53,8 @@
       </form>
       <div class="hero-chips">{{ ui.genre_chips() }}</div>
       <div class="hero-actions">
-        <button class="btn btn-accent" type="button" data-play-first>▶ Play Bollywood now</button>
-        <a class="btn btn-ghost" href="{{ url_for('public.download_page') }}">Get the Android app</a>
-        <button class="btn btn-ghost" type="button" id="a2hs" hidden>Add to home screen</button>
+        <button class="btn btn-accent" type="button" data-play-first>▶ Start listening</button>
       </div>
-      <p class="small muted" id="a2hs-help" hidden>On iPhone: tap the Share button in Safari, then “Add to Home Screen”.</p>
     </div>
     <div class="card now-card">
       <h2 class="h3">Top stations right now</h2>
@@ -105,23 +102,18 @@
   </div>
 </section>
 
-<div class="wrap home-quick-links" aria-label="Helpful links">
+<div class="wrap home-info-strip" aria-label="Sur Music information">
   <a href="/reviews">★ Read &amp; write reviews</a>
-  <a href="/accessibility">♿ Blind &amp; low-vision accessibility guide</a>
-  <a href="/blog">Radio guides</a>
+  <a href="/accessibility">♿ Accessibility guide</a>
+  <a href="{{ url_for('public.about') }}">About Sur Music &amp; common questions</a>
 </div>
 
 <div class="wrap">{{ partner.offers('home', 4, 'Better listening — recommended') }}</div>
 
-<section class="section">
+<section class="section home-about-section">
   <div class="wrap narrow">
    <details class="pick about-details">
     <summary>About Sur Music and common questions</summary>
-   <div class="about-inline-links" aria-label="Sur Music help">
-     <a href="/reviews">★ Read &amp; write reviews</a>
-     <a href="/accessibility">♿ Accessibility guide</a>
-     <a href="/blog">Radio guides</a>
-   </div>
    <div class="prose seo-text">
     <h2>Live radio from every country — free</h2>
     <p>Sur Music brings together thousands of live radio stations for Hindi, Urdu, Punjabi and English music. Listen to Bollywood hits from Mumbai, Lollywood songs and ghazals from Lahore and Karachi, qawwali and Sufi music, or the latest Top 40 from the USA and UK — right in your browser, with no app or sign-up needed. You can also listen to radio from more than 200 countries across Europe, North and South America, Africa, Asia and Oceania: news, talk, sports, Christian, Latin, jazz, classical and much more.</p>
