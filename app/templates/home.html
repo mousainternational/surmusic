@@ -57,15 +57,24 @@
   </div>
 </section>
 
-<section class="section">
-  <div class="wrap">
-    <p><a class="btn btn-ghost" href="/reviews">★ Read or write a review</a></p>
-  </div>
-</section>
-
-<section class="section">
-  <div class="wrap">
-    <p class="small muted">Blind or low-vision? Sur Music works with screen readers and the keyboard — <a href="/accessibility">see how</a>.</p>
+<section class="section home-support-row">
+  <div class="wrap grid two-col">
+    <div class="card home-support-card review-card">
+      <div>
+        <span class="eyebrow">Your voice matters</span>
+        <h2 class="h3">Read &amp; write reviews</h2>
+        <p class="muted">See what listeners say about Sur Music or leave your own review.</p>
+      </div>
+      <a class="btn btn-ghost" href="/reviews">★ Read &amp; write review</a>
+    </div>
+    <div class="card home-support-card a11y-card">
+      <div>
+        <span class="eyebrow">Easy access</span>
+        <h2 class="h3">Blind &amp; low-vision friendly</h2>
+        <p class="muted">Screen-reader, keyboard and TalkBack-friendly radio with a dedicated accessibility guide.</p>
+      </div>
+      <a class="btn btn-primary" href="/accessibility">♿ Accessibility guide</a>
+    </div>
   </div>
 </section>
 
@@ -112,7 +121,6 @@
   <div class="wrap">
     <h2 class="section-title">More on Sur Music</h2>
     <div class="home-extras">
-      {{ tr.strip(trending, 'Trending now') }}
       <div class="card mk-card mk-gadget" data-market-section="gadget" aria-labelledby="mk-gadget-h">
         <div class="mk-head"><h2 class="h3" id="mk-gadget-h">Gold, Bitcoin and dollar rate</h2><a href="/markets">All prices →</a></div>
         {% for s in market_sections %}{% if s.key in ('metals', 'crypto', 'forex') %}
