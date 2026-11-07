@@ -1008,8 +1008,18 @@ HIDDEN_CHIPS = ("naat", "qawwali", "sufi") + tuple(k for k in ISLAMIC_FAMILY if 
 SECT_PAGES = ("majlis", "madani", "hadith", "english-news", "hindi-news", "arabic-news")      # kept for search engines (sitemap), not listed as buttons or in the directory
 
 # One "Islamic" page that holds all of it: Quran, Naat, bayan and the other Islamic programmes.
+# Keep the main Islamic page fast: it is the single combined station hub.
+# The individual Quran/Naat/Bayan/Pakistan Islamic/Majlis pages remain real SEO
+# landing pages, but their many API paths are not all fetched again on /genre/islamic.
+# The page still covers the major Islamic station signals through a compact set of
+# broad + specific searches.
 TOPICS["islamic"]["paths"] = list(dict.fromkeys(
-    TOPICS["islamic"]["paths"] + [p for k in ISLAMIC_FAMILY for p in TOPICS[k]["paths"]]))
+    TOPICS["islamic"]["paths"] + [
+        tag("quran"), tag("quran recitation"), tag("tilawat"),
+        tag("naat"), tag("hamd"), tag("bayan"), tag("dars"),
+        tag("noha"), tag("majlis"), tag("ahlebait"), tag("islamic"),
+        tag("muslim"), tag("religion", "&countrycode=PK"),
+    ]))
 
 
 def chips_for(code):
