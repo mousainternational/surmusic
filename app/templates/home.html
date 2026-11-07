@@ -57,26 +57,11 @@
   </div>
 </section>
 
-<section class="section home-support-row">
-  <div class="wrap grid two-col">
-    <div class="card home-support-card review-card">
-      <div>
-        <span class="eyebrow">Your voice matters</span>
-        <h2 class="h3">Read &amp; write reviews</h2>
-        <p class="muted">See what listeners say about Sur Music or leave your own review.</p>
-      </div>
-      <a class="btn btn-ghost" href="/reviews">★ Read &amp; write review</a>
-    </div>
-    <div class="card home-support-card a11y-card">
-      <div>
-        <span class="eyebrow">Easy access</span>
-        <h2 class="h3">Blind &amp; low-vision friendly</h2>
-        <p class="muted">Screen-reader, keyboard and TalkBack-friendly radio with a dedicated accessibility guide.</p>
-      </div>
-      <a class="btn btn-primary" href="/accessibility">♿ Accessibility guide</a>
-    </div>
-  </div>
-</section>
+<div class="wrap home-quick-links" aria-label="Helpful links">
+  <a href="/reviews">★ Read &amp; write reviews</a>
+  <a href="/accessibility">♿ Blind &amp; low-vision accessibility guide</a>
+  <a href="/blog">Radio guides</a>
+</div>
 
 <div class="wrap">{{ partner.offers('home', 4, 'Better listening — recommended') }}</div>
 
@@ -124,35 +109,16 @@
   </div>
 </section>
 
-<section class="section">
-  <div class="wrap">
-    <h2 class="section-title">More on Sur Music</h2>
-    <div class="home-extras">
-      <div class="card mk-card mk-gadget" data-market-section="gadget" aria-labelledby="mk-gadget-h">
-        <div class="mk-head"><h2 class="h3" id="mk-gadget-h">Gold, Bitcoin and dollar rate</h2><a href="/markets">All prices →</a></div>
-        {% for s in market_sections %}{% if s.key in ('metals', 'crypto', 'forex') %}
-        {% for r in s.rows if r.id in ('xau', 'xag', 'btc', 'usd-pkr') %}
-        <div class="mk-row" data-market="{{ r.id }}"{% if not r.text %} hidden{% endif %}>
-          <span class="mk-name">{{ r.label }}<span class="mk-unit">{{ r.unit }}</span></span>
-          <span class="mk-val" data-v>{{ r.text }}</span>
-          <span class="mk-chg mk-{{ r.dir }}" data-c>{{ r.change }}</span>
-        </div>
-        {% endfor %}{% endif %}{% endfor %}
-        <p class="small muted">Live prices, for information only, not financial advice.</p>
-      </div>
-      <div class="card">
-        <h2 class="h3">Radio guides</h2>
-        <ul class="guide-list">{% for g in guides %}<li><a href="/blog/{{ g.slug }}">{{ g.title }}</a></li>{% endfor %}</ul>
-        <p class="small"><a href="/blog">All guides →</a></p>
-      </div>
-    </div>
-  </div>
-</section>
 
 <section class="section">
   <div class="wrap narrow">
    <details class="pick about-details">
     <summary>About Sur Music and common questions</summary>
+   <div class="about-inline-links" aria-label="Sur Music help">
+     <a href="/reviews">★ Read &amp; write reviews</a>
+     <a href="/accessibility">♿ Accessibility guide</a>
+     <a href="/blog">Radio guides</a>
+   </div>
    <div class="prose seo-text">
     <h2>Live radio from every country — free</h2>
     <p>Sur Music brings together thousands of live radio stations for Hindi, Urdu, Punjabi and English music. Listen to Bollywood hits from Mumbai, Lollywood songs and ghazals from Lahore and Karachi, qawwali and Sufi music, or the latest Top 40 from the USA and UK — right in your browser, with no app or sign-up needed. You can also listen to radio from more than 200 countries across Europe, North and South America, Africa, Asia and Oceania: news, talk, sports, Christian, Latin, jazz, classical and much more.</p>
