@@ -246,7 +246,16 @@ def get_settings():
             g.settings = dict(cached[1])
         else:
             data = dict(DEFAULTS)
-            for row in get_db().all("SELECT key, value FROM settings"):
+            try:
+                rows = get_db().all("SELECT key, value FROM settings")
+            except Exception:
+                # Public pages must remain renderable during a temporary Neon outage.
+                # Never create a local replacement database; use safe built-in defaults
+                # until PostgreSQL becomes reachable again.
+                rows = []
+                from flask import current_app
+                current_app.logger.warning("Settings database unavailable; serving safe defaults")
+            for row in rows:
                 data[row["key"]] = row["value"]
             g.settings = data
             if lowdb.enabled():
