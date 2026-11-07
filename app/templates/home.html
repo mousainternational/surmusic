@@ -80,19 +80,26 @@
 
 <div class="wrap">{{ partner.offers('home', 4, 'Better listening — recommended') }}</div>
 
-{% if popular %}
-<section class="section">
-  <div class="wrap">
-    <div class="section-head"><h2>Popular on Sur Music this week</h2></div>
-    <ol class="popular-list">
-      {% for p in popular %}<li>
-        <span class="pop-rank">{{ loop.index }}</span>
-        <span class="pop-text">
-          {% if p.href %}<a class="pop-name" href="{{ p.href }}">{{ p.station_name }}</a>{% else %}<span class="pop-name">{{ p.station_name }}</span>{% endif %}
-          <span class="pop-meta muted small">{% if p.category %}{{ (TOPICS[p.category].label if p.category in TOPICS else p.category) | capitalize }} · {% endif %}{{ p.n }} plays</span>
-        </span>
-      </li>{% endfor %}
-    </ol>
+{% if popular or trending %}
+<section class="section home-discovery">
+  <div class="wrap grid two-col">
+    {% if popular %}
+    <div class="card">
+      <div class="section-head"><h2 class="h3">Popular stations this week</h2></div>
+      <ol class="popular-list">
+        {% for p in popular %}<li>
+          <span class="pop-rank">{{ loop.index }}</span>
+          <span class="pop-text">
+            {% if p.href %}<a class="pop-name" href="{{ p.href }}">{{ p.station_name }}</a>{% else %}<span class="pop-name">{{ p.station_name }}</span>{% endif %}
+            <span class="pop-meta muted small">{% if p.category %}{{ (TOPICS[p.category].label if p.category in TOPICS else p.category) | capitalize }} · {% endif %}{{ p.n }} plays</span>
+          </span>
+        </li>{% endfor %}
+      </ol>
+    </div>
+    {% endif %}
+    {% if trending %}
+      {{ tr.strip(trending, 'Trending: live commentary and news') }}
+    {% endif %}
   </div>
 </section>
 {% endif %}
