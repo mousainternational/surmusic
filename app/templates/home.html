@@ -82,19 +82,6 @@
 
 <div class="wrap">{{ partner.offers('home', 4, 'Better listening — recommended') }}</div>
 
-            <span class="pop-meta muted small">{% if p.category %}{{ (TOPICS[p.category].label if p.category in TOPICS else p.category) | capitalize }} · {% endif %}{{ p.n }} plays</span>
-          </span>
-        </li>{% endfor %}
-      </ol>
-    </div>
-    {% endif %}
-    {% if trending %}
-      {{ tr.strip(trending, 'Trending: live commentary and news') }}
-    {% endif %}
-  </div>
-</section>
-{% endif %}
-
 <section class="section">
   <div class="wrap narrow">
    <details class="pick about-details">
