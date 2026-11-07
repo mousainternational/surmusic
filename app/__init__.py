@@ -56,6 +56,12 @@ def create_app(overrides=None):
     from . import geo as _geo
     _geo.start_auto_update(app)
     app.config["APP_VERSION"] = __version__
+
+    # Render health check / lightweight uptime endpoint. It must never touch Neon or other
+    # optional services, so a short database outage cannot make the web service look unhealthy.
+    @app.get("/ping")
+    def _ping():
+        return "ok", 200, {"Cache-Control": "no-store"}
     from . import indexnow as _indexnow
     _indexnow.start(app)
     from . import directory as _directory
