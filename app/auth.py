@@ -124,18 +124,34 @@ def signup():
 
 @bp.route("/login", methods=["GET", "POST"])
 def login():
-    if current_user():
+    # A short Neon/database outage must never turn the sign-in page into a generic
+    # 500 error. If the database is unavailable, show the login page with a clear
+    # temporary message; do not create a replacement SQLite account database.
+    try:
+        already_signed_in = current_user()
+    except Exception:
+        current_app.logger.exception("Database unavailable while opening sign-in")
+        already_signed_in = None
+        session.pop("uid", None)
+        session.pop("sv", None)
+    if already_signed_in:
         return redirect(safe_next(request.args.get("next"), url_for("public.home")))
     error, email = None, ""
     if request.method == "POST":
         email = (request.form.get("email") or "").strip().lower()
         password = request.form.get("password") or ""
-        db = get_db()
-        if not _form_ok():
+        try:
+            db = get_db()
+        except Exception:
+            current_app.logger.exception("Database unavailable during sign-in")
+            error = "Sign-in is temporarily unavailable. Please try again in a moment."
+            db = None
+        if db is not None:
+        if db is not None and not _form_ok():
             error = "Sign-in rejected."
-        elif rate_limited("login", 20, 900):
+        elif db is not None and rate_limited("login", 20, 900):
             error = "Too many sign-in attempts. Please wait 15 minutes."
-        else:
+        elif db is not None:
             row = db.one("SELECT * FROM users WHERE email = ?", (email,))
             now = datetime.now(timezone.utc)
             if row and row["locked_until"] and datetime.fromisoformat(row["locked_until"]) > now:
