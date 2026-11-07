@@ -1528,11 +1528,9 @@ def llms_txt():
 
 @bp.route("/sitemap.xml")
 def sitemap():
-    from . import lowdb
-    if lowdb.enabled():
-        hit, xml = lowdb.cache_get("sitemap")
-        if hit:
-            return Response(xml, mimetype="application/xml")
+    # Sitemaps can contain tens of thousands of station URLs. Do not keep the
+    # generated XML in the process-wide lowdb cache: on Render Free that can
+    # turn a crawler request into several MB of retained RAM.
     site = current_app.config["SITE_URL"]
     pages = ["/", "/bollywood", "/lollywood", "/hollywood", "/download", "/donate", "/about", "/contact", "/faq",
              "/privacy", "/terms", "/disclaimer", "/donation-disclaimer", "/cookies"]
@@ -1560,19 +1558,14 @@ def sitemap():
         parts.append(f"<url><loc>{escape(site + p)}</loc></url>")
     parts.append("</urlset>")
     xml = "\n".join(parts)
-    if lowdb.enabled():
-        lowdb.cache_set("sitemap", xml, 3600)
     return Response(xml, mimetype="application/xml")
 
 
 @bp.route("/sitemap-stations-<int:n>.xml")
 def sitemap_stations(n):
     """One chunk of the world station directory (see directory.py): a real page for every station."""
-    from . import lowdb
-    if lowdb.enabled():
-        hit, xml = lowdb.cache_get(f"sitemap-dir:{n}")
-        if hit:
-            return Response(xml, mimetype="application/xml")
+    # Directory sitemap chunks can also be large; generate them on demand
+    # instead of retaining full XML documents in the process-wide cache.
     from . import directory
     stations = directory.chunk_stations(n)
     if not stations:
@@ -1584,8 +1577,6 @@ def sitemap_stations(n):
             parts.append(f"<url><loc>{escape(site + station_path(st))}</loc></url>")
     parts.append("</urlset>")
     xml = "\n".join(parts)
-    if lowdb.enabled():
-        lowdb.cache_set(f"sitemap-dir:{n}", xml, 6 * 3600)
     return Response(xml, mimetype="application/xml")
 
 
