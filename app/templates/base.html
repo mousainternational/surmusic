@@ -140,12 +140,32 @@
     <div class="promo-ticker" role="region" aria-label="Sur Music highlights">
       <div class="promo-track">
         <div class="promo-set">
-          <a class="promo-item" href="{{ url_for('public.download_page') }}"><strong>Take your music everywhere</strong><span>Get the app</span></a>
-          <a class="promo-item" href="{{ url_for('auth.signup') }}"><strong>Save your favourites</strong><span>Sign up free</span></a>
+          <a class="promo-item" href="{{ url_for('public.download_page') }}">
+            <span class="promo-art art-bollywood" aria-hidden="true">♫</span>
+            <strong>Take your music everywhere</strong><span>Get the app</span>
+          </a>
+          <a class="promo-item" href="{{ url_for('auth.signup') }}">
+            <span class="promo-art art-hollywood" aria-hidden="true">★</span>
+            <strong>Save your favourites</strong><span>Sign up free</span>
+          </a>
+          <a class="promo-item" href="{{ url_for('public.category', cat='music') }}">
+            <span class="promo-art art-live" aria-hidden="true">●</span>
+            <strong>Bollywood • Hollywood • Live Radio</strong><span>Listen worldwide</span>
+          </a>
         </div>
         <div class="promo-set" aria-hidden="true">
-          <a class="promo-item" href="{{ url_for('public.download_page') }}" tabindex="-1"><strong>Take your music everywhere</strong><span>Get the app</span></a>
-          <a class="promo-item" href="{{ url_for('auth.signup') }}" tabindex="-1"><strong>Save your favourites</strong><span>Sign up free</span></a>
+          <a class="promo-item" href="{{ url_for('public.download_page') }}" tabindex="-1">
+            <span class="promo-art art-bollywood" aria-hidden="true">♫</span>
+            <strong>Take your music everywhere</strong><span>Get the app</span>
+          </a>
+          <a class="promo-item" href="{{ url_for('auth.signup') }}" tabindex="-1">
+            <span class="promo-art art-hollywood" aria-hidden="true">★</span>
+            <strong>Save your favourites</strong><span>Sign up free</span>
+          </a>
+          <a class="promo-item" href="{{ url_for('public.category', cat='music') }}" tabindex="-1">
+            <span class="promo-art art-live" aria-hidden="true">●</span>
+            <strong>Bollywood • Hollywood • Live Radio</strong><span>Listen worldwide</span>
+          </a>
         </div>
       </div>
     </div>
@@ -154,9 +174,9 @@
     <div class="mk-track">
       <div class="mk-set" data-ticker-set>
         <a class="mk-t" href="/markets" data-market="xau"><span class="mk-sym">Gold</span><svg class="mk-spark" viewBox="0 0 46 18" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+        <a class="mk-t" href="/markets" data-market="xag"><span class="mk-sym">Silver</span><svg class="mk-spark" viewBox="0 0 46 18" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
         <a class="mk-t" href="/markets" data-market="btc"><span class="mk-sym">Bitcoin</span><svg class="mk-spark" viewBox="0 0 46 18" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
         <a class="mk-t" href="/markets" data-market="usd-pkr"><span class="mk-sym">USD/PKR</span><svg class="mk-spark" viewBox="0 0 46 18" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
-        <a class="mk-t" href="/markets" data-market="xag"><span class="mk-sym">Silver</span><svg class="mk-spark" viewBox="0 0 46 18" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
       </div>
     </div>
   </aside>
