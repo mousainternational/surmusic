@@ -1130,19 +1130,16 @@ for _k, _t in EXTRA_MORE.items():
 # The category tabs (Music, News, Sports, Talk, Religious, Languages, Countries) and what opens under each.
 # Everything about a kind of radio sits under one tab; nothing points at one school of thought.
 NAV = [
-    ("music", "Music", ["bollywood", "lollywood", "hollywood", "ghazal", "qawwali", "sufi", "old-songs", "indian-classical",
-                         "pop", "rock", "hip-hop", "jazz", "classical", "dance", "lofi", "80s-90s", "latin", "country-music",
-                         "reggae", "afrobeats", "metal", "k-pop"]),
-    ("news", "News", ["news"]),
+    # Main navigation: each tab contains only closely related radio categories.
+    ("music", "Music", ["bollywood", "lollywood", "hollywood", "pop", "rock", "hip-hop", "jazz", "classical",
+                         "dance", "lofi", "80s-90s", "latin", "country-music", "reggae", "afrobeats", "metal",
+                         "k-pop", "ghazal", "qawwali", "sufi", "old-songs", "indian-classical"]),
+    ("news", "News", ["news", "english-news", "hindi-news", "business"]),
     ("sports", "Sports", ["sports", "cricket", "football"]),
-    ("talk", "Talk", ["talk", "debates", "comedy", "health", "meditation", "cooking", "kids", "education", "business",
-                       "technology"]),
+    ("talk", "Talk", ["talk", "debates"]),
     ("religious", "Religious", ["islamic", "christian", "bhajan", "gurbani", "jewish"]),
-    ("languages", "Languages", ["punjabi", "pashto", "sindhi", "hindi", "urdu", "english", "arabic", "bengali", "tamil",
-                                "telugu", "malayalam", "marathi", "gujarati", "persian", "spanish", "french", "german",
-                                "italian", "portuguese", "russian", "turkish", "indonesian", "japanese", "korean",
-                                "chinese", "swahili", "thai", "vietnamese", "polish", "dutch", "greek", "hebrew"]),
-    ("countries", "Countries", []),     # filled by the page code: continents and the biggest countries
+    # Languages and Countries are deliberately not main tabs. They remain available through
+    # their dedicated header menus and SEO landing pages.
 ]
 CAT_PAGES = {"bollywood": "Bollywood", "lollywood": "Lollywood", "hollywood": "Hollywood"}
 TAB_OF = {slug: key for key, _label, slugs in NAV for slug in slugs}
