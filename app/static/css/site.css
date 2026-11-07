@@ -1418,3 +1418,53 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
   .home-promo-item { min-width: 70vw; padding: 3px 10px; }
   .home-promo-art { width: 26px; height: 26px; flex-basis: 26px; }
 }
+
+/* Home: keep the news strip and promo strip independent; markets live beside Top Stations. */
+.utility-row { padding: 3px 12px; border: 0; }
+.utility-news .nw-ticker { border: 0; border-radius: 0; box-shadow: none; }
+.home-promo-strip { border: 0; border-radius: 0; box-shadow: none; }
+.home-promo-item { min-width: max(260px, 20vw); }
+.station-promo .home-promo-thumb {
+  width: 30px; height: 30px; flex: 0 0 30px; border-radius: 8px;
+  display: grid; place-items: center; overflow: hidden;
+  background: linear-gradient(135deg, #ff3d86, #7b61ff 55%, #20c997);
+  color: #fff; font-weight: 800;
+}
+.station-promo .home-promo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.now-card { position: relative; min-height: 260px; }
+.now-card > .stations { padding-right: 156px; }
+.now-market-rail {
+  position: absolute; top: 46px; right: 10px; width: 142px; height: 205px;
+  overflow: hidden; border: 0; border-left: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
+  background: transparent; z-index: 2;
+}
+.now-market-rail .mk-track { display: block; width: 100%; animation: now-market-scroll 28s linear infinite; }
+.now-market-rail:hover .mk-track, .now-market-rail:focus-within .mk-track { animation-play-state: paused; }
+.now-market-rail .mk-set { display: flex; flex-direction: column; width: 100%; }
+.now-market-rail .mk-t {
+  width: 100%; min-height: 42px; height: 42px; box-sizing: border-box;
+  display: grid; grid-template-columns: 42px 36px 1fr;
+  grid-template-areas: "sym spark val" "sym spark chg";
+  align-items: center; column-gap: 3px; padding: 2px 5px;
+  border: 0; background: transparent; text-decoration: none;
+}
+.now-market-rail .mk-sym { grid-area: sym; font-size: .58rem; font-weight: 800; }
+.now-market-rail .mk-spark { grid-area: spark; width: 34px; height: 15px; overflow: visible; }
+.now-market-rail .mk-spark polyline { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.now-market-rail .mk-val { grid-area: val; justify-self: end; font-size: .62rem; font-weight: 700; }
+.now-market-rail .mk-chg { grid-area: chg; justify-self: end; font-size: .55rem; }
+@keyframes now-market-scroll { from { transform: translateY(0); } to { transform: translateY(-50%); } }
+
+@media (max-width: 959px) {
+  .now-card > .stations { padding-right: 0; }
+  .now-market-rail {
+    position: static; width: 100%; height: 38px; margin: 6px 0 8px;
+    border-left: 0; border-top: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
+    border-bottom: 0;
+  }
+  .now-market-rail .mk-track { width: max-content; display: flex; animation: now-market-horizontal 45s linear infinite; }
+  .now-market-rail .mk-set { flex-direction: row; }
+  .now-market-rail .mk-t { min-width: 140px; height: 38px; min-height: 38px; }
+}
+@keyframes now-market-horizontal { from { transform: translateX(0); } to { transform: translateX(-50%); } }
