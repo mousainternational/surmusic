@@ -15,7 +15,7 @@ from flask import current_app
 from PIL import Image, ImageOps
 from werkzeug.utils import secure_filename
 
-Image.MAX_IMAGE_PIXELS = 40_000_000
+Image.MAX_IMAGE_PIXELS = 12_000_000  # cap decompressed image size to protect Render Free RAM during admin uploads
 
 NAME_RE = re.compile(r"^[a-f0-9]{32}\.[a-z0-9.]{1,12}$")
 
