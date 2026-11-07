@@ -100,7 +100,7 @@ def _names(obj):
     return ((obj or {}).get("names") or {}).get("en", "") if isinstance(obj, dict) else ""
 
 
-@lru_cache(maxsize=8192)
+@lru_cache(maxsize=2048)
 def _lookup_mmdb(path, ip, mtime):
     try:
         rec = _mmdb_reader(path).get(ip)
@@ -132,7 +132,7 @@ def _conn(path):
     return c
 
 
-@lru_cache(maxsize=4096)
+@lru_cache(maxsize=1024)
 def _lookup_db(path, ip, mtime):
     try:
         key = _hex(ip)
