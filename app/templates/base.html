@@ -134,17 +134,19 @@
   </div>
 </header>
 {% endblock %}
-<div class="mk-ticker" data-ticker role="region" aria-label="Live market prices" hidden>
-  <div class="mk-track">
-    <div class="mk-set" data-ticker-set>
-      <a class="mk-t" href="/markets" data-market="xau"><span class="mk-sym">Gold</span><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
-      <a class="mk-t" href="/markets" data-market="btc"><span class="mk-sym">Bitcoin</span><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
-      <a class="mk-t" href="/markets" data-market="usd-pkr"><span class="mk-sym">USD/PKR</span><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
-      <a class="mk-t" href="/markets" data-market="xag"><span class="mk-sym">Silver</span><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+<div class="utility-row">
+  <div class="utility-news">{% include "_newsbar.html" %}</div>
+  <div class="mk-ticker" data-ticker role="region" aria-label="Live market prices" hidden>
+    <div class="mk-track">
+      <div class="mk-set" data-ticker-set>
+        <a class="mk-t" href="/markets" data-market="xau"><span class="mk-sym">Gold</span><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+        <a class="mk-t" href="/markets" data-market="btc"><span class="mk-sym">Bitcoin</span><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+        <a class="mk-t" href="/markets" data-market="usd-pkr"><span class="mk-sym">USD/PKR</span><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+        <a class="mk-t" href="/markets" data-market="xag"><span class="mk-sym">Silver</span><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+      </div>
     </div>
   </div>
 </div>
-{% include "_newsbar.html" %}
 
 <div id="sr-announce" class="sr" aria-live="polite" aria-atomic="true"></div>
 <main id="main" tabindex="-1" data-page="{{ request.endpoint }}">
