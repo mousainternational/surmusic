@@ -54,8 +54,8 @@ class Config:
     # Radio Browser (open station directory) — fetched on the server and cached.
     RADIO_API_SERVERS = [s.strip() for s in os.environ.get(
         "RADIO_API_SERVERS", "de1,nl1,at1,fi1").split(",") if s.strip()]
-    RADIO_CACHE_MINUTES = _int("RADIO_CACHE_MINUTES", 30)
-    RADIO_TIMEOUT = _int("RADIO_TIMEOUT", 8)
+    RADIO_CACHE_MINUTES = _int("RADIO_CACHE_MINUTES", 60)
+    RADIO_TIMEOUT = _int("RADIO_TIMEOUT", 5)
     # Visitor location (see app/geo.py). GEOIP_DB is built with `flask --app wsgi import-geoip`.
     GEOIP_DB = os.environ.get("GEOIP_DB", str(BASE_DIR / "data" / "geoip.sqlite"))
     TRUST_CF_HEADERS = _bool("TRUST_CF_HEADERS", False)
