@@ -384,6 +384,13 @@ document.addEventListener("toggle", function (e) {
   document.addEventListener("click", function (e) {
     var tab = e.target.closest && e.target.closest("[data-nav-tabs] .nt-tab");
     if (!tab) return;
+    // The active main tab is a real navigation target back to the directory.
+    // Other main tabs still switch their sub-tabs instantly without a page reload.
+    if (tab.classList.contains("on")) {
+      var href = tab.getAttribute("href");
+      if (href) window.location.assign(href);
+      return;
+    }
     e.preventDefault(); e.stopPropagation();
     var nav = tab.closest("[data-nav-tabs]"), key = tab.getAttribute("data-tab");
     nav.querySelectorAll(".nt-tab").forEach(function (t) {
