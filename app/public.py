@@ -107,25 +107,21 @@ def _nav_tabs(active=""):
         if key == "news":                                     # News: the news channels themselves, not one more "News" button
             items = _news_channels(slug) or [(topic_path("news"), "All news channels", slug == "news")]
         tabs.append({"key": key, "label": label, "on": key == current, "subs": items})
-    # A tab for blind and low-vision listeners: how-to page first, then the stations that are easy to follow by ear.
+    # Accessibility is a focused utility area: keep only accessibility help and keyboard controls here.
     here_a11y = request.path == "/accessibility"
     if here_a11y:
         for t in tabs:
             t["on"] = False
     subs = [("/accessibility", "Blind-friendly guide", here_a11y),
             ("/accessibility#keyboard-shortcuts", "Keyboard shortcuts", False)]
-    for sl, lb in (("news", "News"), ("talk", "Talk"), ("sports", "Sports & cricket"),
-                   ("english-news", "World news")):
-        if sl in TOPICS and not radio.known_empty(sl):
-            subs.append((topic_path(sl), lb, False))
     tabs.append({"key": "accessibility", "label": "Accessibility", "on": here_a11y, "subs": subs})
-    # A–Z directory next to the categories (like the big directories): every letter, plus Top 100 and Pakistan FM.
-    here_az = request.path.startswith("/stations/") or request.path == "/top-100"
+    # A–Z is a true station directory: letters plus 0–9. Top 100 remains available from its own page,
+    # but is not mixed into the alphabet directory.
+    here_az = request.path.startswith("/stations/")
     if here_az:
         for t in tabs:
             t["on"] = False
-    az = [("/top-100", "Top 100", request.path == "/top-100")]     # Pakistan FM lives on the Pakistan pages, not here
-    az += [(f"/stations/{c}", c.upper(), request.path == f"/stations/{c}") for c in LETTERS]
+    az = [(f"/stations/{c}", c.upper(), request.path == f"/stations/{c}") for c in LETTERS]
     az.append(("/stations/0", "0–9", request.path == "/stations/0"))
     tabs.append({"key": "az", "label": "A–Z", "on": here_az, "subs": az})
     return tabs
