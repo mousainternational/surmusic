@@ -81,9 +81,9 @@ def cache_drop(prefix):
 # ---------------------------------------------------------------- deferred writes
 
 MAX_QUEUE = 1200
-MAX_VISITORS = 20000
-MAX_RATE_BUCKETS = 10000
-MAX_LIVE = 10000
+MAX_VISITORS = 10000
+MAX_RATE_BUCKETS = 5000
+MAX_LIVE = 5000
 
 
 def defer(sql, params):
