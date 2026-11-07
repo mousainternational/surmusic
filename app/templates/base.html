@@ -135,17 +135,31 @@
 </header>
 {% endblock %}
 <div class="utility-row">
-  <div class="utility-news">{% include "_newsbar.html" %}</div>
-  <div class="mk-ticker" data-ticker role="region" aria-label="Live market prices" hidden>
-    <div class="mk-track">
-      <div class="mk-set" data-ticker-set>
-        <a class="mk-t" href="/markets" data-market="xau"><span class="mk-sym">Gold</span><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
-        <a class="mk-t" href="/markets" data-market="btc"><span class="mk-sym">Bitcoin</span><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
-        <a class="mk-t" href="/markets" data-market="usd-pkr"><span class="mk-sym">USD/PKR</span><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
-        <a class="mk-t" href="/markets" data-market="xag"><span class="mk-sym">Silver</span><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+  <div class="utility-main">
+    <div class="utility-news">{% include "_newsbar.html" %}</div>
+    <div class="promo-ticker" role="region" aria-label="Sur Music highlights">
+      <div class="promo-track">
+        <div class="promo-set">
+          <a class="promo-item" href="{{ url_for('public.download_page') }}"><strong>Take your music everywhere</strong><span>Get the app</span></a>
+          <a class="promo-item" href="{{ url_for('auth.signup') }}"><strong>Save your favourites</strong><span>Sign up free</span></a>
+        </div>
+        <div class="promo-set" aria-hidden="true">
+          <a class="promo-item" href="{{ url_for('public.download_page') }}" tabindex="-1"><strong>Take your music everywhere</strong><span>Get the app</span></a>
+          <a class="promo-item" href="{{ url_for('auth.signup') }}" tabindex="-1"><strong>Save your favourites</strong><span>Sign up free</span></a>
+        </div>
       </div>
     </div>
   </div>
+  <aside class="mk-ticker mk-side-ticker" data-ticker role="region" aria-label="Live market prices" hidden>
+    <div class="mk-track">
+      <div class="mk-set" data-ticker-set>
+        <a class="mk-t" href="/markets" data-market="xau"><span class="mk-sym">Gold</span><svg class="mk-spark" viewBox="0 0 46 18" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+        <a class="mk-t" href="/markets" data-market="btc"><span class="mk-sym">Bitcoin</span><svg class="mk-spark" viewBox="0 0 46 18" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+        <a class="mk-t" href="/markets" data-market="usd-pkr"><span class="mk-sym">USD/PKR</span><svg class="mk-spark" viewBox="0 0 46 18" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+        <a class="mk-t" href="/markets" data-market="xag"><span class="mk-sym">Silver</span><svg class="mk-spark" viewBox="0 0 46 18" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+      </div>
+    </div>
+  </aside>
 </div>
 
 <div id="sr-announce" class="sr" aria-live="polite" aria-atomic="true"></div>

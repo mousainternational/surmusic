@@ -10,6 +10,7 @@ import time
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
+from concurrent.futures import ThreadPoolExecutor
 
 TTL = 15 * 60
 _ENGLISH_EDITIONS = {"US", "GB", "IN", "AU", "CA", "NZ", "IE", "SG", "ZA", "NG", "KE", "GH", "PK", "PH", "MY", "BD",
@@ -73,7 +74,7 @@ def _fetch(url):
     try:
         req = urllib.request.Request(url, headers={
             "User-Agent": "SurMusic/1.0 (+https://surmusicradio.com)", "Accept": "application/rss+xml, application/xml"})
-        with urllib.request.urlopen(req, timeout=8) as r:  # noqa: S310 (fixed https host)
+        with urllib.request.urlopen(req, timeout=5) as r:  # noqa: S310 (fixed https host)
             raw = r.read(600 * 1024 + 1)
         return parse(raw.decode("utf-8", "replace"), limit=6) if len(raw) <= 600 * 1024 else []
     except Exception:
@@ -94,7 +95,12 @@ def mix(lists, limit=24):
 
 
 def _load(cc):
-    items = mix([_fetch(u) for u in _feed_urls(cc)])
+    # Fetch the small RSS feeds in parallel so the header ticker does not wait through
+    # several sequential network timeouts before the first headlines become available.
+    urls = _feed_urls(cc)
+    with ThreadPoolExecutor(max_workers=min(4, len(urls))) as ex:
+        lists = list(ex.map(_fetch, urls))
+    items = mix(lists)
     with _lock:
         if items or cc not in _cache:
             _cache[cc] = (time.time(), items)
