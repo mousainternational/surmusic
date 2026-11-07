@@ -458,7 +458,13 @@ document.addEventListener("toggle", function (e) {
   }
   function init() {
     bar = document.getElementById("nw-ticker"); track = document.getElementById("nw-track");
-    if (bar && track) load();
+    if (bar && track) {
+      // Keep the professional news strip in the layout immediately; replace the
+      // loading label with real headlines as soon as the feed responds.
+      bar.hidden = false;
+      track.textContent = "Loading latest headlines…";
+      load();
+    }
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();
