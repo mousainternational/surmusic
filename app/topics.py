@@ -1025,6 +1025,19 @@ TOPICS["islamic"]["paths"] = [
     tag("religion"),
 ]
 
+# One Sports hub: keep the main Sports tab broad so cricket/football and other
+# sports channels appear together instead of splitting the live directory into
+# separate tabs. The dedicated SEO pages can still exist without being shown as
+# navigation buttons.
+TOPICS["sports"]["paths"] = [
+    tag("sports"),
+    tag("sport"),
+    tag("cricket"),
+    tag("football"),
+    tag("soccer"),
+    tag("basketball"),
+]
+
 
 def chips_for(code):
     """Chips for a visitor from this country: their own country first, then what people there listen to."""
@@ -1139,7 +1152,7 @@ NAV = [
                          "dance", "lofi", "80s-90s", "latin", "country-music", "reggae", "afrobeats", "metal",
                          "k-pop", "ghazal", "qawwali", "sufi", "old-songs", "indian-classical"]),
     ("news", "News", ["news", "english-news", "hindi-news", "business"]),
-    ("sports", "Sports", ["sports", "cricket", "football"]),
+    ("sports", "Sports", ["sports"]),
     ("talk", "Talk & Lifestyle", ["talk", "debates", "comedy", "health", "meditation", "cooking", "kids", "education", "business", "technology"]),
     ("religious", "Religious", ["islamic", "christian", "bhajan", "gurbani", "jewish"]),
     # Languages and Countries are deliberately not main tabs. They remain available through
