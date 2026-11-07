@@ -18,11 +18,8 @@
         <strong>{{ st.name }}</strong><span>Popular channel · {{ st.country or 'Worldwide' }}</span>
       </a>
       {% endfor %}
-      {% if trending %}
-      {% for r in trending[:8] %}
-      <a class="home-promo-item" href="{{ r.href }}"><span class="home-promo-art trend" aria-hidden="true">↗</span><strong>{{ r.term }}</strong><span>{% if r.action %}{{ r.action }}{% else %}Trending now{% endif %}</span></a>
-      {% endfor %}
-      {% endif %}
+      <a class="home-promo-item" href="{{ url_for('public.home') }}"><span class="home-promo-art trend" aria-hidden="true">♪</span><strong>Sur Music</strong><span>Worldwide radio • music • news • talk</span></a>
+      <a class="home-promo-item" href="/radio-stations"><span class="home-promo-art trend" aria-hidden="true">LIVE</span><strong>Listen live</strong><span>Free radio in your browser</span></a>
     </div>
     <div class="home-promo-set" aria-hidden="true">
       <a class="home-promo-item" href="{{ url_for('public.download_page') }}" tabindex="-1"><span class="home-promo-art app" aria-hidden="true">▶</span><strong>Get the app</strong><span>Background play • lock-screen controls</span></a>
@@ -31,11 +28,8 @@
       {% for st in stations[:5] %}
       <a class="home-promo-item station-promo" href="{{ station_href(st) }}" tabindex="-1"><span class="home-promo-thumb" aria-hidden="true">{% if st.favicon %}<img src="{{ st.favicon }}" alt="" loading="lazy" width="30" height="30" referrerpolicy="no-referrer">{% else %}<span>{{ (st.name or '?')[:1] | upper }}</span>{% endif %}</span><strong>{{ st.name }}</strong><span>Popular channel · {{ st.country or 'Worldwide' }}</span></a>
       {% endfor %}
-      {% if trending %}
-      {% for r in trending[:8] %}
-      <a class="home-promo-item" href="{{ r.href }}" tabindex="-1"><span class="home-promo-art trend" aria-hidden="true">↗</span><strong>{{ r.term }}</strong><span>{% if r.action %}{{ r.action }}{% else %}Trending now{% endif %}</span></a>
-      {% endfor %}
-      {% endif %}
+      <a class="home-promo-item" href="{{ url_for('public.home') }}"><span class="home-promo-art trend" aria-hidden="true">♪</span><strong>Sur Music</strong><span>Worldwide radio • music • news • talk</span></a>
+      <a class="home-promo-item" href="/radio-stations"><span class="home-promo-art trend" aria-hidden="true">LIVE</span><strong>Listen live</strong><span>Free radio in your browser</span></a>
     </div>
   </div>
 </section>
