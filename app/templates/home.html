@@ -6,19 +6,36 @@
 {% import "_offers.html" as partner with context %}
 {% block body_class %}page-home{% endblock %}
 {% block content %}
-<section class="home-promo-strip" aria-label="Sur Music highlights">
+<section class="home-promo-strip" aria-label="Sur Music live highlights">
   <div class="home-promo-track">
     <div class="home-promo-set">
       <a class="home-promo-item" href="{{ url_for('public.download_page') }}"><span class="home-promo-art app" aria-hidden="true">▶</span><strong>Get the app</strong><span>Background play • lock-screen controls</span></a>
       <a class="home-promo-item" href="/accessibility"><span class="home-promo-art access" aria-hidden="true">♿</span><strong>Accessibility</strong><span>TalkBack • VoiceOver • keyboard friendly</span></a>
       <a class="home-promo-item" href="/radio-stations"><span class="home-promo-art world" aria-hidden="true">◎</span><strong>Worldwide channels</strong><span>200+ countries • music • news • talk</span></a>
-      {% if trending %}{% for r in trending[:4] %}<a class="home-promo-item" href="{{ r.href }}"><span class="home-promo-art trend" aria-hidden="true">↗</span><strong>{{ r.term }}</strong><span>{% if r.action %}{{ r.action }}{% else %}Trending now{% endif %}</span></a>{% endfor %}{% endif %}
+      {% for st in stations[:5] %}
+      <a class="home-promo-item station-promo" href="{{ station_href(st) }}">
+        <span class="home-promo-thumb" aria-hidden="true">{% if st.favicon %}<img src="{{ st.favicon }}" alt="" loading="lazy" width="30" height="30" referrerpolicy="no-referrer">{% else %}<span>{{ (st.name or '?')[:1] | upper }}</span>{% endif %}</span>
+        <strong>{{ st.name }}</strong><span>Popular channel · {{ st.country or 'Worldwide' }}</span>
+      </a>
+      {% endfor %}
+      {% if trending %}
+      {% for r in trending[:8] %}
+      <a class="home-promo-item" href="{{ r.href }}"><span class="home-promo-art trend" aria-hidden="true">↗</span><strong>{{ r.term }}</strong><span>{% if r.action %}{{ r.action }}{% else %}Trending now{% endif %}</span></a>
+      {% endfor %}
+      {% endif %}
     </div>
     <div class="home-promo-set" aria-hidden="true">
       <a class="home-promo-item" href="{{ url_for('public.download_page') }}" tabindex="-1"><span class="home-promo-art app" aria-hidden="true">▶</span><strong>Get the app</strong><span>Background play • lock-screen controls</span></a>
       <a class="home-promo-item" href="/accessibility" tabindex="-1"><span class="home-promo-art access" aria-hidden="true">♿</span><strong>Accessibility</strong><span>TalkBack • VoiceOver • keyboard friendly</span></a>
       <a class="home-promo-item" href="/radio-stations" tabindex="-1"><span class="home-promo-art world" aria-hidden="true">◎</span><strong>Worldwide channels</strong><span>200+ countries • music • news • talk</span></a>
-      {% if trending %}{% for r in trending[:4] %}<a class="home-promo-item" href="{{ r.href }}" tabindex="-1"><span class="home-promo-art trend" aria-hidden="true">↗</span><strong>{{ r.term }}</strong><span>{% if r.action %}{{ r.action }}{% else %}Trending now{% endif %}</span></a>{% endfor %}{% endif %}
+      {% for st in stations[:5] %}
+      <a class="home-promo-item station-promo" href="{{ station_href(st) }}" tabindex="-1"><span class="home-promo-thumb" aria-hidden="true">{% if st.favicon %}<img src="{{ st.favicon }}" alt="" loading="lazy" width="30" height="30" referrerpolicy="no-referrer">{% else %}<span>{{ (st.name or '?')[:1] | upper }}</span>{% endif %}</span><strong>{{ st.name }}</strong><span>Popular channel · {{ st.country or 'Worldwide' }}</span></a>
+      {% endfor %}
+      {% if trending %}
+      {% for r in trending[:8] %}
+      <a class="home-promo-item" href="{{ r.href }}" tabindex="-1"><span class="home-promo-art trend" aria-hidden="true">↗</span><strong>{{ r.term }}</strong><span>{% if r.action %}{{ r.action }}{% else %}Trending now{% endif %}</span></a>
+      {% endfor %}
+      {% endif %}
     </div>
   </div>
 </section>
@@ -43,6 +60,20 @@
       <p class="small muted" id="a2hs-help" hidden>On iPhone: tap the Share button in Safari, then “Add to Home Screen”.</p>
     </div>
     <div class="card now-card">
+      <h2 class="h3">Top stations right now</h2>
+      <aside class="now-market-rail" data-ticker aria-label="Live market prices" hidden>
+        <div class="mk-track"><div class="mk-set" data-ticker-set>
+          <a class="mk-t" href="/markets" data-market="btc"><span class="mk-sym">BTC</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+          <a class="mk-t" href="/markets" data-market="eth"><span class="mk-sym">ETH</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+          <a class="mk-t" href="/markets" data-market="xau"><span class="mk-sym">Gold</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+          <a class="mk-t" href="/markets" data-market="xag"><span class="mk-sym">Silver</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+          <a class="mk-t" href="/markets" data-market="usd-pkr"><span class="mk-sym">USD/PKR</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+          <a class="mk-t" href="/markets" data-market="eur-pkr"><span class="mk-sym">EUR/PKR</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+          <a class="mk-t" href="/markets" data-market="gbp-pkr"><span class="mk-sym">GBP/PKR</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+          <a class="mk-t" href="/markets" data-market="aed-pkr"><span class="mk-sym">AED/PKR</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+          <a class="mk-t" href="/markets" data-market="sar-pkr"><span class="mk-sym">SAR/PKR</span><svg class="mk-spark" viewBox="0 0 60 22" aria-hidden="true"><polyline points=""></polyline></svg><span class="mk-val" data-v></span><span class="mk-chg" data-c></span></a>
+        </div></div>
+      </aside>
       <h2 class="h3">Top stations right now</h2>
       {% if stations %}{{ ui.station_list(stations[:4], cat) }}{% else %}<p class="muted">Stations are loading. Please try again in a minute.</p>{% endif %}
       <p class="small"><a href="{{ url_for('public.category', cat='bollywood') }}">All Bollywood stations →</a></p>
