@@ -1229,3 +1229,8 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 .a11y-card { border-color: color-mix(in srgb, var(--c-blue, #3b7bff) 42%, var(--border)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--c-blue, #3b7bff) 10%, transparent), var(--shadow); }
 .a11y-card .btn-primary { box-shadow: 0 6px 18px color-mix(in srgb, var(--c-blue, #3b7bff) 25%, transparent); }
 @media (max-width: 700px) { .home-support-card { align-items: flex-start; flex-direction: column; } .home-support-card .btn { width: 100%; } }
+
+/* Homepage discovery: popular stations and live trends share one compact row. */
+.home-discovery .trend-strip { height: 100%; margin: 0; }
+.home-discovery .popular-list { margin-top: 4px; }
+@media (max-width: 760px) { .home-discovery .trend-strip { margin-top: 0; } }
