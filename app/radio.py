@@ -204,6 +204,11 @@ def _best(stations, cap):
 def _merge(paths, per=None, cap=300):
     if current_app.config.get("RADIO_DEMO"):
         return _demo(paths)
+    # Keep category pages responsive: very large path fan-outs create several
+    # simultaneous Radio Browser responses and make a cold page load slow.
+    # SEO landing pages still retain their full path definitions; this only
+    # limits the live aggregation work done for a single request.
+    paths = list(paths or [])[:6]
     app = current_app._get_current_object()
 
     def run(p):
