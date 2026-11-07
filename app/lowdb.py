@@ -81,7 +81,6 @@ def cache_drop(prefix):
 # ---------------------------------------------------------------- deferred writes
 
 MAX_QUEUE = 5000
-MAX_LIVE = 10000
 MAX_VISITORS = 20000
 
 
