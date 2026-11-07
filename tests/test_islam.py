@@ -37,3 +37,13 @@ def test_live_news_page(client):
     html = client.get("/live-news").get_data(as_text=True)
     assert "midterm" in html.lower() and "FAQPage" in html and html.count("<h1") == 1
     assert "/live-news" in client.get("/sitemap.xml").get_data(as_text=True)
+
+
+def test_islamic_navigation_is_single_hub_and_seo_pages_remain(client):
+    from app.public import _nav_tabs
+    with client.application.test_request_context("/genre/islamic"):
+        tabs = _nav_tabs("islamic")
+    religious = next(t for t in tabs if t["key"] == "religious")
+    assert religious["subs"] == [("/genre/islamic", "All Islamic", True)]
+    for slug in ("quran", "naat", "bayan", "pakistan-islamic", "majlis"):
+        assert client.get(f"/genre/{slug}").status_code == 200
