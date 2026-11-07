@@ -15,6 +15,8 @@ services:
         sync: false                 # e.g. https://surmusic.onrender.com
       - key: DATABASE_URL
         sync: false                 # the Neon connection string (postgresql://…?sslmode=require)
+      - key: DB_FALLBACK_SQLITE
+        value: "0"                  # NEVER fall back to Render's ephemeral filesystem; that would reset data on restart
       - key: ADMIN_EMAIL
         sync: false                 # your admin email (first start creates the admin; delete afterwards)
       - key: ADMIN_PASSWORD
