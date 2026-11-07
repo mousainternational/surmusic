@@ -83,6 +83,7 @@ def cache_drop(prefix):
 MAX_QUEUE = 5000
 MAX_VISITORS = 20000
 MAX_RATE_BUCKETS = 10000
+MAX_LIVE = 10000
 
 
 def defer(sql, params):
@@ -224,6 +225,11 @@ def _sweep(app):
     with st.lock:
         stale = [k for k, v in st.live.items() if v["_seen"] < cutoff]
         gone = [st.live.pop(k) for k in stale]
+        if len(st.live) > MAX_LIVE:
+            excess = len(st.live) - MAX_LIVE
+            oldest = sorted(st.live, key=lambda k: st.live[k]["_seen"])[:excess]
+            for k in oldest:
+                st.live.pop(k, None)
         for k in [k for k, t in st.visitors.items() if t < time.time() - 3600]:
             st.visitors.pop(k, None)
     if gone:
