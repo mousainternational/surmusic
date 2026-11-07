@@ -1013,13 +1013,17 @@ SECT_PAGES = ("majlis", "madani", "hadith", "english-news", "hindi-news", "arabi
 # landing pages, but their many API paths are not all fetched again on /genre/islamic.
 # The page still covers the major Islamic station signals through a compact set of
 # broad + specific searches.
-TOPICS["islamic"]["paths"] = list(dict.fromkeys(
-    TOPICS["islamic"]["paths"] + [
-        tag("quran"), tag("quran recitation"), tag("tilawat"),
-        tag("naat"), tag("hamd"), tag("bayan"), tag("dars"),
-        tag("noha"), tag("majlis"), tag("ahlebait"), tag("islamic"),
-        tag("muslim"), tag("religion", "&countrycode=PK"),
-    ]))
+# Keep the combined Islamic hub fast: a few high-signal searches cover the main
+# content without firing a long chain of near-duplicate Radio Browser requests.
+# Individual Quran/Naat/Bayan/Majlis/Madani/Hadith pages remain separate SEO pages.
+TOPICS["islamic"]["paths"] = [
+    tag("islamic"),
+    tag("quran"),
+    tag("naat"),
+    tag("bayan"),
+    tag("muslim"),
+    tag("religion"),
+]
 
 
 def chips_for(code):
