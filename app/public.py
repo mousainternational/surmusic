@@ -1225,9 +1225,16 @@ def like_counts(uuid):
         hit, value = lowdb.cache_get(key)
         if hit:
             return tuple(value)
-    row = get_db().one("SELECT SUM(CASE WHEN value = 1 THEN 1 ELSE 0 END) AS up, "
-                       "SUM(CASE WHEN value = -1 THEN 1 ELSE 0 END) AS down FROM station_likes WHERE station_uuid = ?", (uuid,))
-    out = (int((row or {}).get("up") or 0), int((row or {}).get("down") or 0)) if row else (0, 0)
+    try:
+        row = get_db().one("SELECT SUM(CASE WHEN value = 1 THEN 1 ELSE 0 END) AS up, "
+                           "SUM(CASE WHEN value = -1 THEN 1 ELSE 0 END) AS down FROM station_likes WHERE station_uuid = ?", (uuid,))
+        out = (int((row or {}).get("up") or 0), int((row or {}).get("down") or 0)) if row else (0, 0)
+    except Exception:
+        # Likes are optional public metadata. If Neon is temporarily unavailable
+        # or its free-plan quota is exhausted, keep the station page renderable
+        # instead of turning a public page into a 500 error.
+        current_app.logger.warning("Station likes unavailable; serving zero counts", exc_info=True)
+        out = (0, 0)
     if lowdb.enabled():
         lowdb.cache_set(key, list(out), 600)
     return out
