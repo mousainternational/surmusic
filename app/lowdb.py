@@ -81,6 +81,8 @@ def cache_drop(prefix):
 # ---------------------------------------------------------------- deferred writes
 
 MAX_QUEUE = 5000
+MAX_LIVE = 10000
+MAX_VISITORS = 20000
 
 
 def defer(sql, params):
@@ -149,7 +151,7 @@ def _writer(app):
             now = time.time()
             old_enough = st.oldest is not None and now - st.oldest >= every
             going_idle = st.queue and now - st.last_request >= idle      # free server sleeps after 15 min idle
-            if old_enough or going_idle or len(st.queue) >= 2000:
+            if old_enough or going_idle or len(st.queue) >= 1000:
                 flush(app)
             _sweep(app)
         except Exception:  # pragma: no cover
@@ -190,7 +192,12 @@ def rate_limited(bucket, limit, window_seconds):
 def saw_visitor(visitor_id):
     st = state()
     with st.lock:
-        st.visitors[visitor_id] = time.time()
+        now = time.time()
+        st.visitors[visitor_id] = now
+        if len(st.visitors) > MAX_VISITORS:
+            # Hard memory ceiling during bursts/abuse; normal visitors are swept after one hour.
+            for k in sorted(st.visitors, key=st.visitors.get)[:2000]:
+                st.visitors.pop(k, None)
 
 
 def online_visitors(seconds=300):
