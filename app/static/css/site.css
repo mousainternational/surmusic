@@ -913,6 +913,7 @@ h3, .h3 { font-weight: 600; letter-spacing: -.01em; }
 @media (max-width: 1199px) { .menu .hd-pill { margin: 3px 0; } .menu a.hd-pill:not(.btn), .menu .hd-dd > summary.hd-pill { padding: 12px 14px; } }
 .theme-toggle { border-color: color-mix(in srgb, var(--c-amber) 55%, var(--border)); color: var(--c-amber); }
 .btn-accent { background: linear-gradient(135deg, #ffb13f, #ff7a1a); color: #2a1200; }
+.btn-a2hs { background: linear-gradient(135deg, #0fb5c4, #3b7bff); color: #061b24; border-color: transparent; }
 .btn-ghost { border-color: color-mix(in srgb, var(--brand) 40%, var(--border)); }
 .btn-ghost:hover { background: color-mix(in srgb, var(--brand) 10%, var(--surface)); }
 
