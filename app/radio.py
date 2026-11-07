@@ -73,8 +73,8 @@ def _fetch_json(path):
         try:
             req = urllib.request.Request(url, headers={"User-Agent": _user_agent(), "Accept": "application/json"})
             with urllib.request.urlopen(req, timeout=timeout) as r:  # noqa: S310 (fixed https host)
-                data = r.read(5 * 1024 * 1024 + 1)
-            if len(data) > 5 * 1024 * 1024:
+                data = r.read(3 * 1024 * 1024 + 1)
+            if len(data) > 3 * 1024 * 1024:
                 raise RadioError("response too large")
             return json.loads(data.decode("utf-8"))
         except Exception:  # network error, bad JSON, HTTP error
