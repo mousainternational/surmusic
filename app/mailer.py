@@ -75,3 +75,24 @@ def send_mail(to_address, subject, body, reply_to=None):
     except (OSError, smtplib.SMTPException):
         current_app.logger.warning("Email delivery failed (SMTP error).")
         return "failed"
+
+
+def send_mail_later(to_address, subject, body, reply_to=None):
+    """Send in the background so a slow email service never holds up sign-in, sign-up or password reset.
+    Returns 'queued' (or what send_mail returns in tests / when email is not set up)."""
+    if not smtp_ready() or not valid_email(to_address or ""):
+        return "pending_setup"
+    if current_app.config.get("TESTING"):
+        return send_mail(to_address, subject, body, reply_to)
+    import threading
+    app = current_app._get_current_object()
+
+    def run():
+        with app.app_context():
+            try:
+                send_mail(to_address, subject, body, reply_to)
+            except Exception:  # pragma: no cover
+                app.logger.warning("Email delivery failed (background).")
+
+    threading.Thread(target=run, name="send-mail", daemon=True).start()
+    return "queued"

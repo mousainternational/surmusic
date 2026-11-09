@@ -42,9 +42,18 @@ def create_app(overrides=None):
     dbmod.ensure_dirs(app)
     _database_or_fallback(app)
     dbmod.migrate(app.config["DATABASE_URL"])
+    from . import persist as _persist
+    app.config["STORAGE_PERSISTENT"] = _persist.storage_is_persistent(app.config["STORAGE_DIR"])
+    if not app.config.get("TESTING"):
+        # free hosting without a permanent disk: bring accounts, admin and settings back from the private copy
+        app.config["DATA_RESTORE"] = _persist.restore_if_empty(app.config["DATABASE_URL"])
     _bootstrap_admin(app)
     _migrate_app_devices(app)
     _apply_setting_changes(app)
+    if not app.config["STORAGE_PERSISTENT"] and "GEOIP_AUTO" not in os.environ:
+        # no permanent disk: the ~120 MB city database would be downloaded again after every restart or wake-up
+        # (Render counts that as bandwidth, and it needs memory), so it stays off unless GEOIP_AUTO=1 is set
+        app.config["GEOIP_AUTO"] = False
     from . import geo as _geo
     _geo.start_auto_update(app)
     app.config["APP_VERSION"] = __version__
@@ -52,6 +61,7 @@ def create_app(overrides=None):
     _indexnow.start(app)
     from . import directory as _directory
     _directory.start(app)
+    _persist.start(app)
 
     from .admin import bp as admin_bp
     from .auth import bp as auth_bp

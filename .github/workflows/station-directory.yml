@@ -1,0 +1,35 @@
+# Twice a month: rebuild the world station list on GitHub's computers (free for public repositories) and commit it,
+# so the Sur Music server never has to download or build it itself (saves its memory and bandwidth).
+# Runs on the 2nd and 16th at 03:17 Pakistan time (22:17 UTC the day before) — outside the busy evening hours.
+name: Station directory
+on:
+  schedule:
+    - cron: "17 22 1,15 * *"
+  workflow_dispatch: {}
+  push:
+    branches: [stage1-data-safety]
+    paths: [".github/workflows/station-directory.yml", "tools/build_directory.py"]
+permissions:
+  contents: write
+concurrency:
+  group: station-directory
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install -r requirements.txt
+      - run: python tools/build_directory.py
+      - name: Commit only if the list changed
+        run: |
+          git config user.name "Sur Music station list"
+          git config user.email "mousainternational@users.noreply.github.com"
+          git add app/data/directory.jsonl.gz
+          if git diff --cached --quiet; then echo "No change"; exit 0; fi
+          git commit -m "Weekly station list update"
+          git push

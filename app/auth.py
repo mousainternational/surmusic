@@ -10,7 +10,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from . import analytics, twofa
 from .db import get_db, utcnow
-from .mailer import send_mail, smtp_ready
+from .mailer import send_mail, send_mail_later, smtp_ready
 from .security import current_user, login_required, rate_limited, safe_next, start_session
 from .settings import get_settings
 from .util import valid_email
@@ -329,7 +329,7 @@ def forgot():
                 token = _signer("reset").dumps({"uid": row["id"], "fp": _pw_fingerprint(row["password_hash"])})
                 link = current_app.config["SITE_URL"] + url_for("auth.reset", token=token)
                 s = get_settings()
-                send_mail(row["email"], f"Reset your {s['site_name']} password",
+                send_mail_later(row["email"], f"Reset your {s['site_name']} password",
                           f"Someone (hopefully you) asked to reset the password for {row['email']}.\n\n"
                           f"Choose a new password here (valid for 1 hour, works once):\n{link}\n\n"
                           "If you did not ask for this, ignore this email — your password stays the same.")

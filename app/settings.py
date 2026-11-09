@@ -238,6 +238,33 @@ ADSENSE_CLIENT_RE = re.compile(r"^ca-pub-\d{10,20}$")
 AD_SLOT_RE = re.compile(r"^\d{6,15}$")
 
 
+_STATIC = None
+
+
+def static_settings():
+    """Settings that must survive even if the database is lost (AdSense, donations, verification codes):
+    first app/data/site_settings.json in the code, then environment variables SETTING_<KEY> on the host
+    (for example SETTING_ADSENSE_CLIENT=ca-pub-123..., SETTING_ADS_ENABLED=1). Values saved in Admin still win."""
+    global _STATIC
+    if _STATIC is None:
+        import os
+        data = {}
+        path = os.path.join(os.path.dirname(__file__), "data", "site_settings.json")
+        try:
+            with open(path, encoding="utf-8") as fh:
+                raw = json.load(fh)
+            if isinstance(raw, dict):
+                data.update({k: str(v) for k, v in raw.items() if k in DEFAULTS})
+        except (OSError, ValueError):
+            pass
+        for key in DEFAULTS:
+            v = os.environ.get("SETTING_" + key.upper())
+            if v is not None:
+                data[key] = v
+        _STATIC = data
+    return _STATIC
+
+
 def get_settings():
     if "settings" not in g:
         from . import lowdb
@@ -246,6 +273,7 @@ def get_settings():
             g.settings = dict(cached[1])
         else:
             data = dict(DEFAULTS)
+            data.update(static_settings())
             for row in get_db().all("SELECT key, value FROM settings"):
                 data[row["key"]] = row["value"]
             g.settings = data
