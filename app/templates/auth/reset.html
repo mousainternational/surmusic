@@ -8,6 +8,8 @@
   <input id="password" name="password" type="password" required minlength="10" autocomplete="new-password" autofocus>
   <label for="password2">Repeat new password</label>
   <input id="password2" name="password2" type="password" required minlength="10" autocomplete="new-password">
+  {% if two_step %}<label for="code">Code from your authenticator app (or a recovery code)</label>
+  <input id="code" name="code" inputmode="numeric" autocomplete="one-time-code" required>{% endif %}
   <button class="btn btn-primary btn-block">Save new password</button>
 </form>
 {% endblock %}

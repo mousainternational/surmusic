@@ -364,17 +364,36 @@ def reset(token):
         error = password_problem(password, row["email"])
         if not error and password != (request.form.get("password2") or ""):
             error = "The two passwords do not match."
+        if not error and twofa.is_enabled(row["id"]) and not twofa.verify(row["id"], request.form.get("code")):
+            # an email link alone is not enough when 2-step sign-in is on (a stolen inbox must not take the account)
+            error = "The code from your authenticator app is not correct. Please try again."
         if not error:
             db.execute("UPDATE users SET password_hash = ?, session_version = session_version + 1, "
                        "failed_attempts = 0, locked_until = NULL, email_verified = 1 WHERE id = ?",
                        (generate_password_hash(password, method="scrypt"), row["id"]))
             db.commit()
             analytics.record("password_reset", row["id"])
+            _security_notice(row, "Your password was reset")
             session.clear()
             flash("Your password was changed. Please sign in.", "success")
             return redirect(url_for("auth.login"))
     return render_template("auth/reset.html", meta={"title": "Choose a new password | Sur Music", "noindex": True},
-                           error=error), (400 if error else 200)
+                           error=error, two_step=twofa.is_enabled(row["id"])), (400 if error else 200)
+
+
+def _security_notice(user, what):
+    """Email the account owner when the password changes (time and device), in the background."""
+    try:
+        from datetime import datetime, timezone
+        when = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+        device = (request.headers.get("User-Agent") or "unknown device")[:160]
+        s = get_settings()
+        send_mail_later(user["email"], f"{what} — {s['site_name']}",
+                        f"{what} on {when}.\nDevice: {device}\n\nIf this was you, nothing else is needed.\n"
+                        f"If it was NOT you, use 'Forgot password' now and contact us: "
+                        f"{s.get('app_contact_email') or s.get('contact_email') or ''}")
+    except Exception:  # never block the change itself
+        pass
 
 
 # ---------------------------------------------------------------- my account
@@ -400,12 +419,15 @@ def account():
                 flash(problem, "error")
             elif new != again:
                 flash("The two new passwords do not match.", "error")
+            elif twofa.is_enabled(me["id"]) and not twofa.verify(me["id"], request.form.get("code")):
+                flash("The code from your authenticator app is not correct. Please try again.", "error")
             else:
                 sv = me["session_version"] + 1
                 db.execute("UPDATE users SET password_hash = ?, session_version = ? WHERE id = ?",
                            (generate_password_hash(new, method="scrypt"), sv, me["id"]))
                 db.commit()
                 session["sv"] = sv  # keep this device signed in, sign out every other device
+                _security_notice(me, "Your password was changed")
                 flash("Password changed. You were signed out on all other devices.", "success")
         elif action == "signout_all":
             sv = me["session_version"] + 1

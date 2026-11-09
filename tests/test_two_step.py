@@ -83,3 +83,44 @@ def test_code_step_expires_and_needs_password_first(client, app):
     assert client.get("/login/code").status_code == 302           # no password yet → back to sign-in
     r = post(client, "/login/code", {"code": "123456"}, page="/login")
     assert r.status_code in (302, 400)
+
+
+def _turn_on(client):
+    login(client)
+    post(client, "/account/two-step", {"action": "start"}, page="/account/two-step")
+    secret = _secret_from(client.get("/account/two-step").get_data(as_text=True))
+    post(client, "/account/two-step", {"action": "confirm", "code": _code(secret)}, page="/account/two-step")
+    return secret
+
+
+def test_password_change_needs_the_authenticator_code_when_two_step_is_on(client, app):
+    secret = _turn_on(client)
+    new = "a-brand-new-password-77"
+    form = {"action": "password", "current": ADMIN_PASSWORD, "new": new, "again": new}
+    assert 'name="code"' in client.get("/account").get_data(as_text=True)
+    r = post(client, "/account", dict(form, code="000000"), page="/account", follow_redirects=True)
+    assert b"authenticator app is not correct" in r.data
+    r = post(client, "/account", dict(form, code=_code(secret, 1)), page="/account", follow_redirects=True)
+    assert b"Password changed" in r.data
+    with app.app_context():
+        mails = app.config.get("SENT_MAIL", [])
+    assert any("Your password was changed" in m["Subject"] for m in mails) or not mails  # email when set up
+
+
+def test_reset_link_alone_is_not_enough_when_two_step_is_on(client, app):
+    secret = _turn_on(client)
+    from app.auth import _pw_fingerprint, _signer
+    from app.db import Database
+    db = Database(app.config["DATABASE_URL"])
+    row = db.one("SELECT * FROM users WHERE email = ?", (ADMIN_EMAIL,))
+    db.close()
+    with app.app_context():
+        token = _signer("reset").dumps({"uid": row["id"], "fp": _pw_fingerprint(row["password_hash"])})
+    page = client.get(f"/reset/{token}").get_data(as_text=True)
+    assert 'name="code"' in page
+    new = "reset-by-email-only-123"
+    r = post(client, f"/reset/{token}", {"password": new, "password2": new, "code": "000000"}, page=f"/reset/{token}")
+    assert r.status_code == 400 and b"authenticator app is not correct" in r.data
+    r = post(client, f"/reset/{token}", {"password": new, "password2": new, "code": _code(secret, 1)},
+             page=f"/reset/{token}")
+    assert r.status_code in (302, 303)
