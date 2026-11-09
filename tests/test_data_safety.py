@@ -148,8 +148,8 @@ def test_a_to_z_is_full_right_after_a_restart(app, client, tmp_path):
     html = client.get("/stations/a").get_data(as_text=True)
     assert "250 live radio stations" in html and "AStation 249" in html     # most listened first
     assert 'href="/stations/a?page=2"' in html
-    page2 = client.get("/stations/a?page=2").get_data(as_text=True)
-    assert "AStation 0" in page2
+    page3 = client.get("/stations/a?page=3").get_data(as_text=True)
+    assert "AStation 0" in page3
     assert client.get("/stations/a?page=9").status_code == 404
     assert "101 FM" in client.get("/stations/0").get_data(as_text=True)
     assert client.get("/sitemap-stations-1.xml").status_code == 200

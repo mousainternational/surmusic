@@ -599,12 +599,12 @@ def top_100():
 
 @bp.route("/stations/<letter>")
 def stations_az(letter):
-    """A–Z station directory: one page per first letter (0 = numbers), 200 stations per page, most listened first.
+    """A–Z station directory: one page per first letter (0 = numbers), 100 stations per page, most listened first.
     Comes from the world station directory file (directory.py), so it is full right after a restart."""
     letter = letter.lower()
     if letter != "0" and (len(letter) != 1 or letter not in LETTERS):
         abort(404)
-    per = 200
+    per = 100                                # about 170 KB a page: lighter on visitors and on bandwidth
     try:
         pg = max(1, int(request.args.get("page", 1)))
     except ValueError:
@@ -1631,7 +1631,15 @@ def healthz():
     except OSError:
         checks["storage"] = "error"
     ok = all(v == "ok" for v in checks.values())
-    return {"status": "ok" if ok else "error", "checks": checks}, (200 if ok else 503)
+    info = {}
+    try:                                       # facts for checking a deploy (no secrets)
+        from . import directory, persist
+        info = {"stations": directory.count(), "permanent_disk": bool(current_app.config.get("STORAGE_PERSISTENT")),
+                "data_backup": persist.status()["enabled"], "data_backup_last_ok": persist.status()["last_ok"],
+                "restore_at_start": current_app.config.get("DATA_RESTORE", "")}
+    except Exception:  # pragma: no cover
+        pass
+    return {"status": "ok" if ok else "error", "checks": checks, "info": info}, (200 if ok else 503)
 
 
 @bp.route("/favicon.ico")
