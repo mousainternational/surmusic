@@ -9,9 +9,10 @@ How (free, no new service):
   only when something changed). Git history keeps every older copy, so this is also the weekly backup.
 * When the site starts with an empty database (no accounts at all), it reads that copy back first.
 
-Switched on only when BOTH environment variables are set on the host:
-  BACKUP_GITHUB_REPO   e.g. mousainternational/surmusic-backup   (must be a PRIVATE repository)
-  BACKUP_GITHUB_TOKEN  a fine-grained token with "Contents: read and write" on that one repository only
+Where the copy is kept (first one configured wins):
+* Cloudflare Workers KV (free: 1,000 writes a day, values up to 25 MB; over the limit it simply stops, no bill):
+  BACKUP_CF_ACCOUNT_ID, BACKUP_CF_NAMESPACE_ID, BACKUP_CF_TOKEN (an API token with "Workers KV Storage: Edit" only)
+* or a PRIVATE GitHub repository: BACKUP_GITHUB_REPO + BACKUP_GITHUB_TOKEN ("Contents: read and write" on it only)
 Optional: BACKUP_KEY (encryption password; default: derived from SECRET_KEY), BACKUP_EVERY_MINUTES (default 10).
 """
 import base64
@@ -56,13 +57,25 @@ def storage_is_persistent(storage_dir):
         path = parent
 
 
-def enabled():
+def _kv_on():
+    return all(os.environ.get(k) for k in ("BACKUP_CF_ACCOUNT_ID", "BACKUP_CF_NAMESPACE_ID", "BACKUP_CF_TOKEN"))
+
+
+def _gh_on():
     return bool(os.environ.get("BACKUP_GITHUB_REPO") and os.environ.get("BACKUP_GITHUB_TOKEN"))
+
+
+def enabled():
+    return _kv_on() or _gh_on()
+
+
+def backend():
+    return "cloudflare-kv" if _kv_on() else ("github" if _gh_on() else "")
 
 
 def status():
     """For the admin panel and /healthz: no secrets."""
-    return {"enabled": enabled(), "last_ok": _state["last_ok"], "last_error": _state["last_error"]}
+    return {"enabled": enabled(), "where": backend(), "last_ok": _state["last_ok"], "last_error": _state["last_error"]}
 
 
 # ------------------------------------------------------------------ encryption
@@ -155,6 +168,24 @@ def _http(method, url, body=None, token=None):
         return exc.code, exc.read() or b""
 
 
+def _kv_http(method, url, data=None, token=None):
+    """Raw bytes to/from Cloudflare's API; replaced in tests. Returns (status, bytes)."""
+    req = urllib.request.Request(url, data=data, method=method, headers={
+        "Authorization": f"Bearer {token}", "User-Agent": "surmusic-backup"})
+    if data is not None:
+        req.add_header("Content-Type", "application/octet-stream")
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:  # noqa: S310 (fixed https host)
+            return r.status, r.read()
+    except urllib.error.HTTPError as exc:
+        return exc.code, exc.read() or b""
+
+
+def _kv_url():
+    a, n = os.environ["BACKUP_CF_ACCOUNT_ID"].strip(), os.environ["BACKUP_CF_NAMESPACE_ID"].strip()
+    return f"https://api.cloudflare.com/client/v4/accounts/{a}/storage/kv/namespaces/{n}/values/{FILE_PATH}"
+
+
 def _url():
     repo = os.environ["BACKUP_GITHUB_REPO"].strip().strip("/")
     branch = os.environ.get("BACKUP_GITHUB_BRANCH", "main")
@@ -162,7 +193,14 @@ def _url():
 
 
 def fetch_remote():
-    """(sha, decrypted bytes) of the copy on GitHub, (None, None) if there is none yet. Raises on errors."""
+    """(sha, decrypted bytes) of the saved copy, (None, None) if there is none yet. Raises on errors."""
+    if _kv_on():
+        code, raw = _kv_http("GET", _kv_url(), token=os.environ["BACKUP_CF_TOKEN"])
+        if code == 404:
+            return None, None
+        if code != 200:
+            raise RuntimeError(f"Cloudflare answered {code}")
+        return None, unseal(raw)
     url, branch = _url()
     token = os.environ["BACKUP_GITHUB_TOKEN"]
     code, raw = _http("GET", f"{url}?ref={branch}", token=token)
@@ -182,7 +220,7 @@ def fetch_remote():
 
 
 def push(db, force=False):
-    """Write the copy to GitHub if the data changed. Returns 'pushed', 'unchanged', 'off' or 'failed'."""
+    """Write the copy (Cloudflare KV or GitHub) if the data changed. Returns 'pushed', 'unchanged', 'off' or 'failed'."""
     if not enabled():
         return "off"
     with _lock:
@@ -199,6 +237,16 @@ def push(db, force=False):
             if len(blob) > MAX_BYTES:
                 _state["last_error"] = "backup too large"
                 return "failed"
+            if _kv_on():
+                code, _raw = _kv_http("PUT", _kv_url(), blob, token=os.environ["BACKUP_CF_TOKEN"])
+                if code != 200:
+                    _state["last_error"] = f"Cloudflare answered {code}"
+                    log.warning("Data backup to Cloudflare failed (HTTP %s)", code)
+                    return "failed"
+                _state["last_hash"] = digest
+                _state["last_ok"] = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
+                _state["last_error"] = None
+                return "pushed"
             url, branch = _url()
             token = os.environ["BACKUP_GITHUB_TOKEN"]
             if _state["sha"] is None:
@@ -232,7 +280,7 @@ def push(db, force=False):
 
 
 def restore_if_empty(url):
-    """At start: if the database has no accounts, load the GitHub copy. Returns a short status word."""
+    """At start: if the database has no accounts, load the saved copy. Returns a short status word."""
     if not enabled():
         return "off"
     from .db import Database
