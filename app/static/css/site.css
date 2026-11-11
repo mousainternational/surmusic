@@ -1403,3 +1403,8 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
   .page-top-mid { contain: size; align-self: stretch; min-height: 300px; margin-top: 8px; display: flex; flex-direction: column; overflow: hidden; }
   .page-top-mid > .card { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 }
+
+/* Trending pills: one per row so the words, the action and the country never overlap */
+.trend-list li { width: 100%; flex-wrap: wrap; row-gap: 2px; }
+.trend-list a { flex-wrap: wrap; flex: 1 1 auto; }
+.trend-list .trend-go { flex: none; }
