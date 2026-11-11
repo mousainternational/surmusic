@@ -1301,3 +1301,24 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
   .flag-top { display: block; margin-top: 8px; }
   .flag-aside { display: none; }
 }
+
+/* Flags: three in a row (slimmer strip); the home hero uses the whole width of wide screens */
+@media (min-width: 720px) { .flag-box .flag-grid, .flag-all .flag-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .flag-name { font-size: .7rem; } }
+@media (min-width: 1400px) {
+  .hero2 .hero2-grid { max-width: 1800px; padding-left: 28px; padding-right: 28px; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) 280px; gap: 28px; }
+}
+@media (min-width: 1100px) { .page-top { grid-template-columns: minmax(0, 1fr) 300px; } }
+
+/* Arrow only where a box opens types inside it (Religious); all boxes stay on one line from tablet width up */
+.cat-box::after, .cat-box:hover::after, .cat-box:focus-within::after { content: none; }
+.cat-box.has-sub::after { content: "▽"; }
+.cat-box.has-sub:hover::after { color: #fff; }
+@media (min-width: 720px) {
+  .cat-row { flex-wrap: nowrap; gap: 6px; }
+  .cat-box { flex: 1 1 auto; justify-content: center; min-height: 46px; font-size: clamp(.68rem, .42rem + .55vw, .9rem); padding: 0 clamp(5px, .7vw, 10px); }
+}
+@media (min-width: 1400px) {
+  .hero2 .hero2-grid { grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr) 250px; gap: 24px; }
+}
+@media (min-width: 720px) and (max-width: 1399px) { .cat-box { font-size: clamp(.6rem, .25rem + .62vw, .8rem); padding: 0 4px; } .cat-row { gap: 4px; } }
+.flag-name { font-size: .66rem; }

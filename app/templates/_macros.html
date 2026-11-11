@@ -57,7 +57,7 @@
 {% macro find_bar() -%}
 {%- set filters = find_filters() %}
 <nav class="cat-row" aria-label="Categories">
-  {% for label, target in filters[2] %}<a class="cat-box" href="{{ target }}">{{ label }}</a>{% endfor %}
+  {% for label, target in filters[2] %}<a class="cat-box{{ ' has-sub' if label == 'Religious' }}" href="{{ target }}">{{ label }}</a>{% endfor %}
 </nav>
 {%- endmacro %}
 
