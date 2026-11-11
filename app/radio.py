@@ -315,10 +315,9 @@ def _islamic_fast(slug):
 
 
 def _genre_stations(slug):
-    if slug in ("islamic", "music", "sports", "daily-life", "religious"):
-        fast = _islamic_fast(slug)
-        if fast:
-            return fast
+    fast = _islamic_fast(slug)                         # every list: show the last saved copy at once, refresh behind the scenes
+    if fast:
+        return fast
     t = _TOPICS.get(slug, {})
     return _cached(f"genre:{slug}", lambda: _first(_merge(GENRES[slug]["paths"], t.get("per"), t.get("cap", 300)),
                                                   _FIRST.get(slug)),
