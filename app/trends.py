@@ -23,7 +23,7 @@ RETRY = 600         # after a failure, wait 10 minutes
 
 SPORT = re.compile(r"\b(vs|v)\b|cricket|\b(ipl|psl|bbl|t20|t20i|odi|test series|asia cup|world cup|champions league|"
                    r"premier league|la ?liga|serie a|bundesliga|ligue 1|fifa|uefa|nba|nfl|mlb|nhl|mls|f1|formula 1|"
-                   r"ufc|wwe|olympics|ballon d'or|standings|fixtures|scorecard|live score|commentary|match)\b|\bfc\b",
+                   r"olympics|ballon d'or|standings|fixtures|scorecard|live score|commentary|match)\b|\bfc\b",
                    re.I)
 MONEY = re.compile(r"\b(gold|silver|dollar|usd|rupee|dirham|riyal|euro|pound|bitcoin|btc|ethereum|crypto|exchange rate|"
                    r"currency|stock market|psx|sensex|nifty|dow jones|nasdaq|petrol|diesel|fuel|petroleum|oil price|"
@@ -40,7 +40,10 @@ MUSIC = re.compile(r"\b(song|songs|music|album|concert|tour|lyrics|singer|grammy
 MOVIE = re.compile(r"\b(movie|movies|film|films|trailer|box office|series|netflix|oscar|oscars|bollywood|hollywood|"
                    r"drama|episode|cast)\b", re.I)
 BLOCK = re.compile(r"\b(sex|porn|nude|naked|leaked|scandal|rape|murder|suicide|killed|kills|dead|death|dies|died|"
-                   r"shooting|bomb|bombing|terror|lottery|casino|betting|jackpot|ebola|virus)\b", re.I)
+                   r"shooting|bomb|bombing|terror|lottery|casino|betting|jackpot|ebola|virus|"
+                   # topics that have nothing to do with radio: wrestling, fights, monsters, games, anime
+                   r"wwe|wrestling|wrestlemania|ufc|mma|godzilla|kong|marvel|avengers|pokemon|roblox|fortnite|minecraft|"
+                   r"gta|anime|manga)\b", re.I)
 
 _lock = threading.Lock()
 _state = {"data": {}, "ts": 0.0, "next": 0.0, "busy": False}
