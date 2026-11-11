@@ -406,6 +406,23 @@ def _unlock(raw):
 
 # ---------------------------------------------------------------- pages
 
+def _home_filters():
+    """The three drop-downs on the home page: country, language, category. Each choice is a real page."""
+    from .topics import NAV
+    nav = {k: slugs for k, _, slugs in NAV}
+    pk = [("pakistan", "Pakistan")]
+    others = sorted(((k, t["label"]) for k, t in TOPICS.items() if t["kind"] == "country" and k != "pakistan"),
+                    key=lambda x: x[1])
+    countries = [(topic_path(k), lb) for k, lb in pk + others]
+    languages = [(topic_path(k), TOPICS[k]["label"]) for k in nav.get("languages", []) if k in TOPICS]
+    music = [(topic_path(k) if k in TOPICS else f"/{k}", TOPICS[k]["label"] if k in TOPICS else k.title())
+             for k in nav.get("music", []) if k in TOPICS or k in ("bollywood", "lollywood", "hollywood")]
+    cats = [("Music", music),
+            ("", [(topic_path("news"), "News"), (topic_path("sports"), "Sports"), (topic_path("talk"), "Talk"),
+                  ("/genre/islamic", "Religious"), ("/accessibility", "Accessibility")])]
+    return countries, languages, cats
+
+
 @bp.route("/")
 def home():
     stations, error = _stations_for("bollywood")
@@ -413,6 +430,7 @@ def home():
     return render_template("home.html", meta=meta, stations=protect(stations[:60]), error=error, cat="bollywood",
                            popular=_popular(), home_faq=islam_data.HOME_FAQ, market_sections=markets.view(),
                            guides=blog_data.posts_sorted()[:3],
+                           filters=_home_filters(),
                            trending=trends.top(6),
                            ld=[website_ld(), webapp_ld(), organization_ld(), faq_ld(islam_data.HOME_FAQ)])
 

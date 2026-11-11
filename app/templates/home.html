@@ -18,16 +18,23 @@
         <input id="hero-q" name="q" type="search" placeholder="Search: Arijit, ghazal, Lahore, FM 100…" maxlength="60">
         <button class="btn btn-primary">Search</button>
       </form>
-      <nav class="quick-grid" aria-label="Popular radio">
-        <a class="quick" href="/genre/quran">Quran</a>
-        <a class="quick" href="/genre/naat">Naat</a>
-        <a class="quick" href="/pakistan-fm-radio">Pakistani FM</a>
-        <a class="quick" href="/bollywood">Bollywood</a>
-        <a class="quick" href="/genre/news">News</a>
-        <a class="quick" href="/genre/cricket">Cricket</a>
-        <a class="quick" href="/genre/ghazal">Ghazal &amp; Qawwali</a>
-        <a class="quick" href="/genre/english">English</a>
-      </nav>
+      <div class="find-grid" role="group" aria-label="Find a channel">
+        <label class="find"><span>Country</span>
+          <select data-go aria-label="Choose a country">
+            <option value="">Choose country…</option>
+            {% for href, label in filters[0] %}<option value="{{ href }}">{{ label }}</option>{% endfor %}
+          </select></label>
+        <label class="find"><span>Language</span>
+          <select data-go aria-label="Choose a language">
+            <option value="">Choose language…</option>
+            {% for href, label in filters[1] %}<option value="{{ href }}">{{ label }}</option>{% endfor %}
+          </select></label>
+        <label class="find"><span>Category</span>
+          <select data-go aria-label="Choose a category">
+            <option value="">Choose category…</option>
+            {% for group, items in filters[2] %}{% if group %}<optgroup label="{{ group }}">{% endif %}{% for href, label in items %}<option value="{{ href }}">{{ label }}</option>{% endfor %}{% if group %}</optgroup>{% endif %}{% endfor %}
+          </select></label>
+      </div>
       <div class="hero-chips">{{ ui.genre_chips() }}</div>
       <div class="hero-actions">
         <button class="btn btn-accent" type="button" data-play-first>▶ Play Bollywood now</button>

@@ -531,3 +531,9 @@ document.addEventListener("toggle", function (e) {
     if (s) ["pointerenter", "focus"].forEach(function (ev) { s.addEventListener(ev, function () { fill(d); }, { once: true, passive: true }); });
   });
 })();
+
+/* Home drop-downs: choosing a country, language or category opens its page */
+document.addEventListener("change", function (e) {
+  var el = e.target;
+  if (el && el.matches && el.matches("select[data-go]") && el.value && el.value.charAt(0) === "/") window.location.href = el.value;
+});
