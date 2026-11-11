@@ -603,5 +603,10 @@ document.addEventListener("error", function (e) {
       grids.forEach(function (g) { var top = g.scrollTop; g.innerHTML = src.innerHTML; g.scrollTop = top; });
     }).catch(function () {});
   }
-  if ("requestIdleCallback" in window) requestIdleCallback(load, { timeout: 3000 }); else setTimeout(load, 1500);
+  var done = false;
+  function once() { if (done) return; done = true; load(); }
+  grids.forEach(function (g) {                       /* load the long list when someone touches the flags, or after a quiet 6 seconds */
+    ["pointerenter", "touchstart", "scroll", "focusin"].forEach(function (ev) { g.addEventListener(ev, once, { passive: true, once: true }); });
+  });
+  setTimeout(once, 6000);
 })();
