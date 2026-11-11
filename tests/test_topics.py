@@ -85,7 +85,7 @@ def test_category_tabs(client):
         nav = html.split("data-nav-tabs", 1)[1].split("</nav>", 1)[0]
         tabs = re.findall(r'<a class="nt-tab( on)?"[^>]*data-tab="([^"]+)"', nav)
         return nav, tabs
-    nav, tabs = parts("/")
+    nav, tabs = parts("/bollywood")
     assert [t for _, t in tabs] == ["music", "news", "sports", "talk", "religious", "accessibility", "az"]
     assert [t for on, t in tabs if on] == ["music"]
     for href in ("/bollywood", "/lollywood", "/hollywood", "/genre/ghazal", "/genre/news", "/genre/cricket",
@@ -314,7 +314,7 @@ def test_song_name_is_clean_text():
 
 
 def test_accessibility_tab_and_seo(client):
-    home = client.get("/").get_data(as_text=True)
+    home = client.get("/bollywood").get_data(as_text=True)
     assert 'data-tab="accessibility"' in home and 'data-sub="accessibility"' in home
     page = client.get("/accessibility").get_data(as_text=True)
     assert 'id="keyboard-shortcuts"' in page
@@ -344,3 +344,25 @@ def test_reviews_submit_approve_show(client, app):
     post(client, f"/admin/reviews/{rid}/approve", {}, page="/admin/reviews")
     assert b"Great free radio" in client.get("/reviews").data
     assert b"/reviews" in client.get("/sitemap.xml").data
+
+
+def test_home_filters_are_a_to_z_and_category_has_only_big_names(client):
+    import re
+    html = client.get("/").get_data(as_text=True)
+    assert html.count("<select data-go") == 3 and html.count("data-go aria-label") == 3
+    row = html.split('class="cat-row"', 1)[1].split("</nav>", 1)[0]
+    assert re.findall(r'class="cat-box"[^>]*href="([^"]+)"', row) == [
+        "/genre/music", "/genre/news", "/genre/business", "/genre/daily-life", "/accessibility"]
+    assert row.count("<select") == 1 and ">Islamic<" in row and "Quran" not in row and "Naat" not in row   # types only in Religious
+    assert row.index("Religious") < row.index("Music")
+    for url in ("/genre/music", "/genre/sports", "/genre/daily-life", "/genre/business", "/genre/talk", "/genre/islamic", "/genre/news", "/accessibility"):
+        assert client.get(url).status_code == 200, url
+    for slug in ("ghazal", "qawwali", "sufi", "old-songs", "pop"):      # the old pages stay for Google
+        assert client.get(f"/genre/{slug}").status_code == 200
+
+
+def test_channel_logo_http_is_upgraded_to_https():
+    from app.radio import _logo
+    assert _logo("http://example.com/logo.png") == "https://example.com/logo.png"
+    assert _logo("https://example.com/logo.png") == "https://example.com/logo.png"
+    assert _logo("") == "" and _logo("javascript:alert(1)") == "" and _logo(None) == ""

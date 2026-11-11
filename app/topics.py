@@ -1007,6 +1007,34 @@ ISLAMIC_FAMILY = ("quran", "naat", "pakistan-islamic", "bayan", "majlis", "madan
 HIDDEN_CHIPS = ("naat", "qawwali", "sufi") + tuple(k for k in ISLAMIC_FAMILY if k != "naat")   # all of them live under "Islamic"
 SECT_PAGES = ("majlis", "madani", "hadith", "english-news", "hindi-news", "arabic-news")      # kept for search engines (sitemap), not listed as buttons or in the directory
 
+# One page per big category, holding every channel of the types under it (like "Islamic" does).
+MUSIC_FAMILY = ("bollywood", "lollywood", "hollywood", "ghazal", "qawwali", "sufi", "old-songs", "indian-classical", "pop",
+                "rock", "hip-hop", "jazz", "classical", "dance", "lofi", "80s-90s", "latin", "country-music", "reggae",
+                "afrobeats", "metal", "k-pop")
+SPORTS_FAMILY = ("cricket", "football")
+DAILY_FAMILY = ("talk", "debates", "comedy", "health", "meditation", "cooking", "kids", "education", "technology")
+TOPICS["music"] = dict(
+    kind="genre", group="Music", label="Music",
+    h1="Music Radio — Live Bollywood, Lollywood, Hollywood, Ghazal, Qawwali, Pop & More", native="میوزک ریڈیو",
+    seo_title="Music Radio Live — Bollywood, Ghazal, Qawwali, Pop",
+    description="Listen to live music radio free: Bollywood, Lollywood, Hollywood, ghazal, qawwali, pop, rock and more, from stations worldwide.",
+    intro="All live music radio in one place: Bollywood, Lollywood, Hollywood, ghazal, qawwali, Sufi, old songs, pop, rock and more.",
+    more="Also searched as music radio, live music radio online, Bollywood radio, Pakistani songs radio and free online music stations.",
+    per=40, cap=400,
+    paths=list(dict.fromkeys(p for k in MUSIC_FAMILY if k in TOPICS for p in TOPICS[k]["paths"][:3])))
+GENRE_PAGES["music"] = TOPICS["music"]
+TOPICS["sports"]["paths"] = list(dict.fromkeys(TOPICS["sports"]["paths"] + [p for k in SPORTS_FAMILY for p in TOPICS[k]["paths"][:4]]))
+TOPICS["daily-life"] = dict(
+    kind="genre", group="Lifestyle & learning", label="Daily life",
+    h1="Daily Life Radio — Live Talk, Health, Cooking, Kids & Education", native="روزمرہ زندگی ریڈیو",
+    seo_title="Daily Life Radio Live — Talk, Health, Cooking, Kids",
+    description="Listen to live daily life radio free: talk, health, cooking, comedy, kids, education, meditation and technology from stations worldwide.",
+    intro="Everyday live radio on one page: talk shows, health, cooking, comedy, kids and family, education, meditation and technology.",
+    more="Also searched as talk radio, health radio, cooking radio, kids radio, education radio and meditation radio live.",
+    per=40, cap=300,
+    paths=list(dict.fromkeys(p for k in DAILY_FAMILY if k in TOPICS for p in TOPICS[k]["paths"][:4])))
+GENRE_PAGES["daily-life"] = TOPICS["daily-life"]
+
 # One "Islamic" page that holds all of it: Quran, Naat, bayan and the other Islamic programmes.
 TOPICS["islamic"]["paths"] = list(dict.fromkeys(
     TOPICS["islamic"]["paths"] + [p for k in ISLAMIC_FAMILY for p in TOPICS[k]["paths"]]))
@@ -1137,6 +1165,7 @@ NAV = [
 CAT_PAGES = {"bollywood": "Bollywood", "lollywood": "Lollywood", "hollywood": "Hollywood"}
 TAB_OF = {slug: key for key, _label, slugs in NAV for slug in slugs}
 TAB_OF.update({k: "religious" for k in ISLAMIC_FAMILY})
+TAB_OF["music"] = "music"
 TAB_OF.update({k: "countries" for k in CITY_SLUGS})
 TAB_COUNTRIES = ["lahore", "karachi", "islamabad", "mumbai", "delhi", "dubai", "london", "pakistan", "india", "uk", "usa", "uae", "saudi-arabia", "canada", "australia", "germany", "france",
                  "turkey", "bangladesh"]

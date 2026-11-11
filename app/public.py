@@ -406,6 +406,21 @@ def _unlock(raw):
 
 # ---------------------------------------------------------------- pages
 
+def _home_filters():
+    """The three drop-downs on the home page: country, language, category. Each choice is a real page."""
+    from .topics import NAV
+    nav = {k: slugs for k, _, slugs in NAV}
+    az = lambda items: sorted(items, key=lambda x: x[1].lower())          # every list is A to Z
+    countries = az([(topic_path(k), t["label"]) for k, t in TOPICS.items() if t["kind"] == "country"])
+    languages = az([(topic_path(k), TOPICS[k]["label"]) for k in nav.get("languages", []) if k in TOPICS])
+    # The category row (one line of boxes). Only Religious has types inside it; the rest open straight to their channels.
+    religious = az([(topic_path(k), TOPICS[k]["label"]) for k in nav.get("religious", []) if k in TOPICS])
+    cats = [("Religious", religious), ("Music", topic_path("music")), ("News", topic_path("news")),
+            ("Business", topic_path("business")), ("Daily life", topic_path("daily-life")),
+            ("Accessibility", "/accessibility")]
+    return countries, languages, cats
+
+
 @bp.route("/")
 def home():
     stations, error = _stations_for("bollywood")
@@ -413,6 +428,7 @@ def home():
     return render_template("home.html", meta=meta, stations=protect(stations[:60]), error=error, cat="bollywood",
                            popular=_popular(), home_faq=islam_data.HOME_FAQ, market_sections=markets.view(),
                            guides=blog_data.posts_sorted()[:3],
+                           filters=_home_filters(),
                            trending=trends.top(6),
                            ld=[website_ld(), webapp_ld(), organization_ld(), faq_ld(islam_data.HOME_FAQ)])
 

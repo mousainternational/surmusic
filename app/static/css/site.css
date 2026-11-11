@@ -1220,3 +1220,29 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 
 /* the brand name on the home page heading (small line above the big words) */
 .hero-brand { display: block; font-size: clamp(1rem, 1.6vw, 1.25rem); letter-spacing: .02em; color: var(--link, var(--brand)); margin-bottom: 6px; }
+
+/* Home: big search box and 8 big buttons for what people look for most */
+.hero-app { margin: 0 0 12px; }
+.hero-search-big { max-width: 640px; padding: 8px 8px 8px 20px; }
+.hero-search-big input[type="search"] { min-height: 52px; font-size: 1.15rem; }
+.hero-search-big .btn { min-height: 48px; padding: 0 24px; font-size: 1.05rem; }
+
+/* Home: three simple filters (country, language, category); choosing one opens that page */
+.find-grid { display: grid; grid-template-columns: 1fr; gap: 10px; max-width: 640px; margin: 0 0 16px; }
+.find { display: flex; flex-direction: column; gap: 4px; font-weight: 700; font-size: .9rem; }
+.find select { min-height: 52px; padding: 0 8px; min-width: 0; width: 100%; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; font-weight: 600; font-size: .95rem; }
+
+/* Home: one line of coloured category boxes, each with a small arrow (sketch from the owner) */
+.cat-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; max-width: 640px; margin: 0 0 14px; }
+.cat-box { --h: var(--brand); min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 52px; padding: 0 7px; border-radius: 12px; border: 2px solid var(--h); background: color-mix(in srgb, var(--h) 16%, var(--surface)); color: color-mix(in srgb, var(--h) 55%, var(--text)); font: inherit; font-weight: 700; font-size: .82rem; text-decoration: none; white-space: nowrap; }
+.cat-box::after { content: "▽"; font-size: .7rem; flex: none; color: var(--h); }
+.cat-box:hover, .cat-box:focus-within { background: var(--h); color: #fff; box-shadow: var(--shadow); }
+.cat-box:hover::after, .cat-box:focus-within::after { color: #fff; }
+.cat-select select { flex: 1; min-width: 0; width: 100%; appearance: none; -webkit-appearance: none; border: 0; background: transparent; color: inherit; font: inherit; font-weight: 700; padding: 14px 0; min-height: 48px; }
+.cat-select select option { color: #222; }
+.cat-box:nth-child(1) { --h: var(--c-green); } .cat-box:nth-child(2) { --h: var(--c-pink); } .cat-box:nth-child(3) { --h: var(--c-blue); }
+.cat-box:nth-child(4) { --h: var(--c-amber); } .cat-box:nth-child(5) { --h: var(--c-teal); } .cat-box:nth-child(6) { --h: var(--c-violet); }
+.find-grid { grid-template-columns: 1fr 1fr; }
+
+@media (min-width: 720px) { .cat-box { font-size: 1rem; padding: 0 14px; } .cat-box::after { font-size: .8rem; } }
+@media (max-width: 400px) { .cat-box { font-size: .74rem; padding: 0 5px; gap: 3px; } .cat-box::after { font-size: .6rem; } }
