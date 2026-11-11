@@ -304,6 +304,12 @@
     return any;
   }
   function load() {
+    if (document.hidden) {                                   /* tab in the background: no refresh (saves data) */
+      document.addEventListener("visibilitychange", function again() {
+        if (!document.hidden) { document.removeEventListener("visibilitychange", again); load(); }
+      });
+      return;
+    }
     fetch("/api/markets", { credentials: "same-origin" }).then(function (r) { return r.json(); }).then(function (d) {
       var ok = apply(d);
       tries++;
@@ -499,4 +505,29 @@ document.addEventListener("toggle", function (e) {
   });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", paintAll); else paintAll();
   document.addEventListener("page:load", paintAll);
+})();
+
+
+/* header Country / Types menus: their long lists are fetched the first time the menu is opened (or hovered) */
+(function () {
+  function fill(d) {
+    var panel = d.querySelector("[data-lazy]");
+    if (!panel || panel.getAttribute("data-loaded")) return;
+    panel.setAttribute("data-loaded", "1");
+    panel.setAttribute("aria-busy", "true");
+    fetch(panel.getAttribute("data-lazy"), { credentials: "same-origin" }).then(function (r) {
+      if (!r.ok) throw new Error(r.status);
+      return r.text();
+    }).then(function (html) {
+      panel.innerHTML = html;
+    }).catch(function () {
+      panel.removeAttribute("data-loaded");                 /* keep the "All ..." link; try again next time */
+    }).then(function () { panel.removeAttribute("aria-busy"); });
+  }
+  document.querySelectorAll("details.hd-dd").forEach(function (d) {
+    if (!d.querySelector("[data-lazy]")) return;
+    d.addEventListener("toggle", function () { if (d.open) fill(d); });
+    var s = d.querySelector("summary");
+    if (s) ["pointerenter", "focus"].forEach(function (ev) { s.addEventListener(ev, function () { fill(d); }, { once: true, passive: true }); });
+  });
 })();

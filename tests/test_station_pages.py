@@ -18,7 +18,12 @@ def test_genre_pages(client):
     assert "/genre/naat" not in strip and "/genre/quran" not in strip
     header = home.split('<nav id="menu"', 1)[1].split("</nav>", 1)[0]                           # the header menu
     assert header.count("<details") == 3 and "🌐 Language" in header and "🌍 Country" in header
-    other = header.split("📻 Types", 1)[1].split("Other</h3>", 1)[1].split("</ul>", 1)[0]
+    assert 'data-lazy="/menu/types"' in header and 'data-lazy="/menu/country"' in header
+    types_menu = client.get("/menu/types").get_data(as_text=True)                                # loaded when opened
+    country_menu = client.get("/menu/country").get_data(as_text=True)
+    assert client.get("/menu/types").headers["Cache-Control"] == "public, max-age=86400"
+    header = header + types_menu + country_menu
+    other = types_menu.split("Other</h3>", 1)[1].split("</ul>", 1)[0]
     for slug in ("qawwali", "sufi", "ghazal"):                                                  # inside "Other"
         assert f'href="/genre/{slug}"' in other, slug
     assert 'href="/country/usa"' in header and 'href="/continent/europe"' in header

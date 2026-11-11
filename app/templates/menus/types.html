@@ -1,0 +1,5 @@
+{#- loaded into the header "Types" menu only when it is opened (saves bandwidth on every page) #}
+          {%- for key, icon, title, items in type_menu() %}
+          <h3>{{ icon }} {{ title }}</h3>
+          <ul>{% for href, label in items %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul>
+          {%- endfor %}

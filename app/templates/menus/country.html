@@ -1,0 +1,10 @@
+{#- loaded into the header "Country" menu only when it is opened (saves bandwidth on every page) #}
+          {%- set cm = country_menu() %}
+          <h3>Popular</h3>
+          <ul>{% for href, label in cm[0] %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul>
+          <h3>Regions</h3>
+          <ul>{% for href, label in cm[1] %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul>
+          {%- for title, items in cm[2] %}
+          <h3>{{ title }}</h3>
+          <ul>{% for href, label in items %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul>
+          {%- endfor %}
