@@ -266,7 +266,7 @@
     if (first) play(stationFrom(first), listStations(first.parentElement), first.parentElement.dataset.cat);
   }
   function step(dir) {
-    if (!state.list.length) return;
+    if (!state.list.length) { toggle(); return; }       // nothing chosen yet: start the first station on the page
     var i = state.list.findIndex(function (s) { return state.station && s.uuid === state.station.uuid; });
     var next = state.list[(i + dir + state.list.length) % state.list.length];
     play(next);
@@ -292,31 +292,46 @@
   $("pl-vol").addEventListener("input", function (e) { audio.volume = Number(e.target.value); local("sm-volume", audio.volume); });
 
   // Keyboard shortcuts (for everyone, and a big help for blind and low-vision listeners):
-  // K = play/pause · N = next · B = previous · M = mute · ↑/↓ with Alt = volume · / = search
+  // K = play/pause · N = next · B = previous · M = mute · Alt+↑/↓ = volume · / = search
+  // * Work on any keyboard layout (Urdu, Arabic, Hindi...): the physical key is used (e.code), not the letter typed.
+  // * Alt+Shift+K/N/B/M/S also work, for screen readers (NVDA, JAWS) that keep single letters for themselves.
   document.addEventListener("keydown", function (e) {
     if (e.ctrlKey || e.metaKey || e.defaultPrevented) return;
     var t = e.target, tag = (t && t.tagName) || "";
-    if (/^(INPUT|TEXTAREA|SELECT)$/.test(tag) || (t && t.isContentEditable)) return;
-    var k = (e.key || "").toLowerCase(), vol = $("pl-vol");
-    if (e.altKey && (k === "arrowup" || k === "arrowdown")) {
+    var combo = e.altKey && e.shiftKey;
+    var typing = /^(INPUT|TEXTAREA|SELECT)$/.test(tag) || (t && t.isContentEditable);
+    if (typing && !combo) return;
+    var code = e.code || "", k = (e.key || "").toLowerCase(), vol = $("pl-vol");
+    var letter = /^Key[A-Z]$/.test(code) ? code.slice(3).toLowerCase() : k;
+    if (code === "Slash" || k === "/") letter = "/";
+    if (e.altKey && !e.shiftKey && (k === "arrowup" || k === "arrowdown")) {
       vol.value = Math.min(1, Math.max(0, Number(vol.value) + (k === "arrowup" ? 0.1 : -0.1)));
       vol.dispatchEvent(new Event("input"));
       say("Volume " + Math.round(Number(vol.value) * 100) + " percent");
       e.preventDefault(); return;
     }
-    if (e.altKey) return;
-    if (k === "k") { toggle(); e.preventDefault(); }
-    else if (k === "n") { step(1); e.preventDefault(); }
-    else if (k === "b") { step(-1); e.preventDefault(); }
-    else if (k === "m") { audio.muted = !audio.muted; say(audio.muted ? "Muted" : "Sound on"); e.preventDefault(); }
-    else if (k === "/") {
+    if (e.altKey && !combo) return;
+    if (e.shiftKey && !combo && letter !== "/") return;     // "/" needs Shift on some keyboards
+    if (letter === "k") { toggle(); announce(); e.preventDefault(); }
+    else if (letter === "n") { step(1); announce(); e.preventDefault(); }
+    else if (letter === "b") { step(-1); announce(); e.preventDefault(); }
+    else if (letter === "m") { audio.muted = !audio.muted; say(audio.muted ? "Muted" : "Sound on"); e.preventDefault(); }
+    else if (letter === "/" || (combo && letter === "s")) {
       var boxes = document.querySelectorAll("main input[type=search], input[type=search]"), q = null;
       for (var i = 0; i < boxes.length && !q; i++) if (boxes[i].offsetParent !== null) q = boxes[i];
       e.preventDefault();
-      if (q) q.focus();
+      if (q) { q.focus(); say("Search"); }
       else if (window.SurNav) window.SurNav("/search");
     }
   });
+  function announce() {                       // tell screen-reader users what happened
+    setTimeout(function () {
+      var s = bar.getAttribute("data-state"), name = state.station ? state.station.name : "";
+      if (s === "playing" || s === "loading") say((s === "loading" ? "Loading " : "Playing ") + name);
+      else if (state.station) say("Paused " + name);
+      else say("No station on this page. Press slash to search.");
+    }, 150);
+  }
   function say(text) {
     var box = document.getElementById("sr-announce");
     if (!box) return;
