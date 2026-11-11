@@ -420,6 +420,27 @@ def _country_az():
     return list(out.items())
 
 
+@bp.app_template_global("religious_types")
+def _religious_types():
+    from .topics import RELIGIOUS_TYPES
+    return sorted(((topic_path(k), TOPICS[k]["label"]) for k in RELIGIOUS_TYPES if k in TOPICS), key=lambda x: x[1])
+
+
+@bp.app_template_global("language_az")
+def _language_az():
+    """Every language page, A to Z by first letter: [(letter, [(href, name)])]."""
+    seen, rows = set(), []
+    for _, slugs in _LANG_GROUPS:
+        for sl in slugs:
+            if sl in TOPICS and sl not in seen and not radio.known_empty(sl):
+                seen.add(sl)
+                rows.append((TOPICS[sl]["label"], topic_path(sl)))
+    out = {}
+    for name, href in sorted(rows, key=lambda x: x[0].lower()):
+        out.setdefault(name[:1].upper(), []).append((href, name))
+    return list(out.items())
+
+
 @bp.app_template_global("find_filters")
 def _find_filters():
     return _home_filters()
@@ -433,8 +454,7 @@ def _home_filters():
     countries = az([(topic_path(k), t["label"]) for k, t in TOPICS.items() if t["kind"] == "country"])
     languages = az([(topic_path(k), TOPICS[k]["label"]) for k in nav.get("languages", []) if k in TOPICS])
     # The category row (one line of boxes). Only Religious has types inside it; the rest open straight to their channels.
-    religious = az([(topic_path(k), TOPICS[k]["label"]) for k in nav.get("religious", []) if k in TOPICS])
-    cats = [("Religious", religious), ("Music", topic_path("music")), ("News", topic_path("news")),
+    cats = [("Religious", topic_path("religious")), ("Music", topic_path("music")), ("News", topic_path("news")),
             ("Business", topic_path("business")), ("Daily life", topic_path("daily-life")),
             ("Accessibility", "/accessibility")]
     return countries, languages, cats

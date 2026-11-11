@@ -1,4 +1,5 @@
 {#- loaded into the header "Country" menu only when it is opened (saves bandwidth on every page): every country, A to Z #}
+          <input class="menu-find" type="search" data-filter-menu placeholder="Type to find a country…" aria-label="Find a country" autocomplete="off">
           {%- for letter, items in country_az() %}
           <h3>{{ letter }}</h3>
           <ul>{% for href, label, fl in items %}<li><a href="{{ href }}"><span class="flag" aria-hidden="true">{{ fl }}</span> {{ label }}</a></li>{% endfor %}</ul>

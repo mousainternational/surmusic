@@ -349,13 +349,14 @@ def test_reviews_submit_approve_show(client, app):
 def test_home_filters_are_a_to_z_and_category_has_only_big_names(client):
     import re
     html = client.get("/").get_data(as_text=True)
-    assert html.count("<select data-go") == 1                  # only Religious; Country and Language are in the header menus
+    assert "<select" not in html.split('class="cat-row"', 1)[1].split("</nav>", 1)[0]       # Country and Language are in the header menus
     row = html.split('class="cat-row"', 1)[1].split("</nav>", 1)[0]
-    assert re.findall(r'class="cat-box"[^>]*href="([^"]+)"', row) == [
-        "/genre/music", "/genre/news", "/genre/business", "/genre/daily-life", "/accessibility"]
-    assert row.count("<select") == 1 and ">Islamic<" in row and "Quran" not in row and "Naat" not in row   # types only in Religious
-    assert row.index("Religious") < row.index("Music")
-    for url in ("/genre/music", "/genre/sports", "/genre/daily-life", "/genre/business", "/genre/talk", "/genre/islamic", "/genre/news", "/accessibility"):
+    assert re.findall(r'class="cat-box" href="([^"]+)"', row) == [
+        "/genre/religious", "/genre/music", "/genre/news", "/genre/business", "/genre/daily-life", "/accessibility"]
+    assert "<select" not in row                                    # six plain boxes; Religious types are shown on its own page
+    rel = client.get("/genre/religious").get_data(as_text=True)
+    assert 'class="chip' in rel and "/genre/islamic" in rel and "/genre/christian" in rel and "data-filter-list" in rel
+    for url in ("/genre/music", "/genre/sports", "/genre/daily-life", "/genre/business", "/genre/talk", "/genre/religious", "/genre/islamic", "/genre/news", "/accessibility"):
         assert client.get(url).status_code == 200, url
     for slug in ("ghazal", "qawwali", "sufi", "old-songs", "pop"):      # the old pages stay for Google
         assert client.get(f"/genre/{slug}").status_code == 200

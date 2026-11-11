@@ -70,8 +70,9 @@
       <details class="hd-dd hue-violet">
         <summary class="hd-pill">🌐 Language</summary>
         <div class="hd-panel">
-          {%- for title, items in language_menu() %}
-          <h3>{{ title }}</h3>
+          <input class="menu-find" type="search" data-filter-menu placeholder="Type to find a language…" aria-label="Find a language" autocomplete="off">
+          {%- for letter, items in language_az() %}
+          <h3>{{ letter }}</h3>
           <ul>{% for href, label in items %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul>
           {%- endfor %}
         </div>

@@ -1035,6 +1035,19 @@ TOPICS["daily-life"] = dict(
     paths=list(dict.fromkeys(p for k in DAILY_FAMILY if k in TOPICS for p in TOPICS[k]["paths"][:4])))
 GENRE_PAGES["daily-life"] = TOPICS["daily-life"]
 
+# One "Religious" page: every religious channel; the types (Islamic, Christian …) are shown on that page.
+RELIGIOUS_TYPES = ("islamic", "christian", "bhajan", "gurbani", "jewish")
+TOPICS["religious"] = dict(
+    kind="genre", group="Islamic & spiritual", label="Religious",
+    h1="Religious Radio — Live Islamic, Christian, Bhajan, Gurbani & More", native="مذہبی ریڈیو",
+    seo_title="Religious Radio Live — Islamic, Christian, Bhajan",
+    description="Listen to live religious radio free: Islamic, Quran and naat, Christian, bhajan, gurbani and Jewish stations from around the world.",
+    intro="All live religious radio in one place: Islamic radio with Quran, naat and bayan, Christian, bhajan, gurbani and Hebrew stations.",
+    more="Also searched as religious radio, Islamic radio, Christian radio, bhajan radio, gurbani radio and spiritual radio live.",
+    per=60, cap=400,
+    paths=list(dict.fromkeys(p for k in RELIGIOUS_TYPES if k in TOPICS for p in TOPICS[k]["paths"][:6])))
+GENRE_PAGES["religious"] = TOPICS["religious"]
+
 # One "Islamic" page that holds all of it: Quran, Naat, bayan and the other Islamic programmes.
 TOPICS["islamic"]["paths"] = list(dict.fromkeys(
     TOPICS["islamic"]["paths"] + [p for k in ISLAMIC_FAMILY for p in TOPICS[k]["paths"]]))
