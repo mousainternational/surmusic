@@ -13,7 +13,8 @@
     {% for c in "0" ~ letters %}<a class="btn btn-sm{% if letter == c %} btn-primary{% endif %}" href="/stations/{{ c }}">{{ 'No.' if c == '0' else c | upper }}</a>{% endfor %}
   </nav>
   {{ ads.ad('top') }}
-  {% if stations %}{{ ui.station_list(stations, '') }}{% else %}<div class="empty card"><p>No stations here yet. Try another letter.</p></div>{% endif %}
+  {% if stations %}{{ ui.station_list(stations, '') }}{% else %}<div class="empty card"><p>Please try another letter.</p></div>{% endif %}
+  {% if pages and pages > 1 %}<nav class="chips" aria-label="Pages">{% for n in range(1, pages + 1) %}<a class="btn btn-sm{% if n == page_no %} btn-primary{% endif %}" href="/stations/{{ letter }}{% if n > 1 %}?page={{ n }}{% endif %}"{% if n == page_no %} aria-current="page"{% endif %}>{{ n }}</a>{% endfor %}</nav>{% endif %}
   <p class="small"><a href="/radio-stations">All countries and radio types →</a></p>
 </div>
 {% endblock %}

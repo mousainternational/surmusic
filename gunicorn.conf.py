@@ -9,3 +9,9 @@ def worker_exit(server, worker):
         lowdb.flush_all()
     except Exception:  # pragma: no cover
         pass
+    try:
+        # free hosting without a permanent disk: save accounts and settings to the private GitHub copy
+        from app import persist
+        persist.push_all_on_exit()
+    except Exception:  # pragma: no cover
+        pass

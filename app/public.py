@@ -599,24 +599,46 @@ def top_100():
 
 @bp.route("/stations/<letter>")
 def stations_az(letter):
-    """A–Z station directory: one page per first letter (0 = numbers)."""
+    """A–Z station directory: one page per first letter (0 = numbers), 100 stations per page, most listened first.
+    Comes from the world station directory file (directory.py), so it is full right after a restart."""
     letter = letter.lower()
     if letter != "0" and (len(letter) != 1 or letter not in LETTERS):
         abort(404)
+    per = 100                                # about 170 KB a page: lighter on visitors and on bandwidth
+    try:
+        pg = max(1, int(request.args.get("page", 1)))
+    except ValueError:
+        pg = 1
 
     def first(st):
         c = (st.get("name") or "?").strip()[:1].lower()
         return c if c in LETTERS else "0"
-    stations = [x for x in without_blocked(radio.known_stations()) if first(x) == letter]
-    stations.sort(key=lambda x: x["name"].lower())
+    from . import directory
+    try:
+        stations, total = directory.by_letter(letter, limit=per, offset=(pg - 1) * per)
+    except Exception:                       # directory file not readable: the lists already in memory
+        stations, total = [], 0
+    if pg == 1:
+        # stations from the site's own lists that the world directory may not have (e.g. HLS news channels)
+        have = {x.get("uuid") for x in stations}
+        extra = [x for x in radio.known_stations() if first(x) == letter and x.get("uuid") not in have]
+        if not total:
+            stations, total = extra, len(extra)
+        else:
+            stations = stations + extra[:50]
+    stations = without_blocked(stations)
+    pages = max(1, (total + per - 1) // per)
+    if pg > pages:
+        abort(404)
     shown = "numbers" if letter == "0" else letter.upper()
     meta = build_meta(f"Radio Stations Starting with {shown} — A–Z Radio Directory",
                       f"All live radio stations whose name starts with {shown}: free A–Z radio directory with Pakistani, Indian, Arabic and world stations.",
-                      noindex=not stations)
+                      noindex=not stations or pg > 1)
     crumbs = [("Home", "/"), ("Top 100", "/top-100"), (f"Stations {shown}", f"/stations/{letter}")]
     return render_template("directory.html", meta=meta, stations=protect(stations), crumbs=crumbs, letters=LETTERS, letter=letter,
                            h1=f"Radio Stations Starting with {shown}",
-                           lead=f"{len(stations)} live radio stations from A to Z that start with {shown}. Choose one and press play, free in your browser.",
+                           lead=f"{total} live radio stations from A to Z that start with {shown}. Choose one and press play, free in your browser.",
+                           page_no=pg, pages=pages,
                            ld=[breadcrumb_ld(crumbs)])
 
 
@@ -1609,7 +1631,15 @@ def healthz():
     except OSError:
         checks["storage"] = "error"
     ok = all(v == "ok" for v in checks.values())
-    return {"status": "ok" if ok else "error", "checks": checks}, (200 if ok else 503)
+    info = {}
+    try:                                       # facts for checking a deploy (no secrets)
+        from . import directory, persist
+        info = {"stations": directory.count(), "permanent_disk": bool(current_app.config.get("STORAGE_PERSISTENT")),
+                "data_backup": persist.status()["enabled"], "data_backup_last_ok": persist.status()["last_ok"],
+                "restore_at_start": current_app.config.get("DATA_RESTORE", "")}
+    except Exception:  # pragma: no cover
+        pass
+    return {"status": "ok" if ok else "error", "checks": checks, "info": info}, (200 if ok else 503)
 
 
 @bp.route("/favicon.ico")
