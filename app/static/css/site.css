@@ -1397,3 +1397,9 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 .trend-list .thumb-xs { width: 26px; height: 26px; min-width: 26px; border-radius: 50%; }
 .trend-list .thumb-xs img { border-radius: 50%; }
 .trend-list li .muted { white-space: nowrap; }
+
+/* No empty gap under the title: the middle box never makes the top row taller than the title side (it scrolls inside if needed) */
+@media (min-width: 1000px) {
+  .page-top-mid { contain: size; align-self: stretch; min-height: 300px; margin-top: 8px; display: flex; flex-direction: column; overflow: hidden; }
+  .page-top-mid > .card { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+}
