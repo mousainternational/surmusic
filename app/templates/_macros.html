@@ -57,7 +57,8 @@
 {% macro find_bar() -%}
 {%- set filters = find_filters() %}
 <nav class="cat-row" aria-label="Categories">
-  {% for label, target in filters[2] %}<a class="cat-box{{ ' has-sub' if label == 'Religious' }}" href="{{ target }}">{{ label }}</a>{% endfor %}
+  {% for label, target in filters[2] %}{%- set here = request.path == target or (label == 'Religious' and request.path in ('/genre/islamic', '/genre/christian', '/genre/bhajan', '/genre/gurbani', '/genre/jewish')) -%}
+<a class="cat-box{{ ' has-sub' if label == 'Religious' }}{{ ' on' if here }}" href="{{ target }}"{% if here %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}
 </nav>
 {%- endmacro %}
 
