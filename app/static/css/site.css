@@ -1220,3 +1220,13 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 
 /* the brand name on the home page heading (small line above the big words) */
 .hero-brand { display: block; font-size: clamp(1rem, 1.6vw, 1.25rem); letter-spacing: .02em; color: var(--link, var(--brand)); margin-bottom: 6px; }
+
+/* Home: big search box and 8 big buttons for what people look for most */
+.hero-app { margin: 0 0 12px; }
+.hero-search-big { max-width: 640px; padding: 8px 8px 8px 20px; }
+.hero-search-big input[type="search"] { min-height: 52px; font-size: 1.15rem; }
+.hero-search-big .btn { min-height: 48px; padding: 0 24px; font-size: 1.05rem; }
+.quick-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-width: 640px; margin: 0 0 16px; }
+.quick { display: flex; align-items: center; justify-content: center; min-height: 56px; padding: 10px 12px; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); color: var(--text); text-decoration: none; font-weight: 700; font-size: 1.05rem; text-align: center; }
+.quick:hover, .quick:focus-visible { border-color: var(--brand); box-shadow: var(--shadow); }
+@media (min-width: 640px) { .quick-grid { grid-template-columns: repeat(4, 1fr); } }

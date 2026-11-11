@@ -9,18 +9,28 @@
 <section class="hero hero2">
   <div class="wrap hero2-grid">
     <div class="hero2-copy">
+      <p class="hero-app"><a class="btn btn-accent" href="{{ url_for('public.download_page') }}">⬇ Get the Android app</a></p>
       <h1><span class="hero-brand">Sur Music Radio</span> {{ S.hero_title }}</h1>
       <p class="lead">{{ S.hero_subtitle }}</p>
-      <form class="hero-search" action="{{ url_for('public.search') }}" method="get" role="search">
+      <form class="hero-search hero-search-big" action="{{ url_for('public.search') }}" method="get" role="search">
         <label for="hero-q" class="sr">Search radio stations</label>
         <svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
         <input id="hero-q" name="q" type="search" placeholder="Search: Arijit, ghazal, Lahore, FM 100…" maxlength="60">
         <button class="btn btn-primary">Search</button>
       </form>
+      <nav class="quick-grid" aria-label="Popular radio">
+        <a class="quick" href="/genre/quran">Quran</a>
+        <a class="quick" href="/genre/naat">Naat</a>
+        <a class="quick" href="/pakistan-fm-radio">Pakistani FM</a>
+        <a class="quick" href="/bollywood">Bollywood</a>
+        <a class="quick" href="/genre/news">News</a>
+        <a class="quick" href="/genre/cricket">Cricket</a>
+        <a class="quick" href="/genre/ghazal">Ghazal &amp; Qawwali</a>
+        <a class="quick" href="/genre/english">English</a>
+      </nav>
       <div class="hero-chips">{{ ui.genre_chips() }}</div>
       <div class="hero-actions">
         <button class="btn btn-accent" type="button" data-play-first>▶ Play Bollywood now</button>
-        <a class="btn btn-ghost" href="{{ url_for('public.download_page') }}">Get the Android app</a>
         <button class="btn btn-ghost" type="button" id="a2hs" hidden>Add to home screen</button>
       </div>
       <p class="small muted" id="a2hs-help" hidden>On iPhone: tap the Share button in Safari, then “Add to Home Screen”.</p>
