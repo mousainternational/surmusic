@@ -182,6 +182,17 @@ def near_me():
     return resp
 
 
+@bp.app_template_global("local_radio_link")
+def _local_radio_link():
+    """The button next to "Play top station": the visitor's own country (Pakistan FM page for Pakistan, else that country's page)."""
+    from .topics import CODE_TO_COUNTRY
+    code = visitor_country()
+    slug = CODE_TO_COUNTRY.get(code)
+    if code == "PK" or slug not in TOPICS:
+        return {"label": "Pakistan FM by frequency & city", "href": "/pakistan-fm-radio"}
+    return {"label": TOPICS[slug].get("label", slug.title()) + " radio stations", "href": topic_path(slug)}
+
+
 @bp.app_template_global("chips_here")
 def _chips_here():
     from .topics import chips_for

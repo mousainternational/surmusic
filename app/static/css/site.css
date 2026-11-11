@@ -1408,3 +1408,18 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 .trend-list li { width: 100%; flex-wrap: wrap; row-gap: 2px; }
 .trend-list a { flex-wrap: wrap; flex: 1 1 auto; }
 .trend-list .trend-go { flex: none; }
+
+/* Flags wave gently inside their own boxes (everywhere; off for people who ask for less motion) */
+@keyframes flag-wave {
+  0%   { transform: perspective(160px) rotateY(0deg) skewY(0deg); }
+  25%  { transform: perspective(160px) rotateY(-14deg) skewY(2deg); }
+  50%  { transform: perspective(160px) rotateY(0deg) skewY(-1.5deg); }
+  75%  { transform: perspective(160px) rotateY(12deg) skewY(1.5deg); }
+  100% { transform: perspective(160px) rotateY(0deg) skewY(0deg); }
+}
+.flag-tile .flag-big { display: inline-block; transform-origin: left center; animation: flag-wave 3.2s ease-in-out infinite; backface-visibility: hidden; }
+.flag-tile:nth-child(3n+2) .flag-big { animation-delay: -1s; }
+.flag-tile:nth-child(3n) .flag-big { animation-delay: -2s; }
+.flag-tile:nth-child(5n) .flag-big { animation-duration: 3.8s; }
+.flag-grid { overflow-x: hidden; }
+@media (prefers-reduced-motion: reduce) { .flag-tile .flag-big { animation: none; } }
