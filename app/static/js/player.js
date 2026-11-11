@@ -482,6 +482,26 @@
   function onPage() { renderLocalFavs(); renderRecent(); markLists(); }
   document.addEventListener("page:load", onPage);
 
+  // Sleep timer: each press goes off -> 15 -> 30 -> 60 -> 90 minutes -> off; the radio then stops by itself.
+  (function () {
+    var btn = $("pl-sleep"); if (!btn) return;
+    var opts = [0, 15, 30, 60, 90], at = 0, timer = null, tag = $("pl-sleep-t"), live = $("pl-sleep-live");
+    function show(msg) {
+      var m = opts[at];
+      btn.setAttribute("aria-label", "Sleep timer: " + (m ? m + " minutes" : "off") + ". Press to change.");
+      btn.setAttribute("aria-pressed", m ? "true" : "false");
+      if (tag) tag.textContent = m ? m + "m" : "";
+      if (live) live.textContent = msg;
+    }
+    btn.addEventListener("click", function () {
+      clearTimeout(timer); at = (at + 1) % opts.length;
+      var m = opts[at];
+      if (m) timer = setTimeout(function () { at = 0; pause(); show("Sleep timer finished. The radio has stopped."); }, m * 60000);
+      show(m ? "Sleep timer set. The radio will stop in " + m + " minutes." : "Sleep timer off.");
+    });
+    show("");
+  })();
+
   renderRecent();
   var vol = local("sm-volume");
   if (typeof vol === "number") { $("pl-vol").value = vol; audio.volume = vol; }
