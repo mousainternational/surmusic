@@ -589,3 +589,19 @@ document.addEventListener("error", function (e) {
     }
   });
 })();
+
+/* Radio by country: starts with the main countries, then the list quietly becomes every country (A to Z) so scrolling shows them all */
+(function () {
+  var grids = document.querySelectorAll(".flag-grid[data-flags-all]");
+  if (!grids.length || !window.fetch) return;
+  function load() {
+    fetch(grids[0].getAttribute("data-flags-all"), { credentials: "same-origin" }).then(function (r) { return r.ok ? r.text() : ""; }).then(function (html) {
+      if (!html) return;
+      var tmp = document.createElement("div"); tmp.innerHTML = html;
+      var src = tmp.querySelector(".flag-grid");
+      if (!src || src.children.length < 40) return;
+      grids.forEach(function (g) { var top = g.scrollTop; g.innerHTML = src.innerHTML; g.scrollTop = top; });
+    }).catch(function () {});
+  }
+  if ("requestIdleCallback" in window) requestIdleCallback(load, { timeout: 3000 }); else setTimeout(load, 1500);
+})();
