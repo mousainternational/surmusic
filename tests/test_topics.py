@@ -381,3 +381,10 @@ def test_lists_fall_back_to_the_saved_directory_when_the_online_one_is_down(app,
         out = radio._local_lists(["/json/stations/search?tag=kids&hidebroken=true"], None, 300)
         assert len(out) == 40 and out[0]["uuid"] == "u0" and all(s["uuid"] != "other" for s in out)
         assert radio._local_lists(["/json/stations/search?tag=nothing"], None, 300) == []
+
+
+def test_local_radio_button_follows_the_visitor_country(client):
+    r = client.get("/country/pakistan", headers={"Accept-Language": "en-IN"})
+    assert 'href="/country/india"' in r.get_data(as_text=True) and "India radio stations" in r.get_data(as_text=True)
+    r = client.get("/country/pakistan", headers={"Accept-Language": "ur-PK"})
+    assert "Pakistan FM by frequency" in r.get_data(as_text=True)
