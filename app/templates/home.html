@@ -32,7 +32,7 @@
         <label class="find"><span>Category</span>
           <select data-go aria-label="Choose a category">
             <option value="">Choose category…</option>
-            {% for group, items in filters[2] %}{% if group %}<optgroup label="{{ group }}">{% endif %}{% for href, label in items %}<option value="{{ href }}">{{ label }}</option>{% endfor %}{% if group %}</optgroup>{% endif %}{% endfor %}
+            {% for group, items in filters[2] %}<optgroup label="{{ group }}">{% for href, label in items %}<option value="{{ href }}">{{ label }}</option>{% endfor %}</optgroup>{% endfor %}
           </select></label>
       </div>
       <div class="hero-chips">{{ ui.genre_chips() }}</div>

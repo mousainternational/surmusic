@@ -413,12 +413,20 @@ def _home_filters():
     az = lambda items: sorted(items, key=lambda x: x[1].lower())          # every list is A to Z
     countries = az([(topic_path(k), t["label"]) for k, t in TOPICS.items() if t["kind"] == "country"])
     languages = az([(topic_path(k), TOPICS[k]["label"]) for k in nav.get("languages", []) if k in TOPICS])
-    music = az([(topic_path(k) if k in TOPICS else f"/{k}", TOPICS[k]["label"] if k in TOPICS else k.title())
-                for k in nav.get("music", []) if k in TOPICS or k in ("bollywood", "lollywood", "hollywood")])
-    cats = az([(topic_path("news"), "News"), (topic_path("sports"), "Sports"), (topic_path("talk"), "Talk"),
-               ("/genre/islamic", "Religious"), ("/accessibility", "Accessibility")])
-    cats = [("", [c for c in cats if c[1] in ("Accessibility",)]), ("Music", music),
-            ("", [c for c in cats if c[1] != "Accessibility"])]
+    def group(key, extra=()):
+        items = [(topic_path(k) if k in TOPICS else f"/{k}", TOPICS[k]["label"] if k in TOPICS else k.title())
+                 for k in nav.get(key, []) if k in TOPICS or k in ("bollywood", "lollywood", "hollywood")]
+        return az(items + list(extra))
+    # each category holds its own channels; Islamic is one entry (no Quran / Naat / Bayan sub-tabs)
+    cats = [("Accessibility", az([("/accessibility", "Blind-friendly guide"),
+                                  ("/accessibility#keyboard-shortcuts", "Keyboard shortcuts"),
+                                  (topic_path("news"), "News"), (topic_path("talk"), "Talk"),
+                                  (topic_path("sports"), "Sports & cricket"), (topic_path("english-news"), "World news")])),
+            ("Music", group("music")),
+            ("News", az([(topic_path("news"), "All news channels"), (topic_path("english-news"), "World news")])),
+            ("Religious", group("religious")),
+            ("Sports", group("sports")),
+            ("Talk", group("talk"))]
     return countries, languages, cats
 
 
