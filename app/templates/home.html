@@ -26,10 +26,13 @@
       </div>
       <p class="small muted" id="a2hs-help" hidden>On iPhone: tap the Share button in Safari, then “Add to Home Screen”.</p>
     </div>
+    <div class="hero2-side">
     <div class="card now-card">
       <h2 class="h3">Top stations right now</h2>
       {% if stations %}{{ ui.station_list(stations[:4], cat) }}{% else %}<p class="muted">Stations are loading. Please try again in a minute.</p>{% endif %}
       <p class="small"><a href="{{ url_for('public.category', cat='bollywood') }}">All Bollywood stations →</a></p>
+    </div>
+      {{ ui.flag_box() }}
     </div>
   </div>
 </section>
