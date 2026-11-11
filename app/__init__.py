@@ -81,6 +81,13 @@ def create_app(overrides=None):
     def _headers(resp):
         if request.path == "/ping":
             return resp
+        try:   # accounts/settings changed: save the backup copy within seconds (a restart can come any time)
+            if resp.status_code < 400 and (request.method == "POST" or request.path.startswith("/verify/")) \
+                    and not request.path.startswith("/api/"):
+                from . import persist as _p
+                _p.schedule_push(app)
+        except Exception:  # pragma: no cover
+            pass
         try:
             ads = ads_active()
         except Exception:  # database unavailable during an error page
