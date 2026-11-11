@@ -315,7 +315,7 @@ def _islamic_fast(slug):
 
 
 def _genre_stations(slug):
-    if slug == "islamic":
+    if slug in ("islamic", "music", "sports", "daily-life"):
         fast = _islamic_fast(slug)
         if fast:
             return fast
