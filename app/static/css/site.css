@@ -1371,3 +1371,9 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 .station-head .st-play { max-width: 100%; white-space: normal; text-align: left; }
 @media (min-width: 1000px) { .page-top-main .station-head h1 { font-size: clamp(1.5rem, 1rem + 1.4vw, 2.2rem); } }
 .station-head .st-play { border-radius: 18px; padding-top: 12px; padding-bottom: 12px; width: 100%; }
+
+/* Sleep timer button in the player */
+.pl-sleep { font-size: 1.1rem; color: var(--muted); position: relative; }
+.pl-sleep[aria-pressed="true"] { color: var(--accent); }
+.pl-sleep-t { font-size: .62rem; font-weight: 700; margin-left: 2px; }
+.pl-sleep-t:empty { display: none; }
