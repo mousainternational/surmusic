@@ -1322,3 +1322,19 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 }
 @media (min-width: 720px) and (max-width: 1399px) { .cat-box { font-size: clamp(.6rem, .25rem + .62vw, .8rem); padding: 0 4px; } .cat-row { gap: 4px; } }
 .flag-name { font-size: .66rem; }
+
+/* Home hero: three columns (intro | Top stations | flags) from 1000px, and the category boxes as one full-width line below.
+   Zooming out gives more CSS pixels, so the same layout stays at 100%, 80% and 70%. */
+.hero2-strip { display: none; }
+@media (min-width: 1000px) {
+  .strip-in-copy { display: none; }
+  .hero2 .hero2-grid { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) clamp(200px, 17vw, 260px); gap: 24px; max-width: 1800px; padding-left: 24px; padding-right: 24px; }
+  .hero2-side { display: contents; }
+  .hero2-side .flag-box, .hero2-side .now-card { align-self: start; }
+  .hero2-strip { display: block; grid-column: 1 / -1; }
+  .hero2-strip .cat-row { max-width: 100%; margin-bottom: 8px; }
+  .hero2-strip .cat-box { font-size: clamp(.8rem, .5rem + .45vw, 1rem); }
+}
+@media (min-width: 1000px) and (max-width: 1299px) { .hero2 { padding-top: 28px; } .hero2 h1 { font-size: 2.3rem; } }
+.hero2 .flag-box .flag-grid { max-height: 330px; }
+.flag-name { font-size: .62rem; letter-spacing: -.01em; }
