@@ -359,3 +359,10 @@ def test_home_filters_are_a_to_z_and_category_has_only_big_names(client):
         assert client.get(url).status_code == 200, url
     for slug in ("ghazal", "qawwali", "sufi", "old-songs", "pop"):      # the old pages stay for Google
         assert client.get(f"/genre/{slug}").status_code == 200
+
+
+def test_channel_logo_http_is_upgraded_to_https():
+    from app.radio import _logo
+    assert _logo("http://example.com/logo.png") == "https://example.com/logo.png"
+    assert _logo("https://example.com/logo.png") == "https://example.com/logo.png"
+    assert _logo("") == "" and _logo("javascript:alert(1)") == "" and _logo(None) == ""

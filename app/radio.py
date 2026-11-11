@@ -106,7 +106,7 @@ def normalize(raw, https_only=True):
             "uuid": uuid,
             "name": _text(s.get("name"), 120) or "Unknown station",
             "url": url,
-            "favicon": fav if valid_url(fav, https_only=True) else "",
+            "favicon": _logo(fav),
             "country": _text(s.get("country"), 60),
             "tags": ", ".join(t.strip() for t in _text(s.get("tags"), 200).split(",")[:3] if t.strip()),
             "bitrate": s.get("bitrate") if isinstance(s.get("bitrate"), int) else 0,
@@ -120,6 +120,13 @@ def normalize(raw, https_only=True):
         })
     out.sort(key=lambda x: -x["clicks"])
     return out
+
+
+def _logo(fav):
+    """Channel logo address: many stations list an http:// logo, which browsers block on our https site; try https."""
+    if isinstance(fav, str) and fav.startswith("http://"):
+        fav = "https://" + fav[len("http://"):]
+    return fav if valid_url(fav, https_only=True) else ""
 
 
 def _cached(key, loader, ttl_minutes):
@@ -458,7 +465,7 @@ def clean_station(data):
         "uuid": uuid,
         "name": _text(data.get("name"), 120) or "Radio station",
         "url": url,
-        "favicon": fav if valid_url(fav, https_only=True) else "",
+        "favicon": _logo(fav),
         "country": _text(data.get("country"), 60),
         "tags": _text(data.get("tags"), 120),
         "bitrate": bitrate if isinstance(bitrate, int) and 0 <= bitrate < 10000 else 0,
