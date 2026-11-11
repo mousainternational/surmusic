@@ -466,7 +466,8 @@ def _flag_img(code):
 @bp.app_template_global("flag_grid")
 def _flag_grid():
     """The most used countries as flags: [(href, name, flag)] (side column of the list pages)."""
-    return [(topic_path(k), TOPICS[k]["label"], TOPICS[k].get("code")) for k in _FLAG_FIRST if k in TOPICS]
+    rows = [(topic_path(k), TOPICS[k]["label"], TOPICS[k].get("code")) for k in _FLAG_FIRST if k in TOPICS]
+    return sorted(rows, key=lambda r: r[1].lower())              # A to Z
 
 
 @bp.app_template_global("find_filters")
