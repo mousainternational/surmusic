@@ -352,7 +352,8 @@ def test_home_filters_are_a_to_z_and_category_has_only_big_names(client):
     assert "<select" not in html.split('class="cat-row"', 1)[1].split("</nav>", 1)[0]       # Country and Language are in the header menus
     row = html.split('class="cat-row"', 1)[1].split("</nav>", 1)[0]
     assert re.findall(r'class="cat-box" href="([^"]+)"', row) == [
-        "/genre/religious", "/genre/music", "/genre/news", "/genre/business", "/genre/daily-life", "/accessibility"]
+        "/genre/religious", "/genre/music", "/genre/news", "/genre/business", "/genre/daily-life",
+        "/genre/kids", "/genre/cooking", "/genre/technology", "/accessibility"]
     assert "<select" not in row                                    # six plain boxes; Religious types are shown on its own page
     rel = client.get("/genre/religious").get_data(as_text=True)
     assert 'class="chip' in rel and "/genre/islamic" in rel and "/genre/christian" in rel and "data-filter-list" in rel

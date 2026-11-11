@@ -6,6 +6,8 @@
 {% block content %}
 <div class="wrap page">
   {{ ui.breadcrumbs(crumbs or [('Home', '/'), (info.h1.split(' — ')[0], request.path)]) }}
+  <div class="page-top">
+  <div class="page-top-main">
   <header class="page-head"{% if genre %} data-topic-page="{{ genre }}" data-topic-label="{{ info.label }}"{% endif %}>
     <h1>{{ info.h1 }}</h1>
     {% if info.native %}<p class="native-name" dir="auto">{{ info.native }}</p>{% endif %}
@@ -15,6 +17,9 @@
   </header>
   {{ ui.find_bar() }}
   <details class="more-types"><summary>All radio types</summary>{{ ui.genre_chips(genre or cat) }}</details>
+  </div>
+  {{ ui.flag_box('flag-top') }}
+  </div>
   {{ ads.ad('top') }}
   <div class="with-side">
     <div>
@@ -51,7 +56,7 @@
       </section>{% endif %}
     </div>
     <aside class="side">
-      {{ ui.flag_box() }}
+      {{ ui.flag_box('flag-aside') }}
       {{ ads.ad('side') }}
       {{ partner.offers('lists') }}
       <div class="card">

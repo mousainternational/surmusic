@@ -484,7 +484,8 @@ def _home_filters():
     # The category row (one line of boxes). Only Religious has types inside it; the rest open straight to their channels.
     cats = [("Religious", topic_path("religious")), ("Music", topic_path("music")), ("News", topic_path("news")),
             ("Business", topic_path("business")), ("Daily life", topic_path("daily-life")),
-            ("Accessibility", "/accessibility")]
+            ("Kids", topic_path("kids")), ("Cooking", topic_path("cooking")),
+            ("Science & Tech", topic_path("technology")), ("Accessibility", "/accessibility")]
     return countries, languages, cats
 
 
