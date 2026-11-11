@@ -470,6 +470,30 @@ def _flag_grid():
     return sorted(rows, key=lambda r: r[1].lower())              # A to Z
 
 
+@bp.app_template_global("trend_logos")
+def _trend_logos(items):
+    """A channel logo for each trending row: a different top station of the page the row opens (saved lists only, no network)."""
+    from . import radio
+    pools, used, out = {}, {}, []
+    for r in items:
+        href = r.get("href", "")
+        slug = href.strip("/").split("/")[-1]
+        if href not in pools:
+            lst = None
+            for key in ("genre:" + slug, "cat:" + slug):
+                try:
+                    lst = radio._peek(key)
+                except Exception:
+                    lst = None
+                if lst:
+                    break
+            pools[href] = [s for s in (lst or []) if isinstance(s, dict) and s.get("favicon")][:12]
+        pool, n = pools[href], used.get(href, 0)
+        used[href] = n + 1
+        out.append(pool[n % len(pool)] if pool else None)
+    return out
+
+
 @bp.app_template_global("find_filters")
 def _find_filters():
     return _home_filters()

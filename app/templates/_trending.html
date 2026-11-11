@@ -2,8 +2,9 @@
 {% if items %}
 <section class="card trend-strip" aria-labelledby="trend-h">
   <h2 class="h3" id="trend-h">{{ heading or 'Trending now' }}</h2>
+  {%- set logos = trend_logos(items) %}
   <ul class="trend-list">
-    {% for r in items %}<li><a href="{{ r.href }}">{{ r.term }}{% if r.action %} <span class="trend-go">{{ r.action }}</span>{% endif %}</a>{% if r.geo %} <span class="muted small">({{ r.geo }})</span>{% endif %}</li>{% endfor %}
+    {% for r in items %}{% set st = logos[loop.index0] %}<li><a href="{{ r.href }}"><span class="thumb thumb-xs {{ thumb_class(st.name if st else r.term) }}" data-letter="{{ ((st.name if st else r.term) or '?')[:1] | upper }}" aria-hidden="true">{% if st %}<img src="{{ st.favicon }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" width="30" height="30">{% endif %}</span>{{ r.term }}{% if r.action %} <span class="trend-go">{{ r.action }}</span>{% endif %}</a>{% if r.geo %} <span class="muted small">({{ r.geo }})</span>{% endif %}</li>{% endfor %}
   </ul>
   <p class="small muted">Searches that are rising on Google right now. <a href="/trending">See all trending</a>. Tap one to start listening to live radio or commentary, or to see prices.</p>
 </section>
