@@ -1377,3 +1377,15 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 .pl-sleep[aria-pressed="true"] { color: var(--accent); }
 .pl-sleep-t { font-size: .62rem; font-weight: 700; margin-left: 2px; }
 .pl-sleep-t:empty { display: none; }
+
+/* Trending rows: a small channel logo (or coloured letter) in front of each */
+.thumb-xs { width: 30px; height: 30px; min-width: 30px; font-size: .8rem; border-radius: 8px; flex: none; }
+.thumb-xs img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+.trend-list a { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* Big player: the title text stays in its own corner at every zoom and on every page, never over the lights */
+.np-head { max-width: min(40vw, 460px); padding: 10px 14px; border-radius: 16px; background: linear-gradient(180deg, rgba(8, 6, 20, .62), rgba(8, 6, 20, .38)); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.np-name { font-size: clamp(.85rem, 1.1vw + .5rem, 1.15rem); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.np-sub { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.np.np-light .np-head { background: linear-gradient(180deg, rgba(255, 255, 255, .6), rgba(255, 255, 255, .4)); }
+@media (max-width: 899px) { .np-head { max-width: calc(100vw - 32px); } }
