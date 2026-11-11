@@ -205,7 +205,10 @@
       var ul = li ? li.parentElement : document.querySelector("main ul.stations");
       if (ul) { state.list = listStations(ul); if (!category && ul.dataset.cat) state.category = ul.dataset.cat; }
     }
-    state.category = category || state.category;
+    // a station chosen from a list takes THAT list's type (or none): never the type of an earlier list
+    // (a Quran station played from search used to be counted as "Bollywood")
+    if (list && list.length) state.category = category || "";
+    else state.category = category || state.category;
     if (state.locked) { showGate(station); return; }
     if (state.station && state.station.uuid !== station.uuid) stopBeats(false);
     state.station = station;
