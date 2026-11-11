@@ -410,16 +410,15 @@ def _home_filters():
     """The three drop-downs on the home page: country, language, category. Each choice is a real page."""
     from .topics import NAV
     nav = {k: slugs for k, _, slugs in NAV}
-    pk = [("pakistan", "Pakistan")]
-    others = sorted(((k, t["label"]) for k, t in TOPICS.items() if t["kind"] == "country" and k != "pakistan"),
-                    key=lambda x: x[1])
-    countries = [(topic_path(k), lb) for k, lb in pk + others]
-    languages = [(topic_path(k), TOPICS[k]["label"]) for k in nav.get("languages", []) if k in TOPICS]
-    music = [(topic_path(k) if k in TOPICS else f"/{k}", TOPICS[k]["label"] if k in TOPICS else k.title())
-             for k in nav.get("music", []) if k in TOPICS or k in ("bollywood", "lollywood", "hollywood")]
-    cats = [("Music", music),
-            ("", [(topic_path("news"), "News"), (topic_path("sports"), "Sports"), (topic_path("talk"), "Talk"),
-                  ("/genre/islamic", "Religious"), ("/accessibility", "Accessibility")])]
+    az = lambda items: sorted(items, key=lambda x: x[1].lower())          # every list is A to Z
+    countries = az([(topic_path(k), t["label"]) for k, t in TOPICS.items() if t["kind"] == "country"])
+    languages = az([(topic_path(k), TOPICS[k]["label"]) for k in nav.get("languages", []) if k in TOPICS])
+    music = az([(topic_path(k) if k in TOPICS else f"/{k}", TOPICS[k]["label"] if k in TOPICS else k.title())
+                for k in nav.get("music", []) if k in TOPICS or k in ("bollywood", "lollywood", "hollywood")])
+    cats = az([(topic_path("news"), "News"), (topic_path("sports"), "Sports"), (topic_path("talk"), "Talk"),
+               ("/genre/islamic", "Religious"), ("/accessibility", "Accessibility")])
+    cats = [("", [c for c in cats if c[1] in ("Accessibility",)]), ("Music", music),
+            ("", [c for c in cats if c[1] != "Accessibility"])]
     return countries, languages, cats
 
 
