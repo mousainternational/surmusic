@@ -406,6 +406,19 @@ def _unlock(raw):
 
 # ---------------------------------------------------------------- pages
 
+@bp.app_template_global("country_az")
+def _country_az():
+    """Every country page, A to Z, grouped by first letter: [(letter, [(href, name)])] (header Country menu)."""
+    import unicodedata
+    fold = lambda x: unicodedata.normalize("NFKD", x).encode("ascii", "ignore").decode().lower() or x.lower()
+    rows = sorted(((t["label"], topic_path(k)) for k, t in TOPICS.items() if t["kind"] == "country"),
+                  key=lambda x: fold(x[0]))
+    out = {}
+    for name, href in rows:
+        out.setdefault((fold(name)[:1] or "#").upper(), []).append((href, name))
+    return list(out.items())
+
+
 @bp.app_template_global("find_filters")
 def _find_filters():
     return _home_filters()
