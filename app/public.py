@@ -415,7 +415,8 @@ def _home_filters():
     languages = az([(topic_path(k), TOPICS[k]["label"]) for k in nav.get("languages", []) if k in TOPICS])
     def group(key, extra=()):
         items = [(topic_path(k) if k in TOPICS else f"/{k}", TOPICS[k]["label"] if k in TOPICS else k.title())
-                 for k in nav.get(key, []) if k in TOPICS or k in ("bollywood", "lollywood", "hollywood")]
+                 for k in nav.get(key, []) if (k in TOPICS or k in ("bollywood", "lollywood", "hollywood"))
+                 and not radio.known_empty(k)]                      # a type with no channel is not offered
         return az(items + list(extra))
     # each category holds its own channels; Islamic is one entry (no Quran / Naat / Bayan sub-tabs)
     cats = [("Accessibility", az([("/accessibility", "Blind-friendly guide"),
