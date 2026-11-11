@@ -27,12 +27,12 @@
       <div class="find-grid" role="group" aria-label="Find a channel">
         <label class="find"><span>Country</span>
           <select data-go aria-label="Choose a country">
-            <option value="">Choose country…</option>
+            <option value="">Country…</option>
             {% for href, label in filters[0] %}<option value="{{ href }}">{{ label }}</option>{% endfor %}
           </select></label>
         <label class="find"><span>Language</span>
           <select data-go aria-label="Choose a language">
-            <option value="">Choose language…</option>
+            <option value="">Language…</option>
             {% for href, label in filters[1] %}<option value="{{ href }}">{{ label }}</option>{% endfor %}
           </select></label>
       </div>
