@@ -273,7 +273,45 @@ def genre_stations(slug):
     return _genre_stations(slug)
 
 
+def _build_genre(slug):
+    t = _TOPICS.get(slug, {})
+    return _first(_merge(GENRES[slug]["paths"], t.get("per"), t.get("cap", 300)), _FIRST.get(slug))
+
+
+def _islamic_fast(slug):
+    """The Islamic page joins ~100 searches, so a cold open took very long. Show the last saved list at once
+    (even if old) and refresh it in the background; only the very first load ever waits."""
+    from . import lowdb
+    if not lowdb.enabled():
+        return None                                   # normal path below keeps its own cache
+    key = "genre:" + slug
+    hit, value = lowdb.cache_get("radio:" + key)
+    if hit:
+        return value
+    old = _peek(key)
+    if not old:
+        return None
+    app = current_app._get_current_object()
+    flag = "radio-refresh:" + key
+    if not lowdb.cache_get(flag)[0]:
+        lowdb.cache_set(flag, True, 600)
+        import threading
+
+        def refresh():
+            with app.app_context():
+                try:
+                    _cached(key, lambda: _build_genre(slug), app.config["RADIO_CACHE_MINUTES"])
+                except Exception:
+                    pass
+        threading.Thread(target=refresh, daemon=True).start()
+    return old
+
+
 def _genre_stations(slug):
+    if slug == "islamic":
+        fast = _islamic_fast(slug)
+        if fast:
+            return fast
     t = _TOPICS.get(slug, {})
     return _cached(f"genre:{slug}", lambda: _first(_merge(GENRES[slug]["paths"], t.get("per"), t.get("cap", 300)),
                                                   _FIRST.get(slug)),
