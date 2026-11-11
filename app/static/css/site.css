@@ -1338,3 +1338,15 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 @media (min-width: 1000px) and (max-width: 1299px) { .hero2 { padding-top: 28px; } .hero2 h1 { font-size: 2.3rem; } }
 .hero2 .flag-box .flag-grid { max-height: 330px; }
 .flag-name { font-size: .62rem; letter-spacing: -.01em; }
+
+/* The top-right flag box must not make the title row taller than the title: it takes the height of the left side and scrolls inside */
+@media (min-width: 1100px) {
+  .flag-top { contain: size; min-height: 300px; align-self: stretch; display: flex; flex-direction: column; margin-top: 8px; }
+  .flag-top .flag-grid { flex: 1 1 auto; min-height: 0; max-height: none; }
+  .flag-top .flag-all { flex: none; }
+}
+.chips.religious-types .chip.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+
+/* the box of the page you are on stays highlighted */
+.cat-box.on, .cat-box.on:hover { background: var(--h); color: #fff; box-shadow: var(--shadow); }
+.cat-box.on::after { color: #fff; }
