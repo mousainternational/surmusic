@@ -368,3 +368,16 @@ def test_channel_logo_http_is_upgraded_to_https():
     assert _logo("http://example.com/logo.png") == "https://example.com/logo.png"
     assert _logo("https://example.com/logo.png") == "https://example.com/logo.png"
     assert _logo("") == "" and _logo("javascript:alert(1)") == "" and _logo(None) == ""
+
+
+def test_lists_fall_back_to_the_saved_directory_when_the_online_one_is_down(app, monkeypatch):
+    from app import radio
+    pool = [{"uuid": f"u{i}", "name": f"Kids {i}", "url": "https://x.example/s", "favicon": "", "country": "Qatar",
+             "tags": "kids, music", "language": "English", "bitrate": 128, "clicks": 100 - i} for i in range(40)]
+    pool.append({"uuid": "other", "name": "Cars", "url": "https://x.example/c", "favicon": "", "country": "Qatar",
+                 "tags": "cars", "language": "English", "bitrate": 128, "clicks": 999})
+    monkeypatch.setattr(radio, "_local_all", pool)
+    with app.app_context():
+        out = radio._local_lists(["/json/stations/search?tag=kids&hidebroken=true"], None, 300)
+        assert len(out) == 40 and out[0]["uuid"] == "u0" and all(s["uuid"] != "other" for s in out)
+        assert radio._local_lists(["/json/stations/search?tag=nothing"], None, 300) == []
