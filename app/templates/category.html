@@ -16,13 +16,16 @@
   {{ ui.find_bar() }}
   <details class="more-types"><summary>All radio types</summary>{{ ui.genre_chips(genre or cat) }}</details>
   {{ ads.ad('top') }}
-  {{ tr.strip(trending, 'Trending now: live commentary and news') }}
   <div class="with-side">
     <div>
       {% if error and not stations %}
       <div class="empty card"><p>{{ error }} Please try again in a minute.</p></div>
       {% else %}
       {% if not stations %}<div class="empty card"><p>No live stations of this type are online right now. Please try again later, or explore the other types above.</p></div>{% endif %}
+      {% if genre == 'religious' or genre in ('islamic', 'christian', 'bhajan', 'gurbani', 'jewish') %}<nav class="chips religious-types" aria-label="Religious types">
+        <a class="chip{{ ' active' if genre == 'religious' }}" href="/genre/religious">All religious</a>{% for href, label in religious_types() %}<a class="chip{{ ' active' if href == '/genre/' ~ genre }}" href="{{ href }}">{{ label }}</a>{% endfor %}
+      </nav>{% endif %}
+      {% if stations %}<input class="list-find" type="search" data-filter-list placeholder="Type to find a channel…" aria-label="Find a channel on this page" autocomplete="off">{% endif %}
       <p class="muted small">{{ total or (stations | length) }} live stations{% if pages and pages > 1 %} · page {{ page_no }} of {{ pages }}{% endif %} · secure streams that play in your browser. More stations are available in the <a href="{{ url_for('public.download_page') }}">Android app</a>.</p>
       {{ ui.station_list(stations, cat) }}
       {% if pages and pages > 1 %}<nav class="pager" aria-label="More stations">
@@ -31,6 +34,7 @@
         {% if page_no < pages %}<a class="btn btn-sm" href="{{ page_base }}?page={{ page_no + 1 }}" rel="next">Next →</a>{% endif %}
       </nav>{% endif %}
       {% endif %}
+      {{ tr.strip(trending, 'Trending now: live commentary and news') }}
       {% if popular %}<section class="topic-popular card">
         <h2 class="h3">Popular {{ info.label }} radio stations</h2>
         <ul>{% for x in popular %}<li><a href="{{ station_href(x) }}">{{ x.name }}</a>{% if x.country %} — {{ x.country }}{% endif %}{% if x.tags %}, playing {{ x.tags }}{% endif %}.</li>{% endfor %}</ul>

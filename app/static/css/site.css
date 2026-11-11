@@ -1258,3 +1258,11 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 .find-grid { max-width: 640px; }
 
 .flag { display: inline-block; min-width: 1.5em; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
+
+/* Type-to-find boxes */
+.menu-find, .list-find { display: block; width: 100%; box-sizing: border-box; min-height: 44px; padding: 8px 12px; margin: 0 0 8px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; }
+.menu .hd-panel .menu-find { position: sticky; top: 0; z-index: 2; margin: 4px 0 6px; }
+.list-find { max-width: 520px; margin: 0 0 12px; }
+.religious-types { margin: 0 0 12px; }
+.cat-row li[hidden], .hd-panel li[hidden], .stations li[hidden], .hd-panel h3[hidden] { display: none; }
+@media (min-width: 560px) { .cat-box { font-size: .8rem; padding: 0 8px; gap: 5px; } }

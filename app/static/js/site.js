@@ -543,3 +543,46 @@ document.addEventListener("error", function (e) {
   var el = e.target;
   if (el && el.tagName === "IMG" && el.closest && el.closest(".thumb")) el.remove();
 }, true);
+
+/* Type to find: in the header Language / Country / Types lists, and in the channel list of a page.
+   A word that starts with what was typed matches (P shows Pakistan, Panama …). */
+(function () {
+  function words(t) { return (t || "").toLowerCase().split(/[^a-z0-9\u0600-\u06ff]+/).filter(Boolean); }
+  function hit(text, q, contains) {
+    if (!q) return true;
+    var low = (text || "").toLowerCase();
+    if (contains && low.indexOf(q) !== -1) return true;
+    return words(low).some(function (w) { return w.indexOf(q) === 0; }) || low.indexOf(q) === 0;
+  }
+  document.addEventListener("input", function (e) {
+    var el = e.target;
+    if (!el || !el.matches) return;
+    var q = (el.value || "").trim().toLowerCase();
+    if (el.matches("[data-filter-menu]")) {
+      var panel = el.parentNode;
+      var lis = panel.querySelectorAll("li");
+      var starts = false;                                  /* names that begin with the typed letters come first: P shows Pakistan, not French Polynesia */
+      lis.forEach(function (li) { if (q && li.textContent.trim().replace(/^[^a-z\u0600-\u06ff]+/i, "").toLowerCase().indexOf(q) === 0) starts = true; });
+      lis.forEach(function (li) {
+        var name = li.textContent.trim().replace(/^[^a-z\u0600-\u06ff]+/i, "").toLowerCase();
+        li.hidden = starts ? name.indexOf(q) !== 0 : !hit(li.textContent, q, false);
+      });
+      panel.querySelectorAll("h3").forEach(function (h) {
+        var ul = h.nextElementSibling;
+        h.hidden = !!q && !!ul && !ul.querySelector("li:not([hidden])");
+      });
+    } else if (el.matches("[data-filter-list]")) {
+      document.querySelectorAll("ul.stations > li.st").forEach(function (li) {
+        var n = li.querySelector(".st-name");
+        li.hidden = !hit(n ? n.textContent : li.textContent, q, true);
+      });
+    }
+  });
+  document.addEventListener("keydown", function (e) {
+    var el = e.target;
+    if (e.key === "Enter" && el && el.matches && el.matches("[data-filter-menu]")) {
+      var a = el.parentNode.querySelector("li:not([hidden]) a");
+      if (a) { e.preventDefault(); window.location.href = a.getAttribute("href"); }
+    }
+  });
+})();

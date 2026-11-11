@@ -25,10 +25,12 @@ def test_genre_pages(client):
     header = header + types_menu + country_menu
     for label in ("Religious", "Music", "News", "Business", "Daily life", "Accessibility"):        # the same six as the boxes
         assert f">{label}<" in types_menu, label
-    assert 'href="/genre/islamic"' in types_menu and "Quran" not in types_menu and "Naat" not in types_menu
+    assert 'href="/genre/religious"' in types_menu and "Islamic" not in types_menu and "Quran" not in types_menu   # types are shown on the Religious page
+    assert "data-filter-menu" in types_menu and "data-filter-menu" in country_menu                          # type to find
     assert 'href="/genre/qawwali"' not in types_menu and "Other</h3>" not in types_menu            # no long type list any more
     assert 'href="/country/usa"' in country_menu and 'href="/continent/europe"' in country_menu
     assert "<h3>A</h3>" in country_menu                                                         # Country: plain A to Z list
+    assert "<h3>A</h3>" in header.split("Country")[0] and "data-filter-menu" in header          # Language: A to Z with a find box
     for word in ("Madani", "Dawat", "Majlis", "Hadith", "Noha", "/genre/naat", "/genre/quran"):                 # all live under Islamic
         assert word not in header, word
     assert 'href="/genre/news"' in header and 'href="/blog"' in header                          # Guides is in the menu

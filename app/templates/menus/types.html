@@ -1,10 +1,4 @@
 {#- loaded into the header "Types" menu only when it is opened: the same six categories as the boxes on the pages #}
-          {%- for label, target in find_filters()[2] %}
-          {%- if target is string %}
-          <ul><li><a href="{{ target }}"><strong>{{ label }}</strong></a></li></ul>
-          {%- else %}
-          <h3>{{ label }}</h3>
-          <ul>{% for href, sub in target %}<li><a href="{{ href }}">{{ sub }}</a></li>{% endfor %}</ul>
-          {%- endif %}
-          {%- endfor %}
-          <p class="small"><a href="/radio-stations">All radio types →</a></p>
+          <input class="menu-find" type="search" data-filter-menu placeholder="Type to find a type…" aria-label="Find a type" autocomplete="off">
+          <ul>{% for label, target in find_filters()[2] %}<li><a href="{{ target }}">{{ label }}</a></li>{% endfor %}
+            <li><a href="/radio-stations">All radio types</a></li></ul>
