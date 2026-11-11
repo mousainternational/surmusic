@@ -408,27 +408,14 @@ def _unlock(raw):
 
 def _home_filters():
     """The three drop-downs on the home page: country, language, category. Each choice is a real page."""
-    from .topics import NAV, DESI_FAMILY
+    from .topics import NAV
     nav = {k: slugs for k, _, slugs in NAV}
     az = lambda items: sorted(items, key=lambda x: x[1].lower())          # every list is A to Z
     countries = az([(topic_path(k), t["label"]) for k, t in TOPICS.items() if t["kind"] == "country"])
     languages = az([(topic_path(k), TOPICS[k]["label"]) for k in nav.get("languages", []) if k in TOPICS])
-    def group(key, extra=()):
-        items = [(topic_path(k) if k in TOPICS else f"/{k}", TOPICS[k]["label"] if k in TOPICS else k.title())
-                 for k in nav.get(key, []) if (k in TOPICS or k in ("bollywood", "lollywood", "hollywood"))
-                 and not radio.known_empty(k)]                      # a type with no channel is not offered
-        return az(items + list(extra))
-    # each category holds its own channels; Islamic is one entry (no Quran / Naat / Bayan sub-tabs)
-    cats = [("Accessibility", az([("/accessibility", "Blind-friendly guide"),
-                                  ("/accessibility#keyboard-shortcuts", "Keyboard shortcuts"),
-                                  (topic_path("news"), "News"), (topic_path("talk"), "Talk"),
-                                  (topic_path("sports"), "Sports & cricket"), (topic_path("english-news"), "World news")])),
-            ("Music", az([x for x in group("music") if x[0] not in tuple(topic_path(k) for k in DESI_FAMILY)]
-                          + [(topic_path("ghazal-qawwali"), "Ghazal, Qawwali & Sufi")])),
-            ("News", az([(topic_path("news"), "All news channels"), (topic_path("english-news"), "World news")])),
-            ("Religious", group("religious")),
-            ("Sports", group("sports")),
-            ("Talk", group("talk"))]
+    # only the big categories, A to Z; each opens a page with every channel under it
+    cats = az([("/accessibility", "Accessibility"), ("/genre/islamic", "Islamic"), (topic_path("music"), "Music"),
+               (topic_path("news"), "News"), (topic_path("sports"), "Sports"), (topic_path("talk"), "Talk")])
     return countries, languages, cats
 
 

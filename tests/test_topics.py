@@ -85,7 +85,7 @@ def test_category_tabs(client):
         nav = html.split("data-nav-tabs", 1)[1].split("</nav>", 1)[0]
         tabs = re.findall(r'<a class="nt-tab( on)?"[^>]*data-tab="([^"]+)"', nav)
         return nav, tabs
-    nav, tabs = parts("/")
+    nav, tabs = parts("/bollywood")
     assert [t for _, t in tabs] == ["music", "news", "sports", "talk", "religious", "accessibility", "az"]
     assert [t for on, t in tabs if on] == ["music"]
     for href in ("/bollywood", "/lollywood", "/hollywood", "/genre/ghazal", "/genre/news", "/genre/cricket",
@@ -314,7 +314,7 @@ def test_song_name_is_clean_text():
 
 
 def test_accessibility_tab_and_seo(client):
-    home = client.get("/").get_data(as_text=True)
+    home = client.get("/bollywood").get_data(as_text=True)
     assert 'data-tab="accessibility"' in home and 'data-sub="accessibility"' in home
     page = client.get("/accessibility").get_data(as_text=True)
     assert 'id="keyboard-shortcuts"' in page
@@ -346,13 +346,15 @@ def test_reviews_submit_approve_show(client, app):
     assert b"/reviews" in client.get("/sitemap.xml").data
 
 
-def test_home_filters_are_a_to_z_and_music_has_one_desi_entry(client):
+def test_home_filters_are_a_to_z_and_category_has_only_big_names(client):
+    import re
     html = client.get("/").get_data(as_text=True)
     assert html.count("<select data-go") == 3
-    assert 'value="/genre/ghazal-qawwali">Ghazal, Qawwali &amp; Sufi<' in html
-    music = html.split('<optgroup label="Music">', 1)[1].split("</optgroup>", 1)[0]
-    for gone in (">Ghazal<", ">Qawwali<", ">Sufi<", ">Old songs<"):
-        assert gone not in music
-    for slug in ("ghazal", "qawwali", "sufi", "old-songs"):      # the old pages stay for Google
+    cat = html.split("Choose a category", 1)[1].split("</select>", 1)[0]
+    labels = re.findall(r"<option value=\"/[^\"]+\">([^<]+)<", cat)
+    assert labels == ["Accessibility", "Islamic", "Music", "News", "Sports", "Talk"]
+    assert "<optgroup" not in html.split("data-go", 1)[1].split("</div>", 1)[0]
+    for url in ("/genre/music", "/genre/sports", "/genre/talk", "/genre/islamic", "/genre/news", "/accessibility"):
+        assert client.get(url).status_code == 200, url
+    for slug in ("ghazal", "qawwali", "sufi", "old-songs", "pop"):      # the old pages stay for Google
         assert client.get(f"/genre/{slug}").status_code == 200
-    assert client.get("/genre/ghazal-qawwali").status_code == 200

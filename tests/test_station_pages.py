@@ -13,7 +13,7 @@ def test_genre_pages(client):
         assert 'rel="canonical"' in html and "Radio categories" in html and 'aria-current="page"' in html
     assert "Naat Radio" in client.get("/genre/naat").get_data(as_text=True)
     assert client.get("/genre/nothing").status_code == 404
-    home = client.get("/").get_data(as_text=True)
+    home = client.get("/bollywood").get_data(as_text=True)
     strip = home.split("data-nav-tabs", 1)[1].split("</nav>", 1)[0]                             # the category tabs
     assert "/genre/naat" not in strip and "/genre/quran" not in strip
     header = home.split('<nav id="menu"', 1)[1].split("</nav>", 1)[0]                           # the header menu
@@ -106,7 +106,7 @@ def test_station_details_from_radio_browser():
 
 
 def test_az_tab_next_to_categories_and_not_in_footer(client):
-    html = client.get("/").get_data(as_text=True)
+    html = client.get("/bollywood").get_data(as_text=True)
     tabs = html.split("data-nav-tabs", 1)[1].split("</nav>", 1)[0]
     assert 'data-tab="az"' in tabs and 'href="/stations/a"' in tabs and 'href="/stations/z"' in tabs and 'href="/top-100"' in tabs
     footer = html.split('<footer', 1)[1]
@@ -161,7 +161,7 @@ def test_llms_txt_lists_provinces_directory_and_popular_stations(client):
 
 def test_news_tab_lists_channels_not_another_news_button(client):
     client.get("/genre/news")                       # fills the news list (demo data in tests)
-    html = client.get("/").get_data(as_text=True)
+    html = client.get("/bollywood").get_data(as_text=True)
     panel = html.split('data-sub="news"', 1)[1].split("</div>", 1)[0]
     assert "/station/" in panel                     # the channels themselves
     assert ">News<" not in panel                    # no second "News" button inside News
@@ -224,7 +224,7 @@ def test_directory_refresh_saves_only_browser_playable_stations(app, monkeypatch
 
 
 def test_pakistan_fm_is_on_pakistan_pages_not_in_a_to_z(client):
-    home = client.get("/").get_data(as_text=True)
+    home = client.get("/bollywood").get_data(as_text=True)
     az = home.split('data-sub="az"', 1)[1].split("</div>", 1)[0]
     assert "Pakistan FM" not in az and "Top 100" in az
     assert 'href="/pakistan-fm-radio"' in client.get("/country/pakistan").get_data(as_text=True)

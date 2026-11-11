@@ -32,10 +32,10 @@
         <label class="find"><span>Category</span>
           <select data-go aria-label="Choose a category">
             <option value="">Choose category…</option>
-            {% for group, items in filters[2] %}<optgroup label="{{ group }}">{% for href, label in items %}<option value="{{ href }}">{{ label }}</option>{% endfor %}</optgroup>{% endfor %}
+            {% for href, label in filters[2] %}<option value="{{ href }}">{{ label }}</option>{% endfor %}
           </select></label>
       </div>
-      <div class="hero-chips">{{ ui.genre_chips() }}</div>
+      <p class="small"><a href="/radio-stations">All radio types and countries →</a></p>
       <div class="hero-actions">
         <button class="btn btn-accent" type="button" data-play-first>▶ Play Bollywood now</button>
         <button class="btn btn-ghost" type="button" id="a2hs" hidden>Add to home screen</button>

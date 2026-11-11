@@ -1231,4 +1231,3 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 .find-grid { display: grid; grid-template-columns: 1fr; gap: 10px; max-width: 640px; margin: 0 0 16px; }
 .find { display: flex; flex-direction: column; gap: 4px; font-weight: 700; font-size: .9rem; }
 .find select { min-height: 52px; padding: 0 12px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font: inherit; font-weight: 600; font-size: 1.05rem; }
-@media (min-width: 640px) { .find-grid { grid-template-columns: repeat(3, 1fr); } }

@@ -1007,18 +1007,24 @@ ISLAMIC_FAMILY = ("quran", "naat", "pakistan-islamic", "bayan", "majlis", "madan
 HIDDEN_CHIPS = ("naat", "qawwali", "sufi") + tuple(k for k in ISLAMIC_FAMILY if k != "naat")   # all of them live under "Islamic"
 SECT_PAGES = ("majlis", "madani", "hadith", "english-news", "hindi-news", "arabic-news")      # kept for search engines (sitemap), not listed as buttons or in the directory
 
-# One page that holds the small desi-music types (ghazal, qawwali, sufi, old songs, classical), like "Islamic" does.
-DESI_FAMILY = ("ghazal", "qawwali", "sufi", "old-songs", "indian-classical")
-TOPICS["ghazal-qawwali"] = dict(
-    kind="genre", group="Sufi, ghazal & classics", label="Ghazal, Qawwali & Sufi",
-    h1="Ghazal, Qawwali & Sufi Radio — Live Old Songs and Classical", native="غزل، قوالی اور صوفی ریڈیو",
-    seo_title="Ghazal, Qawwali & Sufi Radio Live — Old Songs & Classical",
-    description="Listen to live ghazal, qawwali and Sufi radio free: old Urdu and Hindi songs, ghazals, kalam and Indian classical from stations worldwide.",
-    intro="Live radio for ghazal, qawwali, Sufi kalam, old film songs and classical music, all on one page.",
-    more="Also searched as ghazal radio, qawwali radio, Sufi music live, old songs radio and Indian classical radio.",
-    paths=list(dict.fromkeys(p for k in DESI_FAMILY for p in TOPICS[k]["paths"])))
-GENRE_PAGES["ghazal-qawwali"] = TOPICS["ghazal-qawwali"]
-GENRES_ADDED = ("ghazal-qawwali",)
+# One page per big category, holding every channel of the types under it (like "Islamic" does).
+MUSIC_FAMILY = ("bollywood", "lollywood", "hollywood", "ghazal", "qawwali", "sufi", "old-songs", "indian-classical", "pop",
+                "rock", "hip-hop", "jazz", "classical", "dance", "lofi", "80s-90s", "latin", "country-music", "reggae",
+                "afrobeats", "metal", "k-pop")
+SPORTS_FAMILY = ("cricket", "football")
+TALK_FAMILY = ("debates", "comedy", "health", "meditation", "cooking", "kids", "education", "business", "technology")
+TOPICS["music"] = dict(
+    kind="genre", group="Music", label="Music",
+    h1="Music Radio — Live Bollywood, Lollywood, Hollywood, Ghazal, Qawwali, Pop & More", native="میوزک ریڈیو",
+    seo_title="Music Radio Live — Bollywood, Ghazal, Qawwali, Pop",
+    description="Listen to live music radio free: Bollywood, Lollywood, Hollywood, ghazal, qawwali, pop, rock and more, from stations worldwide.",
+    intro="All live music radio in one place: Bollywood, Lollywood, Hollywood, ghazal, qawwali, Sufi, old songs, pop, rock and more.",
+    more="Also searched as music radio, live music radio online, Bollywood radio, Pakistani songs radio and free online music stations.",
+    per=40, cap=400,
+    paths=list(dict.fromkeys(p for k in MUSIC_FAMILY if k in TOPICS for p in TOPICS[k]["paths"][:3])))
+GENRE_PAGES["music"] = TOPICS["music"]
+for _k, _fam in (("sports", SPORTS_FAMILY), ("talk", TALK_FAMILY)):
+    TOPICS[_k]["paths"] = list(dict.fromkeys(TOPICS[_k]["paths"] + [p for k in _fam for p in TOPICS[k]["paths"][:4]]))
 
 # One "Islamic" page that holds all of it: Quran, Naat, bayan and the other Islamic programmes.
 TOPICS["islamic"]["paths"] = list(dict.fromkeys(
@@ -1150,6 +1156,7 @@ NAV = [
 CAT_PAGES = {"bollywood": "Bollywood", "lollywood": "Lollywood", "hollywood": "Hollywood"}
 TAB_OF = {slug: key for key, _label, slugs in NAV for slug in slugs}
 TAB_OF.update({k: "religious" for k in ISLAMIC_FAMILY})
+TAB_OF["music"] = "music"
 TAB_OF.update({k: "countries" for k in CITY_SLUGS})
 TAB_COUNTRIES = ["lahore", "karachi", "islamabad", "mumbai", "delhi", "dubai", "london", "pakistan", "india", "uk", "usa", "uae", "saudi-arabia", "canada", "australia", "germany", "france",
                  "turkey", "bangladesh"]
