@@ -5,6 +5,8 @@
 {% block content %}
 <div class="wrap page">
   {{ ui.breadcrumbs(crumbs) }}
+  <div class="page-top">
+  <div class="page-top-main">
   <header class="station-head card">
     <span class="thumb thumb-xl {{ thumb_class(st.name) }}" data-letter="{{ (st.name or '?')[:1] | upper }}">{% if st.favicon %}<img src="{{ st.favicon }}" alt="{{ st.name }} logo" decoding="async" referrerpolicy="no-referrer" width="96" height="96">{% endif %}</span>
     <div class="station-info">
@@ -24,10 +26,16 @@
       </div>
     </div>
   </header>
+  <div class="strip-in-copy">{{ ui.find_bar() }}</div>
+  </div>
+  <div class="page-top-mid">
+    {% if similar %}<div class="card now-card"><h2 class="h3">Top stations right now</h2>{{ ui.station_list(similar[:4], cat) }}</div>{% endif %}
+  </div>
+  {{ ui.flag_box('flag-top') }}
+  <div class="hero2-strip">{{ ui.find_bar() }}</div>
+  </div>
 
   {{ ads.ad('top') }}
-
-  {{ ui.find_bar() }}
   <div class="with-side">
     <div>
       <section class="card prose">
@@ -76,7 +84,7 @@
       {% endif %}
     </div>
     <aside class="side">
-      {{ ui.flag_box() }}
+      {{ ui.flag_box('flag-aside') }}
       {{ ads.ad('side') }}
       {{ partner.offers('station') }}
       <details class="more-types"><summary>All radio types</summary>{{ ui.genre_chips() }}</details>
