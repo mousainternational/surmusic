@@ -1281,3 +1281,10 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 .flag .flagimg { display: inline-block; vertical-align: middle; margin: 0; width: 22px; }
 
 .hero2-side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+/* Wide screens: flags sit beside Top stations, using the empty side space */
+@media (min-width: 1400px) {
+  .hero2 .hero2-grid { max-width: 1560px; grid-template-columns: 1.6fr 1fr 1fr; gap: 24px; }
+  .hero2-side { display: contents; }
+  .hero2-side .flag-box, .hero2-side .now-card { align-self: start; }
+}
