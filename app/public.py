@@ -318,6 +318,12 @@ def _user_favorite_ids():
     return [r["station_uuid"] for r in get_db().all("SELECT station_uuid FROM favorites WHERE user_id = ?", (u["id"],))]
 
 
+_RELIGIOUS = re.compile(r"quran|qur'an|koran|tilawat|tilawa|recitation|naat|na'at|nasheed|islam|islamic|azan|adhan|"
+                        r"madani|hadith|bayan|qaseeda|qasida|makkah|mecca|madinah|medina|قرآن|القرآن|اسلام|نعت", re.I)
+_QURAN = re.compile(r"quran|qur'an|koran|tilawat|tilawa|recitation|قرآن|القرآن", re.I)
+_RELIGIOUS_CATS = {"quran", "naat", "islamic", "islam", "bayan", "hadith", "madani", "majlis", "nasheed", "religious"}
+
+
 def _popular(days=7, limit=8):
     from . import lowdb
     if lowdb.enabled():
@@ -333,13 +339,22 @@ def _popular(days=7, limit=8):
 def _popular_query(days=7, limit=8):
     since = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
     # one row per station (the same station played from two pages used to appear twice)
-    rows = get_db().all("SELECT station_name, MAX(station_uuid) AS station_uuid, MAX(category) AS category, "
+    rows = get_db().all("SELECT station_name, MAX(station_uuid) AS station_uuid, "
                         "COUNT(*) AS n FROM plays WHERE created_at > ? GROUP BY station_name "
                         "ORDER BY n DESC LIMIT ?", (since, limit + 5))
+    # the type each station was played under most often (not the alphabetically last one)
+    cats = {}
+    for c in get_db().all("SELECT station_name, category, COUNT(*) AS n FROM plays WHERE created_at > ? "
+                          "AND category != '' GROUP BY station_name, category ORDER BY n DESC", (since,)):
+        cats.setdefault(c["station_name"], c["category"])
     import re as _re
     out = []
     for r in rows:
         r = dict(r)
+        r["category"] = cats.get(r["station_name"], "")
+        if _RELIGIOUS.search(r["station_name"] or "") and r["category"] not in _RELIGIOUS_CATS:
+            # Quran, Naat and other religious stations are never shown under film or music types
+            r["category"] = "quran" if _QURAN.search(r["station_name"] or "") else ""
         if is_blocked({"name": r["station_name"], "uuid": r.get("station_uuid") or ""}):
             continue
         uuid = r.get("station_uuid") or ""

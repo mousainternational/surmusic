@@ -37,3 +37,21 @@ def test_live_news_page(client):
     html = client.get("/live-news").get_data(as_text=True)
     assert "midterm" in html.lower() and "FAQPage" in html and html.count("<h1") == 1
     assert "/live-news" in client.get("/sitemap.xml").get_data(as_text=True)
+
+
+def test_quran_station_never_listed_as_bollywood_in_popular(app, client):
+    from app.db import Database, utcnow
+    db = Database(app.config["DATABASE_URL"])
+    for _ in range(3):
+        db.insert("plays", {"station_uuid": "aaaaaaaa-0000-0000-0000-000000000001",
+                            "station_name": "Quran Radio - Abdul Basit", "category": "bollywood", "created_at": utcnow()})
+    db.insert("plays", {"station_uuid": "aaaaaaaa-0000-0000-0000-000000000002",
+                        "station_name": "Hits FM", "category": "bollywood", "created_at": utcnow()})
+    db.commit()
+    db.close()
+    html = client.get("/").get_data(as_text=True)
+    block = html.split("Popular on Sur Music this week", 1)[1].split("</ol>", 1)[0]
+    quran_row = block.split("Quran Radio - Abdul Basit", 1)[1].split("</li>", 1)[0]
+    assert "Bollywood" not in quran_row and "Quran" in quran_row
+    hits_row = block.split("Hits FM", 1)[1].split("</li>", 1)[0]
+    assert "Bollywood" in hits_row
