@@ -1350,3 +1350,20 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 /* the box of the page you are on stays highlighted */
 .cat-box.on, .cat-box.on:hover { background: var(--h); color: #fff; box-shadow: var(--shadow); }
 .cat-box.on::after { color: #fff; }
+
+/* Every list page uses the home layout: title | Trending / Top stations | flags, then the category boxes as one line */
+@media (min-width: 1000px) {
+  .page-top { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) clamp(200px, 17vw, 250px); gap: 20px; }
+  .page-top-mid { align-self: start; margin-top: 8px; min-width: 0; }
+  .page-top-mid .trend-strip, .page-top-mid .now-card { margin: 0; }
+  .page-top-mid .trend-list { max-height: 330px; overflow-y: auto; }
+  .flag-top { display: flex; }
+  .flag-aside { display: none; }
+}
+@media (max-width: 999px) { .flag-top { display: none; } .flag-aside { display: block; } .page-top-mid { margin: 12px 0; } .hero2-strip { display: none; } }
+@media (min-width: 1000px) {
+  .page-top { display: grid; align-items: start; }
+  .page-top-main { min-width: 0; }
+  .flag-top { contain: size; min-height: 300px; align-self: stretch; flex-direction: column; margin-top: 8px; }
+  .flag-top .flag-grid { flex: 1 1 auto; min-height: 0; max-height: none; }
+}

@@ -199,10 +199,10 @@ def test_long_lists_are_paged(client, monkeypatch):
              "country": "Qatar", "tags": "ghazal", "bitrate": 128, "clicks": 1000 - i} for i in range(230)]
     monkeypatch.setattr(radio, "genre_stations", lambda slug: fake)
     p1 = client.get("/genre/ghazal").get_data(as_text=True)
-    assert p1.count('<li class="st') == 100 and "?page=2" in p1 and "230 live stations" in p1
+    assert p1.split('class="with-side"', 1)[1].count('<li class="st') == 100 and "?page=2" in p1 and "230 live stations" in p1
     assert "noindex" not in p1.split("</head>")[0]
     p3 = client.get("/genre/ghazal?page=3").get_data(as_text=True)
-    assert p3.count('<li class="st') == 30 and "noindex" in p3.split("</head>")[0]
+    assert p3.split('class="with-side"', 1)[1].count('<li class="st') == 30 and "noindex" in p3.split("</head>")[0]
     assert client.get("/genre/ghazal?page=99").status_code == 200       # too high a page → the last one
     assert client.get("/genre/ghazal?page=abc").status_code == 200
 
