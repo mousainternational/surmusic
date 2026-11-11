@@ -344,3 +344,15 @@ def test_reviews_submit_approve_show(client, app):
     post(client, f"/admin/reviews/{rid}/approve", {}, page="/admin/reviews")
     assert b"Great free radio" in client.get("/reviews").data
     assert b"/reviews" in client.get("/sitemap.xml").data
+
+
+def test_home_filters_are_a_to_z_and_music_has_one_desi_entry(client):
+    html = client.get("/").get_data(as_text=True)
+    assert html.count("<select data-go") == 3
+    assert 'value="/genre/ghazal-qawwali">Ghazal, Qawwali &amp; Sufi<' in html
+    music = html.split('<optgroup label="Music">', 1)[1].split("</optgroup>", 1)[0]
+    for gone in (">Ghazal<", ">Qawwali<", ">Sufi<", ">Old songs<"):
+        assert gone not in music
+    for slug in ("ghazal", "qawwali", "sufi", "old-songs"):      # the old pages stay for Google
+        assert client.get(f"/genre/{slug}").status_code == 200
+    assert client.get("/genre/ghazal-qawwali").status_code == 200

@@ -408,7 +408,7 @@ def _unlock(raw):
 
 def _home_filters():
     """The three drop-downs on the home page: country, language, category. Each choice is a real page."""
-    from .topics import NAV
+    from .topics import NAV, DESI_FAMILY
     nav = {k: slugs for k, _, slugs in NAV}
     az = lambda items: sorted(items, key=lambda x: x[1].lower())          # every list is A to Z
     countries = az([(topic_path(k), t["label"]) for k, t in TOPICS.items() if t["kind"] == "country"])
@@ -423,7 +423,8 @@ def _home_filters():
                                   ("/accessibility#keyboard-shortcuts", "Keyboard shortcuts"),
                                   (topic_path("news"), "News"), (topic_path("talk"), "Talk"),
                                   (topic_path("sports"), "Sports & cricket"), (topic_path("english-news"), "World news")])),
-            ("Music", group("music")),
+            ("Music", az([x for x in group("music") if x[0] not in tuple(topic_path(k) for k in DESI_FAMILY)]
+                          + [(topic_path("ghazal-qawwali"), "Ghazal, Qawwali & Sufi")])),
             ("News", az([(topic_path("news"), "All news channels"), (topic_path("english-news"), "World news")])),
             ("Religious", group("religious")),
             ("Sports", group("sports")),

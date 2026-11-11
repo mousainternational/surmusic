@@ -1007,6 +1007,19 @@ ISLAMIC_FAMILY = ("quran", "naat", "pakistan-islamic", "bayan", "majlis", "madan
 HIDDEN_CHIPS = ("naat", "qawwali", "sufi") + tuple(k for k in ISLAMIC_FAMILY if k != "naat")   # all of them live under "Islamic"
 SECT_PAGES = ("majlis", "madani", "hadith", "english-news", "hindi-news", "arabic-news")      # kept for search engines (sitemap), not listed as buttons or in the directory
 
+# One page that holds the small desi-music types (ghazal, qawwali, sufi, old songs, classical), like "Islamic" does.
+DESI_FAMILY = ("ghazal", "qawwali", "sufi", "old-songs", "indian-classical")
+TOPICS["ghazal-qawwali"] = dict(
+    kind="genre", group="Sufi, ghazal & classics", label="Ghazal, Qawwali & Sufi",
+    h1="Ghazal, Qawwali & Sufi Radio — Live Old Songs and Classical", native="غزل، قوالی اور صوفی ریڈیو",
+    seo_title="Ghazal, Qawwali & Sufi Radio Live — Old Songs & Classical",
+    description="Listen to live ghazal, qawwali and Sufi radio free: old Urdu and Hindi songs, ghazals, kalam and Indian classical from stations worldwide.",
+    intro="Live radio for ghazal, qawwali, Sufi kalam, old film songs and classical music, all on one page.",
+    more="Also searched as ghazal radio, qawwali radio, Sufi music live, old songs radio and Indian classical radio.",
+    paths=list(dict.fromkeys(p for k in DESI_FAMILY for p in TOPICS[k]["paths"])))
+GENRE_PAGES["ghazal-qawwali"] = TOPICS["ghazal-qawwali"]
+GENRES_ADDED = ("ghazal-qawwali",)
+
 # One "Islamic" page that holds all of it: Quran, Naat, bayan and the other Islamic programmes.
 TOPICS["islamic"]["paths"] = list(dict.fromkeys(
     TOPICS["islamic"]["paths"] + [p for k in ISLAMIC_FAMILY for p in TOPICS[k]["paths"]]))
