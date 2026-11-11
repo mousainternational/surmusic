@@ -411,8 +411,7 @@ def _country_az():
     """Every country page, A to Z, grouped by first letter: [(letter, [(href, name)])] (header Country menu)."""
     import unicodedata
     fold = lambda x: unicodedata.normalize("NFKD", x).encode("ascii", "ignore").decode().lower() or x.lower()
-    flag = lambda code: "".join(chr(0x1F1E6 + ord(c) - 65) for c in code.upper()) if len(code or "") == 2 and code.isalpha() else ""
-    rows = sorted(((t["label"], topic_path(k), flag(t.get("code"))) for k, t in TOPICS.items() if t["kind"] == "country"),
+    rows = sorted(((t["label"], topic_path(k), t.get("code")) for k, t in TOPICS.items() if t["kind"] == "country"),
                   key=lambda x: fold(x[0]))
     out = {}
     for name, href, fl in rows:
@@ -439,6 +438,35 @@ def _language_az():
     for name, href in sorted(rows, key=lambda x: x[0].lower()):
         out.setdefault(name[:1].upper(), []).append((href, name))
     return list(out.items())
+
+
+_FLAG_FIRST = ["pakistan", "india", "saudi-arabia", "uae", "uk", "usa", "canada", "australia", "germany", "france",
+               "turkey", "bangladesh", "afghanistan", "egypt", "qatar", "kuwait", "oman", "bahrain", "iraq", "iran",
+               "indonesia", "malaysia", "nigeria", "south-africa", "brazil", "mexico", "italy", "spain", "russia",
+               "china", "japan", "south-korea", "sri-lanka", "nepal", "morocco", "algeria"]
+
+
+def _flag(code):
+    code = code or ""
+    return "".join(chr(0x1F1E6 + ord(c) - 65) for c in code.upper()) if len(code) == 2 and code.isalpha() else ""
+
+
+@bp.app_template_global("flag_img")
+def _flag_img(code):
+    """A small flag picture (Windows has no flag emoji, so a picture is used; the emoji is the fallback)."""
+    from markupsafe import Markup, escape
+    c = (code or "").lower()
+    if len(c) != 2 or not c.isalpha():
+        return Markup("")
+    return Markup(f'<img class="flagimg" src="https://flagcdn.com/w40/{c}.png" srcset="https://flagcdn.com/w80/{c}.png 2x" '
+                  f'width="28" height="21" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" '
+                  f'data-emoji="{escape(_flag(c))}">')
+
+
+@bp.app_template_global("flag_grid")
+def _flag_grid():
+    """The most used countries as flags: [(href, name, flag)] (side column of the list pages)."""
+    return [(topic_path(k), TOPICS[k]["label"], TOPICS[k].get("code")) for k in _FLAG_FIRST if k in TOPICS]
 
 
 @bp.app_template_global("find_filters")
@@ -1707,7 +1735,7 @@ def healthz():
     return {"status": "ok" if ok else "error", "checks": checks, "info": info}, (200 if ok else 503)
 
 
-@bp.route("/menu/<any(country, types):which>")
+@bp.route("/menu/<any(country, types, flags):which>")
 def header_menu(which):
     """The long header drop-downs (hundreds of links) are sent only when someone opens them, and then kept by the
     browser for a day, instead of riding along with every page (about 40% of each page before)."""

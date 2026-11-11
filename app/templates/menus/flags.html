@@ -1,0 +1,2 @@
+{#- every country as a flag, loaded only when "All countries" is opened #}
+          <div class="flag-grid">{% for letter, items in country_az() %}{% for href, label, fl in items %}<a class="flag-tile" href="{{ href }}"><span class="flag-big" aria-hidden="true">{{ flag_img(fl) }}</span><span class="flag-name">{{ label }}</span></a>{% endfor %}{% endfor %}</div>

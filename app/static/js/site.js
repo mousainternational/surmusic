@@ -524,7 +524,7 @@ document.addEventListener("toggle", function (e) {
       panel.removeAttribute("data-loaded");                 /* keep the "All ..." link; try again next time */
     }).then(function () { panel.removeAttribute("aria-busy"); });
   }
-  document.querySelectorAll("details.hd-dd").forEach(function (d) {
+  document.querySelectorAll("details.hd-dd, details.flag-all").forEach(function (d) {
     if (!d.querySelector("[data-lazy]")) return;
     d.addEventListener("toggle", function () { if (d.open) fill(d); });
     var s = d.querySelector("summary");
@@ -542,6 +542,9 @@ document.addEventListener("change", function (e) {
 document.addEventListener("error", function (e) {
   var el = e.target;
   if (el && el.tagName === "IMG" && el.closest && el.closest(".thumb")) el.remove();
+  else if (el && el.tagName === "IMG" && el.classList.contains("flagimg")) {      /* flag picture missing: show the flag emoji */
+    var t = document.createElement("span"); t.textContent = el.getAttribute("data-emoji") || ""; el.replaceWith(t);
+  }
 }, true);
 
 /* Type to find: in the header Language / Country / Types lists, and in the channel list of a page.
