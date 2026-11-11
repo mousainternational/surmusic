@@ -44,9 +44,9 @@
 
 {% macro cat_tabs(active) -%}{%- endmacro %}
 
-{% macro flag_box() -%}
-<section class="card flag-box" aria-labelledby="flag-h">
-  <h2 class="h3" id="flag-h">Radio by country</h2>
+{% macro flag_box(cls='') -%}
+<section class="card flag-box {{ cls }}" aria-label="Radio by country">
+  <h2 class="h3">Radio by country</h2>
   <div class="flag-grid">{% for href, name, fl in flag_grid() %}<a class="flag-tile" href="{{ href }}"><span class="flag-big" aria-hidden="true">{{ flag_img(fl) }}</span><span class="flag-name">{{ name }}</span></a>{% endfor %}</div>
   <details class="flag-all"><summary class="btn btn-sm">All countries</summary>
     <div data-lazy="/menu/flags" aria-live="polite"><p class="small"><a href="/radio-stations">All countries and regions →</a></p></div>

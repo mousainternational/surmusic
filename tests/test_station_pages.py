@@ -23,7 +23,7 @@ def test_genre_pages(client):
     country_menu = client.get("/menu/country").get_data(as_text=True)
     assert client.get("/menu/types").headers["Cache-Control"] == "public, max-age=86400"
     header = header + types_menu + country_menu
-    for label in ("Religious", "Music", "News", "Business", "Daily life", "Accessibility"):        # the same six as the boxes
+    for label in ("Religious", "Music", "News", "Business", "Daily life", "Kids", "Cooking", "Science &amp; Tech", "Accessibility"):        # the same as the boxes
         assert f">{label}<" in types_menu, label
     assert 'href="/genre/religious"' in types_menu and "Islamic" not in types_menu and "Quran" not in types_menu   # types are shown on the Religious page
     assert "data-filter-menu" in types_menu and "data-filter-menu" in country_menu                          # type to find
