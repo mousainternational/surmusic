@@ -64,6 +64,9 @@ def _user_agent():
 def _fetch_json(path):
     """GET one Radio Browser API path, trying the mirrors. Raises RadioError."""
     servers = list(current_app.config["RADIO_API_SERVERS"])
+    for extra in ("de2", "all"):                       # de1 is retired by the directory; always also try its current mirrors
+        if extra not in servers:
+            servers.append(extra)
     random.shuffle(servers)
     now = time.time()
     servers.sort(key=lambda s: _bad_servers.get(s, 0) > now)  # skip recently failing mirrors last
@@ -208,6 +211,44 @@ def _best(stations, cap):
     return (good if len(good) >= 30 else stations[:30])[:cap]
 
 
+_local_all = []
+
+
+def _local_lists(paths, per, cap):
+    """Same search as the online directory (tag, and language when asked), but on the 30,000 stations saved in the code."""
+    from urllib.parse import urlparse, parse_qs
+    from . import directory
+    try:
+        if not _local_all:
+            for n in directory.chunks():
+                _local_all.extend(directory.chunk_stations(n))
+        pool = _local_all
+    except Exception:
+        return []
+    merged = []
+    for p in paths:
+        q = parse_qs(urlparse(p).query)
+        tag = (q.get("tag") or [""])[0].lower()
+        lang = (q.get("language") or [""])[0].lower()
+        if not tag and not lang:
+            continue
+        hits = []
+        for st in pool:
+            tags = [t.strip().lower() for t in (st.get("tags") or "").split(",")]
+            if tag and tag not in tags:
+                continue
+            if lang and lang not in (st.get("language") or "").lower():
+                continue
+            hits.append(st)
+        hits.sort(key=lambda x: -(x.get("clicks") or 0))
+        merged.extend(hits[:per] if per else hits[:300])
+    seen, out = set(), []
+    for st in sorted(merged, key=lambda x: -(x.get("clicks") or 0)):
+        if st.get("uuid") not in seen:
+            seen.add(st["uuid"]); out.append(st)
+    return _best(out, cap) if out else []
+
+
 def _merge(paths, per=None, cap=300):
     if current_app.config.get("RADIO_DEMO"):
         return _demo(paths)
@@ -223,6 +264,9 @@ def _merge(paths, per=None, cap=300):
     with ThreadPoolExecutor(max_workers=6) as ex:
         results = list(ex.map(run, paths))
     if all(r is None for r in results):
+        local = _local_lists(paths, per, cap)          # the online directory is down: use our own saved copy of it
+        if local:
+            return local
         raise RadioError("The radio directory is not reachable right now.")
     merged = []
     for r in results:
