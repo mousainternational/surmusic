@@ -1389,3 +1389,11 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 .np-sub { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .np.np-light .np-head { background: linear-gradient(180deg, rgba(255, 255, 255, .6), rgba(255, 255, 255, .4)); }
 @media (max-width: 899px) { .np-head { max-width: calc(100vw - 32px); } }
+
+/* Trending: back to the original tidy pills (logo + words in one pill), no inner scrolling */
+.trend-list { display: flex; flex-wrap: wrap; gap: 8px; max-height: none !important; overflow: visible !important; }
+.trend-list li { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 5px 12px 5px 6px; border: 1px solid var(--border); border-radius: 999px; }
+.trend-list a { display: inline-flex; flex-wrap: nowrap; align-items: center; gap: 8px; min-width: 0; }
+.trend-list .thumb-xs { width: 26px; height: 26px; min-width: 26px; border-radius: 50%; }
+.trend-list .thumb-xs img { border-radius: 50%; }
+.trend-list li .muted { white-space: nowrap; }
