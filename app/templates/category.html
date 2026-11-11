@@ -15,10 +15,15 @@
     <button class="btn btn-accent" type="button" data-play-first>▶ Play top station</button>
     {% if genre == 'pakistan' or (genre and 'Pakistan' in (info.description or '')) %}<a class="btn" href="/pakistan-fm-radio">📻 Pakistan FM by frequency &amp; city</a>{% endif %}
   </header>
-  {{ ui.find_bar() }}
+  <div class="strip-in-copy">{{ ui.find_bar() }}</div>
   <details class="more-types"><summary>All radio types</summary>{{ ui.genre_chips(genre or cat) }}</details>
   </div>
+  <div class="page-top-mid">
+    {% if trending %}{{ tr.strip(trending, 'Trending now: live commentary and news') }}
+    {% elif stations %}<div class="card now-card"><h2 class="h3">Top stations right now</h2>{{ ui.station_list(stations[:4], cat) }}</div>{% endif %}
+  </div>
   {{ ui.flag_box('flag-top') }}
+  <div class="hero2-strip">{{ ui.find_bar() }}</div>
   </div>
   {{ ads.ad('top') }}
   <div class="with-side">
@@ -39,7 +44,6 @@
         {% if page_no < pages %}<a class="btn btn-sm" href="{{ page_base }}?page={{ page_no + 1 }}" rel="next">Next →</a>{% endif %}
       </nav>{% endif %}
       {% endif %}
-      {{ tr.strip(trending, 'Trending now: live commentary and news') }}
       {% if popular %}<section class="topic-popular card">
         <h2 class="h3">Popular {{ info.label }} radio stations</h2>
         <ul>{% for x in popular %}<li><a href="{{ station_href(x) }}">{{ x.name }}</a>{% if x.country %} — {{ x.country }}{% endif %}{% if x.tags %}, playing {{ x.tags }}{% endif %}.</li>{% endfor %}</ul>
