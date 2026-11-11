@@ -1,7 +1,7 @@
 {#- loaded into the header "Country" menu only when it is opened (saves bandwidth on every page): every country, A to Z #}
           {%- for letter, items in country_az() %}
           <h3>{{ letter }}</h3>
-          <ul>{% for href, label in items %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul>
+          <ul>{% for href, label, fl in items %}<li><a href="{{ href }}"><span class="flag" aria-hidden="true">{{ fl }}</span> {{ label }}</a></li>{% endfor %}</ul>
           {%- endfor %}
           <h3>Regions</h3>
           <ul>{% for href, label in country_menu()[1] %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul>

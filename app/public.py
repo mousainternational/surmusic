@@ -411,11 +411,12 @@ def _country_az():
     """Every country page, A to Z, grouped by first letter: [(letter, [(href, name)])] (header Country menu)."""
     import unicodedata
     fold = lambda x: unicodedata.normalize("NFKD", x).encode("ascii", "ignore").decode().lower() or x.lower()
-    rows = sorted(((t["label"], topic_path(k)) for k, t in TOPICS.items() if t["kind"] == "country"),
+    flag = lambda code: "".join(chr(0x1F1E6 + ord(c) - 65) for c in code.upper()) if len(code or "") == 2 and code.isalpha() else ""
+    rows = sorted(((t["label"], topic_path(k), flag(t.get("code"))) for k, t in TOPICS.items() if t["kind"] == "country"),
                   key=lambda x: fold(x[0]))
     out = {}
-    for name, href in rows:
-        out.setdefault((fold(name)[:1] or "#").upper(), []).append((href, name))
+    for name, href, fl in rows:
+        out.setdefault((fold(name)[:1] or "#").upper(), []).append((href, name, fl))
     return list(out.items())
 
 

@@ -1256,3 +1256,5 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
   .cat-box::after { font-size: .7rem; }
 }
 .find-grid { max-width: 640px; }
+
+.flag { display: inline-block; min-width: 1.5em; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
