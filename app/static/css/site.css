@@ -1279,3 +1279,5 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 
 .flagimg { display: block; margin: 0 auto; width: 28px; height: auto; border-radius: 3px; box-shadow: 0 0 0 1px rgba(0,0,0,.12); }
 .flag .flagimg { display: inline-block; vertical-align: middle; margin: 0; width: 22px; }
+
+.hero2-side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
