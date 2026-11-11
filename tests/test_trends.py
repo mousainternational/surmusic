@@ -68,3 +68,9 @@ def test_empty_trending_page_is_not_indexed(client):
 
 def test_trending_is_in_the_sitemap_only_when_it_has_data(client):
     assert "/trending" not in client.get("/sitemap.xml").get_data(as_text=True)
+
+
+def test_topics_with_nothing_to_do_with_radio_are_dropped():
+    for term in ("godzilla vs kong", "WWE Raw results", "ufc 300 fight", "wrestlemania tonight", "marvel movie trailer"):
+        assert trends.classify(term) is None, term
+    assert trends.classify("pak vs eng") is not None and trends.classify("psl match today") is not None
