@@ -1012,7 +1012,7 @@ MUSIC_FAMILY = ("bollywood", "lollywood", "hollywood", "ghazal", "qawwali", "suf
                 "rock", "hip-hop", "jazz", "classical", "dance", "lofi", "80s-90s", "latin", "country-music", "reggae",
                 "afrobeats", "metal", "k-pop")
 SPORTS_FAMILY = ("cricket", "football")
-TALK_FAMILY = ("debates", "comedy", "health", "meditation", "cooking", "kids", "education", "business", "technology")
+DAILY_FAMILY = ("talk", "debates", "comedy", "health", "meditation", "cooking", "kids", "education", "technology")
 TOPICS["music"] = dict(
     kind="genre", group="Music", label="Music",
     h1="Music Radio — Live Bollywood, Lollywood, Hollywood, Ghazal, Qawwali, Pop & More", native="میوزک ریڈیو",
@@ -1023,8 +1023,17 @@ TOPICS["music"] = dict(
     per=40, cap=400,
     paths=list(dict.fromkeys(p for k in MUSIC_FAMILY if k in TOPICS for p in TOPICS[k]["paths"][:3])))
 GENRE_PAGES["music"] = TOPICS["music"]
-for _k, _fam in (("sports", SPORTS_FAMILY), ("talk", TALK_FAMILY)):
-    TOPICS[_k]["paths"] = list(dict.fromkeys(TOPICS[_k]["paths"] + [p for k in _fam for p in TOPICS[k]["paths"][:4]]))
+TOPICS["sports"]["paths"] = list(dict.fromkeys(TOPICS["sports"]["paths"] + [p for k in SPORTS_FAMILY for p in TOPICS[k]["paths"][:4]]))
+TOPICS["daily-life"] = dict(
+    kind="genre", group="Lifestyle & learning", label="Daily life",
+    h1="Daily Life Radio — Live Talk, Health, Cooking, Kids & Education", native="روزمرہ زندگی ریڈیو",
+    seo_title="Daily Life Radio Live — Talk, Health, Cooking, Kids",
+    description="Listen to live daily life radio free: talk, health, cooking, comedy, kids, education, meditation and technology from stations worldwide.",
+    intro="Everyday live radio on one page: talk shows, health, cooking, comedy, kids and family, education, meditation and technology.",
+    more="Also searched as talk radio, health radio, cooking radio, kids radio, education radio and meditation radio live.",
+    per=40, cap=300,
+    paths=list(dict.fromkeys(p for k in DAILY_FAMILY if k in TOPICS for p in TOPICS[k]["paths"][:4])))
+GENRE_PAGES["daily-life"] = TOPICS["daily-life"]
 
 # One "Islamic" page that holds all of it: Quran, Naat, bayan and the other Islamic programmes.
 TOPICS["islamic"]["paths"] = list(dict.fromkeys(

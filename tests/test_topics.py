@@ -351,10 +351,11 @@ def test_home_filters_are_a_to_z_and_category_has_only_big_names(client):
     html = client.get("/").get_data(as_text=True)
     assert html.count("<select data-go") == 3
     cat = html.split("Choose a category", 1)[1].split("</select>", 1)[0]
-    labels = re.findall(r"<option value=\"/[^\"]+\">([^<]+)<", cat)
-    assert labels == ["Accessibility", "Islamic", "Music", "News", "Sports", "Talk"]
-    assert "<optgroup" not in html.split("data-go", 1)[1].split("</div>", 1)[0]
-    for url in ("/genre/music", "/genre/sports", "/genre/talk", "/genre/islamic", "/genre/news", "/accessibility"):
+    assert re.findall(r"<option value=\"/[^\"]+\">([^<]+)<", cat.split("<optgroup")[0]) == ["Accessibility", "Business", "Daily life", "Music", "News"]
+    assert cat.count("<optgroup") == 1 and '<optgroup label="Religious">' in cat      # only Religious has types inside
+    rel = cat.split('<optgroup label="Religious">', 1)[1].split("</optgroup>", 1)[0]
+    assert ">Islamic<" in rel and "Quran" not in rel and "Naat" not in rel
+    for url in ("/genre/music", "/genre/sports", "/genre/daily-life", "/genre/business", "/genre/talk", "/genre/islamic", "/genre/news", "/accessibility"):
         assert client.get(url).status_code == 200, url
     for slug in ("ghazal", "qawwali", "sufi", "old-songs", "pop"):      # the old pages stay for Google
         assert client.get(f"/genre/{slug}").status_code == 200

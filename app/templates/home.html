@@ -32,7 +32,7 @@
         <label class="find"><span>Category</span>
           <select data-go aria-label="Choose a category">
             <option value="">Choose category…</option>
-            {% for href, label in filters[2] %}<option value="{{ href }}">{{ label }}</option>{% endfor %}
+            {% for label, target in filters[2] %}{% if target is string %}<option value="{{ target }}">{{ label }}</option>{% else %}<optgroup label="{{ label }}">{% for href, sub in target %}<option value="{{ href }}">{{ sub }}</option>{% endfor %}</optgroup>{% endif %}{% endfor %}
           </select></label>
       </div>
       <p class="small"><a href="/radio-stations">All radio types and countries →</a></p>
