@@ -171,9 +171,9 @@ def test_news_tab_lists_channels_not_another_news_button(client):
 def test_islamic_page_shows_only_islamic_topics(client):
     html = client.get("/genre/islamic").get_data(as_text=True)
     panel = html.split('data-sub="religious"', 1)[1].split("</div>", 1)[0]
-    assert "Quran" in panel and "Naat" in panel
-    for other in ("Christian", "Bhajan", "Gurbani", "Jewish"):
-        assert other not in panel
+    assert "Islamic" in panel
+    for sub in ("All Islamic", "Naat &amp; Hamd", "Bayan", "Pakistan Islamic", "Noha"):
+        assert sub not in panel                     # no small Islamic tabs: everything is on the one Islamic page
 
 
 def test_each_list_keeps_its_own_kind():

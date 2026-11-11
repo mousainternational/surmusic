@@ -99,11 +99,6 @@ def _nav_tabs(active=""):
                     items.append((f"/{sl}", CAT_PAGES[sl], sl == slug))
                 elif sl in TOPICS and not radio.known_empty(sl):
                     items.append((topic_path(sl), TOPICS[sl]["label"], sl == slug))
-        if key == "religious" and slug == "islamic":          # inside Islamic: easy buttons for what it holds
-            islamic = [("islamic", "All Islamic"), ("quran", "Quran"), ("naat", "Naat & Hamd"), ("bayan", "Bayan & lectures"),
-                       ("pakistan-islamic", "Pakistan Islamic"), ("majlis", "Ahl-e-Bait & Noha")]
-            # only Islamic topics here; Christian, Bhajan, Gurbani and Jewish show on their own pages, not inside Islamic
-            items = [(topic_path(k), lb, k == real) for k, lb in islamic if k in TOPICS and not radio.known_empty(k)]
         if key == "news":                                     # News: the news channels themselves, not one more "News" button
             items = _news_channels(slug) or [(topic_path("news"), "All news channels", slug == "news")]
         tabs.append({"key": key, "label": label, "on": key == current, "subs": items})

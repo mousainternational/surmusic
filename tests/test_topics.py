@@ -96,7 +96,7 @@ def test_category_tabs(client):
         assert word not in nav, word
     nav, tabs = parts("/genre/quran")                     # Quran lives under Religious → Islamic
     assert [t for on, t in tabs if on] == ["religious"]
-    assert re.search(r'class="chip active"[^>]*>Quran<', nav) and ">All Islamic<" in nav
+    assert ">All Islamic<" not in nav and "Naat &amp; Hamd" not in nav      # no small Islamic tabs
     assert [t for on, t in parts("/country/pakistan")[1] if on] == []          # countries live in the header menu
     assert 'data-tab="languages"' not in nav and 'data-tab="countries"' not in nav
     assert [t for on, t in parts("/genre/news")[1] if on] == ["news"]
