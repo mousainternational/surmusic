@@ -413,11 +413,11 @@ def _home_filters():
     az = lambda items: sorted(items, key=lambda x: x[1].lower())          # every list is A to Z
     countries = az([(topic_path(k), t["label"]) for k, t in TOPICS.items() if t["kind"] == "country"])
     languages = az([(topic_path(k), TOPICS[k]["label"]) for k in nav.get("languages", []) if k in TOPICS])
-    # Categories A to Z. Only Religious has types inside it (Islamic, Christian …); the rest open straight to their channels.
+    # The category row (one line of boxes). Only Religious has types inside it; the rest open straight to their channels.
     religious = az([(topic_path(k), TOPICS[k]["label"]) for k in nav.get("religious", []) if k in TOPICS])
-    cats = [("Accessibility", "/accessibility"), ("Business", topic_path("business")),
-            ("Daily life", topic_path("daily-life")), ("Music", topic_path("music")), ("News", topic_path("news")),
-            ("Religious", religious), ("Sports", topic_path("sports"))]
+    cats = [("Religious", religious), ("Music", topic_path("music")), ("News", topic_path("news")),
+            ("Business", topic_path("business")), ("Daily life", topic_path("daily-life")),
+            ("Accessibility", "/accessibility")]
     return countries, languages, cats
 
 

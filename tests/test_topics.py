@@ -349,12 +349,12 @@ def test_reviews_submit_approve_show(client, app):
 def test_home_filters_are_a_to_z_and_category_has_only_big_names(client):
     import re
     html = client.get("/").get_data(as_text=True)
-    assert html.count("<select data-go") == 3
-    cat = html.split("Choose a category", 1)[1].split("</select>", 1)[0]
-    assert re.findall(r"<option value=\"/[^\"]+\">([^<]+)<", cat.split("<optgroup")[0]) == ["Accessibility", "Business", "Daily life", "Music", "News"]
-    assert cat.count("<optgroup") == 1 and '<optgroup label="Religious">' in cat      # only Religious has types inside
-    rel = cat.split('<optgroup label="Religious">', 1)[1].split("</optgroup>", 1)[0]
-    assert ">Islamic<" in rel and "Quran" not in rel and "Naat" not in rel
+    assert html.count("<select data-go") == 3 and html.count("data-go aria-label") == 3
+    row = html.split('class="cat-row"', 1)[1].split("</nav>", 1)[0]
+    assert re.findall(r'class="cat-box"[^>]*href="([^"]+)"', row) == [
+        "/genre/music", "/genre/news", "/genre/business", "/genre/daily-life", "/accessibility"]
+    assert row.count("<select") == 1 and ">Islamic<" in row and "Quran" not in row and "Naat" not in row   # types only in Religious
+    assert row.index("Religious") < row.index("Music")
     for url in ("/genre/music", "/genre/sports", "/genre/daily-life", "/genre/business", "/genre/talk", "/genre/islamic", "/genre/news", "/accessibility"):
         assert client.get(url).status_code == 200, url
     for slug in ("ghazal", "qawwali", "sufi", "old-songs", "pop"):      # the old pages stay for Google

@@ -18,6 +18,12 @@
         <input id="hero-q" name="q" type="search" placeholder="Search: Arijit, ghazal, Lahore, FM 100…" maxlength="60">
         <button class="btn btn-primary">Search</button>
       </form>
+      <nav class="cat-row" aria-label="Categories">
+        {% for label, target in filters[2] %}{% if target is string %}<a class="cat-box" href="{{ target }}">{{ label }}</a>{% else %}<span class="cat-box cat-select"><select data-go aria-label="{{ label }}">
+          <option value="">{{ label }}</option>
+          {% for href, sub in target %}<option value="{{ href }}">{{ sub }}</option>{% endfor %}
+        </select></span>{% endif %}{% endfor %}
+      </nav>
       <div class="find-grid" role="group" aria-label="Find a channel">
         <label class="find"><span>Country</span>
           <select data-go aria-label="Choose a country">
@@ -28,11 +34,6 @@
           <select data-go aria-label="Choose a language">
             <option value="">Choose language…</option>
             {% for href, label in filters[1] %}<option value="{{ href }}">{{ label }}</option>{% endfor %}
-          </select></label>
-        <label class="find"><span>Category</span>
-          <select data-go aria-label="Choose a category">
-            <option value="">Choose category…</option>
-            {% for label, target in filters[2] %}{% if target is string %}<option value="{{ target }}">{{ label }}</option>{% else %}<optgroup label="{{ label }}">{% for href, sub in target %}<option value="{{ href }}">{{ sub }}</option>{% endfor %}</optgroup>{% endif %}{% endfor %}
           </select></label>
       </div>
       <p class="small"><a href="/radio-stations">All radio types and countries →</a></p>
