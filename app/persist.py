@@ -246,6 +246,7 @@ def push(db, force=False):
                 _state["last_hash"] = digest
                 _state["last_ok"] = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
                 _state["last_error"] = None
+                log.warning("Data backup saved to Cloudflare KV (%d bytes)", len(blob))
                 return "pushed"
             url, branch = _url()
             token = os.environ["BACKUP_GITHUB_TOKEN"]
@@ -335,6 +336,31 @@ def start(app):
             time.sleep(every * 60)
 
     threading.Thread(target=loop, name="data-backup", daemon=True).start()
+
+
+_timer = {"t": None}
+_timer_lock = threading.Lock()
+
+
+def schedule_push(app, delay=15):
+    """Save a copy soon after something important changed (sign-up, email confirmed, 2-step, settings),
+    instead of waiting for the 10-minute loop: a restart in between would lose it. Several changes close
+    together give one save."""
+    if not enabled() or app.config.get("TESTING_NO_SCHEDULE"):
+        return
+    url = app.config["DATABASE_URL"]
+
+    def run():
+        _timer["t"] = None
+        push_url(url)
+
+    with _timer_lock:
+        if _timer["t"] is not None:
+            return
+        t = threading.Timer(delay, run)
+        t.daemon = True
+        _timer["t"] = t
+    t.start()
 
 
 def push_all_on_exit():

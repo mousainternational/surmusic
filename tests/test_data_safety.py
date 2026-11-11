@@ -207,3 +207,26 @@ def test_cloudflare_kv_backup_and_restore(app, tmp_path, monkeypatch):
     db = Database(fresh)
     assert db.scalar("SELECT role FROM users WHERE email = ?", (ADMIN_EMAIL,)) == "admin"
     db.close()
+
+
+def test_backup_is_saved_soon_after_a_change(app, client, monkeypatch):
+    monkeypatch.setenv("BACKUP_CF_ACCOUNT_ID", "acc")
+    monkeypatch.setenv("BACKUP_CF_NAMESPACE_ID", "ns")
+    monkeypatch.setenv("BACKUP_CF_TOKEN", "cftok")
+    kv = FakeKV()
+    monkeypatch.setattr(persist, "_kv_http", kv)
+    persist._state.update({"last_hash": None, "sha": None})
+    persist._timer["t"] = None
+
+    class NowTimer:                      # run at once instead of after 15 seconds
+        def __init__(self, delay, fn):
+            self.fn = fn
+            self.daemon = True
+
+        def start(self):
+            self.fn()
+    monkeypatch.setattr(persist.threading, "Timer", NowTimer)
+    post(client, "/login", {"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
+    assert kv.puts == 1                     # the sign-in POST triggered a save of the (changed) data
+    client.get("/")                         # a page view changes nothing and saves nothing
+    assert kv.puts == 1
