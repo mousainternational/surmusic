@@ -168,3 +168,42 @@ def test_failed_refresh_keeps_the_old_list(app, tmp_path, monkeypatch):
     monkeypatch.setattr(radio, "_fetch_json", broken)
     directory.refresh(app, pause=0)
     assert directory.count(app) == 2001
+
+
+class FakeKV:
+    def __init__(self):
+        self.value = None
+        self.puts = 0
+
+    def __call__(self, method, url, data=None, token=None):
+        assert token == "cftok" and url.startswith("https://api.cloudflare.com/client/v4/accounts/acc/storage/kv/namespaces/ns/values/")
+        if method == "GET":
+            return (404, b"{}") if self.value is None else (200, self.value)
+        if method == "PUT":
+            self.puts += 1
+            self.value = data
+            return 200, b'{"success":true}'
+        raise AssertionError(method)
+
+
+def test_cloudflare_kv_backup_and_restore(app, tmp_path, monkeypatch):
+    for k in ("BACKUP_GITHUB_REPO", "BACKUP_GITHUB_TOKEN"):
+        monkeypatch.delenv(k, raising=False)
+    monkeypatch.setenv("BACKUP_CF_ACCOUNT_ID", "acc")
+    monkeypatch.setenv("BACKUP_CF_NAMESPACE_ID", "ns")
+    monkeypatch.setenv("BACKUP_CF_TOKEN", "cftok")
+    kv = FakeKV()
+    monkeypatch.setattr(persist, "_kv_http", kv)
+    monkeypatch.setattr(persist, "_http", lambda *a, **k: (_ for _ in ()).throw(AssertionError("GitHub must not be used")))
+    persist._state.update({"last_hash": None, "sha": None})
+    assert persist.backend() == "cloudflare-kv"
+    assert persist.push_url(app.config["DATABASE_URL"]) == "pushed"
+    assert persist.push_url(app.config["DATABASE_URL"]) == "unchanged" and kv.puts == 1
+    assert ADMIN_EMAIL.encode() not in kv.value
+    from app import db as dbmod
+    fresh = f"sqlite:///{tmp_path / 'kvfresh.db'}"
+    dbmod.migrate(fresh)
+    assert persist.restore_if_empty(fresh) == "restored"
+    db = Database(fresh)
+    assert db.scalar("SELECT role FROM users WHERE email = ?", (ADMIN_EMAIL,)) == "admin"
+    db.close()

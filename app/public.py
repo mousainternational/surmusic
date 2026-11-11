@@ -1635,7 +1635,7 @@ def healthz():
     try:                                       # facts for checking a deploy (no secrets)
         from . import directory, persist
         info = {"stations": directory.count(), "permanent_disk": bool(current_app.config.get("STORAGE_PERSISTENT")),
-                "data_backup": persist.status()["enabled"], "data_backup_last_ok": persist.status()["last_ok"],
+                "data_backup": persist.status()["where"] or False, "data_backup_last_ok": persist.status()["last_ok"],
                 "restore_at_start": current_app.config.get("DATA_RESTORE", "")}
     except Exception:  # pragma: no cover
         pass
