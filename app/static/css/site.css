@@ -1367,3 +1367,7 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
   .flag-top { contain: size; min-height: 300px; align-self: stretch; flex-direction: column; margin-top: 8px; }
   .flag-top .flag-grid { flex: 1 1 auto; min-height: 0; max-height: none; }
 }
+.station-head { min-width: 0; } .station-head .station-info { min-width: 0; flex: 1 1 0; }
+.station-head .st-play { max-width: 100%; white-space: normal; text-align: left; }
+@media (min-width: 1000px) { .page-top-main .station-head h1 { font-size: clamp(1.5rem, 1rem + 1.4vw, 2.2rem); } }
+.station-head .st-play { border-radius: 18px; padding-top: 12px; padding-bottom: 12px; width: 100%; }
