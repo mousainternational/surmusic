@@ -78,25 +78,14 @@
       </details>
       <details class="hd-dd hue-teal">
         <summary class="hd-pill">🌍 Country</summary>
-        <div class="hd-panel hd-tall">
-          {%- set cm = country_menu() %}
-          <h3>Popular</h3>
-          <ul>{% for href, label in cm[0] %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul>
-          <h3>Regions</h3>
-          <ul>{% for href, label in cm[1] %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul>
-          {%- for title, items in cm[2] %}
-          <h3>{{ title }}</h3>
-          <ul>{% for href, label in items %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul>
-          {%- endfor %}
+        <div class="hd-panel hd-tall" data-lazy="/menu/country" aria-live="polite">
+          <p class="small"><a href="/radio-stations">All countries and regions →</a></p>
         </div>
       </details>
       <details class="hd-dd hue-orange">
         <summary class="hd-pill">📻 Types</summary>
-        <div class="hd-panel hd-tall">
-          {%- for key, icon, title, items in type_menu() %}
-          <h3>{{ icon }} {{ title }}</h3>
-          <ul>{% for href, label in items %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul>
-          {%- endfor %}
+        <div class="hd-panel hd-tall" data-lazy="/menu/types" aria-live="polite">
+          <p class="small"><a href="/radio-stations">All radio types →</a></p>
         </div>
       </details>
       <span class="hd-sep" aria-hidden="true"></span>

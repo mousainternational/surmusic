@@ -1657,6 +1657,24 @@ def healthz():
     return {"status": "ok" if ok else "error", "checks": checks, "info": info}, (200 if ok else 503)
 
 
+@bp.route("/menu/<any(country, types):which>")
+def header_menu(which):
+    """The long header drop-downs (hundreds of links) are sent only when someone opens them, and then kept by the
+    browser for a day, instead of riding along with every page (about 40% of each page before)."""
+    from . import lowdb
+    key = f"menu:{which}"
+    hit, html = lowdb.cache_get(key) if lowdb.enabled() else (False, None)
+    if not hit:
+        html = render_template(f"menus/{which}.html")
+        if lowdb.enabled():
+            lowdb.cache_set(key, html, 6 * 3600)
+    resp = make_response(html)
+    resp.headers["Content-Type"] = "text/html; charset=utf-8"
+    resp.headers["Cache-Control"] = "public, max-age=86400"
+    resp.headers["X-Robots-Tag"] = "noindex"
+    return resp
+
+
 @bp.route("/favicon.ico")
 def favicon():
     return redirect(url_for("static", filename="img/favicon-32.png"), code=301)

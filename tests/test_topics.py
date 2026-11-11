@@ -72,7 +72,8 @@ def test_accessibility_page_and_world_links(client):
     html = client.get("/accessibility").get_data(as_text=True)
     assert "screen reader" in html.lower() and "<kbd>K</kbd>" in html
     home = client.get("/").get_data(as_text=True)
-    assert 'href="/country/usa"' in home and 'href="/continent/europe"' in home and 'href="/accessibility"' in home
+    menu = client.get("/menu/country").get_data(as_text=True)                 # the Country menu, loaded when opened
+    assert 'href="/country/usa"' in menu and 'href="/continent/europe"' in menu and 'href="/accessibility"' in home
     assert 'id="sr-announce"' in home
     for slug in ("christian", "latin", "talk", "afrobeats"):
         assert client.get(f"/genre/{slug}").status_code == 200
