@@ -295,7 +295,7 @@
   $("pl-vol").addEventListener("input", function (e) { audio.volume = Number(e.target.value); local("sm-volume", audio.volume); });
 
   // Keyboard shortcuts (for everyone, and a big help for blind and low-vision listeners):
-  // K = play/pause · N = next · B = previous · M = mute · Alt+↑/↓ = volume · / = search
+  // K = play/pause · N = next · B = previous · M = mute · + / - = volume · F = favourite · S = sleep timer · / = search
   // * Work on any keyboard layout (Urdu, Arabic, Hindi...): the physical key is used (e.code), not the letter typed.
   // * Alt+Shift+K/N/B/M/S also work, for screen readers (NVDA, JAWS) that keep single letters for themselves.
   document.addEventListener("keydown", function (e) {
@@ -307,6 +307,8 @@
     var code = e.code || "", k = (e.key || "").toLowerCase(), vol = $("pl-vol");
     var letter = /^Key[A-Z]$/.test(code) ? code.slice(3).toLowerCase() : k;
     if (code === "Slash" || k === "/") letter = "/";
+    if (k === "+" || k === "=" || code === "NumpadAdd") letter = "+";              // single keys for volume: + and -
+    else if (k === "-" || k === "_" || code === "Minus" || code === "NumpadSubtract") letter = "-";
     if (e.altKey && !e.shiftKey && (k === "arrowup" || k === "arrowdown")) {
       vol.value = Math.min(1, Math.max(0, Number(vol.value) + (k === "arrowup" ? 0.1 : -0.1)));
       vol.dispatchEvent(new Event("input"));
@@ -314,10 +316,22 @@
       e.preventDefault(); return;
     }
     if (e.altKey && !combo) return;
-    if (e.shiftKey && !combo && letter !== "/") return;     // "/" needs Shift on some keyboards
+    if (e.shiftKey && !combo && letter !== "/" && letter !== "+" && letter !== "-") return;     // "/" and "+" need Shift on some keyboards
     if (letter === "k") { toggle(); announce(); e.preventDefault(); }
     else if (letter === "n") { step(1); announce(); e.preventDefault(); }
     else if (letter === "b") { step(-1); announce(); e.preventDefault(); }
+    else if (letter === "+" || letter === "-") {
+      vol.value = Math.min(1, Math.max(0, Number(vol.value) + (letter === "+" ? 0.1 : -0.1)));
+      vol.dispatchEvent(new Event("input"));
+      say("Volume " + Math.round(Number(vol.value) * 100) + " percent");
+      e.preventDefault();
+    }
+    else if (letter === "f" && !combo) {
+      if (state.station) { toggleFav(state.station); setTimeout(function () { say(state.favIds.has(state.station.uuid) ? "Saved to favourites" : "Removed from favourites"); }, 200); }
+      else say("No station to save.");
+      e.preventDefault();
+    }
+    else if (letter === "s" && !combo) { var sb = $("pl-sleep"); if (sb) sb.click(); e.preventDefault(); }
     else if (letter === "m") { audio.muted = !audio.muted; say(audio.muted ? "Muted" : "Sound on"); e.preventDefault(); }
     else if (letter === "/" || (combo && letter === "s")) {
       var boxes = document.querySelectorAll("main input[type=search], input[type=search]"), q = null;
