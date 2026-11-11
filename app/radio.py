@@ -282,17 +282,18 @@ def _islamic_fast(slug):
     """The Islamic page joins ~100 searches, so a cold open took very long. Show the last saved list at once
     (even if old) and refresh it in the background; only the very first load ever waits."""
     from . import lowdb
+    if not lowdb.enabled():
+        return None                                   # normal path below keeps its own cache
     key = "genre:" + slug
-    if lowdb.enabled():
-        hit, value = lowdb.cache_get("radio:" + key)
-        if hit:
-            return value
+    hit, value = lowdb.cache_get("radio:" + key)
+    if hit:
+        return value
     old = _peek(key)
     if not old:
         return None
     app = current_app._get_current_object()
     flag = "radio-refresh:" + key
-    if lowdb.enabled() and not lowdb.cache_get(flag)[0]:
+    if not lowdb.cache_get(flag)[0]:
         lowdb.cache_set(flag, True, 600)
         import threading
 
