@@ -349,7 +349,7 @@ def test_reviews_submit_approve_show(client, app):
 def test_home_filters_are_a_to_z_and_category_has_only_big_names(client):
     import re
     html = client.get("/").get_data(as_text=True)
-    assert html.count("<select data-go") == 3 and html.count("data-go aria-label") == 3
+    assert html.count("<select data-go") == 1                  # only Religious; Country and Language are in the header menus
     row = html.split('class="cat-row"', 1)[1].split("</nav>", 1)[0]
     assert re.findall(r'class="cat-box"[^>]*href="([^"]+)"', row) == [
         "/genre/music", "/genre/news", "/genre/business", "/genre/daily-life", "/accessibility"]

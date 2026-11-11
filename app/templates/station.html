@@ -27,6 +27,7 @@
 
   {{ ads.ad('top') }}
 
+  {{ ui.find_bar() }}
   <div class="with-side">
     <div>
       <section class="card prose">
@@ -77,7 +78,7 @@
     <aside class="side">
       {{ ads.ad('side') }}
       {{ partner.offers('station') }}
-      {{ ui.genre_chips() }}
+      <details class="more-types"><summary>All radio types</summary>{{ ui.genre_chips() }}</details>
     </aside>
   </div>
 </div>

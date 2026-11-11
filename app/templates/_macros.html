@@ -44,6 +44,16 @@
 
 {% macro cat_tabs(active) -%}{%- endmacro %}
 
+{% macro find_bar() -%}
+{%- set filters = find_filters() %}
+<nav class="cat-row" aria-label="Categories">
+  {% for label, target in filters[2] %}{% if target is string %}<a class="cat-box" href="{{ target }}">{{ label }}</a>{% else %}<span class="cat-box cat-select"><select data-go aria-label="{{ label }}">
+    <option value="">{{ label }}</option>
+    {% for href, sub in target %}<option value="{{ href }}">{{ sub }}</option>{% endfor %}
+  </select></span>{% endif %}{% endfor %}
+</nav>
+{%- endmacro %}
+
 {% macro genre_chips(active='') -%}
 <nav class="nav-tabs" aria-label="Radio categories" data-nav-tabs>
   <div class="nt-main" role="tablist">

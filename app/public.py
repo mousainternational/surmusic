@@ -406,6 +406,11 @@ def _unlock(raw):
 
 # ---------------------------------------------------------------- pages
 
+@bp.app_template_global("find_filters")
+def _find_filters():
+    return _home_filters()
+
+
 def _home_filters():
     """The three drop-downs on the home page: country, language, category. Each choice is a real page."""
     from .topics import NAV
