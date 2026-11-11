@@ -23,14 +23,16 @@ def test_genre_pages(client):
     country_menu = client.get("/menu/country").get_data(as_text=True)
     assert client.get("/menu/types").headers["Cache-Control"] == "public, max-age=86400"
     header = header + types_menu + country_menu
-    other = types_menu.split("Other</h3>", 1)[1].split("</ul>", 1)[0]
-    for slug in ("qawwali", "sufi", "ghazal"):                                                  # inside "Other"
-        assert f'href="/genre/{slug}"' in other, slug
-    assert 'href="/country/usa"' in header and 'href="/continent/europe"' in header
+    for label in ("Religious", "Music", "News", "Business", "Daily life", "Accessibility"):        # the same six as the boxes
+        assert f">{label}<" in types_menu, label
+    assert 'href="/genre/islamic"' in types_menu and "Quran" not in types_menu and "Naat" not in types_menu
+    assert 'href="/genre/qawwali"' not in types_menu and "Other</h3>" not in types_menu            # no long type list any more
+    assert 'href="/country/usa"' in country_menu and 'href="/continent/europe"' in country_menu
+    assert "<h3>A</h3>" in country_menu                                                         # Country: plain A to Z list
     for word in ("Madani", "Dawat", "Majlis", "Hadith", "Noha", "/genre/naat", "/genre/quran"):                 # all live under Islamic
         assert word not in header, word
     assert 'href="/genre/news"' in header and 'href="/blog"' in header                          # Guides is in the menu
-    assert 'href="/genre/hindi"' in header and 'href="/genre/health"' in header
+    assert 'href="/genre/hindi"' in header                                                      # Language menu
     assert 'class="cat-tile"' not in home                                                       # one set of buttons, not two
     assert 'id="cat-religious"' in client.get("/radio-stations").get_data(as_text=True)
 

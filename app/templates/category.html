@@ -13,7 +13,8 @@
     <button class="btn btn-accent" type="button" data-play-first>▶ Play top station</button>
     {% if genre == 'pakistan' or (genre and 'Pakistan' in (info.description or '')) %}<a class="btn" href="/pakistan-fm-radio">📻 Pakistan FM by frequency &amp; city</a>{% endif %}
   </header>
-  {{ ui.genre_chips(genre or cat) }}
+  {{ ui.find_bar() }}
+  <details class="more-types"><summary>All radio types</summary>{{ ui.genre_chips(genre or cat) }}</details>
   {{ ads.ad('top') }}
   {{ tr.strip(trending, 'Trending now: live commentary and news') }}
   <div class="with-side">

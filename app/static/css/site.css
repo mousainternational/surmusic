@@ -1246,3 +1246,15 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 
 @media (min-width: 720px) { .cat-box { font-size: 1rem; padding: 0 14px; } .cat-box::after { font-size: .8rem; } }
 @media (max-width: 400px) { .cat-box { font-size: .74rem; padding: 0 5px; gap: 3px; } .cat-box::after { font-size: .6rem; } }
+
+/* Every page: the same category row and filters as the home page; the old type buttons sit in "All radio types" */
+.more-types { margin: 0 0 14px; }
+.more-types > summary { cursor: pointer; font-weight: 600; color: var(--muted); padding: 6px 0; }
+@media (min-width: 560px) {
+  .cat-row { display: flex; flex-wrap: wrap; max-width: 100%; }
+  .cat-box { font-size: .85rem; padding: 0 10px; }
+  .cat-box::after { font-size: .7rem; }
+}
+.find-grid { max-width: 640px; }
+
+.flag { display: inline-block; min-width: 1.5em; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
