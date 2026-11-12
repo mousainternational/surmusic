@@ -26,19 +26,23 @@ SCHOLARS = [("Dr Israr Ahmed", "israr"), ("Engineer Muhammad Ali Mirza", "mirza"
 # slug -> (page title, [recipe steps]). A step is ("scholars",), ("chart", country) or ("search", words, country).
 CATEGORIES = {
     "islamic-scholars": ("Islamic scholars", [("scholars",), ("search", "urdu islamic bayan", "PK"), ("search", "islamic lectures urdu", "PK")]),
-    "urdu": ("Urdu podcasts", [("search", "urdu podcast", "PK"), ("search", "pakistan podcast", "PK"), ("search", "urdu stories", "PK")]),
+    "urdu": ("Urdu podcasts", [("search", "urdu podcast", "PK"), ("search", "pakistan podcast", "PK")]),
     "islamic": ("Islamic lectures & Quran", [("search", "islamic lectures", "US"), ("search", "quran tafseer", "US"), ("search", "seerah", "US")]),
-    "hindi": ("Hindi podcasts", [("search", "hindi podcast", "IN"), ("search", "hindi stories", "IN")]),
+    "hindi": ("Hindi podcasts", [("search", "hindi podcast", "IN"), ("search", "hindi talk show", "IN")]),
     "cricket": ("Cricket", [("search", "cricket podcast", "IN"), ("search", "cricket podcast", "PK")]),
     "bollywood": ("Bollywood & film", [("search", "bollywood podcast", "IN")]),
     "news": ("News & talk", [("search", "news podcast", "PK"), ("search", "news podcast", "US")]),
     "kids": ("Kids & stories", [("search", "kids stories podcast", "US"), ("search", "bachon ki kahaniyan", "PK")]),
     "celebrity": ("Celebrity & interview podcasts", [("search", "celebrity interviews podcast", "US"), ("search", "celebrity podcast", "US"), ("search", "urdu interviews podcast", "PK"), ("search", "bollywood celebrity interviews", "IN")]),
+    "business": ("Business", [("search", "business podcast", "US"), ("search", "entrepreneurship startup podcast", "US"), ("search", "business podcast", "PK"), ("search", "business podcast", "IN")]),
+    "science": ("Science", [("search", "science podcast", "US"), ("search", "space astronomy podcast", "US"), ("search", "science podcast", "IN")]),
+    "technology": ("Technology", [("search", "technology podcast", "US"), ("search", "tech news podcast", "US"), ("search", "technology podcast", "IN"), ("search", "technology podcast", "PK")]),
+    "ai": ("Artificial intelligence", [("search", "artificial intelligence podcast", "US"), ("search", "AI machine learning podcast", "US"), ("search", "ChatGPT AI podcast", "IN")]),
     "top-pakistan": ("Top podcasts in Pakistan", [("chart", "pk")]),
     "top-india": ("Top podcasts in India", [("chart", "in")]),
     "top-world": ("Top podcasts worldwide", [("chart", "us")]),
 }
-STRIP_ORDER = [("top-world", 12), ("celebrity", 10), ("islamic-scholars", 12), ("top-pakistan", 8), ("urdu", 5), ("islamic", 4), ("hindi", 3), ("cricket", 3), ("news", 3), ("kids", 2)]
+STRIP_ORDER = [("top-world", 12), ("celebrity", 10), ("islamic-scholars", 12), ("top-pakistan", 8), ("urdu", 5), ("islamic", 4), ("hindi", 3), ("cricket", 3), ("news", 3), ("business", 3), ("technology", 3), ("ai", 3), ("science", 2), ("kids", 2)]
 FEATURED_TTL, SHOW_TTL, MAX_SHOWS = 12 * 3600, 3600, 40
 MAX_JSON, MAX_FEED = 1_000_000, 2_500_000
 
@@ -99,9 +103,19 @@ def _https(url):
     return url if url.startswith("https://") and len(url) < 1000 else ""
 
 
+_ADULT = re.compile(r"\b(sex|sexy|sexual|erotic|erotica|porn|xxx|nsfw|18\+|adult|kamasutra|hot stor|nude|fetish|dirty)", re.I)
+
+
+def _clean(name, artist):
+    """Family-friendly lists only: adult shows are never listed."""
+    return not _ADULT.search(f"{name} {artist}")
+
+
 def _row(r):
     sid = str(r.get("collectionId") or "")
-    if not sid.isdigit():
+    if not sid.isdigit() or r.get("collectionExplicitness") == "explicit":
+        return None
+    if not _clean(r.get("collectionName") or "", r.get("artistName") or ""):
         return None
     img = _https(r.get("artworkUrl100") or r.get("artworkUrl60") or "")
     return {"id": sid, "name": (r.get("collectionName") or "Podcast")[:120], "artist": (r.get("artistName") or "")[:100],
@@ -114,7 +128,7 @@ def _chart(cc):
     for r in data.get("feed", {}).get("results", []):
         sid = str(r.get("id") or "")
         img = _https(r.get("artworkUrl100") or "")
-        if sid.isdigit():
+        if sid.isdigit() and _clean(r.get("name") or "", r.get("artistName") or ""):
             out.append({"id": sid, "name": (r.get("name") or "Podcast")[:120], "artist": (r.get("artistName") or "")[:100],
                         "img": img.replace("100x100", "200x200") if img else "", "feed": ""})
     return out
@@ -289,7 +303,7 @@ def show(sid, demo=False):
 
 # Words for each page (search engines and people both read them). Honest: lists come from the Apple directory and change by themselves.
 PAGE_TEXT = {
-    "": ("Listen to free podcasts on Sur Music: Urdu, Islamic lectures, Hindi, cricket, Bollywood, news and kids stories. Press play, no app needed.",
+    "": ("Listen to free podcasts on Sur Music: Urdu, Islamic lectures, Hindi, cricket, business, technology, AI, science and news. Press play, no app needed.",
          "Browse free podcasts in Urdu, Hindi and English: Islamic lectures and bayan, cricket, Bollywood, news and stories for children. Pick a show, press play on any episode, and listen in your browser on any phone or computer. Each podcast belongs to its podcaster and plays from the podcaster's own server.",
          [("Are the podcasts free?", "Yes. Listening on Sur Music is free. Each podcast belongs to its podcaster, and the audio plays from the podcaster's own server."),
           ("Do I need an app to listen?", "No. Episodes play in your browser on any phone or computer. The free Android app adds background play with the screen off."),
@@ -299,7 +313,7 @@ PAGE_TEXT = {
          [("Which Islamic scholars are on this page?", "The page looks for well-known scholars such as Dr Israr Ahmed, Engineer Muhammad Ali Mirza, Mufti Tariq Masood, Maulana Tariq Jameel, Javed Ahmad Ghamidi, Mufti Menk and Nouman Ali Khan. Only those with a podcast in the Apple directory are shown."),
           ("Can I listen to old lectures?", "Yes. Open a show and choose oldest first to see older episodes, up to the last 120 in the podcast's feed."),
           ("Who owns these lectures?", "Each lecture belongs to its scholar or publisher. Sur Music only links to the podcast and plays it from the original server.")]),
-    "urdu": ("Urdu podcasts: talks, stories and discussion in Urdu from Pakistan and around the world. Press play, free, no app needed.",
+    "urdu": ("Urdu podcasts: talks and discussion in Urdu from Pakistan and around the world. Press play, free, no app needed.",
              "Urdu podcasts on talks, stories, society, religion and daily life from Pakistan and the Urdu-speaking world. The list comes from the Apple Podcasts directory and refreshes by itself. Press play on any episode.", []),
     "islamic": ("Islamic lectures and Quran podcasts: tafseer, seerah, bayan and reminders. Press play on any episode, free in your browser.",
                 "Islamic lectures, Quran tafseer, seerah and short reminders from many podcasters. Choose a show and press play, or open the show to see the newest and the oldest episodes.", []),
@@ -315,6 +329,14 @@ PAGE_TEXT = {
              "Story podcasts for children: bedtime tales, learning and fun. Parents can press play on any episode. Each podcast belongs to its podcaster.", []),
     "celebrity": ("Celebrity and interview podcasts: well-known hosts and guests, in English, Urdu and Hindi. Press play, free in your browser.",
                   "Podcasts hosted by well-known people or built around celebrity interviews, in English, Urdu and Hindi. The list comes from the Apple Podcasts directory and refreshes by itself. Press play on any episode.", []),
+    "business": ("Business podcasts: entrepreneurship, startups, money and careers. Press play on any episode, free in your browser.",
+                 "Business podcasts about entrepreneurship, startups, investing, money and careers, from the Apple Podcasts directory. The list refreshes by itself.", []),
+    "science": ("Science podcasts: space, nature, health and discovery. Press play on any episode, free in your browser.",
+                "Science podcasts about space, nature, the human body and new discoveries, from the Apple Podcasts directory. The list refreshes by itself.", []),
+    "technology": ("Technology podcasts: gadgets, software, the internet and tech news. Press play on any episode, free in your browser.",
+                   "Technology podcasts about gadgets, software, the internet and the latest tech news, from the Apple Podcasts directory. The list refreshes by itself.", []),
+    "ai": ("Artificial intelligence podcasts: AI news, ChatGPT, machine learning and the future of work. Press play, free in your browser.",
+           "Podcasts about artificial intelligence: AI news, tools such as ChatGPT, machine learning and how AI changes work and life. The list refreshes by itself.", []),
     "top-pakistan": ("The top podcasts in Pakistan right now, from Apple's own chart. Press play on any episode, free in your browser.",
                      "The most listened podcasts in Pakistan right now, taken from Apple's own chart, which updates by itself. Press play on any episode.", []),
     "top-india": ("The top podcasts in India right now, from Apple's own chart. Press play on any episode, free in your browser.",
