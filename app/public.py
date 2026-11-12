@@ -708,6 +708,35 @@ def api_podcasts():
     return resp
 
 
+def _json_cached(data, seconds=600):
+    resp = jsonify(data)
+    resp.headers["Cache-Control"] = f"public, max-age={seconds}"
+    return resp
+
+
+@bp.route("/api/podcasts/c/<slug>")
+def api_podcast_category(slug):
+    """Shows of one podcast category, for the Android app."""
+    from . import podcasts
+    if slug not in podcasts.CATEGORIES:
+        abort(404)
+    demo = bool(current_app.config.get("TESTING") or current_app.config.get("RADIO_DEMO"))
+    rows = podcasts.category(slug, demo)
+    return _json_cached({"items": [{"i": r["id"], "n": r["name"], "a": r["artist"], "m": r["img"]} for r in rows[:60]]})
+
+
+@bp.route("/api/podcasts/<int:sid>/episodes")
+def api_podcast_episodes(sid):
+    """Newest episodes of one show with their audio links, for the Android app (the audio plays from the podcaster's own server)."""
+    from . import podcasts
+    demo = bool(current_app.config.get("TESTING") or current_app.config.get("RADIO_DEMO"))
+    row, eps = podcasts.show(sid, demo)
+    if not row:
+        abort(404)
+    return _json_cached({"show": {"n": row["name"], "a": row["artist"], "m": row["img"]},
+                         "items": [{"id": e["uuid"], "n": e["name"], "u": e["url"], "d": e.get("date", "")} for e in eps[:60]]}, 300)
+
+
 def _podcast_ld(rows, name):
     return {"@context": "https://schema.org", "@type": "ItemList", "name": name, "numberOfItems": len(rows[:20]),
             "itemListElement": [{"@type": "ListItem", "position": i + 1, "name": r["name"],
