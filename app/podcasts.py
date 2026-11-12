@@ -130,9 +130,10 @@ def _family_ok(name, artist):
     return not _ADULT.search(f"{name} {artist}")
 
 
-def _row(r):
+def _row(r, strict=True):
+    """One show. strict=True (lists): shows Apple marks explicit are left out. A show someone opens directly is always opened."""
     sid = str(r.get("collectionId") or "")
-    if not sid.isdigit() or r.get("collectionExplicitness") == "explicit":
+    if not sid.isdigit() or (strict and r.get("collectionExplicitness") == "explicit"):
         return None
     if not _family_ok(r.get("collectionName") or "", r.get("artistName") or ""):
         return None
@@ -354,10 +355,13 @@ def show(sid, demo=False):
         return hit[1]
     try:
         data = _api("/lookup", id=sid, entity="podcast")
-        row = next((x for x in (_row(r) for r in data.get("results", [])) if x), None)
+        row = next((x for x in (_row(r, False) for r in data.get("results", [])) if x), None)
         if not row or not row["feed"]:
-            return (hit[1] if hit else (None, []))
-        _title, eps, art = parse_feed(_get(row["feed"], MAX_FEED, timeout=9), sid)
+            return (hit[1] if hit else ((row, []) if row else (None, [])))
+        try:
+            _title, eps, art = parse_feed(_get(row["feed"], MAX_FEED, timeout=9), sid)
+        except Exception:                                  # the podcaster's own server is slow or down: still open the show page, without episodes
+            return hit[1] if hit else (row, [])
         if art and not row["img"]:
             row["img"] = art
         value = (row, eps)

@@ -51,3 +51,21 @@ def test_faith_row_is_neutral(client):
     for slug in ("faiths", "christian", "jewish", "hindu", "sikh", "buddhist"):
         assert client.get(f"/api/podcasts/c/{slug}").status_code == 200
     assert client.get("/podcasts/c/christian").status_code == 200
+
+
+def test_show_page_opens_even_if_marked_explicit_or_feed_is_down(client, monkeypatch):
+    from app import podcasts
+    podcasts._shows.clear()
+    result = {"collectionId": 777, "collectionName": "Bayan Show", "artistName": "A Scholar", "artworkUrl100": "https://a/100x100.jpg",
+              "feedUrl": "https://feeds.example.org/f.xml", "collectionExplicitness": "explicit"}
+    monkeypatch.setattr(podcasts, "_api", lambda path, **kw: {"results": [result]})
+    monkeypatch.setattr(podcasts, "_get", lambda *a, **k: (_ for _ in ()).throw(OSError("feed is down")))
+    app = client.application
+    app.config["TESTING"] = False
+    app.config["RADIO_DEMO"] = False
+    try:
+        r = client.get("/podcasts/777")
+    finally:
+        app.config["TESTING"] = True
+    assert r.status_code == 200 and b"Bayan Show" in r.data and b"No episodes could be loaded" in r.data
+    assert podcasts._row(result) is None and podcasts._row(result, False)["name"] == "Bayan Show"      # lists still leave explicit shows out
