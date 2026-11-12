@@ -708,18 +708,35 @@ def api_podcasts():
     return resp
 
 
+def _podcast_ld(rows, name):
+    return {"@context": "https://schema.org", "@type": "ItemList", "name": name, "numberOfItems": len(rows[:20]),
+            "itemListElement": [{"@type": "ListItem", "position": i + 1, "name": r["name"],
+                                 "url": absolute(f"/podcasts/{r['id']}")} for i, r in enumerate(rows[:20])]}
+
+
+def _podcast_list(slug, q, rows):
+    from . import podcasts
+    from .seo import faq_items_ld
+    desc, intro, faqs = podcasts.PAGE_TEXT.get(slug, podcasts.PAGE_TEXT[""])
+    if slug == "":
+        title = "Podcasts — Urdu, Islamic, Hindi, Cricket, News"
+    else:
+        label = podcasts.CATEGORIES[slug][0]
+        title = f"{label} Podcasts — Listen Free" if not label.lower().startswith("top") else f"{label} — Listen Free"
+    meta = build_meta(title, desc, page="podcasts" if not slug else f"podcasts-{slug}", noindex=bool(q) or not rows)
+    heading = (podcasts.CATEGORIES[slug][0] if slug else "Podcasts — Urdu, Islamic, Hindi, Cricket & News")
+    crumbs = [("Home", "/"), ("Podcasts", "/podcasts")] + ([(podcasts.CATEGORIES[slug][0], f"/podcasts/c/{slug}")] if slug else [])
+    ld = [breadcrumb_ld(crumbs)] + ([_podcast_ld(rows, heading)] if rows and not q else []) + ([faq_items_ld(faqs)] if faqs else [])
+    return render_template("podcasts.html", meta=meta, rows=rows, q=q, crumbs=crumbs, ld=ld, heading=heading, intro=intro, faqs=faqs,
+                           cats=podcasts.CATEGORIES, here=slug)
+
+
 @bp.route("/podcasts")
 def podcasts_page():
     from . import podcasts
     demo = bool(current_app.config.get("TESTING") or current_app.config.get("RADIO_DEMO"))
     q = (request.args.get("q") or "").strip()[:60]
-    rows = podcasts.search(q, demo) if q else podcasts.featured(demo)
-    meta = build_meta("Podcasts — Urdu, Islamic, Hindi, Cricket & News",
-                      "Listen to free podcasts on Sur Music: Urdu, Islamic lectures, Hindi, cricket, Bollywood, news and kids stories. Press play, no app needed.",
-                      page="podcasts")
-    crumbs = [("Home", "/"), ("Podcasts", "/podcasts")]
-    return render_template("podcasts.html", meta=meta, rows=rows, q=q, crumbs=crumbs, ld=[breadcrumb_ld(crumbs)],
-                           heading="Podcasts — Urdu, Islamic, Hindi, Cricket & News", cats=podcasts.CATEGORIES, here="")
+    return _podcast_list("", q, podcasts.search(q, demo) if q else podcasts.featured(demo))
 
 
 @bp.route("/podcasts/c/<slug>")
@@ -728,12 +745,7 @@ def podcast_category(slug):
     if slug not in podcasts.CATEGORIES:
         abort(404)
     demo = bool(current_app.config.get("TESTING") or current_app.config.get("RADIO_DEMO"))
-    title = podcasts.CATEGORIES[slug][0]
-    meta = build_meta(f"{title[:40]} — Podcasts", f"{title}: free podcasts on Sur Music. Press play on any episode, no app needed.",
-                      page=f"podcasts-{slug}")
-    crumbs = [("Home", "/"), ("Podcasts", "/podcasts"), (title, f"/podcasts/c/{slug}")]
-    return render_template("podcasts.html", meta=meta, rows=podcasts.category(slug, demo), q="", crumbs=crumbs, ld=[breadcrumb_ld(crumbs)],
-                           heading=title, cats=podcasts.CATEGORIES, here=slug)
+    return _podcast_list(slug, "", podcasts.category(slug, demo))
 
 
 @bp.route("/podcasts/<int:sid>")
@@ -1696,6 +1708,7 @@ def llms_txt():
             f"- [Android app and Chrome extension]({site}/download)\n"
             f"- [Top 100 most listened stations]({site}/top-100)\n"
             f"- [Pakistan FM radio by frequency and city]({site}/pakistan-fm-radio)\n"
+            f"- [Free podcasts: Urdu, Islamic scholars, Hindi, cricket, news]({site}/podcasts)\n"
             f"- [A-Z station directory]({site}/stations/a)\n"
             f"- [Accessibility: radio for blind and low-vision listeners (TalkBack, VoiceOver, NVDA, JAWS)]({site}/accessibility)\n"
             f"- [About]({site}/about)\n"
@@ -1739,9 +1752,11 @@ def sitemap():
     site = current_app.config["SITE_URL"]
     pages = ["/", "/bollywood", "/lollywood", "/hollywood", "/download", "/donate", "/about", "/contact", "/faq",
              "/privacy", "/terms", "/disclaimer", "/donation-disclaimer", "/cookies"]
-    pages += ["/for-stations", "/radio-stations", "/top-100", "/pakistan-fm-radio", "/accessibility", "/reviews", "/islam", "/markets", "/live-news", "/blog"] + (["/trending"] if trends.by_country() else []) + [f"/blog/{p['slug']}" for p in blog_data.POSTS] + [f"/continent/{c}" for c in CONTINENTS]
+    pages += ["/for-stations", "/radio-stations", "/top-100", "/pakistan-fm-radio", "/podcasts", "/accessibility", "/reviews", "/islam", "/markets", "/live-news", "/blog"] + (["/trending"] if trends.by_country() else []) + [f"/blog/{p['slug']}" for p in blog_data.POSTS] + [f"/continent/{c}" for c in CONTINENTS]
     pages += [topic_path(k) for _, items in _listed_types() for k, _ in items]
     pages += [topic_path(k) for c in CONTINENTS for k, _, _ in _listed_countries(c)] + ["/deals"]
+    from . import podcasts as _pod
+    pages += [f"/podcasts/c/{k}" for k in _pod.CATEGORIES]
     seen = set()
     keys = {"cat:" + c for c in radio.CATEGORIES} | {"genre:" + g for g in radio.GENRES}
     db = get_db()

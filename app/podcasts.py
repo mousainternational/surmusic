@@ -270,3 +270,38 @@ def show(sid, demo=False):
         while len(_shows) > MAX_SHOWS:
             _shows.pop(min(_shows, key=lambda k: _shows[k][0]))
     return value
+
+
+# Words for each page (search engines and people both read them). Honest: lists come from the Apple directory and change by themselves.
+PAGE_TEXT = {
+    "": ("Listen to free podcasts on Sur Music: Urdu, Islamic lectures, Hindi, cricket, Bollywood, news and kids stories. Press play, no app needed.",
+         "Browse free podcasts in Urdu, Hindi and English: Islamic lectures and bayan, cricket, Bollywood, news and stories for children. Pick a show, press play on any episode, and listen in your browser on any phone or computer. Each podcast belongs to its podcaster and plays from the podcaster's own server.",
+         [("Are the podcasts free?", "Yes. Listening on Sur Music is free. Each podcast belongs to its podcaster, and the audio plays from the podcaster's own server."),
+          ("Do I need an app to listen?", "No. Episodes play in your browser on any phone or computer. The free Android app adds background play with the screen off."),
+          ("How often is the list updated?", "The list of shows refreshes by itself about every 12 hours, and each show's episodes are read again about every hour, so new episodes appear without any action.")]),
+    "islamic-scholars": ("Podcasts of Islamic scholars: bayan, dars and talks, including well-known Pakistani scholars, when they publish a podcast. Free, in your browser.",
+         "Bayan, dars and talks by well-known Islamic scholars, including Pakistani scholars, gathered from the Apple Podcasts directory. Many scholars publish only on YouTube, so this page shows the ones that have a real podcast feed, and it updates by itself as new shows appear. Press play on any episode, or open a show and choose oldest first to find older lectures.",
+         [("Which Islamic scholars are on this page?", "The page looks for well-known scholars such as Dr Israr Ahmed, Engineer Muhammad Ali Mirza, Mufti Tariq Masood, Maulana Tariq Jameel, Javed Ahmad Ghamidi, Mufti Menk and Nouman Ali Khan. Only those with a podcast in the Apple directory are shown."),
+          ("Can I listen to old lectures?", "Yes. Open a show and choose oldest first to see older episodes, up to the last 120 in the podcast's feed."),
+          ("Who owns these lectures?", "Each lecture belongs to its scholar or publisher. Sur Music only links to the podcast and plays it from the original server.")]),
+    "urdu": ("Urdu podcasts: talks, stories and discussion in Urdu from Pakistan and around the world. Press play, free, no app needed.",
+             "Urdu podcasts on talks, stories, society, religion and daily life from Pakistan and the Urdu-speaking world. The list comes from the Apple Podcasts directory and refreshes by itself. Press play on any episode.", []),
+    "islamic": ("Islamic lectures and Quran podcasts: tafseer, seerah, bayan and reminders. Press play on any episode, free in your browser.",
+                "Islamic lectures, Quran tafseer, seerah and short reminders from many podcasters. Choose a show and press play, or open the show to see the newest and the oldest episodes.", []),
+    "hindi": ("Hindi podcasts: stories, talks and discussion in Hindi. Press play on any episode, free in your browser.",
+              "Hindi podcasts on stories, talks, film and daily life, from the Apple Podcasts directory. The list refreshes by itself.", []),
+    "cricket": ("Cricket podcasts: match talk, analysis and stories from Pakistan, India and the world. Press play, free in your browser.",
+                "Cricket podcasts with match talk, analysis and stories from Pakistan, India and the world. New episodes appear by themselves. For live ball-by-ball radio commentary, see the live cricket radio page on Sur Music.", []),
+    "bollywood": ("Bollywood podcasts: film talk, music and stars. Press play on any episode, free in your browser.",
+                  "Bollywood podcasts about films, songs and the stars, from the Apple Podcasts directory. For live Bollywood songs, open the Bollywood radio on Sur Music.", []),
+    "news": ("News and talk podcasts: daily news, current affairs and discussion. Press play, free in your browser.",
+             "News and talk podcasts with daily headlines and current affairs from Pakistan and the world. For live news radio, see the live news page on Sur Music.", []),
+    "kids": ("Kids story podcasts: bedtime stories and learning for children. Press play on any episode, free in your browser.",
+             "Story podcasts for children: bedtime tales, learning and fun. Parents can press play on any episode. Each podcast belongs to its podcaster.", []),
+    "top-pakistan": ("The top podcasts in Pakistan right now, from Apple's own chart. Press play on any episode, free in your browser.",
+                     "The most listened podcasts in Pakistan right now, taken from Apple's own chart, which updates by itself. Press play on any episode.", []),
+    "top-india": ("The top podcasts in India right now, from Apple's own chart. Press play on any episode, free in your browser.",
+                  "The most listened podcasts in India right now, taken from Apple's own chart, which updates by itself. Press play on any episode.", []),
+    "top-world": ("The top podcasts worldwide right now, from Apple's own chart. Press play on any episode, free in your browser.",
+                  "The most listened podcasts worldwide right now, taken from Apple's own chart, which updates by itself. Press play on any episode.", []),
+}

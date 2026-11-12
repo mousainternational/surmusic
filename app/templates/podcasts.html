@@ -5,7 +5,7 @@
   {{ ui.breadcrumbs(crumbs) }}
   <header class="page-head">
     <h1>{{ heading }}</h1>
-    <p class="lead">Pick a podcast and press play on any episode, right here. The audio comes straight from each podcaster's own server, and every show names its podcaster.</p>
+    <p class="lead">{{ intro }}</p>
     <form class="hero-search" role="search" action="/podcasts" method="get">
       <label for="pod-q" class="sr">Search podcasts</label>
       <input id="pod-q" name="q" type="search" value="{{ q }}" placeholder="Search a podcast or a person…" maxlength="60" autocomplete="off">
@@ -27,6 +27,8 @@
   {% else %}
   <div class="empty card"><p>{% if q %}No podcasts found for “{{ q }}”. Try another name.{% else %}The podcast list is not reachable right now. Please try again in a minute.{% endif %}</p></div>
   {% endif %}
+  {% if faqs %}<section class="card faq" aria-labelledby="pod-faq"><h2 class="h3" id="pod-faq">Questions about these podcasts</h2>
+    {%- for qn, an in faqs %}<details><summary>{{ qn }}</summary><p>{{ an }}</p></details>{% endfor %}</section>{% endif %}
   <p class="small muted">Podcast listings come from the free Apple Podcasts directory. Each podcast belongs to its podcaster.</p>
 </div>
 {% endblock %}
