@@ -289,6 +289,7 @@
 
 <script nonce="{{ csp_nonce() }}" src="{{ asset('js/site.js') }}" defer></script>
 {% block scripts %}<script nonce="{{ csp_nonce() }}" src="{{ asset('js/player.js') }}" defer></script>{% endblock %}
+<script nonce="{{ csp_nonce() }}" src="{{ asset('js/podrows.js') }}" defer></script>
 <script nonce="{{ csp_nonce() }}" src="{{ asset('js/voice.js') }}" defer></script>
 <script nonce="{{ csp_nonce() }}" src="{{ asset('js/webvoice.js') }}" defer></script>
 {%- if ads_on %}<script nonce="{{ csp_nonce() }}" src="{{ asset('js/ads.js') }}" defer></script>{% endif %}
