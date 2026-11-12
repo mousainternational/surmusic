@@ -5,6 +5,9 @@
 {% import "_trending.html" as tr %}
 {% block content %}
 <div class="wrap page">
+  {% set rel_chips %}{% if genre == 'religious' or genre in ('islamic', 'christian', 'bhajan', 'gurbani', 'jewish') %}<nav class="chips religious-types" aria-label="Religious types">
+    <a class="chip{{ ' active' if genre == 'religious' }}" href="/genre/religious">All religious</a>{% for href, label in religious_types() %}<a class="chip{{ ' active' if href == '/genre/' ~ genre }}" href="{{ href }}">{{ label }}</a>{% endfor %}
+  </nav>{% endif %}{% endset %}
   {{ ui.breadcrumbs(crumbs or [('Home', '/'), (info.h1.split(' — ')[0], request.path)]) }}
   <div class="page-top">
   <div class="page-top-main">
@@ -16,6 +19,7 @@
     {% if genre == 'pakistan' or (genre and 'Pakistan' in (info.description or '')) %}{% set lr = local_radio_link() %}<a class="btn" href="{{ lr.href }}">📻 {{ lr.label }}</a>{% endif %}
   </header>
   <div class="strip-in-copy">{{ ui.find_bar() }}</div>
+  {% if rel_chips %}<div class="rel-under rel-mobile">{{ rel_chips }}</div>{% endif %}
   <details class="more-types"><summary>All radio types</summary>{{ ui.genre_chips(genre or cat) }}</details>
   </div>
   <div class="page-top-mid">
@@ -23,7 +27,7 @@
     {% elif stations %}<div class="card now-card"><h2 class="h3">Top stations right now</h2>{{ ui.station_list(stations[:4], cat) }}</div>{% endif %}
   </div>
   {{ ui.flag_box('flag-top') }}
-  <div class="hero2-strip">{{ ui.find_bar() }}</div>
+  <div class="hero2-strip">{{ ui.find_bar() }}{% if rel_chips %}<div class="rel-under rel-desktop">{{ rel_chips }}</div>{% endif %}</div>
   </div>
   {{ ads.ad('top') }}
   <div class="with-side">
@@ -32,9 +36,6 @@
       <div class="empty card"><p>{{ error }} Please try again in a minute.</p></div>
       {% else %}
       {% if not stations %}<div class="empty card"><p>No live stations of this type are online right now. Please try again later, or explore the other types above.</p></div>{% endif %}
-      {% if genre == 'religious' or genre in ('islamic', 'christian', 'bhajan', 'gurbani', 'jewish') %}<nav class="chips religious-types" aria-label="Religious types">
-        <a class="chip{{ ' active' if genre == 'religious' }}" href="/genre/religious">All religious</a>{% for href, label in religious_types() %}<a class="chip{{ ' active' if href == '/genre/' ~ genre }}" href="{{ href }}">{{ label }}</a>{% endfor %}
-      </nav>{% endif %}
       {% if stations %}<input class="list-find" type="search" data-filter-list placeholder="Type to find a channel…" aria-label="Find a channel on this page" autocomplete="off">{% endif %}
       <p class="muted small">{{ total or (stations | length) }} live stations{% if pages and pages > 1 %} · page {{ page_no }} of {{ pages }}{% endif %} · secure streams that play in your browser. More stations are available in the <a href="{{ url_for('public.download_page') }}">Android app</a>.</p>
       {{ ui.station_list(stations, cat) }}

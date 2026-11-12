@@ -1423,3 +1423,24 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 .flag-tile:nth-child(5n) .flag-big { animation-duration: 3.8s; }
 .flag-grid { overflow-x: hidden; }
 @media (prefers-reduced-motion: reduce) { .flag-tile .flag-big { animation: none; } }
+
+/* Phones: the player is two rows (station name on top, buttons below) so nothing is squeezed or wrapped letter by letter */
+@media (max-width: 759px) {
+  :root { --player-h: 118px; }
+  .player-inner { grid-template-columns: minmax(0, 1fr); gap: 4px; padding-top: 6px; padding-bottom: 6px; }
+  .pl-now { min-width: 0; }
+  .pl-text { flex: 1 1 auto; min-width: 0; }
+  .player .pl-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: normal; word-break: normal; }
+  .pl-ctrl { display: flex; justify-content: space-between; gap: 4px; flex-wrap: nowrap; }
+  .pl-vol { display: none; }
+}
+
+/* Religious sub-types sit right under the Religious box (phone and desktop) */
+.rel-under { margin: 10px 0 4px; }
+.rel-under .chips { margin: 0; }
+.rel-desktop { display: none; }
+@media (min-width: 1000px) { .rel-mobile { display: none; } .rel-desktop { display: block; grid-column: 1 / -1; } }
+
+@keyframes pl-slide { 0%, 15% { text-indent: 0; } 85%, 100% { text-indent: var(--pl-shift, 0); } }
+.player .pl-name.pl-marq { text-overflow: clip; animation: pl-slide var(--pl-dur, 10s) ease-in-out infinite alternate; }
+@media (prefers-reduced-motion: reduce) { .player .pl-name.pl-marq { animation: none; text-overflow: ellipsis; } }
