@@ -547,3 +547,25 @@
     renderNow();
   }).catch(function () {});
 })();
+
+/* A long station name stays on one line and slides to and fro, like the news ticker */
+(function () {
+  var el = document.getElementById("pl-name");
+  if (!el) return;
+  var busy = false;
+  function fit() {
+    busy = true;
+    el.classList.remove("pl-marq");
+    el.style.removeProperty("--pl-shift");
+    var over = el.scrollWidth - el.clientWidth;
+    if (over > 4) {
+      el.style.setProperty("--pl-shift", "-" + (over + 12) + "px");
+      el.style.setProperty("--pl-dur", Math.max(6, Math.round(over / 25)) + "s");
+      el.classList.add("pl-marq");
+    }
+    setTimeout(function () { busy = false; }, 0);
+  }
+  new MutationObserver(function () { if (!busy) fit(); }).observe(el, { childList: true, characterData: true, subtree: true });
+  window.addEventListener("resize", fit);
+  fit();
+})();
