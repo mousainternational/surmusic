@@ -722,7 +722,9 @@ def api_podcast_status():
     try:
         out["apple_chart_test"] = len(podcasts._chart_v2("us"))
     except Exception as e:
-        out["apple_chart_test"] = f"{type(e).__name__}: {str(e)[:150]}"
+        import traceback
+        tb = traceback.extract_tb(e.__traceback__)[-1]
+        out["apple_chart_test"] = f"{type(e).__name__}: {str(e)[:150]} (line {tb.lineno}: {(tb.line or '')[:90]})"
     resp = jsonify(out)
     resp.headers["Cache-Control"] = "no-store"
     return resp

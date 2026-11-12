@@ -107,7 +107,7 @@ def _https(url):
 _ADULT = re.compile(r"\b(sex|sexy|sexual|erotic|erotica|porn|xxx|nsfw|18\+|adult|kamasutra|hot stor|nude|fetish|dirty)", re.I)
 
 
-def _clean(name, artist):
+def _family_ok(name, artist):
     """Family-friendly lists only: adult shows are never listed."""
     return not _ADULT.search(f"{name} {artist}")
 
@@ -116,11 +116,15 @@ def _row(r):
     sid = str(r.get("collectionId") or "")
     if not sid.isdigit() or r.get("collectionExplicitness") == "explicit":
         return None
-    if not _clean(r.get("collectionName") or "", r.get("artistName") or ""):
+    if not _family_ok(r.get("collectionName") or "", r.get("artistName") or ""):
         return None
     img = _https(r.get("artworkUrl100") or r.get("artworkUrl60") or "")
     return {"id": sid, "name": (r.get("collectionName") or "Podcast")[:120], "artist": (r.get("artistName") or "")[:100],
             "img": img.replace("100x100", "200x200") if img else "", "feed": _https(r.get("feedUrl") or "")}
+
+
+def _txt(v):
+    return v if isinstance(v, str) else ""
 
 
 def _chart(cc):
@@ -135,7 +139,7 @@ def _chart(cc):
             img = _https((imgs[-1] or {}).get("label") if imgs else "")
             name = ((e.get("im:name") or {}).get("label") or "Podcast")
             artist = ((e.get("im:artist") or {}).get("label") or "")
-            if sid.isdigit() and _clean(name, artist):
+            if sid.isdigit() and _family_ok(name, artist):
                 out.append({"id": sid, "name": name[:120], "artist": artist[:100],
                             "img": re.sub(r"/\d+x\d+", "/200x200", img) if img else "", "feed": ""})
         return out
@@ -144,11 +148,14 @@ def _chart(cc):
 def _chart_v2(cc):
     data = json.loads(_get(f"https://rss.applemarketingtools.com/api/v2/{cc}/podcasts/top/30/podcasts.json", MAX_JSON).decode("utf-8", "replace"))
     out = []
-    for r in data.get("feed", {}).get("results", []):
-        sid = str(r.get("id") or "")
-        img = _https(r.get("artworkUrl100") or "")
-        if sid.isdigit() and _clean(r.get("name") or "", r.get("artistName") or ""):
-            out.append({"id": sid, "name": (r.get("name") or "Podcast")[:120], "artist": (r.get("artistName") or "")[:100],
+    feed = data.get("feed") if isinstance(data, dict) else None
+    for r in (feed.get("results") if isinstance(feed, dict) else None) or []:
+        if not isinstance(r, dict):
+            continue
+        sid, name, artist = str(r.get("id") or ""), _txt(r.get("name")) or "Podcast", _txt(r.get("artistName"))
+        img = _https(_txt(r.get("artworkUrl100")))
+        if sid.isdigit() and _family_ok(name, artist):
+            out.append({"id": sid, "name": name[:120], "artist": artist[:100],
                         "img": img.replace("100x100", "200x200") if img else "", "feed": ""})
     return out
 
