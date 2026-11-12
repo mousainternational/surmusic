@@ -609,4 +609,8 @@ document.addEventListener("error", function (e) {
     ["pointerenter", "touchstart", "scroll", "focusin"].forEach(function (ev) { g.addEventListener(ev, once, { passive: true, once: true }); });
   });
   setTimeout(once, 6000);
+  if (window.IntersectionObserver) {                 /* phones: load the full list as soon as the flags box is close to the screen */
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { once(); io.disconnect(); } }); }, { rootMargin: "600px 0px" });
+    grids.forEach(function (g) { io.observe(g); });
+  }
 })();
