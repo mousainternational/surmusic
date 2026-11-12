@@ -46,6 +46,7 @@ STRIP_ORDER = [("top-world", 12), ("celebrity", 10), ("islamic-scholars", 12), (
 FEATURED_TTL, SHOW_TTL, MAX_SHOWS = 12 * 3600, 3600, 40
 MAX_JSON, MAX_FEED = 1_000_000, 2_500_000
 
+_errors = {}                                  # slug -> last error text (shown on /api/podcasts/status, so a problem can be seen)
 _lock = threading.Lock()
 _building = set()
 _cat = {}                                     # slug -> (time, rows)
@@ -123,6 +124,24 @@ def _row(r):
 
 
 def _chart(cc):
+    try:
+        return _chart_v2(cc)
+    except Exception:                                  # Apple's older chart address, used when the new one is slow or down
+        data = json.loads(_get(f"https://itunes.apple.com/{cc}/rss/toppodcasts/limit=30/json", MAX_JSON).decode("utf-8", "replace"))
+        out = []
+        for e in data.get("feed", {}).get("entry", []):
+            sid = str(((e.get("id") or {}).get("attributes") or {}).get("im:id") or "")
+            imgs = e.get("im:image") or []
+            img = _https((imgs[-1] or {}).get("label") if imgs else "")
+            name = ((e.get("im:name") or {}).get("label") or "Podcast")
+            artist = ((e.get("im:artist") or {}).get("label") or "")
+            if sid.isdigit() and _clean(name, artist):
+                out.append({"id": sid, "name": name[:120], "artist": artist[:100],
+                            "img": re.sub(r"/\d+x\d+", "/200x200", img) if img else "", "feed": ""})
+        return out
+
+
+def _chart_v2(cc):
     data = json.loads(_get(f"https://rss.applemarketingtools.com/api/v2/{cc}/podcasts/top/30/podcasts.json", MAX_JSON).decode("utf-8", "replace"))
     out = []
     for r in data.get("feed", {}).get("results", []):
@@ -157,7 +176,8 @@ def _build(slug):
             else:
                 data = _api("/search", term=step[1], media="podcast", limit=12, country=step[2])
                 rows = [x for x in (_row(r) for r in data.get("results", [])) if x]
-        except Exception:
+        except Exception as e:
+            _errors[slug] = f"{step[0]}: {type(e).__name__}: {str(e)[:150]}"
             continue
         for row in rows:
             if row["id"] not in seen and row["img"]:

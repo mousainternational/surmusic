@@ -714,6 +714,20 @@ def _json_cached(data, seconds=600):
     return resp
 
 
+@bp.route("/api/podcasts/status")
+def api_podcast_status():
+    """A small health page: how many shows each list has, and the last error, so a problem can be seen at once."""
+    from . import podcasts
+    out = {"lists": {k: len(v[1]) for k, v in list(podcasts._cat.items())}, "errors": dict(podcasts._errors)}
+    try:
+        out["apple_chart_test"] = len(podcasts._chart_v2("us"))
+    except Exception as e:
+        out["apple_chart_test"] = f"{type(e).__name__}: {str(e)[:150]}"
+    resp = jsonify(out)
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
+
+
 @bp.route("/api/podcasts/c/<slug>")
 def api_podcast_category(slug):
     """Shows of one podcast category, for the Android app."""
