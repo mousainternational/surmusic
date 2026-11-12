@@ -12,6 +12,7 @@
     </div>
   </header>
   {% if eps %}
+  <p class="small">{{ eps | length }} episodes · {% if old %}oldest first · <a href="/podcasts/{{ sid }}">Show newest first</a>{% else %}newest first · <a href="/podcasts/{{ sid }}?order=old">Show oldest first</a>{% endif %}</p>
   {{ ui.station_list(eps, 'podcast') }}
   {% else %}
   <div class="empty card"><p>No episodes could be loaded right now. Please try again in a minute.</p></div>

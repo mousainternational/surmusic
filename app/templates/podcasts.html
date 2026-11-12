@@ -4,7 +4,7 @@
 <div class="wrap page">
   {{ ui.breadcrumbs(crumbs) }}
   <header class="page-head">
-    <h1>Podcasts — Urdu, Islamic, Hindi, Cricket &amp; News</h1>
+    <h1>{{ heading }}</h1>
     <p class="lead">Pick a podcast and press play on any episode, right here. The audio comes straight from each podcaster's own server, and every show names its podcaster.</p>
     <form class="hero-search" role="search" action="/podcasts" method="get">
       <label for="pod-q" class="sr">Search podcasts</label>
@@ -12,6 +12,9 @@
       <button class="btn btn-primary" type="submit">Search</button>
     </form>
   </header>
+  <nav class="chips pod-cats" aria-label="Podcast pages">
+    <a class="chip{{ ' active' if not here and not q }}" href="/podcasts">All</a>{% for k, c in cats.items() %}<a class="chip{{ ' active' if k == here }}" href="/podcasts/c/{{ k }}">{{ c[0] }}</a>{% endfor %}
+  </nav>
   {% if rows %}
   <ul class="pod-grid">
     {%- for r in rows %}

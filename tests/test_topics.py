@@ -398,3 +398,9 @@ def test_podcast_pages_and_strip_work(client):
     assert "Sample episode 1" in html and 'class="st' in html
     assert client.get("/podcasts/999999").status_code == 404
     assert 'id="pd-ticker"' in client.get("/").get_data(as_text=True)
+
+
+def test_podcast_category_pages_work(client):
+    assert client.get("/podcasts/c/islamic-scholars").status_code == 200
+    assert client.get("/podcasts/c/nope").status_code == 404
+    assert "oldest first" in client.get("/podcasts/1001?order=old").get_data(as_text=True)
