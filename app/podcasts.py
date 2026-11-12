@@ -203,8 +203,19 @@ def featured(demo=False):
     """The moving strip: Islamic scholars first, then the charts and a few of each page."""
     if demo:
         return DEMO_SHOWS
+    first = {"top-world", "islamic-scholars", "top-pakistan"}          # these three are fetched now; the rest join the strip once they are ready,
+    def part(sn):                                                      # so a cold start never makes the page wait for thirteen lists
+        slug, n = sn
+        if slug in first:
+            return category(slug)[:n]
+        with _lock:
+            hit = _cat.get(slug)
+            fresh = bool(hit and hit[1])
+        if not fresh:
+            threading.Thread(target=category, args=(slug,), daemon=True).start()
+        return (hit[1] if fresh else [])[:n]
     with ThreadPoolExecutor(8) as pool:
-        lists = list(pool.map(lambda sn: category(sn[0])[:sn[1]], STRIP_ORDER))
+        lists = list(pool.map(part, STRIP_ORDER))
     out, seen, per = [], set(), {}
     for row in lists[0][:10]:                                          # the 10 most famous podcasts in the world come first, with their pictures
         if row["id"] not in seen and row["img"]:
