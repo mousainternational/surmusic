@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% block content %}
+<div class="wrap page">
+  {{ ui.breadcrumbs(crumbs) }}
+  <header class="page-head pod-head">
+    <span class="pod-art pod-art-lg thumb {{ thumb_class(show.name) }}" data-letter="{{ (show.name or '?')[:1] | upper }}">{% if show.img %}<img src="{{ show.img }}" alt="" decoding="async" referrerpolicy="no-referrer" width="120" height="120">{% endif %}</span>
+    <div>
+      <h1>{{ show.name }}</h1>
+      <p class="lead">By {{ show.artist }}. Press play on any episode below.</p>
+      {% if eps %}<button class="btn btn-accent" type="button" data-play-first>▶ Play latest episode</button>{% endif %}
+    </div>
+  </header>
+  {% if eps %}
+  {{ ui.station_list(eps, 'podcast') }}
+  {% else %}
+  <div class="empty card"><p>No episodes could be loaded right now. Please try again in a minute.</p></div>
+  {% endif %}
+  <p class="small muted">“{{ show.name }}” belongs to {{ show.artist }}. The audio plays from the podcaster's own server. <a href="/podcasts">All podcasts</a></p>
+</div>
+{% endblock %}

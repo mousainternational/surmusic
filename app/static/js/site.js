@@ -614,3 +614,42 @@ document.addEventListener("error", function (e) {
     grids.forEach(function (g) { io.observe(g); });
   }
 })();
+
+
+// ---------- podcast strip: shows (picture + name) that slide past; each one opens on this site ----------
+(function () {
+  var bar, track, tries = 0;
+  function build(items) {
+    track.textContent = "";
+    var set = document.createElement("div"); set.style.display = "flex";
+    items.forEach(function (it) {
+      var a = document.createElement("a"); a.className = "pd-item"; a.href = "/podcasts/" + encodeURIComponent(it.i);
+      var im = document.createElement("span"); im.className = "pd-pic"; im.setAttribute("data-letter", (it.n || "?").charAt(0).toUpperCase());
+      if (it.m && /^https:\/\//.test(it.m)) { var g = document.createElement("img"); g.src = it.m; g.alt = ""; g.width = 36; g.height = 36; g.loading = "lazy"; g.decoding = "async"; g.referrerPolicy = "no-referrer"; im.appendChild(g); }
+      var t = document.createElement("span"); t.className = "pd-txt";
+      var b = document.createElement("b"); b.textContent = it.n; t.appendChild(b);
+      if (it.a) { var s = document.createElement("i"); s.textContent = it.a; t.appendChild(s); }
+      a.appendChild(im); a.appendChild(t); set.appendChild(a);
+    });
+    track.appendChild(set);
+    var dup = set.cloneNode(true); dup.className = "pd-dup"; dup.setAttribute("aria-hidden", "true");
+    dup.querySelectorAll("a").forEach(function (a) { a.tabIndex = -1; });
+    track.appendChild(dup);
+    track.addEventListener("error", function (e) { if (e.target && e.target.tagName === "IMG") e.target.remove(); }, true);
+    bar.hidden = false;
+    track.style.setProperty("--pd-speed", Math.max(60, Math.min(260, items.length * 7)) + "s");
+  }
+  function load() {
+    fetch("/api/podcasts", { credentials: "same-origin" }).then(function (r) { return r.ok ? r.json() : { items: [] }; })
+      .then(function (d) {
+        if (d.items && d.items.length) build(d.items);
+        else if (++tries < 4) setTimeout(load, 20000);
+      }).catch(function () { if (++tries < 4) setTimeout(load, 30000); });
+  }
+  function init() {
+    bar = document.getElementById("pd-ticker"); track = document.getElementById("pd-track");
+    if (!bar || !track || !window.fetch) return;
+    if (window.requestIdleCallback) requestIdleCallback(load, { timeout: 3000 }); else setTimeout(load, 1500);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+})();
