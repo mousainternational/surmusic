@@ -737,10 +737,11 @@ def api_podcast_near():
     """Which chart to show this visitor: the one of his own country (Cloudflare tells us the country; Pakistan if unknown)."""
     from . import podcasts
     cc = (request.headers.get("CF-IPCountry") or request.args.get("cc") or "").strip().lower()[:2]
-    if cc not in podcasts.NEAR:
-        cc = "pk"
-    resp = jsonify({"cc": cc, "name": podcasts.NEAR[cc], "title": f"Top podcasts in {podcasts.NEAR[cc]}", "slug": f"top-{cc}",
-                    "faith": podcasts.FAITH_BY_COUNTRY.get(cc, "islamic-scholars"), "faiths": [{"slug": k, "name": n} for k, n in podcasts.FAITHS]})
+    if cc in podcasts.NEAR:
+        info = {"cc": cc, "name": podcasts.NEAR[cc], "title": f"Top podcasts in {podcasts.NEAR[cc]}", "slug": f"top-{cc}"}
+    else:                                                    # country unknown: the world chart, no country is preferred
+        info = {"cc": "", "name": "the world", "title": "Top podcasts in the world", "slug": "top-world"}
+    resp = jsonify({**info, "faith": "faiths", "faiths": [{"slug": "faiths", "name": "All faiths"}] + [{"slug": k, "name": n} for k, n in podcasts.FAITHS]})
     resp.headers["Cache-Control"] = "private, no-store"
     resp.headers["Vary"] = "CF-IPCountry"
     return resp

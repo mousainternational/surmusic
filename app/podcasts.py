@@ -54,13 +54,9 @@ NEAR = {"pk": "Pakistan", "in": "India", "us": "the United States", "gb": "the U
         "de": "Germany", "fr": "France", "it": "Italy", "es": "Spain", "nl": "the Netherlands", "se": "Sweden", "no": "Norway", "ie": "Ireland",
         "br": "Brazil", "mx": "Mexico", "ar": "Argentina", "za": "South Africa", "ng": "Nigeria", "ke": "Kenya", "ma": "Morocco", "dz": "Algeria",
         "jo": "Jordan", "lb": "Lebanon", "il": "Israel", "jp": "Japan", "kr": "South Korea", "ru": "Russia", "ua": "Ukraine", "pl": "Poland"}
-# The religious row on the home page: every faith is offered on equal terms and the visitor can change it. The first choice is only a
-# guess from the country (the main tradition there); it is never taken to be the visitor's own belief.
+# Religion on the home page is neutral: the row starts with a mix of all faiths and the visitor may choose one. Nobody's belief is guessed from the country.
 FAITHS = [("islamic-scholars", "Islamic"), ("christian", "Christian"), ("jewish", "Jewish"), ("hindu", "Hindu"), ("sikh", "Sikh"), ("buddhist", "Buddhist")]
-FAITH_BY_COUNTRY = {**{c: "islamic-scholars" for c in "pk ae sa qa kw om bh eg tr bd my id jo lb ma dz".split()},
-                    **{c: "christian" for c in "us gb ca au de fr it es nl se no ie br mx ar za ng ke ph pl ua ru".split()},
-                    "il": "jewish", "in": "hindu", "np": "hindu", "lk": "buddhist", "jp": "buddhist", "sg": "buddhist"}
-STRIP_ORDER = [("top-world", 12), ("celebrity", 10), ("islamic-scholars", 12), ("top-pakistan", 8), ("urdu", 5), ("islamic", 4), ("hindi", 3), ("cricket", 3), ("news", 3), ("business", 3), ("technology", 3), ("ai", 3), ("science", 2), ("kids", 2)]
+STRIP_ORDER = [("top-world", 12), ("celebrity", 10), ("faiths", 12), ("technology", 3), ("ai", 3), ("business", 3), ("science", 2), ("news", 3), ("cricket", 3), ("urdu", 3), ("hindi", 3), ("kids", 2)]
 FEATURED_TTL, SHOW_TTL, MAX_SHOWS = 12 * 3600, 3600, 40
 MAX_JSON, MAX_FEED = 1_000_000, 2_500_000
 
@@ -179,10 +175,12 @@ def _chart_v2(cc):
 
 
 def valid(slug):
-    return slug in CATEGORIES or (slug.startswith("top-") and slug[4:] in NEAR)
+    return slug in CATEGORIES or slug == "faiths" or (slug.startswith("top-") and slug[4:] in NEAR)
 
 
 def label(slug):
+    if slug == "faiths":
+        return "Religion & spirituality (all faiths)"
     return CATEGORIES[slug][0] if slug in CATEGORIES else f"Top podcasts in {NEAR[slug[4:]]}"
 
 
@@ -230,6 +228,9 @@ def category(slug, demo=False):
     is kept if Apple is slow."""
     if not valid(slug):
         return []
+    if slug == "faiths":                                    # a mix: the first shows of every faith, taking turns
+        lists = [category(k, demo)[:4] for k, _n in FAITHS]
+        return [r for i in range(4) for rows in lists for r in rows[i:i + 1]]
     if demo:
         return DEMO_SHOWS
     with _lock:

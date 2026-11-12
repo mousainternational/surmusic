@@ -35,17 +35,19 @@ def test_visitor_country_chart(client):
     r = client.get("/api/podcasts/near", headers={"CF-IPCountry": "GB"})
     assert r.get_json()["slug"] == "top-gb" and r.get_json()["title"] == "Top podcasts in the United Kingdom"
     assert "no-store" in r.headers["Cache-Control"]
-    assert client.get("/api/podcasts/near", headers={"CF-IPCountry": "XX"}).get_json()["slug"] == "top-pk"     # unknown: Pakistan
-    assert client.get("/api/podcasts/near").get_json()["slug"] == "top-pk"
+    assert client.get("/api/podcasts/near", headers={"CF-IPCountry": "XX"}).get_json()["slug"] == "top-world"
+    assert client.get("/api/podcasts/near").get_json()["slug"] == "top-world"
     assert client.get("/api/podcasts/c/top-gb").status_code == 200
     assert client.get("/podcasts/c/top-gb").status_code == 200
     assert client.get("/api/podcasts/c/top-zz").status_code == 404
 
 
-def test_faith_row_defaults_and_choices(client):
-    d = client.get("/api/podcasts/near", headers={"CF-IPCountry": "IL"}).get_json()
-    assert d["faith"] == "jewish" and {f["slug"] for f in d["faiths"]} >= {"islamic-scholars", "christian", "jewish", "hindu", "sikh", "buddhist"}
-    assert client.get("/api/podcasts/near", headers={"CF-IPCountry": "US"}).get_json()["faith"] == "christian"
-    assert client.get("/api/podcasts/near", headers={"CF-IPCountry": "PK"}).get_json()["faith"] == "islamic-scholars"
-    for slug in ("christian", "jewish", "hindu", "sikh", "buddhist"):
-        assert client.get(f"/api/podcasts/c/{slug}").status_code == 200 and client.get(f"/podcasts/c/{slug}").status_code == 200
+def test_faith_row_is_neutral(client):
+    for cc in ("IL", "US", "PK", "IN", "XX"):
+        d = client.get("/api/podcasts/near", headers={"CF-IPCountry": cc}).get_json()
+        assert d["faith"] == "faiths"                                                  # nobody's belief is guessed from the country
+        assert d["faiths"][0]["slug"] == "faiths" and {f["slug"] for f in d["faiths"]} >= {"islamic-scholars", "christian", "jewish", "hindu", "sikh", "buddhist"}
+    assert client.get("/api/podcasts/near", headers={"CF-IPCountry": "XX"}).get_json()["slug"] == "top-world"     # unknown country: the world chart
+    for slug in ("faiths", "christian", "jewish", "hindu", "sikh", "buddhist"):
+        assert client.get(f"/api/podcasts/c/{slug}").status_code == 200
+    assert client.get("/podcasts/c/christian").status_code == 200

@@ -17,10 +17,10 @@
       }
       if (sel) cur = sel.value;
       var h = row.querySelector("h2"), name = (list.filter(function (f) { return f.slug === cur; })[0] || {}).name || "";
-      if (h && name) h.textContent = name + " podcasts";
+      if (h) h.textContent = cur === "faiths" ? "Religion & spirituality" : name + " podcasts";
       var a = row.querySelector(".section-head a"); if (a) a.href = "/podcasts/c/" + cur;
       return cur;
-    }).catch(function () { return "islamic-scholars"; });
+    }).catch(function () { return "faiths"; });
   }
   function slugOf(row) {                       // "near" = the chart of the visitor's own country
     var s = row.getAttribute("data-slug");
@@ -30,7 +30,7 @@
       var h = row.querySelector("h2"); if (h && d.title) h.textContent = d.title;
       var a = row.querySelector(".section-head a"); if (a) a.href = "/podcasts/c/" + d.slug;
       return d.slug;
-    }).catch(function () { return "top-pakistan"; });
+    }).catch(function () { return "top-world"; });
   }
   function fill(row) {
     if (row.getAttribute("data-done")) return; row.setAttribute("data-done", "1");
