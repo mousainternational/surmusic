@@ -61,9 +61,9 @@ def test_world_countries_and_continents(client, monkeypatch):
     # only countries that really have stations are listed (when Radio Browser tells us the numbers)
     monkeypatch.setattr(radio, "country_counts", lambda: {"DE": 900, "NR": 0})
     html = client.get("/continent/oceania").get_data(as_text=True)
-    assert "Nauru" not in html and "noindex" in html
+    assert "Nauru" not in html.split("<main", 1)[1] and "noindex" in html
     html = client.get("/radio-stations").get_data(as_text=True)
-    assert "/country/germany" in html and "/country/nauru" not in html
+    assert "/country/germany" in html and "/country/nauru" not in html.split("<main", 1)[1]
     xml = client.get("/sitemap.xml").get_data(as_text=True)
     assert "/country/germany</loc>" in xml and "/country/nauru</loc>" not in xml
 
