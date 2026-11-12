@@ -719,12 +719,14 @@ def api_podcast_status():
     """A small health page: how many shows each list has, and the last error, so a problem can be seen at once."""
     from . import podcasts
     out = {"lists": {k: len(v[1]) for k, v in list(podcasts._cat.items())}, "errors": dict(podcasts._errors)}
-    try:
-        out["apple_chart_test"] = len(podcasts._chart_v2("us"))
-    except Exception as e:
-        import traceback
-        tb = traceback.extract_tb(e.__traceback__)[-1]
-        out["apple_chart_test"] = f"{type(e).__name__}: {str(e)[:150]} (line {tb.lineno}: {(tb.line or '')[:90]})"
+    def probe(fn):
+        try:
+            return len(fn())
+        except Exception as e:
+            return f"{type(e).__name__}: {str(e)[:100]}"
+    out["chart_new_address"] = probe(lambda: podcasts._chart_v2("us"))
+    out["chart_with_fallback"] = probe(lambda: podcasts._chart("us"))
+    out["search_test"] = probe(lambda: podcasts.search("business podcast"))
     resp = jsonify(out)
     resp.headers["Cache-Control"] = "no-store"
     return resp
