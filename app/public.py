@@ -718,7 +718,22 @@ def podcasts_page():
                       "Listen to free podcasts on Sur Music: Urdu, Islamic lectures, Hindi, cricket, Bollywood, news and kids stories. Press play, no app needed.",
                       page="podcasts")
     crumbs = [("Home", "/"), ("Podcasts", "/podcasts")]
-    return render_template("podcasts.html", meta=meta, rows=rows, q=q, crumbs=crumbs, ld=[breadcrumb_ld(crumbs)])
+    return render_template("podcasts.html", meta=meta, rows=rows, q=q, crumbs=crumbs, ld=[breadcrumb_ld(crumbs)],
+                           heading="Podcasts — Urdu, Islamic, Hindi, Cricket & News", cats=podcasts.CATEGORIES, here="")
+
+
+@bp.route("/podcasts/c/<slug>")
+def podcast_category(slug):
+    from . import podcasts
+    if slug not in podcasts.CATEGORIES:
+        abort(404)
+    demo = bool(current_app.config.get("TESTING") or current_app.config.get("RADIO_DEMO"))
+    title = podcasts.CATEGORIES[slug][0]
+    meta = build_meta(f"{title[:40]} — Podcasts", f"{title}: free podcasts on Sur Music. Press play on any episode, no app needed.",
+                      page=f"podcasts-{slug}")
+    crumbs = [("Home", "/"), ("Podcasts", "/podcasts"), (title, f"/podcasts/c/{slug}")]
+    return render_template("podcasts.html", meta=meta, rows=podcasts.category(slug, demo), q="", crumbs=crumbs, ld=[breadcrumb_ld(crumbs)],
+                           heading=title, cats=podcasts.CATEGORIES, here=slug)
 
 
 @bp.route("/podcasts/<int:sid>")
@@ -732,7 +747,9 @@ def podcast_page(sid):
                       f"Listen to {row['name']} by {row['artist']} free on Sur Music. Press play on any episode.",
                       page=f"podcast-{sid}", noindex=True)
     crumbs = [("Home", "/"), ("Podcasts", "/podcasts"), (row["name"][:50], f"/podcasts/{sid}")]
-    return render_template("podcast.html", meta=meta, show=row, eps=protect(eps), crumbs=crumbs, ld=[breadcrumb_ld(crumbs)])
+    if request.args.get("order") == "old":
+        eps = list(reversed(eps))
+    return render_template("podcast.html", meta=meta, show=row, eps=protect(eps), old=request.args.get("order") == "old", sid=sid, crumbs=crumbs, ld=[breadcrumb_ld(crumbs)])
 
 
 @bp.route("/pakistan-fm-radio")
