@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% block content %}
+<div class="wrap page">
+  {{ ui.breadcrumbs(crumbs) }}
+  <header class="page-head">
+    <h1>Podcasts — Urdu, Islamic, Hindi, Cricket &amp; News</h1>
+    <p class="lead">Pick a podcast and press play on any episode, right here. The audio comes straight from each podcaster's own server, and every show names its podcaster.</p>
+    <form class="hero-search" role="search" action="/podcasts" method="get">
+      <label for="pod-q" class="sr">Search podcasts</label>
+      <input id="pod-q" name="q" type="search" value="{{ q }}" placeholder="Search a podcast or a person…" maxlength="60" autocomplete="off">
+      <button class="btn btn-primary" type="submit">Search</button>
+    </form>
+  </header>
+  {% if rows %}
+  <ul class="pod-grid">
+    {%- for r in rows %}
+    <li><a class="pod-card" href="/podcasts/{{ r.id }}">
+      <span class="pod-art thumb {{ thumb_class(r.name) }}" data-letter="{{ (r.name or '?')[:1] | upper }}">{% if r.img %}<img src="{{ r.img }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" width="72" height="72">{% endif %}</span>
+      <span class="pod-meta"><b>{{ r.name }}</b><i>{{ r.artist }}</i></span>
+    </a></li>
+    {%- endfor %}
+  </ul>
+  {% else %}
+  <div class="empty card"><p>{% if q %}No podcasts found for “{{ q }}”. Try another name.{% else %}The podcast list is not reachable right now. Please try again in a minute.{% endif %}</p></div>
+  {% endif %}
+  <p class="small muted">Podcast listings come from the free Apple Podcasts directory. Each podcast belongs to its podcaster.</p>
+</div>
+{% endblock %}

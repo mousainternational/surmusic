@@ -388,3 +388,13 @@ def test_local_radio_button_follows_the_visitor_country(client):
     assert 'href="/country/india"' in r.get_data(as_text=True) and "India radio stations" in r.get_data(as_text=True)
     r = client.get("/country/pakistan", headers={"Accept-Language": "ur-PK"})
     assert "Pakistan FM by frequency" in r.get_data(as_text=True)
+
+
+def test_podcast_pages_and_strip_work(client):
+    j = client.get("/api/podcasts").get_json()
+    assert j["items"] and j["items"][0]["i"] == "1001"
+    r = client.get("/podcasts"); assert r.status_code == 200 and "/podcasts/1001" in r.get_data(as_text=True)
+    html = client.get("/podcasts/1001").get_data(as_text=True)
+    assert "Sample episode 1" in html and 'class="st' in html
+    assert client.get("/podcasts/999999").status_code == 404
+    assert 'id="pd-ticker"' in client.get("/").get_data(as_text=True)

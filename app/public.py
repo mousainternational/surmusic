@@ -291,7 +291,7 @@ def _topic_globals():
 
 @bp.app_template_global()
 def station_href(st):
-    if not isinstance(st, dict) or st.get("sponsored") or not st.get("uuid"):
+    if not isinstance(st, dict) or st.get("sponsored") or not st.get("uuid") or str(st["uuid"]).startswith("pod-"):
         return ""
     return station_path(st)
 
@@ -695,6 +695,44 @@ PK_FM = [
     ("Dil FM 102", "102", "Gujrat, Sahiwal, Kasur, Okara", "Punjabi and Urdu"),
     ("Radio Buraq FM 104", "104", "Peshawar, Sialkot, Mardan", "Pashto and Urdu"),
 ]
+
+
+@bp.route("/api/podcasts")
+def api_podcasts():
+    """Shows for the moving podcast strip under the header (filled in by site.js; hidden until it has some)."""
+    from . import podcasts
+    demo = bool(current_app.config.get("TESTING") or current_app.config.get("RADIO_DEMO"))
+    rows = podcasts.featured(demo)
+    resp = jsonify({"items": [{"i": r["id"], "n": r["name"], "a": r["artist"], "m": r["img"]} for r in rows]})
+    resp.headers["Cache-Control"] = "public, max-age=600"
+    return resp
+
+
+@bp.route("/podcasts")
+def podcasts_page():
+    from . import podcasts
+    demo = bool(current_app.config.get("TESTING") or current_app.config.get("RADIO_DEMO"))
+    q = (request.args.get("q") or "").strip()[:60]
+    rows = podcasts.search(q, demo) if q else podcasts.featured(demo)
+    meta = build_meta("Podcasts — Urdu, Islamic, Hindi, Cricket & News",
+                      "Listen to free podcasts on Sur Music: Urdu, Islamic lectures, Hindi, cricket, Bollywood, news and kids stories. Press play, no app needed.",
+                      page="podcasts")
+    crumbs = [("Home", "/"), ("Podcasts", "/podcasts")]
+    return render_template("podcasts.html", meta=meta, rows=rows, q=q, crumbs=crumbs, ld=[breadcrumb_ld(crumbs)])
+
+
+@bp.route("/podcasts/<int:sid>")
+def podcast_page(sid):
+    from . import podcasts
+    demo = bool(current_app.config.get("TESTING") or current_app.config.get("RADIO_DEMO"))
+    row, eps = podcasts.show(sid, demo)
+    if not row:
+        abort(404)
+    meta = build_meta(f"{row['name'][:44]} — Podcast",
+                      f"Listen to {row['name']} by {row['artist']} free on Sur Music. Press play on any episode.",
+                      page=f"podcast-{sid}", noindex=True)
+    crumbs = [("Home", "/"), ("Podcasts", "/podcasts"), (row["name"][:50], f"/podcasts/{sid}")]
+    return render_template("podcast.html", meta=meta, show=row, eps=protect(eps), crumbs=crumbs, ld=[breadcrumb_ld(crumbs)])
 
 
 @bp.route("/pakistan-fm-radio")
