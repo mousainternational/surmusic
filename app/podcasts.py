@@ -148,7 +148,14 @@ def _build(slug):
         for row in rows:
             if row["id"] not in seen and row["img"]:
                 seen.add(row["id"]); out.append(row)
-    return out
+    if slug.startswith("top-"):
+        return out
+    per, kept = {}, []                                   # never more than two shows of one podcaster on one page
+    for row in out:
+        who = (row["artist"] or row["name"]).lower()
+        if per.get(who, 0) < 2:
+            per[who] = per.get(who, 0) + 1; kept.append(row)
+    return kept
 
 
 def category(slug, demo=False):
@@ -185,12 +192,15 @@ def featured(demo=False):
     with ThreadPoolExecutor(8) as pool:
         lists = list(pool.map(lambda sn: category(sn[0])[:sn[1]], STRIP_ORDER))
     out, seen, per = [], set(), {}
-    for i in range(max((len(x) for x in lists), default=0)):          # take turns between the pages, so every kind shows early
-        for rows in lists:
+    for row in lists[0][:10]:                                          # the 10 most famous podcasts in the world come first, with their pictures
+        if row["id"] not in seen and row["img"]:
+            seen.add(row["id"]); per[(row["artist"] or row["name"]).lower()] = 1; out.append(row)
+    for i in range(max((len(x) for x in lists[1:]), default=0)):      # then take turns between the pages, so every kind shows early
+        for rows in lists[1:]:
             if i < len(rows):
                 row = rows[i]
                 who = (row["artist"] or row["name"]).lower()
-                if row["id"] in seen or per.get(who, 0) >= 2:           # never many shows of one podcaster in a row
+                if row["id"] in seen or per.get(who, 0) >= 1:           # one show per podcaster in the strip
                     continue
                 seen.add(row["id"]); per[who] = per.get(who, 0) + 1; out.append(row)
     return out
