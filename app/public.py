@@ -57,6 +57,7 @@ CATEGORY_PAGES = {
 }
 
 
+from .about_text import COUNTRY_ABOUT, GENRE_ABOUT  # noqa: E402
 from .topics import CONTINENTS, COUNTRY_PAGES, GENRE_PAGES, TOPICS, countries_in, grouped, topic_path  # noqa: E402
 
 
@@ -611,7 +612,8 @@ def _topic_page(slug):
         ld.append(faq_items_ld(faqs))
     return render_template("category.html", meta=meta, stations=protect(stations), error=error, cat=slug,
                            info=info, genre=slug, crumbs=crumbs, ld=ld, trending=trending, faqs=faqs if page_no == 1 else [], popular=popular if page_no == 1 else [],
-                           total=total, page_no=page_no, pages=pages, page_base=request.path)
+                           total=total, page_no=page_no, pages=pages, page_base=request.path,
+                           own_text=(COUNTRY_ABOUT.get(slug) or GENRE_ABOUT.get(slug) or []) if page_no == 1 else [])
 
 
 def _listed_countries(continent, minimum=3):

@@ -53,6 +53,10 @@
         <h2 class="h3">Questions about {{ info.label }} radio</h2>
         {% for q, a in faqs %}<details><summary>{{ q }}</summary><p>{{ a }}</p></details>{% endfor %}
       </section>{% endif %}
+      {% if own_text %}<section class="topic-own card">
+        <h2 class="h3">About {{ info.label }} radio</h2>
+        {% for para in own_text %}<p>{{ para }}</p>{% endfor %}
+      </section>{% endif %}
       {% if info.more %}<section class="topic-more card">
         <h2 class="h3">About {{ info.h1.split(' — ')[0] }}</h2>
         <p>{{ info.more }}</p>

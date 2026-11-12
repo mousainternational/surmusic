@@ -240,3 +240,17 @@ def test_for_stations_page(client):
     assert r.status_code == 200 and "Free player for your radio station" in html and "Listen on Sur Music Radio" in html
     assert "/for-stations" in client.get("/sitemap.xml").get_data(as_text=True)
     assert 'href="/for-stations"' in client.get("/").get_data(as_text=True)
+
+
+def test_own_text_keys_exist_and_render():
+    from app.about_text import COUNTRY_ABOUT, GENRE_ABOUT
+    from app.topics import TOPICS
+    for k in list(COUNTRY_ABOUT) + list(GENRE_ABOUT):
+        assert k in TOPICS, k
+    assert all(len(p) > 20 for v in list(COUNTRY_ABOUT.values()) + list(GENRE_ABOUT.values()) for p in v)
+
+
+def test_own_text_shown_on_page(client):
+    html = client.get("/country/pakistan").get_data(as_text=True)
+    assert "About Pakistan radio" in html and "rickshaws" in html
+    assert "About News radio" in client.get("/genre/news").get_data(as_text=True)
