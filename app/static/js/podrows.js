@@ -32,8 +32,8 @@
       return d.slug;
     }).catch(function () { return "top-world"; });
   }
-  function fill(row) {
-    if (row.getAttribute("data-done")) return; row.setAttribute("data-done", "1");
+  function fill(row, tries) {
+    if (row.getAttribute("data-done")) return; row.setAttribute("data-done", "1"); tries = tries || 0;
     slugOf(row).then(function (slug) { return fetch("/api/podcasts/c/" + encodeURIComponent(slug), { credentials: "same-origin" }); })
       .then(function (r) { return r.ok ? r.json() : { items: [] }; })
       .then(function (d) {
@@ -47,11 +47,12 @@
           a.appendChild(pic); a.appendChild(t); box.appendChild(a);
         });
         if (n) row.hidden = false;
+        else if (tries < 3) setTimeout(function () { row.removeAttribute("data-done"); fill(row, tries + 1); }, 12000);   // a list that is still being prepared: ask again
       }).catch(function () { /* the row simply stays hidden */ });
   }
   function init() {
     var rows = document.querySelectorAll(".pr-row"); if (!rows.length) return;
-    var all = function () { rows.forEach(fill); };
+    var all = function () { rows.forEach(function (r) { fill(r, 0); }); };
     var host = document.querySelector(".pr-rows");
     if (!window.IntersectionObserver || !host) { all(); return; }
     var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { io.disconnect(); all(); } }); }, { rootMargin: "600px 0px" });

@@ -423,3 +423,21 @@ PAGE_TEXT = {
     "top-world": ("The top podcasts worldwide right now, from Apple's own chart. Press play on any episode, free in your browser.",
                   "The most listened podcasts worldwide right now, taken from Apple's own chart, which updates by itself. Press play on any episode.", []),
 }
+
+
+def warm():
+    """After every start, build the podcast lists one by one in the background, so visitors never wait for a cold list."""
+    order = ["top-world", "top-pk", "top-in", "top-us", "top-gb", "top-ae", "top-sa", "top-bd"] + [k for k in CATEGORIES if not k.startswith("top-")]
+    time.sleep(8)
+    for slug in order:
+        try:
+            category(slug)
+        except Exception:
+            pass
+        time.sleep(1.5)
+
+
+def start_warming(app):
+    if app.config.get("TESTING") or app.config.get("RADIO_DEMO"):
+        return
+    threading.Thread(target=warm, daemon=True, name="podcast-warm").start()

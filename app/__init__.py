@@ -164,6 +164,11 @@ def create_app(overrides=None):
                                meta={"title": "Something went wrong | Sur Music", "noindex": True}), 500
 
     register_cli(app)
+    try:
+        from . import podcasts as _podcasts
+        _podcasts.start_warming(app)
+    except Exception:  # pragma: no cover - warming is only a speed-up
+        pass
     return app
 
 
