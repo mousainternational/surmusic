@@ -404,3 +404,16 @@ def test_podcast_category_pages_work(client):
     assert client.get("/podcasts/c/islamic-scholars").status_code == 200
     assert client.get("/podcasts/c/nope").status_code == 404
     assert "oldest first" in client.get("/podcasts/1001?order=old").get_data(as_text=True)
+
+
+def test_podcast_seo_titles_sitemap_and_noindex(client):
+    import re
+    from app.podcasts import CATEGORIES
+    for path in ["/podcasts"] + [f"/podcasts/c/{k}" for k in CATEGORIES]:
+        html = client.get(path).get_data(as_text=True)
+        import html as _h; t = _h.unescape(re.search(r"<title>(.*?)</title>", html).group(1))
+        assert len(t) <= 60, (path, t)
+        assert 'name="description"' in html and 'rel="canonical"' in html and "ItemList" in html
+    assert "noindex" in client.get("/podcasts?q=zzz").get_data(as_text=True)
+    sm = client.get("/sitemap.xml").get_data(as_text=True)
+    assert "/podcasts</loc>" in sm and "/podcasts/c/islamic-scholars</loc>" in sm and "/podcasts/1001" not in sm
