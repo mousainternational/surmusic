@@ -426,15 +426,17 @@ PAGE_TEXT = {
 
 
 def warm():
-    """After every start, build the podcast lists one by one in the background, so visitors never wait for a cold list."""
+    """Right after every start, build all podcast lists at once in the background (four at a time), so a first-time visitor
+    finds them ready. The most important lists are built first."""
     order = ["top-world", "top-pk", "top-in", "top-us", "top-gb", "top-ae", "top-sa", "top-bd"] + [k for k in CATEGORIES if not k.startswith("top-")]
-    time.sleep(8)
-    for slug in order:
+    def one(slug):
         try:
             category(slug)
         except Exception:
             pass
-        time.sleep(1.5)
+    time.sleep(2)
+    with ThreadPoolExecutor(4) as pool:
+        list(pool.map(one, order))
 
 
 def start_warming(app):
