@@ -732,11 +732,25 @@ def api_podcast_status():
     return resp
 
 
+@bp.route("/api/podcasts/near")
+def api_podcast_near():
+    """Which chart to show this visitor: the one of his own country (Cloudflare tells us the country; Pakistan if unknown)."""
+    from . import podcasts
+    cc = (request.headers.get("CF-IPCountry") or request.args.get("cc") or "").strip().lower()[:2]
+    if cc not in podcasts.NEAR:
+        cc = "pk"
+    resp = jsonify({"cc": cc, "name": podcasts.NEAR[cc], "title": f"Top podcasts in {podcasts.NEAR[cc]}", "slug": f"top-{cc}",
+                    "faith": podcasts.FAITH_BY_COUNTRY.get(cc, "islamic-scholars"), "faiths": [{"slug": k, "name": n} for k, n in podcasts.FAITHS]})
+    resp.headers["Cache-Control"] = "private, no-store"
+    resp.headers["Vary"] = "CF-IPCountry"
+    return resp
+
+
 @bp.route("/api/podcasts/c/<slug>")
 def api_podcast_category(slug):
     """Shows of one podcast category, for the Android app."""
     from . import podcasts
-    if slug not in podcasts.CATEGORIES:
+    if not podcasts.valid(slug):
         abort(404)
     demo = bool(current_app.config.get("TESTING") or current_app.config.get("RADIO_DEMO"))
     rows = podcasts.category(slug, demo)
@@ -768,11 +782,11 @@ def _podcast_list(slug, q, rows):
     if slug == "":
         title = "Podcasts — Urdu, Islamic, Hindi, Cricket, News"
     else:
-        label = podcasts.CATEGORIES[slug][0]
+        label = podcasts.label(slug)
         title = f"{label} Podcasts — Listen Free" if not label.lower().startswith("top") else f"{label} — Listen Free"
     meta = build_meta(title, desc, page="podcasts" if not slug else f"podcasts-{slug}", noindex=bool(q) or not rows)
-    heading = (podcasts.CATEGORIES[slug][0] if slug else "Podcasts — Urdu, Islamic, Hindi, Cricket & News")
-    crumbs = [("Home", "/"), ("Podcasts", "/podcasts")] + ([(podcasts.CATEGORIES[slug][0], f"/podcasts/c/{slug}")] if slug else [])
+    heading = (podcasts.label(slug) if slug else "Podcasts — Urdu, Islamic, Hindi, Cricket & News")
+    crumbs = [("Home", "/"), ("Podcasts", "/podcasts")] + ([(podcasts.label(slug), f"/podcasts/c/{slug}")] if slug else [])
     ld = [breadcrumb_ld(crumbs)] + ([_podcast_ld(rows, heading)] if rows and not q else []) + ([faq_items_ld(faqs)] if faqs else [])
     return render_template("podcasts.html", meta=meta, rows=rows, q=q, crumbs=crumbs, ld=ld, heading=heading, intro=intro, faqs=faqs,
                            cats=podcasts.CATEGORIES, here=slug)
@@ -789,7 +803,7 @@ def podcasts_page():
 @bp.route("/podcasts/c/<slug>")
 def podcast_category(slug):
     from . import podcasts
-    if slug not in podcasts.CATEGORIES:
+    if not podcasts.valid(slug):
         abort(404)
     demo = bool(current_app.config.get("TESTING") or current_app.config.get("RADIO_DEMO"))
     return _podcast_list(slug, "", podcasts.category(slug, demo))

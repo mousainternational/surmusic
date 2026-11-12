@@ -1499,3 +1499,5 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 .pr-pic img { position: relative; width: 100%; height: 100%; object-fit: cover; display: block; }
 .pr-name { display: block; margin-top: 7px; font-size: 13px; line-height: 1.25; max-height: 2.5em; overflow: hidden; font-weight: 600; }
 .pr-card:focus-visible { outline: 3px solid #7c4dff; outline-offset: 3px; border-radius: 12px; }
+.pr-faith { margin: 2px 0 6px; font-size: 14px; }
+.pr-faith select { font: inherit; padding: 4px 8px; border-radius: 8px; border: 1px solid var(--line, #d9d3ee); }

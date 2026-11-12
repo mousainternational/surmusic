@@ -34,6 +34,11 @@ CATEGORIES = {
     "news": ("News & talk", [("search", "news podcast", "PK"), ("search", "news podcast", "US")]),
     "kids": ("Kids & stories", [("search", "kids stories podcast", "US"), ("search", "bachon ki kahaniyan", "PK")]),
     "celebrity": ("Celebrity & interview podcasts", [("search", "celebrity interviews podcast", "US"), ("search", "celebrity podcast", "US"), ("search", "urdu interviews podcast", "PK"), ("search", "bollywood celebrity interviews", "IN")]),
+    "christian": ("Christian sermons & Bible", [("search", "christian sermons podcast", "US"), ("search", "bible study podcast", "US"), ("search", "gospel worship podcast", "US")]),
+    "jewish": ("Jewish learning & Torah", [("search", "torah podcast", "US"), ("search", "jewish learning podcast", "US"), ("search", "judaism podcast", "IL")]),
+    "hindu": ("Hindu spiritual talks", [("search", "bhagavad gita podcast", "IN"), ("search", "hindu spiritual talks podcast", "IN"), ("search", "bhajan kirtan podcast", "IN")]),
+    "sikh": ("Sikh Gurbani & katha", [("search", "gurbani katha podcast", "IN"), ("search", "sikh podcast", "US")]),
+    "buddhist": ("Buddhist dharma talks", [("search", "buddhist dharma talks podcast", "US"), ("search", "buddhism meditation podcast", "US")]),
     "business": ("Business", [("search", "business podcast", "US"), ("search", "entrepreneurship startup podcast", "US"), ("search", "business podcast", "PK"), ("search", "business podcast", "IN")]),
     "science": ("Science", [("search", "science podcast", "US"), ("search", "space astronomy podcast", "US"), ("search", "science podcast", "IN")]),
     "technology": ("Technology", [("search", "technology podcast", "US"), ("search", "tech news podcast", "US"), ("search", "technology podcast", "IN"), ("search", "technology podcast", "PK")]),
@@ -42,6 +47,19 @@ CATEGORIES = {
     "top-india": ("Top podcasts in India", [("chart", "in")]),
     "top-world": ("Top podcasts worldwide", [("chart", "us")]),
 }
+# Countries with their own Apple chart ("Top podcasts in <country>"): code -> name. A visitor is shown the chart of his own country.
+NEAR = {"pk": "Pakistan", "in": "India", "us": "the United States", "gb": "the United Kingdom", "ca": "Canada", "au": "Australia",
+        "ae": "the UAE", "sa": "Saudi Arabia", "qa": "Qatar", "kw": "Kuwait", "om": "Oman", "bh": "Bahrain", "eg": "Egypt", "tr": "Türkiye",
+        "bd": "Bangladesh", "lk": "Sri Lanka", "np": "Nepal", "my": "Malaysia", "sg": "Singapore", "id": "Indonesia", "ph": "the Philippines",
+        "de": "Germany", "fr": "France", "it": "Italy", "es": "Spain", "nl": "the Netherlands", "se": "Sweden", "no": "Norway", "ie": "Ireland",
+        "br": "Brazil", "mx": "Mexico", "ar": "Argentina", "za": "South Africa", "ng": "Nigeria", "ke": "Kenya", "ma": "Morocco", "dz": "Algeria",
+        "jo": "Jordan", "lb": "Lebanon", "il": "Israel", "jp": "Japan", "kr": "South Korea", "ru": "Russia", "ua": "Ukraine", "pl": "Poland"}
+# The religious row on the home page: every faith is offered on equal terms and the visitor can change it. The first choice is only a
+# guess from the country (the main tradition there); it is never taken to be the visitor's own belief.
+FAITHS = [("islamic-scholars", "Islamic"), ("christian", "Christian"), ("jewish", "Jewish"), ("hindu", "Hindu"), ("sikh", "Sikh"), ("buddhist", "Buddhist")]
+FAITH_BY_COUNTRY = {**{c: "islamic-scholars" for c in "pk ae sa qa kw om bh eg tr bd my id jo lb ma dz".split()},
+                    **{c: "christian" for c in "us gb ca au de fr it es nl se no ie br mx ar za ng ke ph pl ua ru".split()},
+                    "il": "jewish", "in": "hindu", "np": "hindu", "lk": "buddhist", "jp": "buddhist", "sg": "buddhist"}
 STRIP_ORDER = [("top-world", 12), ("celebrity", 10), ("islamic-scholars", 12), ("top-pakistan", 8), ("urdu", 5), ("islamic", 4), ("hindi", 3), ("cricket", 3), ("news", 3), ("business", 3), ("technology", 3), ("ai", 3), ("science", 2), ("kids", 2)]
 FEATURED_TTL, SHOW_TTL, MAX_SHOWS = 12 * 3600, 3600, 40
 MAX_JSON, MAX_FEED = 1_000_000, 2_500_000
@@ -160,9 +178,17 @@ def _chart_v2(cc):
     return out
 
 
+def valid(slug):
+    return slug in CATEGORIES or (slug.startswith("top-") and slug[4:] in NEAR)
+
+
+def label(slug):
+    return CATEGORIES[slug][0] if slug in CATEGORIES else f"Top podcasts in {NEAR[slug[4:]]}"
+
+
 def _build(slug):
     out, seen = [], set()
-    for step in CATEGORIES[slug][1]:
+    for step in (CATEGORIES[slug][1] if slug in CATEGORIES else [("chart", slug[4:])]):
         try:
             if step[0] == "chart":
                 rows = _chart(step[1])
@@ -202,7 +228,7 @@ def _build(slug):
 def category(slug, demo=False):
     """Shows of one page (e.g. Islamic scholars, top in Pakistan). Refreshed every 12 hours by itself; the last good copy
     is kept if Apple is slow."""
-    if slug not in CATEGORIES:
+    if not valid(slug):
         return []
     if demo:
         return DEMO_SHOWS
@@ -375,6 +401,16 @@ PAGE_TEXT = {
                    "Technology podcasts about gadgets, software, the internet and the latest tech news, from the Apple Podcasts directory. The list refreshes by itself.", []),
     "ai": ("Artificial intelligence podcasts: AI news, ChatGPT, machine learning and the future of work. Press play, free in your browser.",
            "Podcasts about artificial intelligence: AI news, tools such as ChatGPT, machine learning and how AI changes work and life. The list refreshes by itself.", []),
+    "christian": ("Christian podcasts: sermons, Bible study, gospel and worship. Press play, free in your browser.",
+                  "Christian sermons, Bible study, gospel and worship podcasts from the Apple Podcasts directory. The list refreshes by itself.", []),
+    "jewish": ("Jewish podcasts: Torah learning, Jewish thought and culture. Press play, free in your browser.",
+               "Torah learning, Jewish thought, history and culture podcasts from the Apple Podcasts directory. The list refreshes by itself.", []),
+    "hindu": ("Hindu spiritual podcasts: Bhagavad Gita, bhajan, kirtan and talks. Press play, free in your browser.",
+              "Hindu spiritual talks, Bhagavad Gita study, bhajan and kirtan podcasts from the Apple Podcasts directory. The list refreshes by itself.", []),
+    "sikh": ("Sikh podcasts: Gurbani, katha and Sikh history. Press play, free in your browser.",
+             "Gurbani, katha and Sikh history podcasts from the Apple Podcasts directory. The list refreshes by itself.", []),
+    "buddhist": ("Buddhist podcasts: dharma talks and meditation. Press play, free in your browser.",
+                 "Buddhist dharma talks and meditation podcasts from the Apple Podcasts directory. The list refreshes by itself.", []),
     "top-pakistan": ("The top podcasts in Pakistan right now, from Apple's own chart. Press play on any episode, free in your browser.",
                      "The most listened podcasts in Pakistan right now, taken from Apple's own chart, which updates by itself. Press play on any episode.", []),
     "top-india": ("The top podcasts in India right now, from Apple's own chart. Press play on any episode, free in your browser.",

@@ -2,9 +2,39 @@
 // Podcast rows (cover picture + name) on the page, in order, like a podcast app. Each cover opens the show on this site.
 (function () {
   "use strict";
+  function faithSlug(row) {                    // the religious row: a guess from the country, always changeable, remembered in this browser
+    return fetch("/api/podcasts/near", { credentials: "same-origin" }).then(function (r) { return r.json(); }).then(function (d) {
+      var saved = ""; try { saved = localStorage.getItem("sm-faith") || ""; } catch (e) { /* ignore */ }
+      var list = d.faiths || [], cur = list.some(function (f) { return f.slug === saved; }) ? saved : d.faith;
+      var sel = row.querySelector("select");
+      if (sel && !sel.options.length) {
+        list.forEach(function (f) { var o = document.createElement("option"); o.value = f.slug; o.textContent = f.name; sel.appendChild(o); });
+        sel.value = cur;
+        sel.addEventListener("change", function () {
+          try { localStorage.setItem("sm-faith", sel.value); } catch (e) { /* ignore */ }
+          row.removeAttribute("data-done"); row.querySelector(".pr-scroll").textContent = ""; fill(row);
+        });
+      }
+      if (sel) cur = sel.value;
+      var h = row.querySelector("h2"), name = (list.filter(function (f) { return f.slug === cur; })[0] || {}).name || "";
+      if (h && name) h.textContent = name + " podcasts";
+      var a = row.querySelector(".section-head a"); if (a) a.href = "/podcasts/c/" + cur;
+      return cur;
+    }).catch(function () { return "islamic-scholars"; });
+  }
+  function slugOf(row) {                       // "near" = the chart of the visitor's own country
+    var s = row.getAttribute("data-slug");
+    if (s === "faith") return faithSlug(row);
+    if (s !== "near") return Promise.resolve(s);
+    return fetch("/api/podcasts/near", { credentials: "same-origin" }).then(function (r) { return r.json(); }).then(function (d) {
+      var h = row.querySelector("h2"); if (h && d.title) h.textContent = d.title;
+      var a = row.querySelector(".section-head a"); if (a) a.href = "/podcasts/c/" + d.slug;
+      return d.slug;
+    }).catch(function () { return "top-pakistan"; });
+  }
   function fill(row) {
     if (row.getAttribute("data-done")) return; row.setAttribute("data-done", "1");
-    fetch("/api/podcasts/c/" + encodeURIComponent(row.getAttribute("data-slug")), { credentials: "same-origin" })
+    slugOf(row).then(function (slug) { return fetch("/api/podcasts/c/" + encodeURIComponent(slug), { credentials: "same-origin" }); })
       .then(function (r) { return r.ok ? r.json() : { items: [] }; })
       .then(function (d) {
         var items = (d.items || []), seen = {}, box = row.querySelector(".pr-scroll"), n = 0;

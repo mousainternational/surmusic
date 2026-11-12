@@ -1,9 +1,10 @@
 {#- Rows of podcast covers (picture + name) on a page, like a podcast app. Filled by podrows.js from /api/podcasts/c/<slug> when the row is near the screen. -#}
 <section class="section pr-rows" aria-label="Podcasts">
   <div class="wrap">
-    {%- for slug, title in [("top-world", "Top podcasts in the world"), ("top-pakistan", "Top podcasts in Pakistan"), ("islamic-scholars", "Islamic scholars"), ("technology", "Technology"), ("ai", "Artificial intelligence"), ("business", "Business")] %}
+    {%- for slug, title in [("top-world", "Top podcasts in the world"), ("near", "Top podcasts in your country"), ("faith", "Religious podcasts"), ("technology", "Technology"), ("ai", "Artificial intelligence"), ("business", "Business")] %}
     <div class="pr-row" data-slug="{{ slug }}" hidden>
-      <div class="section-head"><h2 class="h3">{{ title }}</h2><a href="{{ '/podcasts' if slug == 'top-pakistan' else '/podcasts/c/' ~ slug }}">All →</a></div>
+      <div class="section-head"><h2 class="h3">{{ title }}</h2><a href="{{ '/podcasts' if slug in ('near', 'faith') else '/podcasts/c/' ~ slug }}">All →</a></div>
+      {%- if slug == 'faith' %}<p class="pr-faith"><label for="pr-faith-sel">Show: </label><select id="pr-faith-sel"></select></p>{% endif %}
       <div class="pr-scroll" role="list"></div>
     </div>
     {%- endfor %}

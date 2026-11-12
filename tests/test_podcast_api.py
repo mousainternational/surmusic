@@ -29,3 +29,23 @@ def test_chart_and_search_rows_hide_adult_shows(monkeypatch):
     row = {"collectionId": 5, "collectionName": "Sexy Stories", "artistName": "x", "artworkUrl100": "https://a/100x100.jpg"}
     assert podcasts._row(row) is None
     assert podcasts._row({**row, "collectionName": "Business Show"})["name"] == "Business Show"
+
+
+def test_visitor_country_chart(client):
+    r = client.get("/api/podcasts/near", headers={"CF-IPCountry": "GB"})
+    assert r.get_json()["slug"] == "top-gb" and r.get_json()["title"] == "Top podcasts in the United Kingdom"
+    assert "no-store" in r.headers["Cache-Control"]
+    assert client.get("/api/podcasts/near", headers={"CF-IPCountry": "XX"}).get_json()["slug"] == "top-pk"     # unknown: Pakistan
+    assert client.get("/api/podcasts/near").get_json()["slug"] == "top-pk"
+    assert client.get("/api/podcasts/c/top-gb").status_code == 200
+    assert client.get("/podcasts/c/top-gb").status_code == 200
+    assert client.get("/api/podcasts/c/top-zz").status_code == 404
+
+
+def test_faith_row_defaults_and_choices(client):
+    d = client.get("/api/podcasts/near", headers={"CF-IPCountry": "IL"}).get_json()
+    assert d["faith"] == "jewish" and {f["slug"] for f in d["faiths"]} >= {"islamic-scholars", "christian", "jewish", "hindu", "sikh", "buddhist"}
+    assert client.get("/api/podcasts/near", headers={"CF-IPCountry": "US"}).get_json()["faith"] == "christian"
+    assert client.get("/api/podcasts/near", headers={"CF-IPCountry": "PK"}).get_json()["faith"] == "islamic-scholars"
+    for slug in ("christian", "jewish", "hindu", "sikh", "buddhist"):
+        assert client.get(f"/api/podcasts/c/{slug}").status_code == 200 and client.get(f"/podcasts/c/{slug}").status_code == 200
