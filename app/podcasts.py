@@ -48,12 +48,16 @@ CATEGORIES = {
     "top-world": ("Top podcasts worldwide", [("chart", "us")]),
 }
 # Countries with their own Apple chart ("Top podcasts in <country>"): code -> name. A visitor is shown the chart of his own country.
-NEAR = {"pk": "Pakistan", "in": "India", "us": "the United States", "gb": "the United Kingdom", "ca": "Canada", "au": "Australia",
+_NEAR_THE = {"pk": "Pakistan", "in": "India", "us": "the United States", "gb": "the United Kingdom", "ca": "Canada", "au": "Australia",
         "ae": "the UAE", "sa": "Saudi Arabia", "qa": "Qatar", "kw": "Kuwait", "om": "Oman", "bh": "Bahrain", "eg": "Egypt", "tr": "Türkiye",
         "bd": "Bangladesh", "lk": "Sri Lanka", "np": "Nepal", "my": "Malaysia", "sg": "Singapore", "id": "Indonesia", "ph": "the Philippines",
         "de": "Germany", "fr": "France", "it": "Italy", "es": "Spain", "nl": "the Netherlands", "se": "Sweden", "no": "Norway", "ie": "Ireland",
         "br": "Brazil", "mx": "Mexico", "ar": "Argentina", "za": "South Africa", "ng": "Nigeria", "ke": "Kenya", "ma": "Morocco", "dz": "Algeria",
         "jo": "Jordan", "lb": "Lebanon", "il": "Israel", "jp": "Japan", "kr": "South Korea", "ru": "Russia", "ua": "Ukraine", "pl": "Poland"}
+from .topics import COUNTRY_PAGES as _CP                      # every country of the site: each gets its own "Top podcasts in <country>" chart
+NEAR = {v["code"].lower(): v["label"] for v in _CP.values() if v.get("code")}
+NEAR.update({k: n for k, n in _NEAR_THE.items() if k in NEAR or True})
+
 # Religion on the home page is neutral: the row starts with a mix of all faiths and the visitor may choose one. Nobody's belief is guessed from the country.
 FAITHS = [("islamic-scholars", "Islamic"), ("christian", "Christian"), ("jewish", "Jewish"), ("hindu", "Hindu"), ("sikh", "Sikh"), ("buddhist", "Buddhist")]
 STRIP_ORDER = [("top-world", 12), ("celebrity", 10), ("faiths", 12), ("technology", 3), ("ai", 3), ("business", 3), ("science", 2), ("news", 3), ("cricket", 3), ("urdu", 3), ("hindi", 3), ("kids", 2)]
