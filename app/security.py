@@ -221,7 +221,7 @@ def security_headers(resp, ads_enabled=False):
     resp.headers.setdefault("X-Content-Type-Options", "nosniff")
     resp.headers.setdefault("X-Frame-Options", "DENY")
     resp.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
-    resp.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()")
+    resp.headers.setdefault("Permissions-Policy", "camera=(), microphone=(self), geolocation=(), payment=()")
     if current_app.config.get("SESSION_COOKIE_SECURE"):
         resp.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
     if is_admin_area or request.path.startswith(("/login", "/signup", "/forgot", "/reset", "/verify")):
