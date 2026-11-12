@@ -1444,3 +1444,10 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 @keyframes pl-slide { 0%, 15% { text-indent: 0; } 85%, 100% { text-indent: var(--pl-shift, 0); } }
 .player .pl-name.pl-marq { text-overflow: clip; animation: pl-slide var(--pl-dur, 10s) ease-in-out infinite alternate; }
 @media (prefers-reduced-motion: reduce) { .player .pl-name.pl-marq { animation: none; text-overflow: ellipsis; } }
+
+/* 960-999px wide (phones in "desktop site" mode): stack the hero, the two side boxes sit next to each other, so there is no empty space beside the title */
+@media (min-width: 960px) and (max-width: 999px) {
+  .hero2 .hero2-grid { grid-template-columns: minmax(0, 1fr); }
+  .hero2-side { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  .hero2-side .flag-box, .hero2-side .now-card { margin: 0; }
+}
