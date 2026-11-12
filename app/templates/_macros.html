@@ -48,7 +48,6 @@
 <section class="card flag-box {{ cls }}" aria-label="Radio by country">
   <h2 class="h3">Radio by country</h2>
   <div class="flag-grid">{% for letter, items in country_az() %}{% for href, name, fl in items %}<a class="flag-tile" href="{{ href }}"><span class="flag-big" aria-hidden="true">{{ flag_img(fl) }}</span><span class="flag-name">{{ name }}</span></a>{% endfor %}{% endfor %}</div>
-  <p class="small"><a href="/radio-stations">All countries and regions →</a></p>
 </section>
 {%- endmacro %}
 

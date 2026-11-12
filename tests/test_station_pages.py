@@ -18,7 +18,7 @@ def test_genre_pages(client):
     assert "/genre/naat" not in strip and "/genre/quran" not in strip
     header = home.split('<nav id="menu"', 1)[1].split("</nav>", 1)[0]                           # the header menu
     assert header.count("<details") == 3 and "🌐 Language" in header and "🌍 Country" in header
-    assert 'data-lazy="/menu/types"' in header and 'data-lazy="/menu/country"' in header
+    assert 'data-lazy="/menu/types"' in header and 'data-filter-menu' in header and 'placeholder="Type to find a country…"' in header
     types_menu = client.get("/menu/types").get_data(as_text=True)                                # loaded when opened
     country_menu = client.get("/menu/country").get_data(as_text=True)
     assert client.get("/menu/types").headers["Cache-Control"] == "public, max-age=86400"
