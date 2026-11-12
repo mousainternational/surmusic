@@ -1,4 +1,3 @@
 {#- loaded into the header "Types" menu only when it is opened: the same six categories as the boxes on the pages #}
           <input class="menu-find" type="search" data-filter-menu placeholder="Type to find a type…" aria-label="Find a type" autocomplete="off">
-          <ul>{% for label, target in find_filters()[2] %}<li><a href="{{ target }}">{{ label }}</a></li>{% endfor %}
-            <li><a href="/radio-stations">All radio types</a></li></ul>
+          <ul>{% for label, target in find_filters()[2] %}<li><a href="{{ target }}">{{ label }}</a></li>{% endfor %}</ul>
