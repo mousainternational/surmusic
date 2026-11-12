@@ -33,11 +33,12 @@ CATEGORIES = {
     "bollywood": ("Bollywood & film", [("search", "bollywood podcast", "IN")]),
     "news": ("News & talk", [("search", "news podcast", "PK"), ("search", "news podcast", "US")]),
     "kids": ("Kids & stories", [("search", "kids stories podcast", "US"), ("search", "bachon ki kahaniyan", "PK")]),
+    "celebrity": ("Celebrity & interview podcasts", [("search", "celebrity interviews podcast", "US"), ("search", "celebrity podcast", "US"), ("search", "urdu interviews podcast", "PK"), ("search", "bollywood celebrity interviews", "IN")]),
     "top-pakistan": ("Top podcasts in Pakistan", [("chart", "pk")]),
     "top-india": ("Top podcasts in India", [("chart", "in")]),
     "top-world": ("Top podcasts worldwide", [("chart", "us")]),
 }
-STRIP_ORDER = [("islamic-scholars", 12), ("top-pakistan", 8), ("urdu", 5), ("islamic", 5), ("hindi", 3), ("cricket", 3), ("news", 3), ("kids", 3)]
+STRIP_ORDER = [("top-world", 12), ("celebrity", 10), ("islamic-scholars", 12), ("top-pakistan", 8), ("urdu", 5), ("islamic", 4), ("hindi", 3), ("cricket", 3), ("news", 3), ("kids", 2)]
 FEATURED_TTL, SHOW_TTL, MAX_SHOWS = 12 * 3600, 3600, 40
 MAX_JSON, MAX_FEED = 1_000_000, 2_500_000
 
@@ -183,11 +184,15 @@ def featured(demo=False):
         return DEMO_SHOWS
     with ThreadPoolExecutor(8) as pool:
         lists = list(pool.map(lambda sn: category(sn[0])[:sn[1]], STRIP_ORDER))
-    out, seen = [], set()
-    for rows in lists:
-        for row in rows:
-            if row["id"] not in seen:
-                seen.add(row["id"]); out.append(row)
+    out, seen, per = [], set(), {}
+    for i in range(max((len(x) for x in lists), default=0)):          # take turns between the pages, so every kind shows early
+        for rows in lists:
+            if i < len(rows):
+                row = rows[i]
+                who = (row["artist"] or row["name"]).lower()
+                if row["id"] in seen or per.get(who, 0) >= 2:           # never many shows of one podcaster in a row
+                    continue
+                seen.add(row["id"]); per[who] = per.get(who, 0) + 1; out.append(row)
     return out
 
 
@@ -298,6 +303,8 @@ PAGE_TEXT = {
              "News and talk podcasts with daily headlines and current affairs from Pakistan and the world. For live news radio, see the live news page on Sur Music.", []),
     "kids": ("Kids story podcasts: bedtime stories and learning for children. Press play on any episode, free in your browser.",
              "Story podcasts for children: bedtime tales, learning and fun. Parents can press play on any episode. Each podcast belongs to its podcaster.", []),
+    "celebrity": ("Celebrity and interview podcasts: well-known hosts and guests, in English, Urdu and Hindi. Press play, free in your browser.",
+                  "Podcasts hosted by well-known people or built around celebrity interviews, in English, Urdu and Hindi. The list comes from the Apple Podcasts directory and refreshes by itself. Press play on any episode.", []),
     "top-pakistan": ("The top podcasts in Pakistan right now, from Apple's own chart. Press play on any episode, free in your browser.",
                      "The most listened podcasts in Pakistan right now, taken from Apple's own chart, which updates by itself. Press play on any episode.", []),
     "top-india": ("The top podcasts in India right now, from Apple's own chart. Press play on any episode, free in your browser.",
