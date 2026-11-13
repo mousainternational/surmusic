@@ -260,3 +260,11 @@ def test_more_countries_have_own_text(client):
     from app.about_text import COUNTRY_ABOUT
     assert len(COUNTRY_ABOUT) >= 60 and "pakistan" in COUNTRY_ABOUT      # the first batch is still there
     assert "About Ghana radio" in client.get("/country/ghana").get_data(as_text=True)
+
+
+def test_indexnow_sends_podcast_and_own_text_pages():
+    from app import indexnow
+    pages = indexnow.pages_to_send()
+    assert pages[0] == "/" and "/podcasts" in pages and "/podcasts/c/ai" in pages
+    assert "/country/ghana" in pages and "/genre/lofi" in pages
+    assert len(pages) == len(set(pages)) and all(p.startswith("/") for p in pages) and len(pages) < 10000
