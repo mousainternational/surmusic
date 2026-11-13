@@ -315,6 +315,155 @@ def push_url(url, force=False):
         db.close()
 
 
+# ------------------------------------------------------------------ visitor statistics (separate copy)
+# The "events" table (visitors, page views, plays) is too big and too busy for the main copy above, which would be
+# rewritten all the time. It gets its OWN encrypted file, kept for the last STATS_DAYS days, saved every
+# STATS_BACKUP_MINUTES and again just before a deploy or restart, and read back at start when the table is empty.
+STATS_PATH = "surmusic-stats.json.gz.enc"
+STATS_FORMAT = "surmusic-stats-v1"
+STATS_DAYS = 90
+_stats_state = {"sha": None, "last_hash": None}
+
+
+def _stats_kv_url():
+    a, n = os.environ["BACKUP_CF_ACCOUNT_ID"].strip(), os.environ["BACKUP_CF_NAMESPACE_ID"].strip()
+    return f"https://api.cloudflare.com/client/v4/accounts/{a}/storage/kv/namespaces/{n}/values/{STATS_PATH}"
+
+
+def _stats_gh_url():
+    repo = os.environ["BACKUP_GITHUB_REPO"].strip().strip("/")
+    return f"https://api.github.com/repos/{repo}/contents/{STATS_PATH}", os.environ.get("BACKUP_GITHUB_BRANCH", "main")
+
+
+def stats_sealed(db):
+    """(payload bytes, sealed bytes, rows) of the newest events; fewer days if the file would be too big."""
+    from datetime import datetime, timedelta, timezone
+    for days in (STATS_DAYS, 60, 30, 14, 7):
+        since = (datetime.now(timezone.utc) - timedelta(days=days)).replace(microsecond=0).isoformat()
+        rows = db.all("SELECT * FROM events WHERE created_at >= ? ORDER BY id", (since,))
+        for r in rows:
+            r.pop("id", None)
+        payload = json.dumps({"format": STATS_FORMAT, "events": rows}, ensure_ascii=False, sort_keys=True,
+                             default=str, separators=(",", ":")).encode("utf-8")
+        blob = seal(payload)
+        if len(blob) <= MAX_BYTES:
+            return payload, blob, rows
+    return payload, blob, rows
+
+
+def push_stats(db, force=False):
+    """Save the visitor statistics copy if it changed. Returns 'pushed', 'unchanged', 'off' or 'failed'."""
+    if not enabled():
+        return "off"
+    with _lock:
+        try:
+            payload, blob, rows = stats_sealed(db)
+            if not rows:
+                return "unchanged"                      # never replace a good copy with an empty table
+            digest = hashlib.sha256(payload).hexdigest()
+            if digest == _stats_state["last_hash"] and not force:
+                return "unchanged"
+            if len(blob) > MAX_BYTES:
+                return "failed"
+            if _kv_on():
+                code, _raw = _kv_http("PUT", _stats_kv_url(), blob, token=os.environ["BACKUP_CF_TOKEN"])
+                ok = code == 200
+            else:
+                url, branch = _stats_gh_url()
+                token = os.environ["BACKUP_GITHUB_TOKEN"]
+                if _stats_state["sha"] is None:
+                    code, raw = _http("GET", f"{url}?ref={branch}", token=token)
+                    if code == 200:
+                        _stats_state["sha"] = json.loads(raw).get("sha")
+                body = {"message": "Sur Music statistics backup", "branch": branch,
+                        "content": base64.b64encode(blob).decode("ascii")}
+                if _stats_state["sha"]:
+                    body["sha"] = _stats_state["sha"]
+                code, raw = _http("PUT", url, body, token=token)
+                if code in (409, 422):
+                    code2, raw2 = _http("GET", f"{url}?ref={branch}", token=token)
+                    if code2 == 200:
+                        body["sha"] = json.loads(raw2).get("sha")
+                        code, raw = _http("PUT", url, body, token=token)
+                ok = code in (200, 201)
+                if ok:
+                    _stats_state["sha"] = json.loads(raw).get("content", {}).get("sha")
+            if not ok:
+                log.warning("Statistics backup failed (HTTP %s)", code)
+                return "failed"
+            _stats_state["last_hash"] = digest
+            return "pushed"
+        except Exception as exc:                          # never break the site for a backup
+            db.rollback()
+            log.warning("Statistics backup failed: %s", exc.__class__.__name__)
+            return "failed"
+
+
+def restore_stats_if_empty(url):
+    """At start: if there are no events yet, load the saved statistics. Returns a short status word."""
+    if not enabled():
+        return "off"
+    from .db import Database
+    db = Database(url)
+    try:
+        if db.scalar("SELECT COUNT(*) FROM events"):
+            return "not-needed"
+        if _kv_on():
+            code, raw = _kv_http("GET", _stats_kv_url(), token=os.environ["BACKUP_CF_TOKEN"])
+            if code == 404:
+                return "no-copy"
+            if code != 200:
+                return "failed"
+            payload = unseal(raw)
+        else:
+            gh_url, branch = _stats_gh_url()
+            token = os.environ["BACKUP_GITHUB_TOKEN"]
+            code, raw = _http("GET", f"{gh_url}?ref={branch}", token=token)
+            if code == 404:
+                return "no-copy"
+            if code != 200:
+                return "failed"
+            meta = json.loads(raw)
+            content = meta.get("content") or ""
+            if not content and meta.get("git_url"):
+                code, raw = _http("GET", meta["git_url"], token=token)
+                if code != 200:
+                    return "failed"
+                content = json.loads(raw).get("content") or ""
+            _stats_state["sha"] = meta.get("sha")
+            payload = unseal(base64.b64decode(content))
+        data = json.loads(payload)
+        if data.get("format") != STATS_FORMAT:
+            return "failed"
+        allowed = _columns(db, "events")
+        n = 0
+        for row in data.get("events") or []:
+            cols = [c for c in row if c in allowed and c != "id"]
+            if cols:
+                db.execute(f"INSERT INTO events ({', '.join(cols)}) VALUES ({', '.join('?' for _ in cols)})",
+                           [row[c] for c in cols])
+                n += 1
+        db.commit()
+        _stats_state["last_hash"] = hashlib.sha256(payload).hexdigest()
+        log.warning("Restored %d saved visitor events", n)
+        return "restored"
+    except Exception as exc:
+        db.rollback()
+        log.error("Could not restore visitor statistics: %s", exc.__class__.__name__)
+        return "failed"
+    finally:
+        db.close()
+
+
+def push_stats_url(url, force=False):
+    from .db import Database
+    db = Database(url)
+    try:
+        return push_stats(db, force=force)
+    finally:
+        db.close()
+
+
 _APP_URLS = []
 
 
@@ -336,6 +485,19 @@ def start(app):
             time.sleep(every * 60)
 
     threading.Thread(target=loop, name="data-backup", daemon=True).start()
+
+    try:                                                  # statistics: every 30 min (Cloudflare) or 3 hours (GitHub commits)
+        stats_every = max(5, int(os.environ.get("STATS_BACKUP_MINUTES", "30" if _kv_on() else "180")))
+    except ValueError:
+        stats_every = 30
+
+    def stats_loop():
+        time.sleep(180)
+        while True:
+            push_stats_url(app.config["DATABASE_URL"])
+            time.sleep(stats_every * 60)
+
+    threading.Thread(target=stats_loop, name="stats-backup", daemon=True).start()
 
 
 _timer = {"t": None}
@@ -367,3 +529,7 @@ def push_all_on_exit():
     """Called by gunicorn just before the server stops (deploy, restart, going to sleep)."""
     for url in _APP_URLS:
         push_url(url)
+        try:
+            push_stats_url(url)
+        except Exception:  # pragma: no cover
+            pass

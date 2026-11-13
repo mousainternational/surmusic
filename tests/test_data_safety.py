@@ -230,3 +230,41 @@ def test_backup_is_saved_soon_after_a_change(app, client, monkeypatch):
     assert kv.puts == 1                     # the sign-in POST triggered a save of the (changed) data
     client.get("/")                         # a page view changes nothing and saves nothing
     assert kv.puts == 1
+
+
+def test_visitor_statistics_survive_a_restart(app, tmp_path, monkeypatch):
+    fake = _env(monkeypatch)
+    persist._stats_state.update({"sha": None, "last_hash": None})
+    url = app.config["DATABASE_URL"]
+    db = Database(url)
+    db.execute("DELETE FROM events")
+    for i in range(3):
+        db.execute("INSERT INTO events (kind, visitor_id, path, created_at) VALUES (?, ?, ?, ?)",
+                   ("page_view", f"v{i}", "/", "2999-01-01T00:00:00+00:00"))
+    db.commit()
+    db.close()
+    assert persist.push_stats_url(url) == "pushed"
+    assert persist.push_stats_url(url) == "unchanged"
+    assert b"page_view" not in base64.b64decode(fake.content)                # encrypted
+    # an empty table never replaces the good copy
+    from app import db as dbmod
+    fresh = f"sqlite:///{tmp_path / 'stats.db'}"
+    dbmod.migrate(fresh)
+    assert persist.push_stats_url(fresh) == "unchanged"
+    # restart: new empty database, the visitors come back
+    persist._stats_state.update({"sha": None, "last_hash": None})
+    assert persist.restore_stats_if_empty(fresh) == "restored"
+    d2 = Database(fresh)
+    assert d2.scalar("SELECT COUNT(*) FROM events") == 3
+    assert d2.scalar("SELECT COUNT(DISTINCT visitor_id) FROM events") == 3
+    d2.close()
+    assert persist.restore_stats_if_empty(fresh) == "not-needed"             # never doubles the numbers
+    # the main account copy is untouched by this: it still pushes by itself
+    assert persist.push_url(url) == "pushed"
+
+
+def test_statistics_backup_off_without_settings(monkeypatch):
+    monkeypatch.delenv("BACKUP_GITHUB_REPO", raising=False)
+    monkeypatch.delenv("BACKUP_GITHUB_TOKEN", raising=False)
+    assert persist.restore_stats_if_empty("sqlite:///unused.db") == "off"
+    assert persist.push_stats_url("sqlite:///unused.db") == "off"

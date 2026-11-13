@@ -47,6 +47,7 @@ def create_app(overrides=None):
     if not app.config.get("TESTING"):
         # free hosting without a permanent disk: bring accounts, admin and settings back from the private copy
         app.config["DATA_RESTORE"] = _persist.restore_if_empty(app.config["DATABASE_URL"])
+        app.config["STATS_RESTORE"] = _persist.restore_stats_if_empty(app.config["DATABASE_URL"])
     _bootstrap_admin(app)
     _migrate_app_devices(app)
     _apply_setting_changes(app)
