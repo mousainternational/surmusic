@@ -238,7 +238,7 @@ def message_view(mid):
     if not m["is_read"]:
         db.execute("UPDATE messages SET is_read = 1 WHERE id = ?", (mid,))
         db.commit()
-    return render_template("admin/message_view.html", meta=META, m=m)
+    return render_template("admin/message_view.html", meta=META, msgrow=m)
 
 
 @bp.route("/messages/delete-selected", methods=["POST"])

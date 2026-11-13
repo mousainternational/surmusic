@@ -289,3 +289,16 @@ def test_ad_in_the_big_player_has_its_own_switch_and_stays_out_of_the_header(cli
     off = {k: v for k, v in form.items() if k != "ads_enabled"}                   # an unticked box is simply not sent
     post(client, "/admin/ads", dict(off, ads_player_enabled="1"), page="/admin/ads")
     assert 'data-ad-slot="5555555555"' not in anon.get("/").get_data(as_text=True)               # ads off = nothing anywhere
+
+
+def test_message_opens_and_is_marked_read(client, app):
+    import re
+    anon = app.test_client()
+    post(anon, "/contact", {"name": "Thurman Su", "email": "domains@search-surmusicradio.com", "subject": "Results for surmusicradio.com",
+                           "message": "Hello <b>there</b>\nhttp://x.com?a=1&b=2"}, page="/contact")
+    login(client)
+    mid = re.search(r"/admin/messages/(\d+)", client.get("/admin/messages").get_data(as_text=True)).group(1)
+    r = client.get(f"/admin/messages/{mid}")
+    assert r.status_code == 200
+    page = r.get_data(as_text=True)
+    assert "Thurman Su" in page and "mailto:domains@search-surmusicradio.com" in page and f"/admin/messages/{mid}/delete" in page
