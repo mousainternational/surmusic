@@ -268,3 +268,13 @@ def test_indexnow_sends_podcast_and_own_text_pages():
     assert pages[0] == "/" and "/podcasts" in pages and "/podcasts/c/ai" in pages
     assert "/country/ghana" in pages and "/genre/lofi" in pages
     assert len(pages) == len(set(pages)) and all(p.startswith("/") for p in pages) and len(pages) < 10000
+
+
+def test_meta_description_is_unique_where_own_text_exists(client):
+    import re
+    def desc(path):
+        return re.search(r'<meta name="description" content="([^"]*)"', client.get(path).get_data(as_text=True)).group(1)
+    a, b = desc("/country/ghana"), desc("/country/kenya")
+    assert a != b and "Ghana" in a and len(a) <= 165
+    assert "Free live" in a and "Twi" in a
+    assert desc("/country/togo").startswith("Listen to live radio from Togo")       # no own text: the old description stays

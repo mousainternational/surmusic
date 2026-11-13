@@ -590,7 +590,9 @@ def _topic_page(slug):
     total = len(stations)
     all_stations = stations
     stations, page_no, pages = _paginate(stations)
-    meta = build_meta(info["seo_title"], info["description"], page=f"genre-{slug}",
+    own = COUNTRY_ABOUT.get(slug) or GENRE_ABOUT.get(slug) or []
+    description = f"Free live {info['label']} radio. {own[0]}" if own else info["description"]   # own text: a description no other page has
+    meta = build_meta(info["seo_title"], description, page=f"genre-{slug}",
                       noindex=(not stations) or page_no > 1)      # an empty page (or page 2, 3 …) is not shown in Google
     meta["keywords"] = topic_keywords(info)
     label = info["label"]
