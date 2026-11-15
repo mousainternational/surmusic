@@ -1,5 +1,6 @@
 """Public pages, the station JSON API, favourites, downloads and infrastructure routes."""
 import json
+import threading
 import re
 from datetime import datetime, timedelta, timezone
 from xml.sax.saxutils import escape
@@ -932,6 +933,9 @@ def continent(slug):
                            topic_path=topic_path, crumbs=crumbs, ld=[breadcrumb_ld(crumbs)])
 
 
+_og_slot = threading.BoundedSemaphore(1)
+
+
 @bp.route("/og/station/<uuid>.png")
 def station_card(uuid):
     """Share picture of one station (shown next to the link in WhatsApp, Facebook, …)."""
@@ -941,7 +945,17 @@ def station_card(uuid):
     st, _key = radio.station_by_uuid(uuid)
     if not st or is_blocked(st):
         abort(404)
-    png = ogcard.render((st.get("name") or "Radio").strip()[:90], (st.get("country") or "").strip()[:40])
+    # a small server draws one picture at a time; a crawler asking for hundreds must not starve the real pages
+    name, place = (st.get("name") or "Radio").strip()[:90], (st.get("country") or "").strip()[:40]
+    if ogcard.is_ready(name, place):
+        png = ogcard.render(name, place)
+    elif not _og_slot.acquire(blocking=False):
+        return Response("Busy, try again shortly", status=503, headers={"Retry-After": "60", "Cache-Control": "no-store"})
+    else:
+        try:
+            png = ogcard.render(name, place)
+        finally:
+            _og_slot.release()
     return Response(png, mimetype="image/png", headers={"Cache-Control": "public, max-age=86400"})
 
 

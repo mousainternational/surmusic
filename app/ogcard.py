@@ -35,6 +35,11 @@ def _wrap(draw, text, font, width, lines=9):
     return out
 
 
+def is_ready(name, place=""):
+    """True when this picture is already drawn (so serving it costs nothing)."""
+    return (name, place) in _cache
+
+
 def render(name, place=""):
     key = (name, place)
     if key in _cache:
@@ -71,7 +76,7 @@ def render(name, place=""):
     d.text((80, y + 14), sub.replace("▶", ">"), font=_font("Poppins-Medium.woff", 34), fill=(53, 232, 168))
     d.text((80, H - 76), "surmusicradio.com", font=_font("Poppins-Medium.woff", 32), fill=(200, 194, 224))
     buf = io.BytesIO()
-    img.save(buf, "PNG", optimize=True)
+    img.save(buf, "PNG")
     data = buf.getvalue()
     if len(_cache) > 300:
         _cache.pop(next(iter(_cache)))

@@ -417,3 +417,27 @@ def test_podcast_seo_titles_sitemap_and_noindex(client):
     assert "noindex" in client.get("/podcasts?q=zzz").get_data(as_text=True)
     sm = client.get("/sitemap.xml").get_data(as_text=True)
     assert "/podcasts</loc>" in sm and "/podcasts/c/islamic-scholars</loc>" in sm and "/podcasts/1001" not in sm
+
+
+def test_share_picture_is_cheap_and_never_starves_pages(client, monkeypatch):
+    """A crawler asking for hundreds of different pictures must get 503 (retry later), not freeze the site."""
+    from app import ogcard, public, radio
+    st = {"uuid": "9062f97c-7c49-4a6a-be28-4997a06aa002", "name": "Busy Test FM", "country": "Peru",
+          "url": "https://example.com/s", "tags": "pop"}
+    monkeypatch.setattr(radio, "station_by_uuid", lambda u: (st if u == st["uuid"] else None, "pop"))
+    ogcard._cache.clear()
+    url = f"/og/station/{st['uuid']}.png"
+    assert public._og_slot.acquire(blocking=False)               # someone else is already drawing a picture
+    try:
+        busy = client.get(url)
+        assert busy.status_code == 503 and busy.headers.get("Retry-After") == "60"
+    finally:
+        public._og_slot.release()
+    ok = client.get(url)                                          # free again: drawn and kept
+    assert ok.status_code == 200 and ok.data[:4] == b"\x89PNG"
+    assert ogcard.is_ready("Busy Test FM", "Peru")
+    assert public._og_slot.acquire(blocking=False)               # a picture already drawn is served even when busy
+    try:
+        assert client.get(url).status_code == 200
+    finally:
+        public._og_slot.release()
