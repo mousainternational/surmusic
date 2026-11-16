@@ -5,7 +5,7 @@
     <span class="thumb {{ thumb_class(st.name) }}" data-letter="{{ (st.name or '?')[:1] | upper }}">{% if st.favicon %}<img src="{{ st.favicon }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" width="44" height="44">{% endif %}</span>
     <span class="st-text">
       <span class="st-name">{{ st.name }}</span>
-      <span class="st-meta">{% if st.sponsored %}<span class="badge badge-sponsored">Sponsored</span> {% endif %}{{ [st.country, st.tags, (st.bitrate ~ ' kbps') if st.bitrate else ''] | select | join(' · ') }}</span>
+      <span class="st-meta">{% if st.sponsored %}<span class="badge badge-sponsored">Sponsored</span> {% endif %}{{ [st.country, st.tags or st.state, (st.bitrate ~ ' kbps') if st.bitrate else ''] | select | join(' · ') }}</span>
     </span>
     <span class="st-eq" aria-hidden="true"><i></i><i></i><i></i></span>
   </button>

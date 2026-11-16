@@ -441,3 +441,45 @@ def test_share_picture_is_cheap_and_never_starves_pages(client, monkeypatch):
         assert client.get(url).status_code == 200
     finally:
         public._og_slot.release()
+
+
+def test_neighbour_lists_only_name_real_countries():
+    from app.neighbours import NEIGHBOURS
+    for slug, others in NEIGHBOURS.items():
+        assert slug in COUNTRY_PAGES, slug
+        assert slug not in others, slug
+        for n in others:
+            assert n in COUNTRY_PAGES, (slug, n)
+
+
+def test_country_page_links_to_neighbours(client):
+    html = client.get("/country/paraguay").get_data(as_text=True)
+    assert "Radio from neighbouring countries" in html
+    for href in ("/country/bolivia", "/country/brazil", "/country/argentina"):
+        assert f'href="{href}"' in html
+
+
+def test_country_facts_and_regions_helpers():
+    from app.public import _country_facts, _state_counts
+    stations = [{"state": "Asuncion", "tags": "news, talk"}, {"state": "Asuncion", "tags": "news"},
+                {"state": "Central", "tags": "pop"}, {"state": "", "tags": ""}]
+    regions = _state_counts(stations)
+    assert regions == [("Asuncion", 2), ("Central", 1)]
+    text = _country_facts("Paraguay", 4, stations, regions)
+    assert "4 live Paraguay radio stations" in text and "news" in text and "Asuncion and Central" in text
+    assert _country_facts("Paraguay", 0, [], []) == ""
+    assert "1 live Paraguay radio station that" in _country_facts("Paraguay", 1, [], [])
+
+
+def test_region_filter_is_not_indexed_and_unknown_region_is_ignored(client, monkeypatch):
+    from app import public
+    sts = [{"uuid": "a", "name": "Radio A", "url": "https://x.example/a", "state": "Asuncion", "tags": "", "country": "Paraguay", "favicon": "", "bitrate": 0},
+           {"uuid": "b", "name": "Radio B", "url": "https://x.example/b", "state": "Central", "tags": "pop", "country": "Paraguay", "favicon": "", "bitrate": 64}]
+    monkeypatch.setattr(public.radio, "genre_stations", lambda slug: list(sts))
+    html = client.get("/country/paraguay?region=Asuncion").get_data(as_text=True)
+    assert 'data-uuid="a"' in html and 'data-uuid="b"' not in html and "noindex" in html
+    assert "Paraguay · Asuncion" in html                     # no tags: the region is shown instead
+    full = client.get("/country/paraguay").get_data(as_text=True)
+    assert 'data-uuid="a"' in full and 'data-uuid="b"' in full and "Asuncion (1)" in full and "noindex" not in full
+    other = client.get("/country/paraguay?region=Nowhere").get_data(as_text=True)
+    assert 'data-uuid="a"' in other and 'data-uuid="b"' in other

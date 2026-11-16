@@ -59,6 +59,7 @@ CATEGORY_PAGES = {
 
 
 from .about_text import COUNTRY_ABOUT, GENRE_ABOUT  # noqa: E402
+from .neighbours import NEIGHBOURS  # noqa: E402
 from .topics import CONTINENTS, COUNTRY_PAGES, GENRE_PAGES, TOPICS, countries_in, grouped, topic_path  # noqa: E402
 
 
@@ -582,6 +583,41 @@ def _paginate(stations):
     return stations[(page - 1) * PAGE_SIZE: page * PAGE_SIZE], page, pages
 
 
+def _country_neighbours(slug):
+    """[(href, label)] of the countries next to this one (only real country pages), for the links on a country page."""
+    return [(topic_path(n), COUNTRY_PAGES[n]["label"]) for n in NEIGHBOURS.get(slug, []) if n in COUNTRY_PAGES][:9]
+
+
+def _state_counts(stations, top=12):
+    """[(region, how many stations)] for the regions/cities named in the live list, biggest first."""
+    counts = {}
+    for st in stations:
+        name = (st.get("state") or "").strip()
+        if name:
+            counts[name] = counts.get(name, 0) + 1
+    return sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[:top]
+
+
+def _country_facts(label, total, stations, regions):
+    """One short paragraph made from the live list itself (so it is different on every country page and always true)."""
+    if not total:
+        return ""
+    tags = {}
+    for st in stations:
+        for t in (st.get("tags") or "").split(","):
+            t = t.strip().lower()
+            if t and len(t) > 2:
+                tags[t] = tags.get(t, 0) + 1
+    styles = [t for t, _ in sorted(tags.items(), key=lambda kv: (-kv[1], kv[0]))[:4]]
+    text = f"Right now Sur Music lists {total} live {label} radio station{'s' if total != 1 else ''} that play in your browser."
+    if styles:
+        text += " The most common styles are " + ", ".join(styles[:-1]) + (" and " if len(styles) > 1 else "") + styles[-1] + "."
+    places = [r for r, _ in regions[:5]]
+    if len(places) >= 2:
+        text += " Stations broadcast from " + ", ".join(places[:-1]) + " and " + places[-1] + "."
+    return text
+
+
 def _topic_page(slug):
     info = TOPICS[slug]
     try:
@@ -590,11 +626,19 @@ def _topic_page(slug):
         stations, error = [], str(exc)
     total = len(stations)
     all_stations = stations
+    is_country = info["kind"] == "country"
+    regions = _state_counts(all_stations) if is_country else []
+    region = (request.args.get("region") or "").strip()[:60]
+    if is_country and region and region in dict(regions):          # ?region=Asunción: only that region's stations
+        stations = [x for x in stations if (x.get("state") or "").strip() == region]
+        total = len(stations)
+    else:
+        region = ""
     stations, page_no, pages = _paginate(stations)
     own = COUNTRY_ABOUT.get(slug) or GENRE_ABOUT.get(slug) or []
     description = f"Free live {info['label']} radio. {own[0]}" if own else info["description"]   # own text: a description no other page has
     meta = build_meta(info["seo_title"], description, page=f"genre-{slug}",
-                      noindex=(not stations) or page_no > 1)      # an empty page (or page 2, 3 …) is not shown in Google
+                      noindex=(not stations) or page_no > 1 or bool(region))      # an empty page (or page 2, 3, or one region) is not shown in Google
     meta["keywords"] = topic_keywords(info)
     label = info["label"]
     top = [x["name"] for x in all_stations[:3] if x.get("name")]
@@ -613,10 +657,16 @@ def _topic_page(slug):
     ld = [breadcrumb_ld(crumbs), collection_ld(info["h1"], info["description"], topic_path(slug), all_stations)]
     if page_no == 1 and faqs:
         ld.append(faq_items_ld(faqs))
+    own_text = (COUNTRY_ABOUT.get(slug) or GENRE_ABOUT.get(slug) or []) if page_no == 1 else []
+    if is_country and page_no == 1 and not region and not own_text:
+        facts = _country_facts(label, total, all_stations, regions)
+        own_text = [facts] if facts else []
     return render_template("category.html", meta=meta, stations=protect(stations), error=error, cat=slug,
+                           neighbours=_country_neighbours(slug) if is_country else [], regions=regions if len(regions) > 1 else [],
+                           active_region=region,
                            info=info, genre=slug, crumbs=crumbs, ld=ld, trending=trending, faqs=faqs if page_no == 1 else [], popular=popular if page_no == 1 else [],
                            total=total, page_no=page_no, pages=pages, page_base=request.path,
-                           own_text=(COUNTRY_ABOUT.get(slug) or GENRE_ABOUT.get(slug) or []) if page_no == 1 else [])
+                           own_text=own_text)
 
 
 def _listed_countries(continent, minimum=3):

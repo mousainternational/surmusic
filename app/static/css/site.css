@@ -1501,3 +1501,6 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 .pr-card:focus-visible { outline: 3px solid #7c4dff; outline-offset: 3px; border-radius: 12px; }
 .pr-faith { margin: 2px 0 6px; font-size: 14px; }
 .pr-faith select { font: inherit; padding: 4px 8px; border-radius: 8px; border: 1px solid var(--line, #d9d3ee); }
+
+.region-chips { margin: 0 0 14px; }
+.topic-neighbours .chips { margin: 6px 0 0; }

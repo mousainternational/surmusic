@@ -38,6 +38,9 @@
       {% if not stations %}<div class="empty card"><p>No live stations of this type are online right now. Please try again later, or explore the other types above.</p></div>{% endif %}
       {% if stations %}<input class="list-find" type="search" data-filter-list placeholder="Type to find a channel…" aria-label="Find a channel on this page" autocomplete="off">{% endif %}
       <p class="muted small">{{ total or (stations | length) }} live stations{% if pages and pages > 1 %} · page {{ page_no }} of {{ pages }}{% endif %} · secure streams that play in your browser. More stations are available in the <a href="{{ url_for('public.download_page') }}">Android app</a>.</p>
+      {% if regions %}<nav class="chips region-chips" aria-label="Stations by region">
+        <a class="chip{{ ' active' if not active_region }}" href="{{ page_base }}">All of {{ info.label }}</a>{% for name, n in regions %}<a class="chip{{ ' active' if name == active_region }}" href="{{ page_base }}?region={{ name | urlencode }}" rel="nofollow">{{ name }} ({{ n }})</a>{% endfor %}
+      </nav>{% endif %}
       {{ ui.station_list(stations, cat) }}
       {% if pages and pages > 1 %}<nav class="pager" aria-label="More stations">
         {% if page_no > 1 %}<a class="btn btn-sm" href="{{ page_base }}{% if page_no > 2 %}?page={{ page_no - 1 }}{% endif %}" rel="prev">← Previous</a>{% endif %}
@@ -52,6 +55,10 @@
       {% if faqs %}<section class="topic-faq card">
         <h2 class="h3">Questions about {{ info.label }} radio</h2>
         {% for q, a in faqs %}<details><summary>{{ q }}</summary><p>{{ a }}</p></details>{% endfor %}
+      </section>{% endif %}
+      {% if neighbours %}<section class="topic-neighbours card">
+        <h2 class="h3">Radio from neighbouring countries</h2>
+        <p class="chips">{% for href, name in neighbours %}<a class="chip" href="{{ href }}">{{ name }} radio</a> {% endfor %}</p>
       </section>{% endif %}
       {% if own_text %}<section class="topic-own card">
         <h2 class="h3">About {{ info.label }} radio</h2>
