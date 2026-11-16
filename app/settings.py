@@ -15,7 +15,7 @@ ABOUT_MD = """\
 
 Listen to Bollywood, Lollywood (Pakistani) and Hollywood music from radio stations around the world — in your browser, in our Chrome extension, or in our Android app.
 
-We do not host or sell songs. Every station is a public live stream broadcast by its owner and listed in the open Radio Browser directory.
+Every station is a public live stream broadcast by its owner.
 """
 
 PRIVACY_MD = """\

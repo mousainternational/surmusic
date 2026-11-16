@@ -42,3 +42,10 @@ def test_podcast_hub_guide_links_every_podcast_page_and_keeps_faiths_neutral(cli
     assert pos == sorted(pos)                                 # faiths are listed A to Z: none is put first
     page = client.get(f"/blog/{slug}").get_data(as_text=True)
     assert "/podcasts/c/christian" in page and client.get("/sitemap.xml").get_data(as_text=True).count(f"/blog/{slug}") == 1
+
+
+def test_public_pages_do_not_name_the_station_directory(client):
+    """The shop window (home, About, llms.txt) names no outside source; the legal pages keep their disclaimer."""
+    for path in ("/", "/about", "/llms.txt"):
+        assert "Radio Browser" not in client.get(path).get_data(as_text=True), path
+    assert "Every station is a public live stream broadcast by its owner." in client.get("/about").get_data(as_text=True)

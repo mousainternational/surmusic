@@ -1026,7 +1026,7 @@ def station_page(uuid, slug=None):
         ("Genres", st.get("tags")),
         ("Stream quality", " ".join(x for x in [f"{st['bitrate']} kbps" if st.get("bitrate") else "", st.get("codec") or ""] if x)),
         ("Listeners", f"{st['clicks']:,} recent plays worldwide" if st.get("clicks") else ""),
-        ("Worldwide votes", f"{st['votes']:,} on the Radio Browser directory" if st.get("votes") else ""),
+        ("Worldwide votes", f"{st['votes']:,}" if st.get("votes") else ""),
     ] if value]
     likes, dislikes = like_counts(st["uuid"])
     return render_template("station.html", meta=meta, st=protect([st])[0], similar=protect(similar), cat=key or "", faqs=faqs,
@@ -1776,7 +1776,7 @@ def llms_txt():
             "## Facts for answers\n"
             "- Listening on the website is free. Stations are public internet radio streams; Sur Music does not own them.\n"
             "- Each station has its own page with details and a play button: /station/<id>/<name>.\n"
-            "- Station lists come from the open Radio Browser directory and update through the day.\n"
+            "- Station lists update through the day.\n"
             "- Android app: free with ads; Sur Music Pro (no ads, all themes) is US$5 per year after a free trial.\n\n"
             "## Main pages\n"
             f"- [All radio stations by country and type]({site}/radio-stations)\n"
