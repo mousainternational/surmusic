@@ -488,3 +488,24 @@ def test_region_filter_is_not_indexed_and_unknown_region_is_ignored(client, monk
 def test_every_country_page_has_neighbours():
     from app.neighbours import NEIGHBOURS
     assert set(COUNTRY_PAGES) <= set(NEIGHBOURS)
+
+
+def _region_stations():
+    mk = lambda i, state: {"uuid": f"u{i}", "name": f"Radio {i}", "url": f"https://x.example/{i}", "state": state, "tags": "pop",
+                           "country": "Paraguay", "favicon": "", "bitrate": 64}
+    return [mk(1, "Asunción"), mk(2, "Asunción"), mk(3, "Asunción"), mk(4, "Central"), mk(5, "Central")]
+
+
+def test_region_page_exists_only_with_enough_stations(client, monkeypatch):
+    from app import public
+    monkeypatch.setattr(public.radio, "genre_stations", lambda slug: _region_stations())
+    r = client.get("/country/paraguay/asuncion")
+    assert r.status_code == 200
+    html = r.get_data(as_text=True)
+    assert "Radio Asunción, Paraguay" in html and 'data-uuid="u1"' in html and 'data-uuid="u4"' not in html
+    assert "noindex" not in html and 'href="/country/paraguay/asuncion"' in html
+    assert client.get("/country/paraguay/central").status_code == 404        # 2 stations: too thin for its own page
+    assert client.get("/country/paraguay/nowhere").status_code == 404
+    assert client.get("/country/nowhere/asuncion").status_code == 404
+    country = client.get("/country/paraguay").get_data(as_text=True)
+    assert 'href="/country/paraguay/asuncion"' in country and "?region=Central" in country

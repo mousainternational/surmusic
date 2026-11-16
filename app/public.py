@@ -29,7 +29,7 @@ from .seo import (absolute, article_ld, breadcrumb_ld, build_meta, collection_ld
 from .settings import (ADSENSE_CLIENT_RE, ads_active, affiliate_offers, donation_method, get_settings, is_blocked,
                        offers_for, sponsored_stations, without_blocked)
 from .storage import file_path, media_bytes, media_path, software_mime
-from .util import valid_email, valid_url
+from .util import slugify, valid_email, valid_url
 
 bp = Blueprint("public", __name__)
 
@@ -569,6 +569,17 @@ def country_page(slug):
     return _topic_page(slug)
 
 
+REGION_PAGE_MIN = 3        # a region/city gets its own page only when it has at least this many stations (no thin pages)
+
+
+@bp.route("/country/<slug>/<region_slug>")
+def country_region_page(slug, region_slug):
+    """Radio of one region or city of a country: /country/paraguay/asuncion."""
+    if slug not in COUNTRY_PAGES:
+        abort(404)
+    return _topic_page(slug, region_slug)
+
+
 PAGE_SIZE = 100
 
 
@@ -618,8 +629,8 @@ def _country_facts(label, total, stations, regions):
     return text
 
 
-def _topic_page(slug):
-    info = TOPICS[slug]
+def _topic_page(slug, region_slug=None):
+    info = base_info = TOPICS[slug]
     try:
         stations, error = without_blocked(radio.genre_stations(slug)), None
     except radio.RadioError as exc:
@@ -629,16 +640,34 @@ def _topic_page(slug):
     is_country = info["kind"] == "country"
     regions = _state_counts(all_stations) if is_country else []
     region = (request.args.get("region") or "").strip()[:60]
-    if is_country and region and region in dict(regions):          # ?region=Asunción: only that region's stations
+    region_page = ""
+    if region_slug:                                                # /country/paraguay/asuncion: a real page of its own
+        for name, n in _state_counts(all_stations, top=1000):
+            if n >= REGION_PAGE_MIN and slugify(name) == region_slug and region_slug != "item":
+                region_page = name
+                break
+        if not region_page:
+            abort(404)
+        region = region_page
+    if is_country and region and (region_page or region in dict(regions)):    # ?region=Asunción: only that region's stations
         stations = [x for x in stations if (x.get("state") or "").strip() == region]
         total = len(stations)
+        if region_page:
+            c = base_info["label"]
+            info = dict(base_info, label=f"{region_page}, {c}", native="", more="",
+                        h1=f"Radio {region_page} — Live {c} Radio Stations",
+                        seo_title=f"Radio {region_page}, {c} — Live Stations Online",
+                        description=f"Listen to live radio from {region_page}, {c} free: {total} stations playing in your browser, no app and no sign-up.",
+                        intro=f"Live radio stations from {region_page} in {c}. Pick a station, press play and keep browsing.")
     else:
         region = ""
     stations, page_no, pages = _paginate(stations)
     own = COUNTRY_ABOUT.get(slug) or GENRE_ABOUT.get(slug) or []
+    if region_page:
+        own = []
     description = f"Free live {info['label']} radio. {own[0]}" if own else info["description"]   # own text: a description no other page has
-    meta = build_meta(info["seo_title"], description, page=f"genre-{slug}",
-                      noindex=(not stations) or page_no > 1 or bool(region))      # an empty page (or page 2, 3, or one region) is not shown in Google
+    meta = build_meta(info["seo_title"], description, page=None if region_page else f"genre-{slug}",
+                      noindex=(not stations) or page_no > 1 or bool(region and not region_page))      # an empty page (or page 2, 3, or one region) is not shown in Google
     meta["keywords"] = topic_keywords(info)
     label = info["label"]
     top = [x["name"] for x in all_stations[:3] if x.get("name")]
@@ -652,17 +681,21 @@ def _topic_page(slug):
     crumbs = [("Home", "/"), ("All radio", "/radio-stations")]
     if info["kind"] == "country" and info["group"] in CONTINENTS:
         crumbs.append((CONTINENTS[info["group"]][0], f"/continent/{info['group']}"))
-    crumbs.append((info["h1"].split(" — ")[0], topic_path(slug)))
+    crumbs.append((base_info["h1"].split(" — ")[0], topic_path(slug)))
+    if region_page:
+        crumbs.append((region_page, request.path))
     trending = trends.top(8) if slug in ("sports", "news", "english-news", "talk", "pop") else []
-    ld = [breadcrumb_ld(crumbs), collection_ld(info["h1"], info["description"], topic_path(slug), all_stations)]
+    ld = [breadcrumb_ld(crumbs), collection_ld(info["h1"], info["description"], request.path if region_page else topic_path(slug), stations if region_page else all_stations)]
     if page_no == 1 and faqs:
         ld.append(faq_items_ld(faqs))
-    own_text = (COUNTRY_ABOUT.get(slug) or GENRE_ABOUT.get(slug) or []) if page_no == 1 else []
-    if is_country and page_no == 1 and not region and not own_text:
-        facts = _country_facts(label, total, all_stations, regions)
+    own_text = (COUNTRY_ABOUT.get(slug) or GENRE_ABOUT.get(slug) or []) if page_no == 1 and not region_page else []
+    if is_country and page_no == 1 and (region_page or not region) and not own_text:
+        facts = _country_facts(label, total, stations if region_page else all_stations, [] if region_page else regions)
         own_text = [facts] if facts else []
+    region_links = [(n, c, f"{topic_path(slug)}/{slugify(n)}" if c >= REGION_PAGE_MIN and slugify(n) != "item"
+                     else f"{topic_path(slug)}?region={quote(n)}") for n, c in regions] if len(regions) > 1 else []
     return render_template("category.html", meta=meta, stations=protect(stations), error=error, cat=slug,
-                           neighbours=_country_neighbours(slug) if is_country else [], regions=regions if len(regions) > 1 else [],
+                           neighbours=_country_neighbours(slug) if is_country else [], regions=region_links, country_href=topic_path(slug),
                            active_region=region,
                            info=info, genre=slug, crumbs=crumbs, ld=ld, trending=trending, faqs=faqs if page_no == 1 else [], popular=popular if page_no == 1 else [],
                            total=total, page_no=page_no, pages=pages, page_base=request.path,
