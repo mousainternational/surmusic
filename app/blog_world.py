@@ -400,4 +400,57 @@ Switch to [sports talk](/genre/talk) or [news radio](/genre/news) for scores and
 
 If you know a station that carries good commentary and it is missing here, [send us its name](/contact).""",
     },
+    {
+        "slug": "podcasts-by-topic-speaker-and-faith-guide",
+        "title": "Free Podcasts by Topic, Speaker and Faith: A Simple Guide",
+        "description": "Find free podcasts and talks in one place: Islamic scholars, Christian sermons, Torah, Bhagavad Gita, Sikh katha, Buddhist dharma talks, Urdu and Hindi shows, cricket, news, business, science and AI.",
+        "date": "2026-11-16",
+        "tag": "Podcasts",
+        "minutes": 5,
+        "body": """Podcasts are easy to enjoy and hard to find. There are millions of shows, and most people only ever hear about the same few. This guide is a map of the podcast pages on Sur Music, so you can go straight to the kind of talk you want, whether that is a lecture by a speaker you already follow or a topic you are just curious about.
+
+## How podcasts work here
+
+We sort the shows into pages by topic, language and faith, so you do not have to dig through millions of titles. Press play on any episode and it starts right in your browser, and every show page names the podcaster, so you always know whose voice you are hearing. New shows appear and old ones leave, so the lists change. The names we mention below are examples we saw when we wrote this guide, not a promise that they will always be listed.
+
+## By faith and belief
+
+Each of these pages gathers talks, lectures and teachings. They are listed in alphabetical order, and no faith is put first.
+
+- [Buddhist dharma talks](/podcasts/c/buddhist): meditation and teaching talks. At the time of writing this included Thich Nhat Hanh dharma talks.
+- [Christian sermons and Bible study](/podcasts/c/christian): sermons, Bible teaching and worship, including a sermons podcast from Timothy Keller.
+- [Hindu spiritual talks](/podcasts/c/hindu): Bhagavad Gita readings and explanations, and kirtan and bhajan shows.
+- [Islamic lectures and Quran](/podcasts/c/islamic): tafseer, seerah and Friday talks from mosques and teachers around the world.
+- [Islamic scholars](/podcasts/c/islamic-scholars): shows by well-known speakers such as Dr Israr Ahmed, Mufti Tariq Masood, Maulana Tariq Jameel, Javed Ahmad Ghamidi and Mufti Taqi Usmani, when they are in the directory.
+- [Jewish learning and Torah](/podcasts/c/jewish): Torah, Talmud and Jewish learning shows.
+- [Sikh Gurbani and katha](/podcasts/c/sikh): katha and kirtan, for example Sikhi Sewa Mission UK.
+
+## By language and country
+
+If you want to hear your own language, start here.
+
+- [Urdu podcasts](/podcasts/c/urdu): stories, talks and conversation in Urdu.
+- [Hindi podcasts](/podcasts/c/hindi): Hindi talk shows and stories.
+- [Top podcasts in Pakistan](/podcasts/c/top-pakistan), [top podcasts in India](/podcasts/c/top-india) and [top podcasts worldwide](/podcasts/c/top-world): the current charts, so you can see what people are listening to.
+
+## By topic
+
+- [Cricket podcasts](/podcasts/c/cricket) for match talk and analysis.
+- [Bollywood and film](/podcasts/c/bollywood) and [celebrity interviews](/podcasts/c/celebrity) for long conversations with people from film, music and sport.
+- [News and talk](/podcasts/c/news) for daily headlines and discussion.
+- [Business](/podcasts/c/business), [science](/podcasts/c/science), [technology](/podcasts/c/technology) and [artificial intelligence](/podcasts/c/ai) for learning something new on a commute.
+- [Kids and stories](/podcasts/c/kids) for bedtime and car journeys.
+
+## If you are looking for a particular speaker or show
+
+Open the [podcast search page](/podcasts) and type the name of the show or the podcaster. If it is in the directory, it will appear and you can press play on any episode. If you cannot find it, it may be listed under a slightly different name, so try the surname or the title of the show on its own.
+
+## Podcasts or live radio?
+
+A podcast is a recording you pick and play when you like. A live radio station is on at a set time and carries on without you. Many people use both: a podcast for something specific, and a station when they simply want something on. If you prefer live talk, try [news radio](/genre/news) or [talk radio](/genre/talk).
+
+## A note on trust
+
+We cannot check every episode, and a show listed here is not an endorsement of what it says. If you find something that does not belong, [tell us](/contact) and we will look at it. To learn more about Sur Music, see our [about page](/about).""",
+    },
 ]

@@ -28,3 +28,17 @@ def test_guide_links_point_to_real_pages(client):
     for p in blog.POSTS:
         for href in set(re.findall(r"\]\((/[^)#]*)\)", p["body"])):
             assert client.get(href).status_code == 200, (p["slug"], href)
+
+
+def test_podcast_hub_guide_links_every_podcast_page_and_keeps_faiths_neutral(client):
+    from app import podcasts
+    slug = "podcasts-by-topic-speaker-and-faith-guide"
+    assert slug in blog.BY_SLUG
+    body = blog.BY_SLUG[slug]["body"]
+    for cat in podcasts.CATEGORIES:                           # one link for every podcast category page
+        assert f"](/podcasts/c/{cat})" in body, cat
+    assert "](/podcasts)" in body
+    pos = [body.index(f"](/podcasts/c/{c})") for c in ("buddhist", "christian", "hindu", "islamic", "jewish", "sikh")]
+    assert pos == sorted(pos)                                 # faiths are listed A to Z: none is put first
+    page = client.get(f"/blog/{slug}").get_data(as_text=True)
+    assert "/podcasts/c/christian" in page and client.get("/sitemap.xml").get_data(as_text=True).count(f"/blog/{slug}") == 1
