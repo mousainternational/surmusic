@@ -278,4 +278,4 @@ def test_meta_description_is_unique_where_own_text_exists(client):
     a, b = desc("/country/ghana"), desc("/country/kenya")
     assert a != b and "Ghana" in a and len(a) <= 165
     assert "Free live" in a and "Twi" in a
-    assert desc("/country/togo").startswith("Listen to live radio from Togo")       # no own text: the old description stays
+    assert desc("/country/togo").startswith("Listen to live Togo radio stations")       # no own text: the standard description stays

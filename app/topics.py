@@ -711,9 +711,10 @@ for _code, (_name, _cont, _native) in sorted(WORLD.items(), key=lambda kv: kv[1]
     TOPICS[_s] = dict(
         kind="country", group=_cont, code=_code, label=_name,
         h1=f"{_name} Radio — Live Radio Stations from {_name}", native=_native,
-        seo_title=(f"Radio {_name} Live — {_name} FM & Online Stations" if len(_name) < 12 else
-                   (f"Radio {_name} Live — Online Stations" if len(_name) <= 31 else f"Radio {_name} Live")),
-        description=f"Listen to live radio from {_name} free: music, news and talk stations from {_name}, "
+        seo_title=(f"Radio {_name} Live — {_name} Radio Stations Online" if len(_name) < 12 else
+                   (f"Radio {_name} Live — Radio Stations Online" if len(_name) <= 25 else
+                    (f"Radio {_name} Live — Online Stations" if len(_name) <= 31 else f"Radio {_name} Live"))),
+        description=f"Listen to live {_name} radio stations free: FM, music, news and talk from {_name}, "
                     "playing right in your browser — no app and no sign-up.",
         intro=f"All the live radio stations from {_name} that play in your browser: music, news, talk, sports and "
               f"local FM. Pick a station, press play and keep browsing — the music keeps going.",

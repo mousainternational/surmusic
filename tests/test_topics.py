@@ -522,3 +522,9 @@ def test_region_pages_are_in_the_sitemap(client, app):
         db.commit()
     sm = client.get("/sitemap.xml").get_data(as_text=True)
     assert "/country/paraguay/asuncion</loc>" in sm and "/country/paraguay/central" not in sm
+
+
+def test_country_titles_use_the_words_people_search():
+    assert TOPICS["paraguay"]["seo_title"] == "Radio Paraguay Live — Paraguay Radio Stations Online"
+    assert "Paraguay radio stations" in TOPICS["paraguay"]["description"]
+    assert TOPICS["new-zealand"]["seo_title"] == "Radio New Zealand Live — New Zealand Radio Stations Online"
