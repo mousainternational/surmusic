@@ -1639,9 +1639,20 @@ def indexnow_key(key):
     abort(404)
 
 
+ADMOB_PUBLISHER_LINE = "google.com, pub-1108836433307648, DIRECT, f08c47fec0942fa0"
+
+
 @bp.route("/ads.txt")
-@bp.route("/app-ads.txt")                # the same publisher lines authorise the Android app's AdMob ads
 def ads_txt():
+    return _ads_txt_response([])
+
+
+@bp.route("/app-ads.txt")                # the same lines plus the AdMob publisher of the Android app
+def app_ads_txt():
+    return _ads_txt_response([ADMOB_PUBLISHER_LINE])
+
+
+def _ads_txt_response(more_lines):
     s = get_settings()
     lines = []
     client = s.get("adsense_client", "")
@@ -1652,6 +1663,7 @@ def ads_txt():
         line = line.strip()
         if line and len(line) < 300 and all(32 <= ord(c) < 127 for c in line):
             lines.append(line)
+    lines += [m for m in more_lines if m not in lines]
     if not lines:
         lines.append("# No advertising partners configured yet.")
     return Response("\n".join(lines) + "\n", mimetype="text/plain")

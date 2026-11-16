@@ -328,9 +328,13 @@ def test_old_admin_events_are_removed_once_at_start(tmp_path, monkeypatch):
     d.close()
 
 
-def test_app_ads_txt_matches_ads_txt(client):
+def test_app_ads_txt_is_ads_txt_plus_the_admob_publisher_once(client):
     a, b = client.get("/ads.txt"), client.get("/app-ads.txt")
-    assert b.status_code == 200 and b.get_data() == a.get_data() and b.mimetype == "text/plain"
+    line = "google.com, pub-1108836433307648, DIRECT, f08c47fec0942fa0"
+    assert b.status_code == 200 and b.mimetype == "text/plain"
+    assert b.get_data(as_text=True).splitlines().count(line) == 1 and line not in a.get_data(as_text=True)
+    assert [l for l in a.get_data(as_text=True).splitlines() if not l.startswith("#")] == \
+           [l for l in b.get_data(as_text=True).splitlines() if l != line]
 
 
 def test_unreachable_postgres_falls_back_to_sqlite_on_disk(tmp_path):
