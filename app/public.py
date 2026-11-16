@@ -1943,6 +1943,10 @@ def sitemap():
             stations = json.loads(row["body"]) or []
         except (ValueError, TypeError):
             continue
+        gslug = key_row["cache_key"][6:] if key_row["cache_key"].startswith("genre:") else ""
+        if gslug in COUNTRY_PAGES:                                    # a page for each region/city with enough stations
+            pages += [f"{topic_path(gslug)}/{slugify(n)}" for n, c in _state_counts(without_blocked(stations), top=1000)
+                      if c >= REGION_PAGE_MIN and slugify(n) != "item"]
         for st in without_blocked(stations):
             if isinstance(st, dict) and st.get("uuid") and st["uuid"] not in seen and len(seen) < 45000:
                 seen.add(st["uuid"])

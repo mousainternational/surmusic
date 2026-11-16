@@ -509,3 +509,16 @@ def test_region_page_exists_only_with_enough_stations(client, monkeypatch):
     assert client.get("/country/nowhere/asuncion").status_code == 404
     country = client.get("/country/paraguay").get_data(as_text=True)
     assert 'href="/country/paraguay/asuncion"' in country and "?region=Central" in country
+
+
+def test_region_pages_are_in_the_sitemap(client, app):
+    import json
+    from app.db import get_db, utcnow
+    with app.app_context():
+        db = get_db()
+        db.execute("DELETE FROM station_cache WHERE cache_key = ?", ("genre:paraguay",))
+        db.execute("INSERT INTO station_cache (cache_key, body, fetched_at) VALUES (?, ?, ?)",
+                   ("genre:paraguay", json.dumps(_region_stations()), utcnow()))
+        db.commit()
+    sm = client.get("/sitemap.xml").get_data(as_text=True)
+    assert "/country/paraguay/asuncion</loc>" in sm and "/country/paraguay/central" not in sm
