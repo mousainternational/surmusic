@@ -483,3 +483,8 @@ def test_region_filter_is_not_indexed_and_unknown_region_is_ignored(client, monk
     assert 'data-uuid="a"' in full and 'data-uuid="b"' in full and "Asuncion (1)" in full and "noindex" not in full
     other = client.get("/country/paraguay?region=Nowhere").get_data(as_text=True)
     assert 'data-uuid="a"' in other and 'data-uuid="b"' in other
+
+
+def test_every_country_page_has_neighbours():
+    from app.neighbours import NEIGHBOURS
+    assert set(COUNTRY_PAGES) <= set(NEIGHBOURS)
