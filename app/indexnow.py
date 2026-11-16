@@ -26,9 +26,11 @@ PODCAST_PAGES = ["/podcasts", "/podcasts/c/islamic-scholars", "/podcasts/c/ai", 
 def pages_to_send():
     """The key pages, the podcast pages and every country/type page that has its own hand-written text (no duplicates)."""
     from .about_text import COUNTRY_ABOUT, GENRE_ABOUT
+    from .blog import POSTS
     from .topics import topic_path
     out = []
-    for p in KEY_PAGES + PODCAST_PAGES + [topic_path(k) for k in list(COUNTRY_ABOUT) + list(GENRE_ABOUT)]:
+    for p in (KEY_PAGES + PODCAST_PAGES + [f"/blog/{g['slug']}" for g in POSTS]
+              + [topic_path(k) for k in list(COUNTRY_ABOUT) + list(GENRE_ABOUT)]):
         if p not in out:
             out.append(p)
     return out

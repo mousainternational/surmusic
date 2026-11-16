@@ -267,6 +267,7 @@ def test_indexnow_sends_podcast_and_own_text_pages():
     pages = indexnow.pages_to_send()
     assert pages[0] == "/" and "/podcasts" in pages and "/podcasts/c/ai" in pages
     assert "/country/ghana" in pages and "/genre/lofi" in pages
+    assert "/blog/podcasts-by-topic-speaker-and-faith-guide" in pages and "/blog/listen-quran-radio-online-free" in pages   # every guide goes to Bing without the form's daily limit
     assert len(pages) == len(set(pages)) and all(p.startswith("/") for p in pages) and len(pages) < 10000
 
 
