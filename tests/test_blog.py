@@ -49,3 +49,10 @@ def test_public_pages_do_not_name_the_station_directory(client):
     for path in ("/", "/about", "/llms.txt"):
         assert "Radio Browser" not in client.get(path).get_data(as_text=True), path
     assert "Every station is a public live stream broadcast by its owner." in client.get("/about").get_data(as_text=True)
+
+
+def test_sitemap_gives_guides_their_real_date_and_other_pages_none(client):
+    xml = client.get("/sitemap.xml").get_data(as_text=True)
+    first = blog.POSTS[0]
+    assert f"/blog/{first['slug']}</loc><lastmod>{first['date']}</lastmod>" in xml
+    assert "/about</loc></url>" in xml          # no invented dates for pages without a real one

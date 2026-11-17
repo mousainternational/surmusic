@@ -1955,8 +1955,10 @@ def sitemap():
                 pages.append(station_path(st))
     pages += [f"/stations/{c}" for c in "0" + LETTERS]
     parts = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    post_dates = {f"/blog/{bp['slug']}": bp.get("date") for bp in blog_data.POSTS}    # real publish dates only
     for p in pages:
-        parts.append(f"<url><loc>{escape(site + p)}</loc></url>")
+        day = post_dates.get(p)
+        parts.append(f"<url><loc>{escape(site + p)}</loc>" + (f"<lastmod>{escape(day)}</lastmod>" if day else "") + "</url>")
     parts.append("</urlset>")
     xml = "\n".join(parts)
     if lowdb.enabled():
