@@ -79,7 +79,7 @@ By using Sur Music you agree to these terms.
 
 ### The service
 
-Sur Music plays public live radio streams listed in the open Radio Browser directory. We do not own, host, record or control the stations or their content, and stations may go offline at any time.
+Sur Music plays public live radio streams listed in the open Radio Browser directory. We do not own, host, record or control the stations or their content, and stations may go offline at any time. We are not responsible for the content, opinions or wording of any station, podcast or other item, and not for any claim or loss that comes from it.
 
 ### Accounts
 
@@ -103,6 +103,8 @@ These terms are governed by the laws of Pakistan.
 """
 
 DISCLAIMER_MD = """\
+**Content disclaimer:** Sur Music is not responsible for any content you find on this website or in its apps, whether religious, music, news, talk or anything else. Every station, podcast and other item carries its own owner's words, views and data, and we cannot be held responsible for what they say or play, or for any call, claim or loss that comes from it. You listen at your own choice.
+
 Sur Music Player & Radio is an independent radio player developed and published by **Mousa International Software House**. It does not host, upload, download, record or store any songs, music or audio files. All audio is streamed live and directly from third-party radio stations that are publicly listed in the open Radio Browser directory (radio-browser.info).
 
 All songs, music, station names and logos belong to their respective owners, broadcasters and record labels. We are not affiliated with, endorsed by, or sponsored by any radio station, film industry, music label or artist. The words "Bollywood", "Lollywood" and "Hollywood" are used only to describe music genres.

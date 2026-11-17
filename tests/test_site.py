@@ -365,3 +365,10 @@ def test_owner_gets_admin_back_by_confirming_email_when_no_admin_exists(app, cli
         db = get_db()
         assert db.scalar("SELECT role FROM users WHERE id = ?", (other,)) == "user"
         assert db.scalar("SELECT role FROM users WHERE id = ?", (uid,)) == "admin"
+
+
+def test_content_disclaimer_is_on_disclaimer_and_terms(client):
+    d = client.get("/disclaimer").get_data(as_text=True)
+    t = client.get("/terms").get_data(as_text=True)
+    assert "Sur Music is not responsible for any content" in d
+    assert "not responsible for the content, opinions or wording" in t
