@@ -60,7 +60,7 @@ CATEGORY_PAGES = {
 
 from .about_text import COUNTRY_ABOUT, GENRE_ABOUT  # noqa: E402
 from .neighbours import NEIGHBOURS  # noqa: E402
-from .topics import CONTINENTS, COUNTRY_PAGES, GENRE_PAGES, TOPICS, countries_in, grouped, topic_path  # noqa: E402
+from .topics import CONTINENTS, COUNTRY_PAGES, GENRE_PAGES, TOPIC_ALIASES, TOPICS, countries_in, grouped, topic_path  # noqa: E402
 
 
 def station_path(st):
@@ -555,6 +555,8 @@ def genre(slug):
     if slug not in GENRE_PAGES:
         if slug in COUNTRY_PAGES:
             return redirect(topic_path(slug), code=301)
+        if slug in TOPIC_ALIASES:                          # a city page that used to be a copy of another page
+            return redirect(topic_path(TOPIC_ALIASES[slug]), code=301)
         abort(404)
     return _topic_page(slug)
 

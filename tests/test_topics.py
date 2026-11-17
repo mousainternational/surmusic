@@ -528,3 +528,14 @@ def test_country_titles_use_the_words_people_search():
     assert TOPICS["paraguay"]["seo_title"] == "Radio Paraguay Live — Paraguay Radio Stations Online"
     assert "Paraguay radio stations" in TOPICS["paraguay"]["description"]
     assert TOPICS["new-zealand"]["seo_title"] == "Radio New Zealand Live — New Zealand Radio Stations Online"
+
+
+def test_a_city_has_one_page_and_its_old_copy_redirects(client):
+    from app.topics import TOPIC_ALIASES, CITY_SLUGS
+    firsts = [TOPICS[s]["paths"][0] for s in CITY_SLUGS]
+    assert len(firsts) == len(set(firsts))                 # no two city pages show the same stations
+    assert TOPIC_ALIASES.get("vienna-at") == "vienna" and "vienna-at" not in TOPICS
+    r = client.get("/genre/vienna-at")
+    assert r.status_code == 301 and r.headers["Location"].endswith("/genre/vienna")
+    assert client.get("/genre/vienna").status_code == 200
+    assert client.get("/genre/not-a-city-xyz").status_code == 404

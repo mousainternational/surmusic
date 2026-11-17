@@ -832,6 +832,7 @@ _CITIES = [   # (slug, name, country code, country name)
     ("new-york", "New York", "US", "USA"), ("toronto", "Toronto", "CA", "Canada"), ("sydney", "Sydney", "AU", "Australia"),
 ]
 CITY_SLUGS = []
+TOPIC_ALIASES = {}                                  # old address of a page that was a copy of another -> the page to use
 for _s, _n, _cc, _cn in _CITIES:
     if _s in TOPICS:
         continue
@@ -935,6 +936,10 @@ for _grp in _BIG.split(";"):
     for _city in _names.split(","):
         _cn = WORLD.get(_cc, (_cc,))[0]
         _s = _slug(_city)
+        if _s and _s in TOPICS and TOPICS[_s].get("paths", [""])[0] == (
+                f"/json/stations/search?state={urllib.parse.quote(_city)}&countrycode={_cc}&{COMMON}"):
+            TOPIC_ALIASES[f"{_s}-{_cc.lower()}"] = _s           # the same city already has this page: no second copy
+            continue
         if not _s or _s in TOPICS:
             _s = f"{_s}-{_cc.lower()}" if _s else ""
         if not _s or _s in TOPICS:
