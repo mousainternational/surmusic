@@ -78,3 +78,15 @@ def test_empty_podcast_list_is_never_cached(client, monkeypatch):
     assert r.get_json() == {"items": []} and r.headers["Cache-Control"] == "no-store"
     monkeypatch.setattr(podcasts, "category", lambda slug, demo=False: [{"id": "1", "name": "N", "artist": "A", "img": "https://x/y.png"}])
     assert "max-age=600" in client.get("/api/podcasts/c/top-pakistan").headers["Cache-Control"]
+
+
+def test_category_in_a_country(client, monkeypatch):
+    from app import podcasts
+    asked = []
+    monkeypatch.setattr(podcasts, "_api", lambda path, **kw: asked.append(kw.get("country")) or {"results": []})
+    assert podcasts.valid("business@gb") and podcasts.valid("kids@pk")
+    assert not podcasts.valid("business@zz") and not podcasts.valid("islamic-scholars@pk") and not podcasts.valid("top-world@pk")
+    assert podcasts.label("business@gb") == "Business in the United Kingdom"
+    podcasts._build("business@gb")
+    assert asked and set(asked) == {"GB"}                       # every search of the category is asked in the chosen country
+    assert client.get("/api/podcasts/c/business@zz").status_code == 404

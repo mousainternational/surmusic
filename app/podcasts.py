@@ -179,19 +179,35 @@ def _chart_v2(cc):
     return out
 
 
+def _cat_country(slug):
+    """'<category>@<country code>' (e.g. 'business@pk') -> (category, code), or None. Islamic scholars is a fixed list, so it has no country form."""
+    cat, _, cc = slug.partition("@")
+    if cc and cat in CATEGORIES and not cat.startswith("top-") and cat != "islamic-scholars" and cc in NEAR:
+        return cat, cc
+    return None
+
+
 def valid(slug):
-    return slug in CATEGORIES or slug == "faiths" or (slug.startswith("top-") and slug[4:] in NEAR)
+    return slug in CATEGORIES or slug == "faiths" or (slug.startswith("top-") and slug[4:] in NEAR) or _cat_country(slug) is not None
 
 
 def label(slug):
     if slug == "faiths":
         return "Religion & spirituality (all faiths)"
+    if _cat_country(slug):
+        cat, cc = _cat_country(slug)
+        return f"{CATEGORIES[cat][0]} in {NEAR[cc]}"
     return CATEGORIES[slug][0] if slug in CATEGORIES else f"Top podcasts in {NEAR[slug[4:]]}"
 
 
 def _build(slug):
     out, seen = [], set()
-    for step in (CATEGORIES[slug][1] if slug in CATEGORIES else [("chart", slug[4:])]):
+    if _cat_country(slug):                                # the same searches of the category, asked in the shop of the chosen country
+        cat, cc = _cat_country(slug)
+        steps = list(dict.fromkeys(("search", st[1], cc.upper()) for st in CATEGORIES[cat][1] if st[0] == "search"))
+    else:
+        steps = CATEGORIES[slug][1] if slug in CATEGORIES else [("chart", slug[4:])]
+    for step in steps:
         try:
             if step[0] == "chart":
                 rows = _chart(step[1])
