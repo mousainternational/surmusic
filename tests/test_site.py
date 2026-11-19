@@ -254,7 +254,8 @@ def test_android_license_allows_one_phone_per_subscription(client, app, monkeypa
 
 def test_privacy_policy_mentions_the_android_subscription_check(client):
     html = client.get("/privacy").get_data(as_text=True)
-    assert "Android app subscription" in html and "transaction ID" in html and "sold through Google Play" not in html
+    assert "Android app subscription" in html and "Google Play" in html and "transaction ID" not in html and "JazzCash" not in html
+    assert "app open" in html and "Google AdMob" in html
 
 
 def test_big_player_is_loaded_only_when_opened_and_static_files_are_cached_long(client):

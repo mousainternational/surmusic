@@ -27,7 +27,7 @@ If you sign up we store your email address, display name, a securely hashed pass
 
 ### Android app: ads in the free version
 
-The free version of the Sur Music Android app shows two small banner ads (top and bottom) from Google AdMob. Google may use your device's advertising ID to choose ads. In Europe and the UK you are first asked for your consent, and on any phone you can reset or turn off personalised ads in Settings → Google → Ads. Sur Music Pro (paid) shows no ads. We do not receive your advertising ID.
+The free version of the Sur Music Android app shows two small banner ads (top and bottom) on every page and one full-screen ad (an "app open" ad) when the app is opened, at most once every four hours. The ads come from Google AdMob. Google may use your device's advertising ID to choose ads. In Europe and the UK you are first asked for your consent, and on any phone you can reset or turn off personalised ads in Settings → Google → Ads. Sur Music Pro shows no ads. We do not receive your advertising ID.
 
 ### Listening and activity
 
@@ -67,7 +67,7 @@ Sur Music is not directed at children under 13, and we do not knowingly collect 
 
 ### Android app subscription
 
-The Android app is a yearly subscription tied to your Sur Music account. You pay by JazzCash, NayaPay or Wise to the account shown on our subscription page and send us the transaction ID; we check it in our own payment app. We never see your card, PIN or bank password. The app signs in with your email and password (the password is not kept on the phone; the phone keeps a random sign-in token). To keep one subscription on one phone, the app sends a random number made when it is first opened, and our server stores only a fingerprint (hash) of it and of the token, with the date it was last used. This is not used for advertising and is not shared.
+The Android app is free. Sur Music Pro (no ads) is a yearly subscription that you buy inside the app with Google Play. Google Play takes the payment and manages renewals and cancellation (Play Store → Payments & subscriptions); we never see your card, PIN or bank details. The app asks Google Play only whether the subscription is active on your account and keeps that answer on your phone for a few days. The app can also sign in with your Sur Music email and password (the password is not kept on the phone; the phone keeps a random sign-in token). To keep one account on one phone, the app sends a random number made when it is first opened, and our server stores only a fingerprint (hash) of it and of the token, with the date it was last used. This is not used for advertising and is not shared.
 
 ### Your rights
 
