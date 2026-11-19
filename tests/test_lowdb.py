@@ -113,3 +113,14 @@ def test_islamic_page_never_waits_when_its_list_expires(client, app, monkeypatch
     counter = _count_connections(monkeypatch)
     assert client.get("/genre/islamic").status_code == 200
     assert counter["n"] == 0                                               # served from memory: no database, no 100 searches
+
+
+def test_admin_says_cities_are_on_when_cloudflare_sends_them(client, app):
+    from conftest import login
+    app.config["BEHIND_CLOUDFLARE"], app.config["GEOIP_AUTO"] = True, False
+    login(client)
+    cf = {"CF-Connecting-IP": "203.0.113.5", "CF-IPCountry": "PK", "CF-IPCity": "Gujranwala"}
+    html = client.get("/admin/", headers=cf).get_data(as_text=True)
+    assert "from Cloudflare" in html and "Visitor cities are off" not in html
+    html = client.get("/admin/", headers={"CF-Connecting-IP": "203.0.113.5", "CF-IPCountry": "PK"}).get_data(as_text=True)
+    assert "Visitor cities are off" in html                               # no city from Cloudflare: the warning stays

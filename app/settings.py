@@ -447,7 +447,7 @@ def setup_warnings(smtp_ready):
     if me and me["role"] == "admin" and not twofa.is_enabled(me["id"]):
         w.append("Protect the admin panel: turn on 2-step sign-in (My account → 2-step sign-in). Then even a "
                  "stolen password is not enough to get in.")
-    if not geo.available():
+    if not geo.available() and not geo.cloudflare_cities():
         cfg = current_app.config
         st = geo.read_status(cfg.get("GEOIP_MMDB", "")) if cfg.get("GEOIP_MMDB") else {}
         if not cfg.get("GEOIP_AUTO"):

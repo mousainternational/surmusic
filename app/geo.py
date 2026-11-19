@@ -124,6 +124,14 @@ def _trust_cf_headers():
     return behind_cloudflare() or via_local_tunnel()
 
 
+def cloudflare_cities():
+    """True when Cloudflare sends the visitor's city (Managed Transform "Add visitor location headers" is on)."""
+    try:
+        return bool(request.headers.get("CF-IPCity")) and _trust_cf_headers()
+    except RuntimeError:                              # outside a request
+        return False
+
+
 def _conn(path):
     c = getattr(_local, "conn", None)
     if c is None or getattr(_local, "path", None) != path:

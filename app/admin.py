@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 from flask import Blueprint, Response, abort, current_app, flash, g, jsonify, redirect, render_template, request, url_for
 
-from . import analytics
+from . import analytics, geo
 from .backup import export_data, restore_data
 from .db import get_db, utcnow
 from .mailer import smtp_ready
@@ -54,7 +54,7 @@ def dashboard():
     today = analytics.summary(1)["totals"]
     return render_template("admin/dashboard.html", meta=META, counts=counts, top=top, days=days, peak=peak,
                            warnings=setup_warnings(smtp_ready()), live=live, today=today,
-                           recent=analytics.recent(limit=12))
+                           recent=analytics.recent(limit=12), cf_cities=geo.cloudflare_cities())
 
 
 # ---------------------------------------------------------------- analytics

@@ -69,7 +69,7 @@
   <div class="card stat-mini">
     <h2 class="h3">More</h2>
     <p class="small">{{ counts.users_7d }} new members this week · {{ counts.favorites }} saved favourites · {{ counts.downloads }} app downloads · {{ counts.unread }} unread messages · ads {{ 'on' if ads_on else 'off' }}</p>
-    <p class="small">{% if geoip_on %}📍 City-level locations are on (DB-IP database installed).{% else %}📍 Locations show <strong>country only</strong> until you install the free DB-IP city database — see README → “Visitor locations”.{% endif %}</p>
+    <p class="small">{% if geoip_on %}📍 City-level locations are on (DB-IP database installed).{% elif cf_cities %}📍 City-level locations are on (from Cloudflare).{% else %}📍 Locations show <strong>country only</strong> until you install the free DB-IP city database — see README → “Visitor locations”.{% endif %}</p>
   </div>
   <form class="card" method="post" action="{{ url_for('admin.cache_clear') }}">
     <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
