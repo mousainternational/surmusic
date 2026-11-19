@@ -77,7 +77,7 @@ def test_app_downloads(client, app, tmp_path, monkeypatch):
                                  "file": (io.BytesIO(apk_bytes()), "SurMusic-1.0.0.apk")},
          page="/admin/apps", content_type="multipart/form-data")
     page = anon.get("/download").get_data(as_text=True)
-    assert "US$5 per year" in page and "mousainternational@gmail.com" in page and "Download the Android app" not in page
+    assert "transaction ID" not in page and "Download the Android app" not in page
     assert anon.get("/download/android").status_code == 404              # the file is never given away
     post(client, "/admin/apps", {"platform": "android",
                                  "external_url": "https://play.google.com/store/apps/details?id=com.mousainternational.surmusic"},

@@ -372,3 +372,9 @@ def test_content_disclaimer_is_on_disclaimer_and_terms(client):
     t = client.get("/terms").get_data(as_text=True)
     assert "Sur Music is not responsible for any content" in d
     assert "not responsible for the content, opinions or wording" in t
+
+
+def test_download_page_does_not_send_app_users_to_pay_outside_google_play():
+    from pathlib import Path
+    html = Path("app/templates/download.html").read_text(encoding="utf-8")
+    assert "Go Pro" not in html and "pay and send your transaction ID" not in html
