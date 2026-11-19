@@ -99,3 +99,17 @@ def test_free_hosting_turns_it_on_by_default(monkeypatch):
     finally:
         monkeypatch.delenv("EPHEMERAL_STORAGE")
         importlib.reload(config)
+
+
+def test_islamic_page_never_waits_when_its_list_expires(client, app, monkeypatch):
+    app.config["LOW_DB_MODE"] = True
+    assert client.get("/genre/islamic").status_code == 200              # first visit builds and keeps the list
+    st = lowdb.state(app)
+    with st.lock:
+        assert st.cache["radio-peek:genre:islamic"][0] > __import__("time").time() + 20 * 3600   # spare copy kept a day
+        st.cache.pop("radio:genre:islamic")                               # the 30-minute copy expires
+    from app import radio
+    monkeypatch.setattr(radio, "_build_genre", lambda slug: [])           # the refresh behind the scenes does nothing
+    counter = _count_connections(monkeypatch)
+    assert client.get("/genre/islamic").status_code == 200
+    assert counter["n"] == 0                                               # served from memory: no database, no 100 searches

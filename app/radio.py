@@ -148,6 +148,9 @@ def _cached(key, loader, ttl_minutes):
             data = None
         if data is not None:
             lowdb.cache_set("radio:" + key, data, ttl_minutes * 60)
+            g = GENRES.get(key[6:]) if key.startswith("genre:") else None
+            if g and len(g["paths"]) >= 10:           # big lists (Islamic ~100 searches): keep a spare copy for a day,
+                lowdb.cache_set("radio-peek:" + key, data, 24 * 3600)   # so an expired list never waits for the database
             seen, _ = lowdb.cache_get("radio-saved:" + key)
             if not seen:                              # keep a copy for cold starts, at most every 6 hours
                 lowdb.cache_set("radio-saved:" + key, True, 6 * 3600)
