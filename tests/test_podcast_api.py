@@ -88,5 +88,15 @@ def test_category_in_a_country(client, monkeypatch):
     assert not podcasts.valid("business@zz") and not podcasts.valid("islamic-scholars@pk") and not podcasts.valid("top-world@pk")
     assert podcasts.label("business@gb") == "Business in the United Kingdom"
     podcasts._build("business@gb")
-    assert asked and set(asked) == {"GB"}                       # every search of the category is asked in the chosen country
+    assert asked and asked[0] == "GB"                           # the category is asked in the chosen country first
     assert client.get("/api/podcasts/c/business@zz").status_code == 404
+
+
+def test_category_in_small_country_is_never_empty(client, monkeypatch):
+    from app import podcasts
+    row = lambda i: {"collectionId": i, "collectionName": f"Show {i}", "artistName": f"A{i}", "artworkUrl100": "https://a/100x100.jpg"}
+    def fake(path, **kw):
+        return {"results": []} if kw.get("country") == "NP" else {"results": [row(i) for i in range(1, 6)]}
+    monkeypatch.setattr(podcasts, "_api", fake)
+    monkeypatch.setattr(podcasts, "_chart", lambda cc: [])
+    assert len(podcasts._build("business@np")) >= 3

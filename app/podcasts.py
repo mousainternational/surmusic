@@ -234,6 +234,19 @@ def _build(slug):
         for row in rows:
             if row["id"] not in seen and row["img"]:
                 seen.add(row["id"]); out.append(row)
+    if _cat_country(slug) and len(out) < 8:               # a small country has few shows of this kind: fill up with the same category from the wider list, then with the country chart
+        cat, cc = _cat_country(slug)
+        more = [("chart", cc)] if not out else []
+        for st in list(CATEGORIES[cat][1]) + more:
+            if len(out) >= 12:
+                break
+            try:
+                rows = _chart(st[1]) if st[0] == "chart" else [x for x in (_row(r) for r in _api("/search", term=st[1], media="podcast", limit=12, country=st[2]).get("results", [])) if x]
+            except Exception:
+                continue
+            for row in rows:
+                if row["id"] not in seen and row["img"]:
+                    seen.add(row["id"]); out.append(row)
     if slug.startswith("top-"):
         return out
     per, kept = {}, []                                   # never more than two shows of one podcaster on one page
