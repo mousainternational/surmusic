@@ -439,6 +439,7 @@ If you want to hear your own language, start here.
 - [Bollywood and film](/podcasts/c/bollywood) and [celebrity interviews](/podcasts/c/celebrity) for long conversations with people from film, music and sport.
 - [News and talk](/podcasts/c/news) for daily headlines and discussion.
 - [Business](/podcasts/c/business), [science](/podcasts/c/science), [technology](/podcasts/c/technology) and [artificial intelligence](/podcasts/c/ai) for learning something new on a commute.
+- [Education](/podcasts/c/education), [health and fitness](/podcasts/c/health), [motivation](/podcasts/c/motivation) and [learning languages](/podcasts/c/languages) for growing a little every day.
 - [Kids and stories](/podcasts/c/kids) for bedtime and car journeys.
 
 ## If you are looking for a particular speaker or show

@@ -100,3 +100,10 @@ def test_category_in_small_country_is_never_empty(client, monkeypatch):
     monkeypatch.setattr(podcasts, "_api", fake)
     monkeypatch.setattr(podcasts, "_chart", lambda cc: [])
     assert len(podcasts._build("business@np")) >= 3
+
+
+def test_learning_categories(client):
+    from app import podcasts
+    for slug in ("education", "health", "motivation", "languages"):
+        assert podcasts.valid(slug) and podcasts.valid(slug + "@gb")
+        assert client.get(f"/api/podcasts/c/{slug}").status_code == 200
