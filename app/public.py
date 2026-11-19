@@ -800,7 +800,7 @@ def api_podcasts():
 
 def _json_cached(data, seconds=600):
     resp = jsonify(data)
-    resp.headers["Cache-Control"] = f"public, max-age={seconds}"
+    resp.headers["Cache-Control"] = f"public, max-age={seconds}" if seconds > 0 else "no-store"
     return resp
 
 
@@ -845,7 +845,9 @@ def api_podcast_category(slug):
         abort(404)
     demo = bool(current_app.config.get("TESTING") or current_app.config.get("RADIO_DEMO"))
     rows = podcasts.category(slug, demo)
-    return _json_cached({"items": [{"i": r["id"], "n": r["name"], "a": r["artist"], "m": r["img"]} for r in rows[:60]]})
+    # an empty list (Apple was slow) must never be remembered by the phone or Cloudflare: the next request asks again
+    return _json_cached({"items": [{"i": r["id"], "n": r["name"], "a": r["artist"], "m": r["img"]} for r in rows[:60]]},
+                        600 if rows else 0)
 
 
 @bp.route("/api/podcasts/<int:sid>/episodes")

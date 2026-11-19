@@ -69,3 +69,12 @@ def test_show_page_opens_even_if_marked_explicit_or_feed_is_down(client, monkeyp
         app.config["TESTING"] = True
     assert r.status_code == 200 and b"Bayan Show" in r.data and b"No episodes could be loaded" in r.data
     assert podcasts._row(result) is None and podcasts._row(result, False)["name"] == "Bayan Show"      # lists still leave explicit shows out
+
+
+def test_empty_podcast_list_is_never_cached(client, monkeypatch):
+    from app import podcasts
+    monkeypatch.setattr(podcasts, "category", lambda slug, demo=False: [])
+    r = client.get("/api/podcasts/c/top-pakistan")
+    assert r.get_json() == {"items": []} and r.headers["Cache-Control"] == "no-store"
+    monkeypatch.setattr(podcasts, "category", lambda slug, demo=False: [{"id": "1", "name": "N", "artist": "A", "img": "https://x/y.png"}])
+    assert "max-age=600" in client.get("/api/podcasts/c/top-pakistan").headers["Cache-Control"]
