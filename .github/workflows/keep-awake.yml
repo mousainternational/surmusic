@@ -11,5 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
+      # Straight to the Render server: Cloudflare answers 403 to GitHub's data-centre addresses.
+      # /ping is not redirected to the own domain, so this reaches the same server.
       - name: Ping the site
-        run: curl -fsS --max-time 90 --retry 2 --retry-delay 20 -o /dev/null -w "%{http_code} in %{time_total}s\n" https://www.surmusicradio.com/ping
+        run: curl -fsS --max-time 90 --retry 2 --retry-delay 20 -o /dev/null -w "%{http_code} in %{time_total}s\n" https://surmusic-vv37.onrender.com/ping
