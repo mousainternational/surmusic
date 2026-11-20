@@ -1061,6 +1061,10 @@ def station_page(uuid, slug=None):
     """Each station's own page: play button, details, similar stations and ads."""
     st, key = radio.station_by_uuid(uuid)
     if not st:
+        from .topics import CODE_TO_COUNTRY
+        gone = CODE_TO_COUNTRY.get(radio.gone_station_country(uuid))
+        if gone:                                      # the station stopped playing: keep its Google visitors
+            return redirect(topic_path(gone), code=301)
         abort(404)
     if is_blocked(st):
         abort(410)

@@ -482,6 +482,21 @@ def station_by_uuid(uuid):
     return (found[0], "") if found else (None, "")
 
 
+def gone_station_country(uuid):
+    """Country code of a station that no longer plays in a browser (http only, HLS or offline), so its old page,
+    which Google may still list, can send visitors to that country's stations instead of a dead end. '' if unknown."""
+    import re as _re
+    if not _re.fullmatch(r"[A-Za-z0-9-]{8,64}", uuid or ""):
+        return ""
+    try:
+        raw = _cached(f"gone:{uuid}", lambda: [{"cc": _text(x.get("countrycode"), 2).upper()} for x in
+                                                _fetch_json(f"/json/stations/byuuid/{urllib.parse.quote(uuid)}")
+                                                if isinstance(x, dict)], 1440)
+    except RadioError:
+        return ""
+    return raw[0]["cc"] if raw else ""
+
+
 def search_stations(q):
     q = " ".join(q.split())[:60]
     if len(q) < 2:

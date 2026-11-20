@@ -302,3 +302,13 @@ def test_countries_with_search_impressions_have_own_text(client):
     for slug in ("belgium", "paraguay", "trinidad-and-tobago", "georgia", "switzerland", "austria"):
         assert slug in COUNTRY_ABOUT and all(len(p) > 15 for p in COUNTRY_ABOUT[slug])
     assert "Flemish and Walloon" in client.get("/country/belgium").get_data(as_text=True)
+
+
+def test_a_station_that_stopped_playing_sends_google_visitors_to_its_country(client, monkeypatch):
+    from app import radio
+    from app.topics import CODE_TO_COUNTRY, topic_path
+    monkeypatch.setattr(radio, "station_by_uuid", lambda u: (None, ""))
+    monkeypatch.setattr(radio, "gone_station_country", lambda u: "US" if u == "c76686ca-a8b9" else "")
+    r = client.get("/station/c76686ca-a8b9/102-7-kiis-fm")
+    assert r.status_code == 301 and r.headers["Location"].endswith(topic_path(CODE_TO_COUNTRY["US"]))
+    assert client.get("/station/never-existed/x").status_code == 404
