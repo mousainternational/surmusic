@@ -29,7 +29,7 @@ from .seo import (absolute, article_ld, breadcrumb_ld, build_meta, collection_ld
 from .settings import (ADSENSE_CLIENT_RE, ads_active, affiliate_offers, donation_method, get_settings, is_blocked,
                        offers_for, sponsored_stations, without_blocked)
 from .storage import file_path, media_bytes, media_path, software_mime
-from .util import slugify, valid_email, valid_url
+from .util import plain_text, slugify, valid_email, valid_url
 
 bp = Blueprint("public", __name__)
 
@@ -787,6 +787,17 @@ PK_FM = [
 ]
 
 
+def pk_fm_for(name):
+    """The PK_FM row for a station page ("Hum FM 106.2" -> its FM cities), or None."""
+    low = f" {(name or '').lower().replace('-', ' ')} ".replace(" one ", " 1 ")
+    for row in PK_FM:
+        freq = row[1]
+        brand = [w for w in row[0].lower().split() if w not in ("fm", freq) and not w.startswith("(")]
+        if f" {freq} " in low and brand and all(f" {w} " in low for w in brand[:2]):
+            return row
+    return None
+
+
 @bp.route("/api/podcasts")
 def api_podcasts():
     """Shows for the moving podcast strip under the header (filled in by site.js; hidden until it has some)."""
@@ -1108,6 +1119,10 @@ def station_page(uuid, slug=None):
         (f"What does {st['name']} play?", f"{st['name']} is a radio station {('from ' + st['country'] + ' ') if st.get('country') else ''}playing {st.get('tags') or 'music and programmes'}."),
         (f"What can I do if {st['name']} stops playing?", "Stations sometimes go offline or change their address. Wait a minute and press play again, or pick another station from the list of similar stations below."),
     ]
+    fm = pk_fm_for(st["name"])
+    if fm:                                            # real frequency and cities: what people search for
+        faqs.insert(0, (f"Where can I hear {st['name']} on FM?", f"On FM {fm[1]} in {fm[2]}. Anywhere else, listen live on this page."))
+        meta["description"] = plain_text(f"Listen to {st['name']} live online free. On FM {fm[1]} in {fm[2]}.", 160)
     ld = [breadcrumb_ld(crumbs), station_ld(st, want), faq_items_ld(faqs)]
     page_url = absolute(want)
     share_text = f"Listen to {st['name']} live on Sur Music: {page_url}"

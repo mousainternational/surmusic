@@ -312,3 +312,13 @@ def test_a_station_that_stopped_playing_sends_google_visitors_to_its_country(cli
     r = client.get("/station/c76686ca-a8b9/102-7-kiis-fm")
     assert r.status_code == 301 and r.headers["Location"].endswith(topic_path(CODE_TO_COUNTRY["US"]))
     assert client.get("/station/never-existed/x").status_code == 404
+
+
+def test_pakistani_fm_station_page_shows_its_frequency_and_cities(client, monkeypatch):
+    from app import public, radio
+    assert public.pk_fm_for("Hum FM 106.2")[1] == "106.2" and public.pk_fm_for("Radio Kashmir FM 91") is None
+    st = {"uuid": "hum-1", "name": "Hum FM 106.2", "url": "https://stream.example.com/hum", "favicon": "",
+          "country": "Pakistan", "tags": "urdu", "bitrate": 128, "clicks": 50, "votes": 0}
+    monkeypatch.setattr(radio, "station_by_uuid", lambda u: (st, ""))
+    page = client.get(public.station_path(st)).get_data(as_text=True)
+    assert "On FM 106.2 in Karachi" in page and "Where can I hear Hum FM 106.2 on FM?" in page
