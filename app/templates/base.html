@@ -143,7 +143,7 @@
         <span>A product of {% if S.owner_url %}<a href="{{ S.owner_url }}" rel="noopener">{{ S.owner_brand }} — {{ S.owner_name }}</a>{% else %}<strong>{{ S.owner_brand }} — {{ S.owner_name }}</strong>{% endif %}</span>
       </p>
       {%- set socials = [('social_facebook','Facebook'),('social_youtube','YouTube'),('social_x','X'),('social_instagram','Instagram'),('social_tiktok','TikTok')] %}
-      <ul class="socials">{% for key, label in socials if S[key] %}<li><a href="{{ S[key] }}" rel="noopener me" target="_blank">{{ label }}</a></li>{% endfor %}</ul>
+      <ul class="socials">{% for key, label in socials if S[key] %}<li><a href="{{ S[key] }}" rel="noopener me" target="_blank"><svg class="social-ico" width="18" height="18" aria-hidden="true" focusable="false"><use href="{{ url_for('static', filename='img/social.svg') }}#{{ key }}"/></svg>{{ label }}</a></li>{% endfor %}</ul>
     </div>
     <nav aria-label="Listen">
       <h2>Listen</h2>

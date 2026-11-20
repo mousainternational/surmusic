@@ -379,3 +379,17 @@ def test_download_page_does_not_send_app_users_to_pay_outside_google_play():
     from pathlib import Path
     html = Path("app/templates/download.html").read_text(encoding="utf-8")
     assert "Go Pro" not in html and "pay and send your transaction ID" not in html
+
+
+def test_footer_social_icons(client, app):
+    """Each social link in the footer shows its icon, and the icon file has every network."""
+    from app import settings as site_settings
+    with app.test_request_context():
+        site_settings.save_settings({"social_facebook": "https://www.facebook.com/surmusicradio.com",
+                                     "social_tiktok": "https://www.tiktok.com/@surmusicradio.com"})
+    html = client.get("/").get_data(as_text=True)
+    assert re.search(r'facebook\.com/surmusicradio\.com"[^>]*><svg class="social-ico"[^>]*><use href="[^"]*img/social\.svg#social_facebook"', html)
+    assert "social.svg#social_tiktok" in html and "social.svg#social_x" not in html
+    sprite = client.get("/static/img/social.svg").get_data(as_text=True)
+    for key in ("social_facebook", "social_youtube", "social_x", "social_instagram", "social_tiktok"):
+        assert f'id="{key}"' in sprite
