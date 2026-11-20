@@ -183,16 +183,48 @@ def _chart_v2(cc):
     return out
 
 
+# Learn a language: one list per language (taught in English) and one for people who want to learn from Urdu. Used by the Android app only.
+LEARN_LANG = {
+    "learn-english": ("Learn English", [("search", "learn english podcast", "US"), ("search", "english speaking practice podcast", "IN"), ("search", "learn english podcast", "GB")]),
+    "learn-german": ("Learn German", [("search", "learn german podcast", "US"), ("search", "deutsch lernen podcast", "DE")]),
+    "learn-french": ("Learn French", [("search", "learn french podcast", "US"), ("search", "apprendre le français podcast", "FR")]),
+    "learn-spanish": ("Learn Spanish", [("search", "learn spanish podcast", "US"), ("search", "aprender español podcast", "ES")]),
+    "learn-arabic": ("Learn Arabic", [("search", "learn arabic podcast", "US"), ("search", "arabic language lessons podcast", "AE")]),
+    "learn-chinese": ("Learn Chinese", [("search", "learn chinese mandarin podcast", "US"), ("search", "learn chinese podcast", "SG")]),
+    "learn-from-urdu": ("Learn languages in Urdu", [("search", "learn english in urdu", "PK"), ("search", "english seekhain urdu mein", "PK"), ("search", "learn german in urdu", "PK"), ("search", "learn arabic in urdu", "PK")]),
+}
+# Apple's category numbers: a category of a country starts with Apple's own chart of that category in that country,
+# so Pakistan shows what Pakistan really listens to and not the same world list. The searches only fill up what is missing.
+GENRES = {"news": 1489, "education": 1304, "business": 1321, "technology": 1318, "science": 1533, "health": 1512,
+          "kids": 1305, "cricket": 1545, "bollywood": 1309}
+NO_COUNTRY = {"islamic-scholars"}
+
+
+def _chart_genre(cc, gid):
+    data = json.loads(_get(f"https://itunes.apple.com/{cc}/rss/toppodcasts/genre={int(gid)}/limit=30/json", MAX_JSON).decode("utf-8", "replace"))
+    out = []
+    for e in (data.get("feed", {}).get("entry", []) if isinstance(data, dict) else []):
+        sid = str(((e.get("id") or {}).get("attributes") or {}).get("im:id") or "")
+        imgs = e.get("im:image") or []
+        img = _https((imgs[-1] or {}).get("label") if imgs else "")
+        name = ((e.get("im:name") or {}).get("label") or "Podcast")
+        artist = ((e.get("im:artist") or {}).get("label") or "")
+        if sid.isdigit() and _family_ok(name, artist):
+            out.append({"id": sid, "name": name[:120], "artist": artist[:100],
+                        "img": re.sub(r"/\d+x\d+", "/200x200", img) if img else "", "feed": ""})
+    return out
+
+
 def _cat_country(slug):
     """'<category>@<country code>' (e.g. 'business@pk') -> (category, code), or None. Islamic scholars is a fixed list, so it has no country form."""
     cat, _, cc = slug.partition("@")
-    if cc and cat in CATEGORIES and not cat.startswith("top-") and cat != "islamic-scholars" and cc in NEAR:
+    if cc and cat in CATEGORIES and not cat.startswith("top-") and cat not in NO_COUNTRY and cc in NEAR:
         return cat, cc
     return None
 
 
 def valid(slug):
-    return slug in CATEGORIES or slug == "faiths" or (slug.startswith("top-") and slug[4:] in NEAR) or _cat_country(slug) is not None
+    return slug in CATEGORIES or slug in LEARN_LANG or slug == "faiths" or (slug.startswith("top-") and slug[4:] in NEAR) or _cat_country(slug) is not None
 
 
 def label(slug):
@@ -201,6 +233,8 @@ def label(slug):
     if _cat_country(slug):
         cat, cc = _cat_country(slug)
         return f"{CATEGORIES[cat][0]} in {NEAR[cc]}"
+    if slug in LEARN_LANG:
+        return LEARN_LANG[slug][0]
     return CATEGORIES[slug][0] if slug in CATEGORIES else f"Top podcasts in {NEAR[slug[4:]]}"
 
 
@@ -209,12 +243,18 @@ def _build(slug):
     if _cat_country(slug):                                # the same searches of the category, asked in the shop of the chosen country
         cat, cc = _cat_country(slug)
         steps = list(dict.fromkeys(("search", st[1], cc.upper()) for st in CATEGORIES[cat][1] if st[0] == "search"))
+        if cat in GENRES:
+            steps.insert(0, ("genre", GENRES[cat], cc))
     else:
-        steps = CATEGORIES[slug][1] if slug in CATEGORIES else [("chart", slug[4:])]
+        steps = CATEGORIES[slug][1] if slug in CATEGORIES else LEARN_LANG[slug][1] if slug in LEARN_LANG else [("chart", slug[4:])]
     for step in steps:
+        if step[0] == "search" and _cat_country(slug) and len(out) >= 12:      # the country's own chart is already full
+            break
         try:
             if step[0] == "chart":
                 rows = _chart(step[1])
+            elif step[0] == "genre":
+                rows = _chart_genre(step[2], step[1])
             elif step[0] == "scholars":
                 def one(pair):
                     words, must = pair
