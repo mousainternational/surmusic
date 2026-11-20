@@ -339,3 +339,8 @@ def test_relax_and_sleep_pages_exist_with_their_own_search_words(client):
         assert words in html and "<h1" in html
         assert f"/genre/{slug}" in sitemap                     # Google and Bing find it by themselves
     assert "/genre/rain-sounds" in client.get("/radio-stations").get_data(as_text=True)    # and a visitor finds it in the list of types
+
+
+def test_relax_and_sleep_is_one_of_the_category_boxes_on_the_home_page(client):
+    html = client.get("/").get_data(as_text=True)
+    assert "Relax and sleep" in html and "/genre/relax-sleep" in html
