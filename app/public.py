@@ -1046,6 +1046,15 @@ def station_card(uuid):
     return Response(png, mimetype="image/png", headers={"Cache-Control": "public, max-age=86400"})
 
 
+STATION_INDEX_CLICKS, STATION_INDEX_VOTES = 10, 500
+
+
+def strong_station(st):
+    """Only stations people really listen to go into Google. Thousands of near-identical station pages made Google
+    rate the whole site as thin (30,000 found, 500 indexed); the other pages still work and are shared normally."""
+    return (st.get("clicks") or 0) >= STATION_INDEX_CLICKS or (st.get("votes") or 0) >= STATION_INDEX_VOTES
+
+
 @bp.route("/station/<uuid>")
 @bp.route("/station/<uuid>/<slug>")
 def station_page(uuid, slug=None):
@@ -1074,6 +1083,8 @@ def station_page(uuid, slug=None):
     desc = (f"Listen to {st['name']} live online free on Sur Music. A radio station from {place} playing {tags}. "
             "No download, no sign-up — press play.")
     meta = build_meta(title, desc, canonical_path=want)
+    if not strong_station(st):
+        meta["robots"] = "noindex, follow"               # not in Google, but share previews and links still work
     meta["image"] = absolute(f"/og/station/{st['uuid']}.png")
     meta["og_type"] = "music.radio_station"
     meta["keywords"] = ", ".join(x for x in [st["name"], f"{st['name']} live", f"{st['name']} online", f"{st.get('country') or ''} radio".strip(), tags] if x)
@@ -1952,7 +1963,8 @@ def sitemap():
             pages += [f"{topic_path(gslug)}/{slugify(n)}" for n, c in _state_counts(without_blocked(stations), top=1000)
                       if c >= REGION_PAGE_MIN and slugify(n) != "item"]
         for st in without_blocked(stations):
-            if isinstance(st, dict) and st.get("uuid") and st["uuid"] not in seen and len(seen) < 45000:
+            if isinstance(st, dict) and st.get("uuid") and st["uuid"] not in seen and len(seen) < 45000 \
+                    and strong_station(st):
                 seen.add(st["uuid"])
                 pages.append(station_path(st))
     pages += [f"/stations/{c}" for c in "0" + LETTERS]
@@ -1983,7 +1995,7 @@ def sitemap_stations(n):
     site = current_app.config["SITE_URL"]
     parts = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
     for st in without_blocked(stations):
-        if isinstance(st, dict) and st.get("uuid"):
+        if isinstance(st, dict) and st.get("uuid") and strong_station(st):
             parts.append(f"<url><loc>{escape(site + station_path(st))}</loc></url>")
     parts.append("</urlset>")
     xml = "\n".join(parts)

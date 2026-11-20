@@ -6,7 +6,7 @@
   {%- set m = meta or {} %}
   <title>{{ m.title or S.seo_default_title }}</title>
   <meta name="description" content="{{ m.description or S.seo_default_description }}">
-  <meta name="robots" content="{{ 'noindex, nofollow' if m.noindex else 'index, follow, max-image-preview:large' }}">
+  <meta name="robots" content="{{ m.robots or ('noindex, nofollow' if m.noindex else 'index, follow, max-image-preview:large') }}">
   {%- if m.canonical %}<link rel="canonical" href="{{ m.canonical }}">{% endif %}
   {%- if m.title and not m.noindex %}
   <meta property="og:type" content="{{ m.og_type or 'website' }}">

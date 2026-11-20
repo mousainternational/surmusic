@@ -279,3 +279,19 @@ def test_meta_description_is_unique_where_own_text_exists(client):
     assert a != b and "Ghana" in a and len(a) <= 165
     assert "Free live" in a and "Twi" in a
     assert desc("/country/togo").startswith("Listen to live Togo radio stations")       # no own text: the standard description stays
+
+
+def test_weak_station_pages_stay_out_of_google_but_still_work(client, monkeypatch):
+    from app import directory, public, radio
+    weak = {"uuid": "weak-1", "name": "Tiny Test FM", "url": "https://stream.example.com/tiny", "favicon": "",
+            "country": "Pakistan", "tags": "pop", "bitrate": 128, "clicks": 2, "votes": 3}
+    strong = dict(weak, uuid="strong-1", name="Big Test FM", clicks=50)
+    monkeypatch.setattr(radio, "station_by_uuid", lambda u: ({"weak-1": weak, "strong-1": strong}.get(u), ""))
+    page = client.get(public.station_path(weak)).get_data(as_text=True)
+    assert 'name="robots" content="noindex, follow"' in page          # not in Google, links still followed
+    assert 'property="og:title"' in page                                # WhatsApp / Facebook previews still work
+    page = client.get(public.station_path(strong)).get_data(as_text=True)
+    assert 'content="index, follow' in page
+    monkeypatch.setattr(directory, "chunk_stations", lambda n: [weak, strong])
+    xml = client.get("/sitemap-stations-1.xml").get_data(as_text=True)
+    assert "strong-1" in xml and "weak-1" not in xml
