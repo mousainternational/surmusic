@@ -532,6 +532,23 @@ document.addEventListener("toggle", function (e) {
   });
 })();
 
+/* the second "Radio by country" box (it shows on narrow screens, the first on wide ones) is fetched only when shown */
+(function () {
+  function go() {
+    document.querySelectorAll("[data-lazy-grid]").forEach(function (el) {
+      if (el.getAttribute("data-loaded") || !el.offsetParent) return;
+      el.setAttribute("data-loaded", "1");
+      fetch(el.getAttribute("data-lazy-grid"), { credentials: "same-origin" }).then(function (r) {
+        if (!r.ok) throw new Error(r.status);
+        return r.text();
+      }).then(function (html) { el.outerHTML = html; }).catch(function () { el.removeAttribute("data-loaded"); });
+    });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", go); else go();
+  window.addEventListener("resize", go, { passive: true });
+  document.addEventListener("page:load", go);
+})();
+
 /* Home drop-downs: choosing a country, language or category opens its page */
 document.addEventListener("change", function (e) {
   var el = e.target;

@@ -44,10 +44,15 @@
 
 {% macro cat_tabs(active) -%}{%- endmacro %}
 
-{% macro flag_box(cls='') -%}
+{% macro flag_box(cls='', lazy=False) -%}
 <section class="card flag-box {{ cls }}" aria-label="Radio by country">
   <h2 class="h3">Radio by country</h2>
+  {%- if lazy %}
+  {#- the same 240 flags are already in this page's other box (only one box shows at a time): fetched only when shown #}
+  <div class="flag-grid" data-lazy-grid="/menu/flags"></div>
+  {%- else %}
   <div class="flag-grid">{% for letter, items in country_az() %}{% for href, name, fl in items %}<a class="flag-tile" href="{{ href }}"><span class="flag-big" aria-hidden="true">{{ flag_img(fl) }}</span><span class="flag-name">{{ name }}</span></a>{% endfor %}{% endfor %}</div>
+  {%- endif %}
 </section>
 {%- endmacro %}
 

@@ -74,7 +74,7 @@
       </section>{% endif %}
     </div>
     <aside class="side">
-      {{ ui.flag_box('flag-aside') }}
+      {{ ui.flag_box('flag-aside', lazy=True) }}
       {{ ads.ad('side') }}
       {{ partner.offers('lists') }}
       <div class="card">

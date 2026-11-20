@@ -364,3 +364,14 @@ def test_welcome_flag_api_gives_the_visitors_own_country(client):
     assert client.get("/static/flags/pk.svg").status_code == 200
     html = client.get("/").get_data(as_text=True)
     assert 'id="wlc"' in html and "hidden" in html.split('id="wlc"')[1][:60]
+
+
+def test_country_flags_are_sent_once_per_page(client):
+    import re
+    html = client.get("/genre/qawwali").get_data(as_text=True)
+    href = re.findall(r'data-href="(/station/[^"]+)"', html)[0]
+    for page in (html, client.get(href).get_data(as_text=True)):
+        assert page.count('class="flag-grid"') == 2 and page.count('data-lazy-grid="/menu/flags"') == 1
+        tiles = page.count('class="flag-tile"')
+        assert 100 < tiles < 400                      # one full set of flags, not two
+    assert client.get("/menu/flags").get_data(as_text=True).count('class="flag-tile"') == tiles
