@@ -781,6 +781,24 @@ _life("white-noise", "White noise", "White Noise Radio — Live White, Pink & Br
       "Live white, pink and brown noise streaming 24 hours a day. A steady sound that covers traffic and household noise and helps you sleep, focus or study.",
       "Also searched as white noise for sleep, brown noise for focus, pink noise, white noise live, fan sound and noise to sleep.",
       [tag("white noise"), tag("brown noise"), tag("pink noise"), tag("noise")])
+_life("calm-piano", "Calm piano", "Calm Piano Radio — Live Soft Piano Music",
+      "Calm Piano Radio Live 24/7 — Soft Piano to Relax and Sleep",
+      "Listen to live calm piano music free, 24/7: soft, slow piano for relaxing, sleeping, studying and unwinding.",
+      "Live calm piano: soft, slow piano music streaming 24 hours a day, for relaxing, sleeping, reading and studying.",
+      "Also searched as relaxing piano music, soft piano for sleep, calm piano live, peaceful piano and piano to relax.",
+      [tag("piano"), tag("calm piano"), tag("relaxing piano"), tag("instrumental")])
+_life("ambient-music", "Ambient music", "Ambient Music Radio — Live Ambient & Chill Sounds",
+      "Ambient Music Radio Live 24/7 — Calm Ambient Sounds Free",
+      "Listen to live ambient music free, 24/7: calm, drifting ambient and chill sounds for sleep, focus and relaxing.",
+      "Live ambient music: calm, slow, drifting soundscapes streaming all day and night, for sleep, focus, study and relaxing.",
+      "Also searched as ambient music live, ambient radio, chill ambient, space ambient and background music to relax.",
+      [tag("ambient"), tag("chillout"), tag("drone"), tag("soundscape")])
+_life("spa-music", "Spa & calm", "Spa Music Radio — Live Spa & Calm Music",
+      "Spa Music Radio Live 24/7 — Calm Spa Music Free Online",
+      "Listen to live spa music free, 24/7: calm, gentle spa and massage music for relaxing, yoga and unwinding.",
+      "Live spa music: gentle, calm music for massage, yoga, meditation and unwinding at home, streaming 24 hours a day.",
+      "Also searched as spa music live, massage music, yoga music radio, relaxing spa music and wellness music.",
+      [tag("spa"), tag("massage"), tag("yoga"), tag("wellness")])
 _life("cooking", "Cooking & food", "Cooking & Food Radio — Live Food Talk",
       "Cooking and Food Radio Live — Recipes and Food Talk",
       "Listen to live cooking and food radio free: recipes, restaurant talk, chefs, food shows and kitchen company from stations worldwide.",

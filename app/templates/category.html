@@ -5,7 +5,9 @@
 {% import "_trending.html" as tr %}
 {% block content %}
 <div class="wrap page">
-  {% set rel_chips %}{% if genre == 'religious' or genre in ('islamic', 'christian', 'bhajan', 'gurbani', 'jewish') %}<nav class="chips religious-types" aria-label="Religious types">
+  {% set rel_chips %}{% if genre == 'relax-sleep' or genre in ('sleep-music', 'rain-sounds', 'nature-sounds', 'white-noise', 'meditation', 'calm-piano', 'ambient-music', 'spa-music') %}<nav class="chips religious-types" aria-label="Relax and sleep sounds">
+    <a class="chip{{ ' active' if genre == 'relax-sleep' }}" href="/genre/relax-sleep">All relax and sleep</a>{% for href, label in relax_types() %}<a class="chip{{ ' active' if href == '/genre/' ~ genre }}" href="{{ href }}">{{ label }}</a>{% endfor %}
+  </nav>{% elif genre == 'religious' or genre in ('islamic', 'christian', 'bhajan', 'gurbani', 'jewish') %}<nav class="chips religious-types" aria-label="Religious types">
     <a class="chip{{ ' active' if genre == 'religious' }}" href="/genre/religious">All religious</a>{% for href, label in religious_types() %}<a class="chip{{ ' active' if href == '/genre/' ~ genre }}" href="{{ href }}">{{ label }}</a>{% endfor %}
   </nav>{% endif %}{% endset %}
   {{ ui.breadcrumbs(crumbs or [('Home', '/'), (info.h1.split(' — ')[0], request.path)]) }}

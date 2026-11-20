@@ -343,3 +343,14 @@ def test_relax_and_sleep_pages_exist_with_their_own_search_words(client):
 def test_relax_and_sleep_is_one_of_the_category_boxes_on_the_home_page(client):
     html = client.get("/").get_data(as_text=True)
     assert "Relax and sleep" in html and "/genre/relax-sleep" in html
+
+
+def test_relax_and_sleep_pages_show_the_same_sound_chips_as_the_app(client):
+    for slug in ("relax-sleep", "rain-sounds", "calm-piano", "spa-music"):
+        html = client.get(f"/genre/{slug}").get_data(as_text=True)
+        for want in ("/genre/rain-sounds", "/genre/nature-sounds", "/genre/sleep-music", "/genre/meditation",
+                     "/genre/calm-piano", "/genre/ambient-music", "/genre/white-noise", "/genre/spa-music"):
+            assert want in html, (slug, want)
+    assert 'aria-label="Relax and sleep sounds"' not in client.get("/genre/religious").get_data(as_text=True)
+    sitemap = client.get("/sitemap.xml").get_data(as_text=True)
+    assert all(f"/genre/{s}" in sitemap for s in ("calm-piano", "ambient-music", "spa-music"))

@@ -210,7 +210,7 @@ _TYPE_GROUPS = [          # (key, icon, title, types)
     ("news", "📰", "News", ["news", "business"]),
     ("debates", "🎙️", "Debates and talk", ["debates", "talk"]),
     ("sports", "🏏", "Sports", ["sports", "cricket", "football"]),
-    ("health", "🩺", "Health and calm", ["health", "meditation", "relax-sleep", "sleep-music", "rain-sounds", "nature-sounds", "white-noise"]),
+    ("health", "🩺", "Health and calm", ["health", "meditation", "relax-sleep", "sleep-music", "rain-sounds", "nature-sounds", "white-noise", "calm-piano", "ambient-music", "spa-music"]),
     ("cooking", "🍳", "Cooking and food", ["cooking"]),
     ("kids", "🧒", "Kids and learning", ["kids", "education", "technology"]),
     ("other", "✨", "Other", ["qawwali", "sufi", "ghazal"]),
@@ -437,6 +437,15 @@ def _country_az():
 def _religious_types():
     from .topics import RELIGIOUS_TYPES
     return sorted(((topic_path(k), TOPICS[k]["label"]) for k in RELIGIOUS_TYPES if k in TOPICS), key=lambda x: x[1])
+
+
+RELAX_TYPES = ["rain-sounds", "nature-sounds", "sleep-music", "meditation", "calm-piano", "ambient-music", "white-noise", "spa-music"]
+
+
+@bp.app_template_global("relax_types")
+def _relax_types():
+    """The sounds shown as chips on every Relax and sleep page (the same ones as in the app)."""
+    return [(topic_path(k), TOPICS[k]["label"]) for k in RELAX_TYPES if k in TOPICS]
 
 
 @bp.app_template_global("language_az")
