@@ -394,6 +394,28 @@ def _islamic_fast(slug):
     return old
 
 
+def start_list_warming(app):
+    """Right after every start (each deploy restarts the server and empties its memory and disk), build the big
+    lists (Islamic, news, Pakistan ... each joins 10 to 100+ searches) in the background, so the first visitor or
+    Google does not wait 10+ seconds for them."""
+    if app.config.get("TESTING") or app.config.get("RADIO_DEMO"):
+        return None
+    import threading
+    big = sorted((k for k, v in GENRES.items() if len(v["paths"]) >= 10), key=lambda k: -len(GENRES[k]["paths"]))
+
+    def run():
+        time.sleep(5)
+        with app.app_context():
+            for slug in big:
+                try:
+                    _cached(f"genre:{slug}", lambda s=slug: _build_genre(s), app.config["RADIO_CACHE_MINUTES"])
+                except Exception:
+                    pass
+    t = threading.Thread(target=run, daemon=True, name="list-warm")
+    t.start()
+    return t
+
+
 def _genre_stations(slug):
     fast = _islamic_fast(slug)                         # every list: show the last saved copy at once, refresh behind the scenes
     if fast:

@@ -170,6 +170,11 @@ def create_app(overrides=None):
         _podcasts.start_warming(app)
     except Exception:  # pragma: no cover - warming is only a speed-up
         pass
+    try:
+        from . import radio as _radio
+        _radio.start_list_warming(app)
+    except Exception:  # pragma: no cover - warming is only a speed-up
+        pass
     return app
 
 

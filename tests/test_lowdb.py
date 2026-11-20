@@ -139,3 +139,17 @@ def test_an_expired_list_comes_from_the_local_disk_copy(client, app, monkeypatch
     counter = _count_connections(monkeypatch)
     html = client.get("/genre/jazz").get_data(as_text=True)
     assert counter["n"] == 0 and 'data-href="/station/' in html          # stations shown, no database, no rebuild
+
+
+def test_big_lists_are_built_right_after_a_start(app, monkeypatch):
+    from app import radio
+    built = []
+    monkeypatch.setattr(radio, "_build_genre", lambda slug: built.append(slug) or [{"uuid": "x", "name": "X"}])
+    monkeypatch.setattr(radio.time, "sleep", lambda s: None)
+    app.config["LOW_DB_MODE"], app.config["TESTING"], app.config["RADIO_DEMO"] = True, False, False
+    try:
+        radio.start_list_warming(app).join(10)
+    finally:
+        app.config["TESTING"], app.config["RADIO_DEMO"] = True, True
+    assert built[0] == "islamic" and "news" in built and len(built) >= 10
+    assert lowdb.state(app).cache["radio:genre:islamic"][1]
