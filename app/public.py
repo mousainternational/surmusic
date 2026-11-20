@@ -210,7 +210,7 @@ _TYPE_GROUPS = [          # (key, icon, title, types)
     ("news", "📰", "News", ["news", "business"]),
     ("debates", "🎙️", "Debates and talk", ["debates", "talk"]),
     ("sports", "🏏", "Sports", ["sports", "cricket", "football"]),
-    ("health", "🩺", "Health and calm", ["health", "meditation"]),
+    ("health", "🩺", "Health and calm", ["health", "meditation", "relax-sleep", "sleep-music", "rain-sounds", "nature-sounds", "white-noise"]),
     ("cooking", "🍳", "Cooking and food", ["cooking"]),
     ("kids", "🧒", "Kids and learning", ["kids", "education", "technology"]),
     ("other", "✨", "Other", ["qawwali", "sufi", "ghazal"]),

@@ -751,6 +751,36 @@ _life("meditation", "Meditation & relax", "Meditation & Relaxation Radio — Cal
       "Calm live streams for meditation, sleep and relaxation: ambient and spa music, soft piano and nature sounds, free in your browser.",
       "Also searched as meditation music radio, relaxing music live, sleep music radio, spa music and ambient radio.",
       [tag("meditation"), tag("relaxation"), tag("ambient"), tag("spa")])
+_life("relax-sleep", "Relax & sleep", "Relaxing Music & Sleep Sounds Radio — Live, Free",
+      "Relaxing Music and Sleep Sounds Radio Live — Free Online",
+      "Can't sleep? Listen to live relaxing music and sleep sounds free: rain, nature, white noise, soft piano and calm ambient radio, 24/7.",
+      "Live radio for people who cannot sleep or want to unwind: rain and thunder sounds, nature sounds, white noise, soft piano, ambient and sleep music, 24 hours a day, free in your browser.",
+      "Also searched as relaxing music live, sleep music 24/7, music to fall asleep to, calm music radio, insomnia sounds, stress relief music and relaxation radio.",
+      [tag("relax"), tag("relaxation"), tag("sleep"), tag("rain"), tag("nature"), tag("ambient"), tag("white noise")])
+_life("sleep-music", "Sleep music", "Sleep Music Radio — Live Music to Fall Asleep To",
+      "Sleep Music Radio Live 24/7 — Fall Asleep Free Online",
+      "Listen to live sleep music radio free: soft piano, lullabies, calm ambient and deep sleep music to help you fall asleep, 24/7.",
+      "Live sleep music: soft piano, lullabies, calm ambient and slow instrumental music that helps you fall asleep. Press play, set the volume low and let it run all night.",
+      "Also searched as sleep music live, music to fall asleep, deep sleep music, lullaby radio, insomnia music and sleeping music 24/7.",
+      [tag("sleep"), tag("sleeping"), tag("lullaby"), tag("sleep music"), tag("piano")])
+_life("rain-sounds", "Rain sounds", "Rain Sounds Radio — Live Rain & Thunderstorm Sounds",
+      "Rain Sounds Live 24/7 — Thunderstorm Sounds to Sleep",
+      "Listen to live rain sounds and thunderstorm sounds free, 24/7: gentle rain, heavy rain and thunder for sleep, study and relaxing.",
+      "Live rain sounds: gentle rain, heavy rain and distant thunder streaming 24 hours a day. Use it to sleep, study, read or block out noise.",
+      "Also searched as rain sounds for sleeping, rain sounds live, thunderstorm sounds, rain and thunder, heavy rain sounds and rain noise to sleep.",
+      [tag("rain"), tag("thunder"), tag("thunderstorm"), tag("rain sounds")])
+_life("nature-sounds", "Nature sounds", "Nature Sounds Radio — Live Forest, Ocean & Bird Sounds",
+      "Nature Sounds Live 24/7 — Forest, Ocean and Birds Free",
+      "Listen to live nature sounds free, 24/7: forest, birds, ocean waves, rivers and wind for sleep, meditation, study and relaxing.",
+      "Live nature sounds: birdsong, ocean waves, rivers, forest and wind streaming all day and night. Perfect for sleeping, meditating, studying or relaxing.",
+      "Also searched as nature sounds for sleep, forest sounds, ocean waves sounds, birds sounds live, river sounds and relaxing nature sounds.",
+      [tag("nature"), tag("nature sounds"), tag("forest"), tag("ocean"), tag("birds"), tag("waves")])
+_life("white-noise", "White noise", "White Noise Radio — Live White, Pink & Brown Noise",
+      "White Noise Live 24/7 — Pink and Brown Noise Free Online",
+      "Listen to live white noise, pink noise and brown noise free, 24/7, to sleep, focus, study or calm a baby.",
+      "Live white, pink and brown noise streaming 24 hours a day. A steady sound that covers traffic and household noise and helps you sleep, focus or study.",
+      "Also searched as white noise for sleep, brown noise for focus, pink noise, white noise live, fan sound and noise to sleep.",
+      [tag("white noise"), tag("brown noise"), tag("pink noise"), tag("noise")])
 _life("cooking", "Cooking & food", "Cooking & Food Radio — Live Food Talk",
       "Cooking and Food Radio Live — Recipes and Food Talk",
       "Listen to live cooking and food radio free: recipes, restaurant talk, chefs, food shows and kitchen company from stations worldwide.",

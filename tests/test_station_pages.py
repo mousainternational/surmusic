@@ -326,3 +326,16 @@ def test_pakistani_fm_station_page_shows_its_frequency_and_cities(client, monkey
     monkeypatch.setattr(radio, "station_by_uuid", lambda u: (st, ""))
     page = client.get(public.station_path(st)).get_data(as_text=True)
     assert "On FM 106.2 in Karachi" in page and "Where can I hear Hum FM 106.2 on FM?" in page
+
+
+def test_relax_and_sleep_pages_exist_with_their_own_search_words(client):
+    pages = {"relax-sleep": "Sleep Sounds", "sleep-music": "Sleep Music", "rain-sounds": "Rain Sounds",
+             "nature-sounds": "Nature Sounds", "white-noise": "White Noise"}
+    sitemap = client.get("/sitemap.xml").get_data(as_text=True)
+    for slug, words in pages.items():
+        r = client.get(f"/genre/{slug}")
+        assert r.status_code == 200
+        html = r.get_data(as_text=True)
+        assert words in html and "<h1" in html
+        assert f"/genre/{slug}" in sitemap                     # Google and Bing find it by themselves
+    assert "/genre/rain-sounds" in client.get("/radio-stations").get_data(as_text=True)    # and a visitor finds it in the list of types
