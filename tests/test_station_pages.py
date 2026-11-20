@@ -295,3 +295,10 @@ def test_weak_station_pages_stay_out_of_google_but_still_work(client, monkeypatc
     monkeypatch.setattr(directory, "chunk_stations", lambda n: [weak, strong])
     xml = client.get("/sitemap-stations-1.xml").get_data(as_text=True)
     assert "strong-1" in xml and "weak-1" not in xml
+
+
+def test_countries_with_search_impressions_have_own_text(client):
+    from app.about_text import COUNTRY_ABOUT
+    for slug in ("belgium", "paraguay", "trinidad-and-tobago", "georgia", "switzerland", "austria"):
+        assert slug in COUNTRY_ABOUT and all(len(p) > 15 for p in COUNTRY_ABOUT[slug])
+    assert "Flemish and Walloon" in client.get("/country/belgium").get_data(as_text=True)
