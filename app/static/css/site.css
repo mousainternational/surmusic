@@ -1504,3 +1504,7 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 
 .region-chips { margin: 0 0 14px; }
 .topic-neighbours .chips { margin: 6px 0 0; }
+
+/* A station or podcast without a picture of its own wears the Sur Music logo in the corner (the coloured letter stays) */
+.thumb:not(:has(img))::after { content: ""; position: absolute; right: 3px; bottom: 3px; width: 36%; aspect-ratio: 1; border-radius: 22%; background: #fff url(/static/img/icon128.png) center / 80% no-repeat; box-shadow: 0 1px 3px rgba(0, 0, 0, .4); }
+.thumb-xs:not(:has(img))::after { display: none; }
