@@ -278,7 +278,11 @@ def test_meta_description_is_unique_where_own_text_exists(client):
     a, b = desc("/country/ghana"), desc("/country/kenya")
     assert a != b and "Ghana" in a and len(a) <= 165
     assert "Free live" in a and "Twi" in a
-    assert desc("/country/togo").startswith("Listen to live Togo radio stations")       # no own text: the standard description stays
+    from app.about_text import COUNTRY_ABOUT
+    from app.topics import COUNTRY_PAGES
+    bare = next(k for k in sorted(COUNTRY_PAGES) if k not in COUNTRY_ABOUT)
+    assert desc(f"/country/{bare}").startswith(f"Listen to live {COUNTRY_PAGES[bare]['label']} radio stations")   # no own text: the standard description stays
+    assert "Free live" in desc("/country/togo") and "Ewe" in desc("/country/togo")                               # Togo now has its own
 
 
 def test_weak_station_pages_stay_out_of_google_but_still_work(client, monkeypatch):
