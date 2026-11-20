@@ -132,6 +132,37 @@ def _logo(fav):
     return fav if valid_url(fav, https_only=True) else ""
 
 
+def _list_file(key):
+    import os
+    safe = re.sub(r"[^a-z0-9:_-]", "_", key.lower()).replace(":", "__")[:120]
+    return os.path.join(current_app.config["STORAGE_DIR"], "lists", safe + ".json.gz")
+
+
+def _disk_put(key, data):
+    """A local copy of a station list: an expired list is then read from the server's own disk in milliseconds,
+    instead of being rebuilt (dozens of directory searches) or fetched from the sleeping free database."""
+    import gzip
+    import os
+    try:
+        path = _list_file(key)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        tmp = path + ".part"
+        with gzip.open(tmp, "wt", encoding="utf-8") as f:
+            json.dump(data, f)
+        os.replace(tmp, path)
+    except Exception:  # pragma: no cover - only a speed-up
+        pass
+
+
+def _disk_get(key):
+    import gzip
+    try:
+        with gzip.open(_list_file(key), "rt", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+
 def _cached(key, loader, ttl_minutes):
     from . import lowdb
     if lowdb.enabled():
@@ -148,6 +179,8 @@ def _cached(key, loader, ttl_minutes):
             data = None
         if data is not None:
             lowdb.cache_set("radio:" + key, data, ttl_minutes * 60)
+            if key.startswith(("genre:", "cat:")):
+                _disk_put(key, data)
             g = GENRES.get(key[6:]) if key.startswith("genre:") else None
             if g and len(g["paths"]) >= 10:           # big lists (Islamic ~100 searches): keep a spare copy for a day,
                 lowdb.cache_set("radio-peek:" + key, data, 24 * 3600)   # so an expired list never waits for the database
@@ -381,6 +414,10 @@ def _peek(key):
         hit, value = lowdb.cache_get("radio-peek:" + key)
         if hit:
             return value
+        data = _disk_get(key)
+        if data:
+            lowdb.cache_set("radio-peek:" + key, data, 1800)
+            return data
     row = get_db().one("SELECT body FROM station_cache WHERE cache_key = ?", (key,))
     data = json.loads(row["body"]) if row else None
     if lowdb.enabled():

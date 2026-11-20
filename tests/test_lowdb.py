@@ -124,3 +124,18 @@ def test_admin_says_cities_are_on_when_cloudflare_sends_them(client, app):
     assert "from Cloudflare" in html and "Visitor cities are off" not in html
     html = client.get("/admin/", headers={"CF-Connecting-IP": "203.0.113.5", "CF-IPCountry": "PK"}).get_data(as_text=True)
     assert "Visitor cities are off" in html                               # no city from Cloudflare: the warning stays
+
+
+def test_an_expired_list_comes_from_the_local_disk_copy(client, app, monkeypatch, tmp_path):
+    app.config["LOW_DB_MODE"], app.config["STORAGE_DIR"] = True, str(tmp_path)
+    assert client.get("/genre/jazz").status_code == 200                  # first visit builds the list and saves a copy
+    assert list((tmp_path / "lists").glob("genre__jazz.json.gz"))
+    st = lowdb.state(app)
+    with st.lock:                                                         # memory copies expire
+        for k in [k for k in st.cache if k.endswith("genre:jazz")]:
+            st.cache.pop(k)
+    from app import radio
+    monkeypatch.setattr(radio, "_build_genre", lambda slug: [])          # the refresh behind the scenes does nothing
+    counter = _count_connections(monkeypatch)
+    html = client.get("/genre/jazz").get_data(as_text=True)
+    assert counter["n"] == 0 and 'data-href="/station/' in html          # stations shown, no database, no rebuild
