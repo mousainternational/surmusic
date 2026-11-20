@@ -1474,6 +1474,21 @@ def api_me():
                     "favorites": _user_favorite_ids(), "gate": gate_active()})
 
 
+@bp.route("/api/welcome")
+def api_welcome():
+    """The visitor's country for the waving-flag welcome bar (empty when it is not known)."""
+    from . import geo
+    code = (visitor_country() or "").lower()
+    flag_file = os.path.join(current_app.static_folder, "flags", code + ".svg")
+    out = {}
+    if len(code) == 2 and code.isalpha() and os.path.exists(flag_file):
+        out = {"code": code, "name": geo.country_name(code), "flag": "/static/flags/" + code + ".svg"}
+    resp = jsonify(out)
+    resp.headers["Cache-Control"] = "private, max-age=300"
+    resp.headers["Vary"] = "Accept-Language, CF-IPCountry"
+    return resp
+
+
 @bp.route("/api/headlines")
 def api_headlines():
     """Headlines for the news strip: the visitor's own country (English edition), refreshed by itself."""

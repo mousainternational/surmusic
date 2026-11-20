@@ -1508,3 +1508,18 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 /* Every station and podcast picture wears the Sur Music logo in the corner (the very small round ones are too tiny for it) */
 .thumb::after { content: ""; position: absolute; right: 3px; bottom: 3px; width: 36%; aspect-ratio: 1; border-radius: 22%; background: #fff url(/static/img/icon128.png) center / 80% no-repeat; box-shadow: 0 1px 3px rgba(0, 0, 0, .4); }
 .thumb-xs::after { display: none; }
+
+/* Welcome bar with the waving flag of the visitor's country */
+.wlc { display: flex; align-items: center; justify-content: center; gap: 14px; padding: 8px 40px 8px 14px; position: relative; border-bottom: 1px solid var(--border); background: linear-gradient(90deg, color-mix(in srgb, var(--accent, #7048e8) 14%, var(--surface)), var(--surface)); }
+.wlc[hidden] { display: none; }
+.wlc-flag { width: 48px; height: 36px; object-fit: cover; border-radius: 3px; box-shadow: 0 3px 10px rgba(0, 0, 0, .35); transform-origin: left center; animation: wlc-wave 2.6s ease-in-out infinite; }
+.wlc-text { font-weight: 600; font-size: 15px; }
+.wlc-x { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: 0; color: inherit; font-size: 22px; line-height: 1; cursor: pointer; opacity: .7; padding: 4px 8px; }
+.wlc-x:hover { opacity: 1; }
+@keyframes wlc-wave {
+  0%, 100% { transform: perspective(300px) rotateY(0deg) skewY(0deg); }
+  25% { transform: perspective(300px) rotateY(-14deg) skewY(3deg); }
+  50% { transform: perspective(300px) rotateY(0deg) skewY(-3deg); }
+  75% { transform: perspective(300px) rotateY(12deg) skewY(2deg); }
+}
+@media (prefers-reduced-motion: reduce) { .wlc-flag { animation: none; } }

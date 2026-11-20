@@ -354,3 +354,13 @@ def test_relax_and_sleep_pages_show_the_same_sound_chips_as_the_app(client):
     assert 'aria-label="Relax and sleep sounds"' not in client.get("/genre/religious").get_data(as_text=True)
     sitemap = client.get("/sitemap.xml").get_data(as_text=True)
     assert all(f"/genre/{s}" in sitemap for s in ("calm-piano", "ambient-music", "spa-music"))
+
+
+def test_welcome_flag_api_gives_the_visitors_own_country(client):
+    d = client.get("/api/welcome", headers={"Accept-Language": "en-PK"}).get_json()
+    assert d == {"code": "pk", "name": "Pakistan", "flag": "/static/flags/pk.svg"}
+    assert client.get("/api/welcome", headers={"Accept-Language": "en-GB"}).get_json()["name"] == "United Kingdom"
+    assert client.get("/api/welcome").get_json() == {}                      # unknown country: nothing is shown
+    assert client.get("/static/flags/pk.svg").status_code == 200
+    html = client.get("/").get_data(as_text=True)
+    assert 'id="wlc"' in html and "hidden" in html.split('id="wlc"')[1][:60]

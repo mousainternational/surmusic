@@ -113,6 +113,12 @@
   </div>
 </header>
 {% endblock %}
+{#- Waving flag of the visitor's own country, filled by site.js from /api/welcome; hidden until it knows the country -#}
+<div class="wlc" id="wlc" role="status" hidden>
+  <img class="wlc-flag" id="wlc-flag" alt="" width="48" height="36">
+  <span class="wlc-text" id="wlc-text"></span>
+  <button type="button" class="wlc-x" id="wlc-x" aria-label="Close welcome message">&times;</button>
+</div>
 {% include "_newsbar.html" %}
 {% include "_podbar.html" %}
 

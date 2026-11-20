@@ -653,3 +653,20 @@ document.addEventListener("error", function (e) {
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();
+
+/* Welcome bar: the waving flag of the visitor's own country (closed for the rest of the visit with the x) */
+(function () {
+  function init() {
+    var bar = document.getElementById("wlc"); if (!bar || !window.fetch) return;
+    try { if (sessionStorage.getItem("sm-wlc") === "1") return; } catch (e) { /* ignore */ }
+    fetch("/api/welcome", { credentials: "same-origin" }).then(function (r) { return r.ok ? r.json() : {}; }).then(function (d) {
+      if (!d || !d.flag || !d.name) return;
+      document.getElementById("wlc-flag").src = d.flag;
+      document.getElementById("wlc-text").textContent = "Welcome, honoured guest, from " + d.name + ". Thank you for visiting us!";
+      bar.hidden = false;
+    }).catch(function () { /* stay hidden */ });
+    var x = document.getElementById("wlc-x");
+    if (x) x.addEventListener("click", function () { bar.hidden = true; try { sessionStorage.setItem("sm-wlc", "1"); } catch (e) { /* ignore */ } });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+})();
