@@ -67,16 +67,6 @@
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="4.2" r="2.2"/><path d="M4 8.5l1 2c3.4-.9 10.6-.9 14 0l1-2c-4.4-1.3-11.6-1.3-16 0zM11 11.2v3.6l-2.6 6 1.9.8 2.7-5.4 2.7 5.4 1.9-.8-2.6-6v-3.6z"/></svg>
         <span class="a11y-t">Accessibility</span>
       </a>
-      <details class="hd-dd hue-violet">
-        <summary class="hd-pill">🌐 Language</summary>
-        <div class="hd-panel">
-          <input class="menu-find" type="search" data-filter-menu placeholder="Type to find a language…" aria-label="Find a language" autocomplete="off">
-          {%- for letter, items in language_az() %}
-          <h3>{{ letter }}</h3>
-          <ul>{% for href, label in items %}<li><a href="{{ href }}">{{ label }}</a></li>{% endfor %}</ul>
-          {%- endfor %}
-        </div>
-      </details>
       <details class="hd-dd hue-teal">
         <summary class="hd-pill">🌍 Country</summary>
         <div class="hd-panel hd-tall">

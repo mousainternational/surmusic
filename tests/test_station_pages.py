@@ -17,7 +17,7 @@ def test_genre_pages(client):
     strip = home.split("data-nav-tabs", 1)[1].split("</nav>", 1)[0]                             # the category tabs
     assert "/genre/naat" not in strip and "/genre/quran" not in strip
     header = home.split('<nav id="menu"', 1)[1].split("</nav>", 1)[0]                           # the header menu
-    assert header.count("<details") == 3 and "🌐 Language" in header and "🌍 Country" in header
+    assert header.count("<details") == 2 and "🌐 Language" not in header and "🌍 Country" in header      # stations are found by country and category, not by language
     assert 'data-lazy="/menu/types"' in header and 'data-filter-menu' in header and 'placeholder="Type to find a country…"' in header
     types_menu = client.get("/menu/types").get_data(as_text=True)                                # loaded when opened
     country_menu = client.get("/menu/country").get_data(as_text=True)
@@ -30,11 +30,10 @@ def test_genre_pages(client):
     assert 'href="/genre/qawwali"' not in types_menu and "Other</h3>" not in types_menu            # no long type list any more
     assert 'href="/country/usa"' in country_menu and 'href="/continent/europe"' in country_menu
     assert "<h3>A</h3>" in country_menu                                                         # Country: plain A to Z list
-    assert "<h3>A</h3>" in header.split("Country")[0] and "data-filter-menu" in header          # Language: A to Z with a find box
     for word in ("Madani", "Dawat", "Majlis", "Hadith", "Noha", "/genre/naat", "/genre/quran"):                 # all live under Islamic
         assert word not in header, word
     assert 'href="/genre/news"' in header and 'href="/blog"' in header                          # Guides is in the menu
-    assert 'href="/genre/hindi"' in header                                                      # Language menu
+    assert 'href="/genre/hindi"' not in header                                                  # no Language menu
     assert 'class="cat-tile"' not in home                                                       # one set of buttons, not two
     assert 'id="cat-religious"' in client.get("/radio-stations").get_data(as_text=True)
 
