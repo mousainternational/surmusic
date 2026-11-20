@@ -152,3 +152,17 @@ def test_genre_chart_rows_are_read_and_adult_ones_hidden(monkeypatch):
     rows = podcasts._chart_genre("pk", 1489)
     assert [r["name"] for r in rows] == ["News Hour"] and rows[0]["img"].endswith("200x200bb.png")
     assert "/pk/rss/toppodcasts/genre=1489/" in seen[0]
+
+
+def test_worldwide_category_starts_with_apples_chart_and_has_no_double_names(monkeypatch):
+    from app import podcasts
+    asked = []
+    chart = [{"id": str(100 + i), "name": f"Great {i}", "artist": f"G{i}", "img": "https://a/200x200.jpg", "feed": ""} for i in range(34)]
+    chart.insert(1, {"id": "999", "name": "great 0", "artist": "Other", "img": "https://a/200x200.jpg", "feed": ""})   # same name, other id
+    monkeypatch.setattr(podcasts, "_chart_genre", lambda cc, gid: asked.append(("genre", gid)) or chart)
+    monkeypatch.setattr(podcasts, "_api", lambda path, **kw: asked.append(("search", kw.get("term"))) or {"results": []})
+    rows = podcasts._build("motivation")
+    assert asked[0] == ("genre", 1500)                           # Apple's Self-Improvement chart first
+    assert not [a for a in asked if a[0] == "search"]            # a full chart needs no word search
+    assert len({r["name"].lower() for r in rows}) == len(rows)   # no show twice under the same name
+    assert len(rows) >= 30

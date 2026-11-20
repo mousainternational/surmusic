@@ -196,12 +196,17 @@ LEARN_LANG = {
 # Apple's category numbers: a category of a country starts with Apple's own chart of that category in that country,
 # so Pakistan shows what Pakistan really listens to and not the same world list. The searches only fill up what is missing.
 GENRES = {"news": 1489, "education": 1304, "business": 1321, "technology": 1318, "science": 1533, "health": 1512,
-          "kids": 1305, "cricket": 1545, "bollywood": 1309}
+          "kids": 1305, "cricket": 1545, "bollywood": 1309, "motivation": 1500}
+# The worldwide page of a category starts with Apple's own chart too (a search for a word alone brings shows that only have the word in their name).
+# Cricket and Bollywood are not whole Apple categories, so they stay searches. Extra charts are added where one chart is not the whole subject.
+GLOBAL_GENRES = {k: v for k, v in GENRES.items() if k not in ("cricket", "bollywood")}
+EXTRA_GENRES = {"motivation": [1517], "health": [1514, 1517]}
+LIST_FULL = 30                                      # enough shows from the charts: the word searches are not needed
 NO_COUNTRY = {"islamic-scholars"}
 
 
 def _chart_genre(cc, gid):
-    data = json.loads(_get(f"https://itunes.apple.com/{cc}/rss/toppodcasts/genre={int(gid)}/limit=30/json", MAX_JSON).decode("utf-8", "replace"))
+    data = json.loads(_get(f"https://itunes.apple.com/{cc}/rss/toppodcasts/genre={int(gid)}/limit=50/json", MAX_JSON).decode("utf-8", "replace"))
     out = []
     for e in (data.get("feed", {}).get("entry", []) if isinstance(data, dict) else []):
         sid = str(((e.get("id") or {}).get("attributes") or {}).get("im:id") or "")
@@ -247,8 +252,12 @@ def _build(slug):
             steps.insert(0, ("genre", GENRES[cat], cc))
     else:
         steps = CATEGORIES[slug][1] if slug in CATEGORIES else LEARN_LANG[slug][1] if slug in LEARN_LANG else [("chart", slug[4:])]
+        if slug in GLOBAL_GENRES:
+            steps = [("genre", g, "us") for g in [GLOBAL_GENRES[slug]] + EXTRA_GENRES.get(slug, [])] + list(steps)
+    full = 12 if _cat_country(slug) else LIST_FULL if slug in GLOBAL_GENRES else 0
+    names = set()
     for step in steps:
-        if step[0] == "search" and _cat_country(slug) and len(out) >= 12:      # the country's own chart is already full
+        if step[0] == "search" and full and len(out) >= full:      # the charts are already full: no word searches
             break
         try:
             if step[0] == "chart":
@@ -276,8 +285,9 @@ def _build(slug):
             _errors[slug] = f"{step[0]}: {type(e).__name__}: {str(e)[:150]}"
             continue
         for row in rows:
-            if row["id"] not in seen and row["img"]:
-                seen.add(row["id"]); out.append(row)
+            key = re.sub(r"\W+", "", row["name"].lower())      # "Education podcast" and "Education Podcast" are one show shown twice
+            if row["id"] not in seen and row["img"] and key not in names:
+                seen.add(row["id"]); names.add(key); out.append(row)
     if _cat_country(slug) and len(out) < 8:               # a small country has few shows of this kind: fill up with the same category from the wider list, then with the country chart
         cat, cc = _cat_country(slug)
         more = [("chart", cc)] if not out else []
