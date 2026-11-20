@@ -154,7 +154,7 @@ def _chart(cc):
     try:
         return _chart_v2(cc)
     except Exception:                                  # Apple's older chart address, used when the new one is slow or down
-        data = json.loads(_get(f"https://itunes.apple.com/{cc}/rss/toppodcasts/limit=30/json", MAX_JSON).decode("utf-8", "replace"))
+        data = json.loads(_get(f"https://itunes.apple.com/{cc}/rss/toppodcasts/limit=50/json", MAX_JSON).decode("utf-8", "replace"))
         out = []
         for e in data.get("feed", {}).get("entry", []):
             sid = str(((e.get("id") or {}).get("attributes") or {}).get("im:id") or "")
@@ -169,7 +169,7 @@ def _chart(cc):
 
 
 def _chart_v2(cc):
-    data = json.loads(_get(f"https://rss.applemarketingtools.com/api/v2/{cc}/podcasts/top/30/podcasts.json", MAX_JSON).decode("utf-8", "replace"))
+    data = json.loads(_get(f"https://rss.applemarketingtools.com/api/v2/{cc}/podcasts/top/50/podcasts.json", MAX_JSON).decode("utf-8", "replace"))
     out = []
     feed = data.get("feed") if isinstance(data, dict) else None
     for r in (feed.get("results") if isinstance(feed, dict) else None) or []:
@@ -270,7 +270,7 @@ def _build(slug):
                 with ThreadPoolExecutor(6) as pool:
                     rows = [x for x in pool.map(one, SCHOLARS) if x]
             else:
-                data = _api("/search", term=step[1], media="podcast", limit=12, country=step[2])
+                data = _api("/search", term=step[1], media="podcast", limit=25, country=step[2])
                 rows = [x for x in (_row(r) for r in data.get("results", [])) if x]
         except Exception as e:
             _errors[slug] = f"{step[0]}: {type(e).__name__}: {str(e)[:150]}"
