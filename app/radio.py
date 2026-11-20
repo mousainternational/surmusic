@@ -404,6 +404,7 @@ def start_list_warming(app):
     big = sorted((k for k, v in GENRES.items() if len(v["paths"]) >= 10), key=lambda k: -len(GENRES[k]["paths"]))
 
     def run():
+        import os
         time.sleep(5)
         with app.app_context():
             for slug in big:
@@ -411,6 +412,18 @@ def start_list_warming(app):
                     _cached(f"genre:{slug}", lambda s=slug: _build_genre(s), app.config["RADIO_CACHE_MINUTES"])
                 except Exception:
                     pass
+            # then every other country and category, slowly, onto the disk only (no memory): after a restart the whole
+            # site is fast again within about half an hour, without paying for a permanent disk
+            for slug in sorted(GENRES):
+                if slug in big or os.path.exists(_list_file(f"genre:{slug}")):
+                    continue
+                try:
+                    data = _build_genre(slug)
+                    if data:
+                        _disk_put(f"genre:{slug}", data)
+                except Exception:
+                    pass
+                time.sleep(2)
     t = threading.Thread(target=run, daemon=True, name="list-warm")
     t.start()
     return t
