@@ -565,6 +565,8 @@ def start_people_check(app):
                     todo.append(slug)
                 else:
                     _note_found(slug, done)
+            first = lambda k: _KIND_FIRST.index(TOPICS[k].get("pkind")) if TOPICS[k].get("pkind") in _KIND_FIRST else 99
+            todo.sort(key=first)                                                # podcasters and speakers first (the sort keeps the list order)
             for slug in todo:                                                   # the rest, one lookup every 10 seconds
                 try:
                     _person_shows(slug)

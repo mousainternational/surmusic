@@ -687,3 +687,12 @@ document.addEventListener("error", function (e) {
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();
+
+/* a logo that does not load must not leave its alt text on the page: the whole tile is removed from the logo rows */
+(function () {
+  function drop(img) { var li = img.closest && img.closest(".logo-row li"); if (li) { li.remove(); } }
+  document.addEventListener("error", function (e) { if (e.target && e.target.tagName === "IMG") { drop(e.target); } }, true);
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".logo-row img").forEach(function (img) { if (img.complete && img.naturalWidth === 0) { drop(img); } });
+  });
+})();
