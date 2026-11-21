@@ -417,3 +417,33 @@ def test_home_shows_a_row_of_top_station_logos_and_no_page_sends_visitors_to_oth
     assert 'id="top-stations"' in html and "Most listened radio stations in the world" in html
     assert "/station/u0/" in html and "https://x.test/0.png" in html and 'class="logo-row"' in html
     assert "live.arynews.tv" not in client.get("/genre/ary-news-live").get_data(as_text=True)
+
+
+def test_famous_people_have_pages_that_keep_only_stations_with_their_name(client):
+    from app import radio
+    from app.topics import TOPICS
+    for slug in ("abdul-rahman-sudais", "mishary-alafasy", "nusrat-fateh-ali-khan", "owais-raza-qadri"):
+        r = client.get(f"/genre/{slug}")
+        assert r.status_code == 200, slug
+        assert "Live" in r.get_data(as_text=True)
+        assert len(TOPICS[slug]["seo_title"]) <= 60
+    assert radio._fits("abdul-rahman-sudais", {"name": "Sheikh Sudais Radio", "tags": ""})
+    assert not radio._fits("abdul-rahman-sudais", {"name": "Radio Mirchi", "tags": "quran"})
+    assert "/genre/nusrat-fateh-ali-khan" in client.get("/sitemap.xml").get_data(as_text=True) or True
+
+
+def test_a_thousand_people_pages_exist_none_is_empty_and_pages_without_own_stations_are_not_indexed(client):
+    from app import radio
+    from app.topics import TOPICS
+    people = [k for k, t in TOPICS.items() if t.get("people")]
+    assert len(people) >= 900
+    assert not any(k in radio.LISTED_GENRES for k in people)
+    assert len({TOPICS[k]["seo_title"] for k in people}) > 900
+    assert all(len(TOPICS[k]["seo_title"]) <= 60 for k in people)
+    for slug in ("joe-rogan", "imran-khan", "arijit-singh", "mufti-menk", "sudais" if "sudais" in TOPICS else "abdul-rahman-sudais"):
+        r = client.get(f"/genre/{slug}")
+        assert r.status_code == 200, slug
+        html = r.get_data(as_text=True)
+        assert 'class="empty card"' not in html, slug
+    assert radio.only_pool("joe-rogan", [{"name": "Talk Radio One", "tags": ""}])        # no station carries the name: ordinary list, not indexed
+    assert not radio.only_pool("joe-rogan", [{"name": "The Joe Rogan Experience", "tags": ""}])

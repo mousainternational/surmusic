@@ -708,7 +708,7 @@ def _topic_page(slug, region_slug=None):
         own = []
     description = f"Free live {info['label']} radio. {own[0]}" if own else info["description"]   # own text: a description no other page has
     meta = build_meta(info["seo_title"], description, page=None if region_page else f"genre-{slug}",
-                      noindex=(not stations) or page_no > 1 or bool(region and not region_page))      # an empty page (or page 2, 3, or one region) is not shown in Google
+                      noindex=(not stations) or radio.only_pool(slug, stations) or page_no > 1 or bool(region and not region_page))      # an empty page (or page 2, 3, or one region) is not shown in Google
     meta["keywords"] = topic_keywords(info)
     label = info["label"]
     top = [x["name"] for x in all_stations[:3] if x.get("name")]
@@ -2027,7 +2027,7 @@ def sitemap():
     from . import podcasts as _pod
     pages += [f"/podcasts/c/{k}" for k in _pod.CATEGORIES]
     seen = set()
-    keys = {"cat:" + c for c in radio.CATEGORIES} | {"genre:" + g for g in radio.GENRES}
+    keys = {"cat:" + c for c in radio.CATEGORIES} | {"genre:" + g for g in radio.LISTED_GENRES}
     db = get_db()
     for key_row in db.all("SELECT cache_key FROM station_cache"):             # one list at a time: low memory
         if key_row["cache_key"] not in keys:
@@ -2046,6 +2046,13 @@ def sitemap():
                     and strong_station(st):
                 seen.add(st["uuid"])
                 pages.append(station_path(st))
+    for k, t in TOPICS.items():                                   # a person's page counts only when a station carries the name
+        if t.get("people"):
+            try:
+                if any(radio._fits(k, x) for x in (radio._peek("genre:" + k) or []) if isinstance(x, dict)):
+                    pages.append(topic_path(k))
+            except Exception:
+                pass
     pages += [f"/stations/{c}" for c in "0" + LETTERS]
     parts = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
     post_dates = {f"/blog/{bp['slug']}": bp.get("date") for bp in blog_data.POSTS}    # real publish dates only

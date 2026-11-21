@@ -50,6 +50,7 @@ def _tag(t, extra=""):
 from .topics import TOPICS as _TOPICS  # noqa: E402
 
 GENRES = {k: {"title": v["label"], "paths": v["paths"]} for k, v in _TOPICS.items()}
+LISTED_GENRES = [k for k in GENRES if not _TOPICS[k].get("people")]      # the pages about people load only when visited
 _bad_servers = {}
 
 
@@ -351,6 +352,11 @@ CHANNEL_WORDS = {
 }
 
 
+for _s, _t in _TOPICS.items():                      # famous people: a station must carry the name
+    if _t.get("words"):
+        CHANNEL_WORDS[_s] = tuple(_t["words"])
+
+
 def _fits(slug, st):
     text = f"{st.get('name') or ''} {st.get('tags') or ''}"
     if slug in CHANNEL_WORDS:
@@ -369,6 +375,9 @@ def _fits(slug, st):
 def genre_stations(slug):
     if slug not in GENRES:
         raise KeyError(slug)
+    if _TOPICS.get(slug, {}).get("people"):             # stations that carry the name; none yet: the best stations of that kind (never an empty page)
+        own = [st for st in _genre_stations(slug) if _fits(slug, st)]
+        return own or _genre_stations(_TOPICS[slug]["pool"])[:40]
     if slug in ("news", "english-news", "sports", "cricket", "football", "talk") or slug in CHANNEL_WORDS:
         return [st for st in _genre_stations(slug) if _fits(slug, st)]
     return _genre_stations(slug)
@@ -415,7 +424,7 @@ def start_list_warming(app):
     if app.config.get("TESTING") or app.config.get("RADIO_DEMO"):
         return None
     import threading
-    big = sorted((k for k, v in GENRES.items() if len(v["paths"]) >= 10), key=lambda k: -len(GENRES[k]["paths"]))
+    big = sorted((k for k, v in GENRES.items() if len(v["paths"]) >= 10 and k in LISTED_GENRES), key=lambda k: -len(GENRES[k]["paths"]))
 
     def run():
         import os
@@ -428,7 +437,7 @@ def start_list_warming(app):
                     pass
             # then every other country and category, slowly, onto the disk only (no memory): after a restart the whole
             # site is fast again within about half an hour, without paying for a permanent disk
-            for slug in sorted(GENRES):
+            for slug in sorted(LISTED_GENRES):
                 if slug in big or os.path.exists(_list_file(f"genre:{slug}")):
                     continue
                 try:
@@ -482,7 +491,7 @@ def all_lists():
             out.append((cat, category_stations(cat)))
         except RadioError:
             pass
-    for slug in GENRES:
+    for slug in LISTED_GENRES:
         try:
             out.append((slug, genre_stations(slug)))
         except RadioError:
@@ -493,7 +502,7 @@ def all_lists():
 def known_stations():
     """Every station already cached on any list, no duplicates, best-listened first (never hits the network)."""
     seen, out = set(), []
-    for key in ["cat:" + c for c in CATEGORIES] + ["genre:" + g for g in GENRES]:
+    for key in ["cat:" + c for c in CATEGORIES] + ["genre:" + g for g in LISTED_GENRES]:
         try:
             data = _peek(key)
         except Exception:
@@ -512,7 +521,7 @@ def memory_stations():
     seen, out = set(), []
     if not lowdb.enabled():
         return out
-    for key in ["cat:" + c for c in CATEGORIES] + ["genre:" + g for g in GENRES]:
+    for key in ["cat:" + c for c in CATEGORIES] + ["genre:" + g for g in LISTED_GENRES]:
         for prefix in ("radio:", "radio-peek:"):
             hit, value = lowdb.cache_get(prefix + key)
             for st in (value or []) if hit else []:
@@ -527,7 +536,7 @@ def cached_station(uuid):
     from . import lowdb
     if not uuid or not lowdb.enabled():
         return None
-    for key in ["cat:" + c for c in CATEGORIES] + ["genre:" + g for g in GENRES]:
+    for key in ["cat:" + c for c in CATEGORIES] + ["genre:" + g for g in LISTED_GENRES]:
         for prefix in ("radio:", "radio-peek:"):
             hit, value = lowdb.cache_get(prefix + key)
             for st in (value or []) if hit else []:
@@ -585,7 +594,7 @@ def _lookup_station(uuid):
     if not _re.fullmatch(r"[A-Za-z0-9-]+", uuid):
         return None, ""
     from . import lowdb
-    keys = [("cat:" + c, c) for c in CATEGORIES] + [("genre:" + g, g) for g in GENRES]
+    keys = [("cat:" + c, c) for c in CATEGORIES] + [("genre:" + g, g) for g in LISTED_GENRES]
     names = dict(keys)
     if lowdb.enabled():                             # lists already in memory: no database at all
         for cache_key, key in keys:
@@ -793,3 +802,8 @@ def now_playing(url):
     if lowdb.enabled():
         lowdb.cache_set(key, title, 25)
     return title
+
+
+def only_pool(slug, stations):
+    """True when a page about a person shows the ordinary list of its kind because no station carries the name."""
+    return bool(_TOPICS.get(slug, {}).get("people")) and not any(_fits(slug, st) for st in stations)

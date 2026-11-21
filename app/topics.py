@@ -771,6 +771,97 @@ _channel("fox-news-live", "Fox News", "Fox News Live Audio — US News Radio",
          [name("fox news")])
 
 
+# ---- famous voices: people many listeners search by name (a page keeps only stations whose name carries the person's name)
+_PEOPLE = [   # (slug, full name, short name, words in a station name, kind, who)
+    ("mishary-alafasy", "Mishary Rashid Alafasy", "Mishary Alafasy", ("mishary", "alafasy", "afasy", "مشاري"), "quran", "the Kuwaiti reciter and nasheed artist"),
+    ("abdul-rahman-sudais", "Abdul Rahman Al-Sudais", "Sudais", ("sudais", "sudays", "السديس"), "quran", "the imam of Masjid al-Haram in Makkah"),
+    ("saud-shuraim", "Saud Al-Shuraim", "Shuraim", ("shuraim", "shuraym", "الشريم"), "quran", "the imam of Masjid al-Haram in Makkah"),
+    ("maher-al-muaiqly", "Maher Al Muaiqly", "Maher Al Muaiqly", ("muaiqly", "mueaqly", "maher al", "المعيقلي"), "quran", "the imam of Masjid al-Haram in Makkah"),
+    ("abdul-basit", "Abdul Basit Abdus Samad", "Abdul Basit", ("abdul basit", "abdulbasit", "abdelbasset", "عبد الباسط"), "quran", "the celebrated Egyptian reciter (1927 to 1988)"),
+    ("mahmoud-khalil-al-husary", "Mahmoud Khalil Al-Husary", "Al-Husary", ("husary", "hussary", "الحصري"), "quran", "the Egyptian reciter known for slow, clear recitation"),
+    ("al-minshawi", "Muhammad Siddiq Al-Minshawi", "Al-Minshawi", ("minshawi", "menshawy", "المنشاوي"), "quran", "one of the best-loved Egyptian reciters"),
+    ("saad-al-ghamdi", "Saad Al-Ghamdi", "Saad Al-Ghamdi", ("ghamdi", "ghamidi", "الغامدي"), "quran", "the popular Saudi reciter"),
+    ("yasser-al-dosari", "Yasser Al-Dosari", "Yasser Al-Dosari", ("dosari", "dossari", "الدوسري"), "quran", "the popular Saudi imam and reciter"),
+    ("hani-ar-rifai", "Hani Ar-Rifai", "Hani Ar-Rifai", ("rifai", "refai", "الرفاعي"), "quran", "the well-known Saudi imam and reciter"),
+    ("ali-al-huthaify", "Ali Al-Huthaify", "Al-Huthaify", ("huthaify", "hudhaify", "الحذيفي"), "quran", "the imam of Masjid an-Nabawi in Madinah"),
+    ("abdullah-al-juhani", "Abdullah Awad Al-Juhani", "Al-Juhani", ("juhani", "juhany", "الجهني"), "quran", "the imam in Makkah and Madinah"),
+    ("owais-raza-qadri", "Owais Raza Qadri", "Owais Raza Qadri", ("owais raza", "uwais raza", "اویس رضا"), "naat", "the Pakistani naat khwan"),
+    ("junaid-jamshed", "Junaid Jamshed", "Junaid Jamshed", ("junaid jamshed", "junaid", "جنید جمشید"), "naat", "the Pakistani naat khwan"),
+    ("khalid-hasnain-khalid", "Khalid Hasnain Khalid", "Khalid Hasnain", ("khalid hasnain", "hasnain khalid"), "naat", "the Pakistani naat khwan"),
+    ("hafiz-tahir-qadri", "Hafiz Tahir Qadri", "Hafiz Tahir Qadri", ("tahir qadri", "hafiz tahir"), "naat", "the Pakistani naat khwan"),
+    ("sami-yusuf", "Sami Yusuf", "Sami Yusuf", ("sami yusuf", "samiyusuf"), "naat", "the British nasheed artist"),
+    ("maher-zain", "Maher Zain", "Maher Zain", ("maher zain", "maherzain"), "naat", "the Swedish nasheed artist"),
+    ("nusrat-fateh-ali-khan", "Nusrat Fateh Ali Khan", "Nusrat Fateh Ali Khan", ("nusrat", "نصرت"), "qawwali", "the legendary Pakistani qawwal"),
+    ("sabri-brothers", "Sabri Brothers", "Sabri Brothers", ("sabri",), "qawwali", "the famous Pakistani qawwali group"),
+    ("aziz-mian", "Aziz Mian", "Aziz Mian", ("aziz mian",), "qawwali", "the famous Pakistani qawwal"),
+    ("rahat-fateh-ali-khan", "Rahat Fateh Ali Khan", "Rahat Fateh Ali Khan", ("rahat fateh", "rahat"), "qawwali", "the Pakistani singer and qawwal"),
+    ("amjad-sabri", "Amjad Sabri", "Amjad Sabri", ("amjad sabri",), "qawwali", "the Pakistani qawwal"),
+    ("abida-parveen", "Abida Parveen", "Abida Parveen", ("abida parveen", "abida", "عابدہ"), "qawwali", "the Pakistani Sufi singer"),
+    ("atif-aslam", "Atif Aslam", "Atif Aslam", ('atif aslam', 'atif'), "music", "the Pakistani singer"),
+    ("arijit-singh", "Arijit Singh", "Arijit Singh", ('arijit',), "music", "the Indian playback singer"),
+    ("lata-mangeshkar", "Lata Mangeshkar", "Lata Mangeshkar", ('lata',), "music", "the legendary Indian playback singer"),
+    ("kishore-kumar", "Kishore Kumar", "Kishore Kumar", ('kishore',), "music", "the legendary Indian singer and actor"),
+    ("mohammed-rafi", "Mohammed Rafi", "Mohammed Rafi", ('rafi',), "music", "the legendary Indian playback singer"),
+    ("mehdi-hassan", "Mehdi Hassan", "Mehdi Hassan", ('mehdi hassan', 'mehdi hasan'), "music", "the king of ghazal from Pakistan"),
+    ("jagjit-singh", "Jagjit Singh", "Jagjit Singh", ('jagjit',), "music", "the Indian ghazal singer"),
+    ("noor-jehan", "Noor Jehan", "Noor Jehan", ('noor jehan', 'noorjehan', 'nur jehan'), "music", "the Pakistani singer known as Malika-e-Tarannum"),
+    ("a-r-rahman", "A. R. Rahman", "A. R. Rahman", ('rahman',), "music", "the Indian composer and singer"),
+    ("sonu-nigam", "Sonu Nigam", "Sonu Nigam", ('sonu nigam',), "music", "the Indian singer"),
+    ("shreya-ghoshal", "Shreya Ghoshal", "Shreya Ghoshal", ('shreya',), "music", "the Indian playback singer"),
+    ("fairuz", "Fairuz", "Fairuz", ('fairuz', 'fayrouz', 'فيروز'), "music", "the beloved Lebanese singer"),
+    ("umm-kulthum", "Umm Kulthum", "Umm Kulthum", ('umm kulthum', 'oum kalthoum', 'ام كلثوم', 'أم كلثوم'), "music", "the Egyptian singer known as the Star of the East"),
+    ("amr-diab", "Amr Diab", "Amr Diab", ('amr diab', 'عمرو دياب'), "music", "the Egyptian pop star"),
+    ("michael-jackson", "Michael Jackson", "Michael Jackson", ('michael jackson',), "music", "the King of Pop"),
+    ("elvis-presley", "Elvis Presley", "Elvis Presley", ('elvis',), "music", "the King of Rock and Roll"),
+    ("the-beatles", "The Beatles", "The Beatles", ('beatles',), "music", "the band from Liverpool"),
+    ("queen", "Queen", "Queen", ('queen radio', 'queen -', 'freddie mercury'), "music", "the British rock band"),
+    ("bob-marley", "Bob Marley", "Bob Marley", ('bob marley', 'marley'), "music", "the reggae legend from Jamaica"),
+    ("taylor-swift", "Taylor Swift", "Taylor Swift", ('taylor swift',), "music", "the American singer-songwriter"),
+    ("ed-sheeran", "Ed Sheeran", "Ed Sheeran", ('ed sheeran',), "music", "the British singer-songwriter"),
+    ("adele", "Adele", "Adele", ('adele',), "music", "the British singer"),
+    ("eminem", "Eminem", "Eminem", ('eminem',), "music", "the American rapper"),
+    ("celine-dion", "Celine Dion", "Celine Dion", ('celine dion',), "music", "the Canadian singer"),
+    ("shakira", "Shakira", "Shakira", ('shakira',), "music", "the Colombian singer"),
+    ("abba", "ABBA", "ABBA", ('abba',), "music", "the Swedish pop group"),
+    ("pink-floyd", "Pink Floyd", "Pink Floyd", ('pink floyd',), "music", "the British rock band"),
+    ("frank-sinatra", "Frank Sinatra", "Frank Sinatra", ('sinatra',), "music", "the American crooner"),
+    ("bts", "BTS", "BTS", ('bts',), "music", "the South Korean group"),
+    ("ricky-martin", "Ricky Martin", "Ricky Martin", ('ricky martin',), "music", "the Puerto Rican singer"),
+]
+# kind: (page heading word, what it is, the ordinary list shown when no station carries the person's name)
+_PEOPLE_KIND = {
+    "quran": ("Quran Recitation", "Quran tilawat", "quran"), "naat": ("Naat & Nasheed", "naat sharif and nasheed", "naat"),
+    "qawwali": ("Qawwali & Sufi Kalam", "qawwali and Sufi kalam", "qawwali"), "music": ("Songs & Music", "songs and music", "pop"),
+    "bhajan": ("Bhajan & Kirtan", "bhajan, kirtan and devotional music", "bhajan"),
+    "gurbani": ("Gurbani & Kirtan", "gurbani and shabad kirtan", "gurbani"),
+    "gospel": ("Gospel & Worship", "gospel and worship songs", "christian"),
+    "speaker": ("Speeches & Talks", "speeches, lectures and talks", "talk"),
+    "politics": ("Speeches & Politics", "speeches, interviews and political talk", "talk"),
+    "podcast": ("Podcasts & Interviews", "podcast episodes and interviews", "talk"),
+}
+
+
+def _add_person(pp_slug, pp_full, pp_short, pp_words, pp_kind, pp_who):
+    if pp_slug in TOPICS:
+        return
+    lab, what, pool = _PEOPLE_KIND[pp_kind]
+    TOPICS[pp_slug] = dict(kind="genre", group="Famous voices", label=pp_short, h1=f"{pp_full} Live — {lab} Radio Online", native="",
+                           seo_title=f"{pp_short} Live — {lab}"[:60],
+                           description=f"Listen to {pp_full} live and free: {what} on radio streams, playing in your browser with no app and no sign-up.",
+                           intro=f"{pp_full} is {pp_who}. This page shows live radio stations that carry the name {pp_short} where a stream is online; "
+                                 f"if none does right now, it shows the best live stations for {what}. What a station plays is its own choice.",
+                           more=f"Also searched as {pp_full} live, {pp_short} radio, {pp_short} online, {pp_short} {what} and {pp_short} live stream.",
+                           paths=list(dict.fromkeys([name(pp_full), name(pp_short)])), per=40, cap=60, words=tuple(pp_words),
+                           people=True, pool=pool)
+
+
+for _p in _PEOPLE:
+    _add_person(*_p)
+from .people import PEOPLE_DATA as _PD, people_rows as _prows   # noqa: E402  (about a thousand more, from people.py)
+for _p in _prows(_PD):
+    _add_person(*_p)
+
+
 # ------------------------------------------------------------------ lifestyle and learning
 def _life(slug, label, h1, title, desc, intro, more, paths):
     TOPICS[slug] = dict(kind="genre", group="Lifestyle & learning", label=label, h1=h1, native="", seo_title=title,
