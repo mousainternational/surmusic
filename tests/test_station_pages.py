@@ -408,3 +408,13 @@ def test_famous_news_channel_pages_exist_keep_only_their_own_stations_and_are_on
     assert 'id="famous-news"' in html and "/genre/al-jazeera-live" in html
     sitemap = client.get("/sitemap.xml").get_data(as_text=True)
     assert "/genre/al-jazeera-live" in sitemap
+
+
+def test_ary_and_geo_pages_link_to_the_channels_own_live_pages_even_when_no_stream_is_in_the_directory(client):
+    ary = client.get("/genre/ary-news-live").get_data(as_text=True)
+    assert "https://live.arynews.tv/audio" in ary and "official live pages" in ary
+    assert "noindex" not in ary.split("</head>")[0]
+    geo = client.get("/genre/geo-news-live").get_data(as_text=True)
+    assert "https://live.geo.tv/" in geo
+    assert "official live pages" not in client.get("/genre/cnn-live").get_data(as_text=True)
+    assert "/genre/geo-news-live" in client.get("/").get_data(as_text=True)

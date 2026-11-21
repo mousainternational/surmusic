@@ -728,9 +728,10 @@ for _k, _t in TOPICS.items():                       # a hand-written country Bab
     if _t["kind"] == "country" and not _t["group"]:
         _t["group"] = "asia"
 
-def _channel(slug, label, h1, title, desc, intro, more, paths):
+def _channel(slug, label, h1, title, desc, intro, more, paths, official=()):
+    """official = the channel's own live pages [(button text, address)], shown when our directory has no stream for it."""
     TOPICS[slug] = dict(kind="genre", group="News, talk & sports", label=label, h1=h1, native="", seo_title=title,
-                        description=desc, intro=intro, more=more, paths=paths, per=40, cap=60)
+                        description=desc, intro=intro, more=more, paths=paths, per=40, cap=60, official=list(official))
 
 
 _channel("al-jazeera-live", "Al Jazeera", "Al Jazeera Live Audio — English & Arabic News Radio",
@@ -750,13 +751,15 @@ _channel("ary-news-live", "ARY News", "ARY News Live Audio — Pakistan News Rad
          "Listen to ARY News live audio free, where the channel's stream is available, plus other Pakistani news radio.",
          "ARY News as live audio, where a stream is available. This is audio only; for the TV picture, use ARY's own site or app.",
          "Also searched as ARY News live, ARY News audio, ARY News radio, اے آر وائی نیوز لائیو and Pakistan news live.",
-         [name("ary news"), name("ary news", "&countrycode=PK"), name("arynews")])
+         [name("ary news"), name("ary news", "&countrycode=PK"), name("arynews")],
+         official=[("Listen to ARY News live (official site)", "https://live.arynews.tv/audio"), ("Watch ARY News live (official site)", "https://live.arynews.tv/")])
 _channel("geo-news-live", "Geo News", "Geo News Live Audio — Pakistan News Radio",
          "Geo News Live Audio — Pakistan News Online",
          "Listen to Geo News live audio free, where the channel's stream is available, plus other Pakistani news radio.",
          "Geo News as live audio, where a stream is available. This is audio only; for the TV picture, use Geo's own site or app.",
          "Also searched as Geo News live, Geo News audio, Geo News radio, جیو نیوز لائیو and Pakistan news live.",
-         [name("geo news"), name("geo news", "&countrycode=PK"), name("geonews")])
+         [name("geo news"), name("geo news", "&countrycode=PK"), name("geonews")],
+         official=[("Geo News live (official site)", "https://live.geo.tv/")])
 _channel("cnn-live", "CNN", "CNN Live Audio — US & World News Radio",
          "CNN Live Audio — US & World News Radio Online",
          "Listen to CNN live audio free, where available, plus other US and world news radio streams.",

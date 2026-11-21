@@ -37,7 +37,10 @@
       {% if error and not stations %}
       <div class="empty card"><p>{{ error }} Please try again in a minute.</p></div>
       {% else %}
-      {% if not stations %}<div class="empty card"><p>No live stations of this type are online right now. Please try again later, or explore the other types above.</p></div>{% endif %}
+      {% if info.official %}<div class="card"><h2 class="h3">{{ info.label }} — official live pages</h2>
+        <p class="muted small">The channel's own live page, from the channel itself.</p>
+        <p class="chips">{% for text, url in info.official %}<a class="chip" href="{{ url }}" target="_blank" rel="noopener">{{ text }} ↗</a>{% endfor %}</p></div>{% endif %}
+      {% if not stations and not info.official %}<div class="empty card"><p>No live stations of this type are online right now. Please try again later, or explore the other types above.</p></div>{% endif %}
       {% if stations %}<input class="list-find" type="search" data-filter-list placeholder="Type to find a channel…" aria-label="Find a channel on this page" autocomplete="off">{% endif %}
       <p class="muted small">{{ total or (stations | length) }} live stations{% if pages and pages > 1 %} · page {{ page_no }} of {{ pages }}{% endif %} · secure streams that play in your browser. More stations are available in the <a href="{{ url_for('public.download_page') }}">Android app</a>.</p>
       {% if regions %}<nav class="chips region-chips" aria-label="Stations by region">

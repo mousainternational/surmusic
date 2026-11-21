@@ -448,7 +448,8 @@ FAMOUS_NEWS = ["al-jazeera-live", "bbc-world-service", "ary-news-live", "geo-new
 @bp.app_template_global("famous_news")
 def _famous_news():
     """The big news channels that really have a stream in our directory (an empty one is left out)."""
-    return [(topic_path(k), TOPICS[k]["label"]) for k in FAMOUS_NEWS if k in TOPICS and not radio.known_empty(k)]
+    return [(topic_path(k), TOPICS[k]["label"]) for k in FAMOUS_NEWS
+            if k in TOPICS and (TOPICS[k].get("official") or not radio.known_empty(k))]
 
 
 @bp.app_template_global("relax_types")
@@ -688,7 +689,7 @@ def _topic_page(slug, region_slug=None):
         own = []
     description = f"Free live {info['label']} radio. {own[0]}" if own else info["description"]   # own text: a description no other page has
     meta = build_meta(info["seo_title"], description, page=None if region_page else f"genre-{slug}",
-                      noindex=(not stations) or page_no > 1 or bool(region and not region_page))      # an empty page (or page 2, 3, or one region) is not shown in Google
+                      noindex=(not stations and not base_info.get("official")) or page_no > 1 or bool(region and not region_page))      # an empty page (or page 2, 3, or one region) is not shown in Google
     meta["keywords"] = topic_keywords(info)
     label = info["label"]
     top = [x["name"] for x in all_stations[:3] if x.get("name")]
