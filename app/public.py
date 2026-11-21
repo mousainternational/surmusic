@@ -498,7 +498,7 @@ def _person_shows(slug, remember=True):
 
 
 def start_people_check(app):
-    """Slowly, in the background, find which famous people really have podcasts or talks (one lookup every 3 seconds, once a week)."""
+    """Slowly, in the background, find which famous people really have podcasts or talks (one lookup every 10 seconds, once a week)."""
     if app.config.get("TESTING") or app.config.get("RADIO_DEMO"):
         return None
     import threading
@@ -511,9 +511,9 @@ def start_people_check(app):
                 try:
                     if radio._peek("pod:person:" + slug) is None:
                         _person_shows(slug)
-                        time.sleep(3)
+                        time.sleep(10)
                 except Exception:
-                    time.sleep(3)
+                    time.sleep(10)
     t = threading.Thread(target=run, daemon=True, name="people-check")
     t.start()
     return t
@@ -901,7 +901,7 @@ def api_podcasts():
     demo = bool(current_app.config.get("TESTING") or current_app.config.get("RADIO_DEMO"))
     rows = podcasts.featured(demo)
     resp = jsonify({"items": [{"i": r["id"], "n": r["name"], "a": r["artist"], "m": r["img"]} for r in rows]})
-    resp.headers["Cache-Control"] = "public, max-age=600"
+    resp.headers["Cache-Control"] = "public, max-age=600" if rows else "no-store"      # an empty answer (cold start) is never kept
     return resp
 
 
@@ -1590,7 +1590,7 @@ def api_headlines():
     else:
         items = headlines.get(visitor_country())
     resp = jsonify({"items": items})
-    resp.headers["Cache-Control"] = "private, max-age=120"
+    resp.headers["Cache-Control"] = "private, max-age=120" if items else "no-store"
     resp.headers["Vary"] = "Accept-Language, CF-IPCountry"
     return resp
 

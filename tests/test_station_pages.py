@@ -435,3 +435,11 @@ def test_person_pages_exist_only_for_people_with_podcasts_or_talks(client, monke
     monkeypatch.setattr(podcasts, "search", lambda q, demo=False: [other])
     assert client.get("/genre/mufti-menk").status_code == 404
     assert "/genre/joe-rogan" in client.get("/sitemap.xml").get_data(as_text=True) or True
+
+
+def test_news_and_podcast_strips_never_cache_an_empty_answer(client, monkeypatch):
+    from app import headlines
+    assert client.get("/api/headlines").headers["Cache-Control"] == "no-store"
+    assert client.get("/api/podcasts").headers["Cache-Control"].startswith("public")
+    monkeypatch.setattr("app.podcasts.featured", lambda demo=False: [])
+    assert client.get("/api/podcasts").headers["Cache-Control"] == "no-store"
