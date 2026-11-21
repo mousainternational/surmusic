@@ -506,6 +506,22 @@ def known_stations():
     return out
 
 
+def memory_stations():
+    """Every station of the lists already in memory (never touches the database or the network), best-listened first."""
+    from . import lowdb
+    seen, out = set(), []
+    if not lowdb.enabled():
+        return out
+    for key in ["cat:" + c for c in CATEGORIES] + ["genre:" + g for g in GENRES]:
+        for prefix in ("radio:", "radio-peek:"):
+            hit, value = lowdb.cache_get(prefix + key)
+            for st in (value or []) if hit else []:
+                if isinstance(st, dict) and st.get("uuid") and st["uuid"] not in seen:
+                    seen.add(st["uuid"]); out.append(st)
+    out.sort(key=lambda x: -(x.get("clicks") or 0))
+    return out
+
+
 def cached_station(uuid):
     """A station from the lists already in memory (never touches the database or the network), else None."""
     from . import lowdb

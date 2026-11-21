@@ -46,12 +46,12 @@
   </div>
 </section>
 
-{% set fam = famous_news() %}
-{% if fam %}
-<section class="section" id="famous-news">
+{% set top = top_stations() %}
+{% if top %}
+<section class="section" id="top-stations">
   <div class="wrap">
-    <div class="section-head"><h2>Famous news channels</h2><a href="/genre/news">All news radio →</a></div>
-    <nav class="chips" aria-label="Famous news channels">{% for href, label in fam %}<a class="chip" href="{{ href }}">{{ label }}</a>{% endfor %}</nav>
+    <div class="section-head"><h2>Most listened radio stations in the world</h2></div>
+    <ul class="logo-row">{% for st in top %}<li><a href="{{ st.href }}" title="Listen to {{ st.name }} live"><img src="{{ st.favicon }}" alt="{{ st.name }} logo" width="76" height="76" loading="{{ 'eager' if loop.index <= 6 else 'lazy' }}" decoding="async" referrerpolicy="no-referrer"><span>{{ st.name }}</span></a></li>{% endfor %}</ul>
   </div>
 </section>
 {% endif %}

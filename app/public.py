@@ -449,7 +449,26 @@ FAMOUS_NEWS = ["al-jazeera-live", "bbc-world-service", "ary-news-live", "geo-new
 def _famous_news():
     """The big news channels that really have a stream in our directory (an empty one is left out)."""
     return [(topic_path(k), TOPICS[k]["label"]) for k in FAMOUS_NEWS
-            if k in TOPICS and (TOPICS[k].get("official") or not radio.known_empty(k))]
+            if k in TOPICS and not radio.known_empty(k)]
+
+
+_TOP = {"t": 0, "v": []}
+
+
+@bp.app_template_global("top_stations")
+def _top_stations(n=24):
+    """The most listened stations of the world that have a logo, from the saved lists (no network), one per name, kept 30 minutes."""
+    import time
+    if time.time() - _TOP["t"] > (1800 if _TOP["v"] else 20):
+        seen, out = set(), []
+        for st in radio.memory_stations():
+            key = (st.get("name") or "").strip().lower()
+            if st.get("favicon") and st.get("uuid") and key and key not in seen:
+                seen.add(key); out.append({"name": st["name"], "favicon": st["favicon"], "href": station_path(st)})
+            if len(out) >= 60:
+                break
+        _TOP.update(t=time.time(), v=out)
+    return _TOP["v"][:n]
 
 
 @bp.app_template_global("relax_types")
@@ -689,7 +708,7 @@ def _topic_page(slug, region_slug=None):
         own = []
     description = f"Free live {info['label']} radio. {own[0]}" if own else info["description"]   # own text: a description no other page has
     meta = build_meta(info["seo_title"], description, page=None if region_page else f"genre-{slug}",
-                      noindex=(not stations and not base_info.get("official")) or page_no > 1 or bool(region and not region_page))      # an empty page (or page 2, 3, or one region) is not shown in Google
+                      noindex=(not stations) or page_no > 1 or bool(region and not region_page))      # an empty page (or page 2, 3, or one region) is not shown in Google
     meta["keywords"] = topic_keywords(info)
     label = info["label"]
     top = [x["name"] for x in all_stations[:3] if x.get("name")]

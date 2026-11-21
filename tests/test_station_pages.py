@@ -404,17 +404,16 @@ def test_famous_news_channel_pages_exist_keep_only_their_own_stations_and_are_on
     assert radio._fits("cnn-live", {"name": "CNN International", "tags": ""})
     assert not radio._fits("cnn-live", {"name": "Radio Mirchi", "tags": "news"})
     assert not radio._fits("ary-news-live", {"name": "Mary Radio", "tags": ""})
-    html = client.get("/").get_data(as_text=True)
-    assert 'id="famous-news"' in html and "/genre/al-jazeera-live" in html
     sitemap = client.get("/sitemap.xml").get_data(as_text=True)
     assert "/genre/al-jazeera-live" in sitemap
 
 
-def test_ary_and_geo_pages_link_to_the_channels_own_live_pages_even_when_no_stream_is_in_the_directory(client):
-    ary = client.get("/genre/ary-news-live").get_data(as_text=True)
-    assert "https://live.arynews.tv/audio" in ary and "official live pages" in ary
-    assert "noindex" not in ary.split("</head>")[0]
-    geo = client.get("/genre/geo-news-live").get_data(as_text=True)
-    assert "https://live.geo.tv/" in geo
-    assert "official live pages" not in client.get("/genre/cnn-live").get_data(as_text=True)
-    assert "/genre/geo-news-live" in client.get("/").get_data(as_text=True)
+def test_home_shows_a_row_of_top_station_logos_and_no_page_sends_visitors_to_other_sites(client, monkeypatch):
+    from app import public
+    st = [{"uuid": f"u{i}", "name": f"Big Radio {i}", "favicon": f"https://x.test/{i}.png", "clicks": 99 - i} for i in range(8)]
+    monkeypatch.setattr(public.radio, "memory_stations", lambda: st)
+    public._TOP.update(t=0, v=[])
+    html = client.get("/").get_data(as_text=True)
+    assert 'id="top-stations"' in html and "Most listened radio stations in the world" in html
+    assert "/station/u0/" in html and "https://x.test/0.png" in html and 'class="logo-row"' in html
+    assert "live.arynews.tv" not in client.get("/genre/ary-news-live").get_data(as_text=True)
