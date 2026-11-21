@@ -506,7 +506,46 @@ def cached_station(uuid):
     return None
 
 
+# Corrections a station sent us itself (name, logo, working stream), on top of the public directory data,
+# which can be out of date. "also" = extra words that find the station in search; never shown.
+STATION_FIXES = {
+    "dd10f037-269c-42e0-9bfb-c22726aa8a7c": {      # Radyo İLEF, Ankara University (their email, 21 Nov 2026)
+        "name": "Radyo İLEF", "url": "https://radyoilef.ankara.edu.tr/live",
+        "favicon": "https://radyoilef.ankara.edu.tr/radyo-ilef-logo.png",
+        "homepage": "https://radyoilef.ankara.edu.tr/", "country": "Türkiye", "tags": "70's, 80s, anatolian rock",
+        "also": "Ankara Üniversitesi Radyosu Radyo İlef FM 91.0",
+        "about": "Radyo İLEF is the radio station of Ankara University (Ankara Üniversitesi Radyosu), on FM 91.0 in "
+                 "Ankara, Türkiye: music in more than 40 languages from an archive of over 17,000 songs, plus podcasts."},
+}
+
+
+def _fold_name(text):
+    """Lower-case without accents, so "İLEF", "ilef" and "Ilef" all match in search."""
+    import unicodedata
+    text = unicodedata.normalize("NFKD", (text or "").casefold())
+    return " ".join("".join(c for c in text if not unicodedata.combining(c)).split())
+
+
+def fix_station(st):
+    """The station with the corrections its owner sent us (unchanged if there are none)."""
+    fix = STATION_FIXES.get((st or {}).get("uuid")) if isinstance(st, dict) else None
+    if not fix:
+        return st
+    return {**st, **{k: v for k, v in fix.items() if k != "also"}}
+
+
 def station_by_uuid(uuid):
+    """One station for its own page, with any corrections from its owner. Returns (station, list_key) or (None, '')."""
+    st, key = _lookup_station(uuid)
+    if st:
+        return fix_station(st), key
+    if uuid in STATION_FIXES:                        # gone from the public directory, but its owner gave us the details
+        return fix_station({"uuid": uuid, "bitrate": 0, "clicks": 0, "language": "", "state": "", "codec": "",
+                            "votes": 0}), ""
+    return None, ""
+
+
+def _lookup_station(uuid):
     """One station for its own page: first from the cached lists, otherwise from Radio Browser (cached).
     Returns (station, list_key) or (None, '')."""
     uuid = _text(uuid, 64)
@@ -579,7 +618,12 @@ def search_stations(q):
     paths = [f"/json/stations/search?name={enc}&{COMMON}", f"/json/stations/search?tag={enc}&{COMMON}"]
     if words is _QURAN_WORDS:
         paths.append(f"/json/stations/search?tag=quran&{COMMON}")
-    return _cached(f"q:{q.lower()}", lambda: _first(_merge(paths), words)[:60], 15)
+    found = _cached(f"q:{q.lower()}", lambda: _first(_merge(paths), words)[:60], 15)
+    wanted = _fold_name(q)
+    fixed = [fix_station({"uuid": uuid, "bitrate": 0, "clicks": 0}) for uuid, fix in STATION_FIXES.items()
+             if wanted in _fold_name(fix["name"] + " " + fix.get("also", ""))]
+    ids = {st["uuid"] for st in fixed}
+    return fixed + [fix_station(st) for st in found if st.get("uuid") not in ids]
 
 
 def clean_station(data):

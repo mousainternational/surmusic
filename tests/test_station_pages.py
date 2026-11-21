@@ -375,3 +375,19 @@ def test_country_flags_are_sent_once_per_page(client):
         tiles = page.count('class="flag-tile"')
         assert 100 < tiles < 400                      # one full set of flags, not two
     assert client.get("/menu/flags").get_data(as_text=True).count('class="flag-tile"') == tiles
+
+
+def test_station_owner_corrections(client):
+    """Radyo İLEF sent its own name, logo and working stream: its page, search and Google text use them."""
+    uuid = "dd10f037-269c-42e0-9bfb-c22726aa8a7c"
+    r = client.get(f"/station/{uuid}/ankara-niversitesi-radyosu-radyo-i-lef")
+    assert r.status_code == 301 and r.headers["Location"].endswith(f"/station/{uuid}/radyo-i-lef")
+    html = client.get(f"/station/{uuid}/radyo-i-lef").get_data(as_text=True)
+    assert "Radyo İLEF" in html and "https://radyoilef.ankara.edu.tr/live" in html
+    assert "radyo-ilef-logo.png" in html and "FM 91.0" in html
+    assert 'name="robots" content="index' in html
+    for q in ("radyo ilef", "İLEF", "Ilef", "ankara universitesi"):
+        found = client.get("/api/search", query_string={"q": q}).get_json()["stations"]
+        assert found and found[0]["uuid"] == uuid and found[0]["name"] == "Radyo İLEF", q
+    other = client.get("/api/search", query_string={"q": "jazz"}).get_json()["stations"]
+    assert all(st["uuid"] != uuid for st in other)

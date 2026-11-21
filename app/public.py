@@ -1073,7 +1073,8 @@ STATION_INDEX_CLICKS, STATION_INDEX_VOTES = 10, 500
 def strong_station(st):
     """Only stations people really listen to go into Google. Thousands of near-identical station pages made Google
     rate the whole site as thin (30,000 found, 500 indexed); the other pages still work and are shared normally."""
-    return (st.get("clicks") or 0) >= STATION_INDEX_CLICKS or (st.get("votes") or 0) >= STATION_INDEX_VOTES
+    return ((st.get("clicks") or 0) >= STATION_INDEX_CLICKS or (st.get("votes") or 0) >= STATION_INDEX_VOTES
+            or st.get("uuid") in radio.STATION_FIXES)     # its owner sent us the details: a real, cared-for page
 
 
 @bp.route("/station/<uuid>")
@@ -1133,6 +1134,11 @@ def station_page(uuid, slug=None):
     if fm:                                            # real frequency and cities: what people search for
         faqs.insert(0, (f"Where can I hear {st['name']} on FM?", f"On FM {fm[1]} in {fm[2]}. Anywhere else, listen live on this page."))
         meta["description"] = plain_text(f"Listen to {st['name']} live online free. On FM {fm[1]} in {fm[2]}.", 160)
+    owner_fix = radio.STATION_FIXES.get(st["uuid"]) or {}
+    if owner_fix.get("about"):                        # the station's own words: what its listeners search for
+        faqs.insert(0, (f"What is {st['name']}?", owner_fix["about"]))
+        meta["description"] = plain_text(f"Listen to {st['name']} live online free. {owner_fix['about']}", 160)
+        meta["keywords"] += ", " + owner_fix.get("also", "")
     ld = [breadcrumb_ld(crumbs), station_ld(st, want), faq_items_ld(faqs)]
     page_url = absolute(want)
     share_text = f"Listen to {st['name']} live on Sur Music: {page_url}"
