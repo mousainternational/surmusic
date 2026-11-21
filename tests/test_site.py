@@ -386,10 +386,13 @@ def test_footer_social_icons(client, app):
     from app import settings as site_settings
     with app.test_request_context():
         site_settings.save_settings({"social_facebook": "https://www.facebook.com/surmusicradio.com",
+                                     "social_x": "https://x.com/surmusicradio",
                                      "social_tiktok": "https://www.tiktok.com/@surmusicradio.com"})
     html = client.get("/").get_data(as_text=True)
     assert re.search(r'facebook\.com/surmusicradio\.com"[^>]*><svg class="social-ico"[^>]*><use href="[^"]*img/social\.svg#social_facebook"', html)
-    assert "social.svg#social_tiktok" in html and "social.svg#social_x" not in html
+    assert "social.svg#social_tiktok" in html and "social.svg#social_youtube" not in html
+    # X's icon is already the letter X, so the word is only read out to screen readers (not shown twice)
+    assert re.search(r'#social_x"/></svg><span class="visually-hidden">X</span></a>', html)
     sprite = client.get("/static/img/social.svg").get_data(as_text=True)
     for key in ("social_facebook", "social_youtube", "social_x", "social_instagram", "social_tiktok"):
         assert f'id="{key}"' in sprite
