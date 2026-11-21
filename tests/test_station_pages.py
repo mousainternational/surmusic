@@ -446,3 +446,15 @@ def test_news_and_podcast_strips_never_cache_an_empty_answer(client, monkeypatch
     assert client.get("/api/podcasts").headers["Cache-Control"].startswith("public")
     monkeypatch.setattr("app.podcasts.featured", lambda demo=False: [])
     assert client.get("/api/podcasts").headers["Cache-Control"] == "no-store"
+
+
+def test_home_shows_a_row_of_famous_voices_with_real_podcasts_only(client, monkeypatch):
+    from app import public
+    public._FOUND.clear()
+    assert "famous-voices" not in client.get("/").get_data(as_text=True)
+    public._note_found("joe-rogan", [{"id": "1", "name": "The Joe Rogan Experience", "artist": "Joe Rogan", "img": "https://x.test/jr.jpg"}])
+    public._note_found("mufti-menk", [{"id": "2", "name": "Mufti Menk", "artist": "x", "img": ""}])     # no picture: left out
+    html = client.get("/").get_data(as_text=True)
+    assert 'id="famous-voices"' in html and "/genre/joe-rogan" in html and "https://x.test/jr.jpg" in html
+    assert "/genre/mufti-menk" not in html
+    public._FOUND.clear()

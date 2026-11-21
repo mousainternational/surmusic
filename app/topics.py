@@ -852,7 +852,7 @@ def _add_person(pp_slug, pp_full, pp_short, pp_words, pp_kind, pp_who):
                                  f"Songs and full speeches stay with their owners, so we link to what is freely offered as podcasts and radio.",
                            more=f"Also searched as {pp_full} podcast, {pp_short} speech, {pp_short} audio, {pp_short} live, {pp_short} online and {pp_short} {what}.",
                            paths=list(dict.fromkeys([name(pp_full), name(pp_short)])), per=40, cap=60, words=tuple(pp_words),
-                           people=True, pool=pool)
+                           people=True, pool=pool, pkind=pp_kind)
 
 
 for _p in _PEOPLE:

@@ -494,7 +494,30 @@ def _person_shows(slug, remember=True):
         return [r for r in rows if all(w in f"{r['name']} {r['artist']}".lower() for w in words)][:12]
     if not remember:
         return radio._peek("pod:person:" + slug)
-    return radio._cached("pod:person:" + slug, load, 7 * 24 * 60)
+    value = radio._cached("pod:person:" + slug, load, 7 * 24 * 60)
+    _note_found(slug, value)
+    return value
+
+
+_FOUND = {}                  # people whose podcasts or talks really exist: slug -> (label, cover picture)
+_KIND_FIRST = ["podcast", "speaker", "politics", "quran", "naat", "bhajan", "gurbani", "gospel", "qawwali", "music"]
+
+
+def _note_found(slug, shows):
+    if shows and slug not in _FOUND:
+        pic = next((r["img"] for r in shows if r.get("img")), "")
+        if pic:
+            _FOUND[slug] = (TOPICS[slug]["label"], pic)
+
+
+@bp.app_template_global("famous_voices")
+def _famous_voices(n=24):
+    """People with real podcasts or talks, as a row of covers on the home page (filled in by the background check)."""
+    order = {k: i for i, k in enumerate(TOPICS)}
+    def prio(k):
+        kind = TOPICS[k].get("pkind")
+        return (_KIND_FIRST.index(kind) if kind in _KIND_FIRST else 99, order[k])
+    return [(topic_path(k), _FOUND[k][0], _FOUND[k][1]) for k in sorted(_FOUND, key=prio)[:n]]
 
 
 def _person_text(slug, info, shows):
@@ -530,15 +553,24 @@ def start_people_check(app):
     import time
 
     def run():
-        time.sleep(90)
+        time.sleep(30)
         with app.app_context():
-            for slug in sorted(k for k, t in TOPICS.items() if t.get("people")):
+            todo = []
+            for slug in [k for k, t in TOPICS.items() if t.get("people")]:       # already checked in an earlier run: just remember them
                 try:
-                    if radio._peek("pod:person:" + slug) is None:
-                        _person_shows(slug)
-                        time.sleep(10)
+                    done = radio._peek("pod:person:" + slug)
                 except Exception:
-                    time.sleep(10)
+                    done = None
+                if done is None:
+                    todo.append(slug)
+                else:
+                    _note_found(slug, done)
+            for slug in todo:                                                   # the rest, one lookup every 10 seconds
+                try:
+                    _person_shows(slug)
+                except Exception:
+                    pass
+                time.sleep(10)
     t = threading.Thread(target=run, daemon=True, name="people-check")
     t.start()
     return t

@@ -55,6 +55,15 @@
   </div>
 </section>
 {% endif %}
+{% set voices = famous_voices() %}
+{% if voices %}
+<section class="section" id="famous-voices">
+  <div class="wrap">
+    <div class="section-head"><h2>Famous voices — podcasts, talks &amp; speeches</h2><a href="/podcasts">All podcasts →</a></div>
+    <ul class="logo-row">{% for href, label, pic in voices %}<li><a href="{{ href }}" title="Listen to {{ label }}"><img src="{{ pic }}" alt="{{ label }} podcast cover" width="76" height="76" loading="lazy" decoding="async" referrerpolicy="no-referrer"><span>{{ label }}</span></a></li>{% endfor %}</ul>
+  </div>
+</section>
+{% endif %}
 
 {% include "_podrows.html" %}
 
