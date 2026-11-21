@@ -442,6 +442,15 @@ def _religious_types():
 RELAX_TYPES = ["rain-sounds", "nature-sounds", "sleep-music", "meditation", "calm-piano", "ambient-music", "white-noise", "spa-music"]
 
 
+FAMOUS_NEWS = ["al-jazeera-live", "bbc-world-service", "ary-news-live", "geo-news-live", "cnn-live", "fox-news-live"]
+
+
+@bp.app_template_global("famous_news")
+def _famous_news():
+    """The big news channels that really have a stream in our directory (an empty one is left out)."""
+    return [(topic_path(k), TOPICS[k]["label"]) for k in FAMOUS_NEWS if k in TOPICS and not radio.known_empty(k)]
+
+
 @bp.app_template_global("relax_types")
 def _relax_types():
     """The sounds shown as chips on every Relax and sleep page (the same ones as in the app)."""

@@ -46,6 +46,16 @@
   </div>
 </section>
 
+{% set fam = famous_news() %}
+{% if fam %}
+<section class="section" id="famous-news">
+  <div class="wrap">
+    <div class="section-head"><h2>Famous news channels</h2><a href="/genre/news">All news radio →</a></div>
+    <nav class="chips" aria-label="Famous news channels">{% for href, label in fam %}<a class="chip" href="{{ href }}">{{ label }}</a>{% endfor %}</nav>
+  </div>
+</section>
+{% endif %}
+
 {% include "_podrows.html" %}
 
 <section class="section">

@@ -283,7 +283,8 @@ TOPICS = {
         intro="Every live news channel in one list — Urdu and Punjabi khabrain from Pakistan, Indian and Hindi samachar, Arabic news and world English news. Pick any channel and press play.",
         more="Also searched as Urdu news live, Pakistan news radio, Indian news live, Bharat news, Hindi news, Hindi samachar, Arabic news, world news live, English news radio, BBC and Al Jazeera live, khabrain and پاکستان خبریں.",
         paths=[tag("news", "&countrycode=PK"), tag("news", "&language=urdu"), tag("news", "&language=punjabi"),
-               lang("urdu", "&tag=talk"), name("news", "&countrycode=PK"), name("khabar", "&countrycode=PK"),
+               lang("urdu", "&tag=talk"), name("ary news"), name("geo news"), name("al jazeera english"), name("al jazeera arabic"),
+               name("bbc world service"), name("news", "&countrycode=PK"), name("khabar", "&countrycode=PK"),
                name("khabrain", "&countrycode=PK"), name("geo", "&countrycode=PK"), name("ary", "&countrycode=PK"),
                name("express", "&countrycode=PK"), name("dawn", "&countrycode=PK"), name("samaa", "&countrycode=PK"),
                name("dunya", "&countrycode=PK"), name("92", "&countrycode=PK"), name("radio pakistan"), name("bbc urdu"), name("voa urdu"),
@@ -726,6 +727,49 @@ for _code, (_name, _cont, _native) in sorted(WORLD.items(), key=lambda kv: kv[1]
 for _k, _t in TOPICS.items():                       # a hand-written country Babel did not know
     if _t["kind"] == "country" and not _t["group"]:
         _t["group"] = "asia"
+
+def _channel(slug, label, h1, title, desc, intro, more, paths):
+    TOPICS[slug] = dict(kind="genre", group="News, talk & sports", label=label, h1=h1, native="", seo_title=title,
+                        description=desc, intro=intro, more=more, paths=paths, per=40, cap=60)
+
+
+_channel("al-jazeera-live", "Al Jazeera", "Al Jazeera Live Audio — English & Arabic News Radio",
+         "Al Jazeera Live Audio — English & Arabic News",
+         "Listen to Al Jazeera live audio free: the English and Arabic news broadcasts as radio streams, wherever the channel offers one.",
+         "Al Jazeera's live news as audio, in English and in Arabic. This is the sound of the broadcast only (no video), so it works well on a slow connection.",
+         "Also searched as Al Jazeera live, Al Jazeera English radio, Al Jazeera Arabic live, الجزيرة مباشر, Al Jazeera audio stream and Al Jazeera news live.",
+         [name("al jazeera"), name("aljazeera"), name("الجزيرة")])
+_channel("bbc-world-service", "BBC World Service", "BBC World Service Live — BBC Radio News Online",
+         "BBC World Service Live Radio — BBC News Online",
+         "Listen to BBC World Service and other BBC radio news live and free, from the UK and around the world.",
+         "BBC World Service and other BBC radio streams, live. (BBC Urdu stopped its radio bulletins in 2022, so it is not in this list.)",
+         "Also searched as BBC World Service live, BBC radio online, BBC News live radio, BBC Radio 4 live and BBC World Service English.",
+         [name("bbc world service"), name("bbc radio"), name("bbc")])
+_channel("ary-news-live", "ARY News", "ARY News Live Audio — Pakistan News Radio",
+         "ARY News Live Audio — Pakistan News Online",
+         "Listen to ARY News live audio free, where the channel's stream is available, plus other Pakistani news radio.",
+         "ARY News as live audio, where a stream is available. This is audio only; for the TV picture, use ARY's own site or app.",
+         "Also searched as ARY News live, ARY News audio, ARY News radio, اے آر وائی نیوز لائیو and Pakistan news live.",
+         [name("ary news"), name("ary news", "&countrycode=PK"), name("arynews")])
+_channel("geo-news-live", "Geo News", "Geo News Live Audio — Pakistan News Radio",
+         "Geo News Live Audio — Pakistan News Online",
+         "Listen to Geo News live audio free, where the channel's stream is available, plus other Pakistani news radio.",
+         "Geo News as live audio, where a stream is available. This is audio only; for the TV picture, use Geo's own site or app.",
+         "Also searched as Geo News live, Geo News audio, Geo News radio, جیو نیوز لائیو and Pakistan news live.",
+         [name("geo news"), name("geo news", "&countrycode=PK"), name("geonews")])
+_channel("cnn-live", "CNN", "CNN Live Audio — US & World News Radio",
+         "CNN Live Audio — US & World News Radio Online",
+         "Listen to CNN live audio free, where available, plus other US and world news radio streams.",
+         "CNN as live audio, where a stream is available. Audio only, no video.",
+         "Also searched as CNN live, CNN audio, CNN radio, CNN International live and US news radio.",
+         [name("cnn")])
+_channel("fox-news-live", "Fox News", "Fox News Live Audio — US News Radio",
+         "Fox News Live Audio — US News Radio Online",
+         "Listen to Fox News live audio free, where available, plus other US news radio streams.",
+         "Fox News as live audio, where a stream is available. Audio only, no video.",
+         "Also searched as Fox News live, Fox News radio, Fox News audio and US news radio.",
+         [name("fox news")])
+
 
 # ------------------------------------------------------------------ lifestyle and learning
 def _life(slug, label, h1, title, desc, intro, more, paths):

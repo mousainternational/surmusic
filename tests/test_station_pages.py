@@ -391,3 +391,20 @@ def test_station_owner_corrections(client):
         assert found and found[0]["uuid"] == uuid and found[0]["name"] == "Radyo İLEF", q
     other = client.get("/api/search", query_string={"q": "jazz"}).get_json()["stations"]
     assert all(st["uuid"] != uuid for st in other)
+
+
+def test_famous_news_channel_pages_exist_keep_only_their_own_stations_and_are_on_the_home_page(client):
+    from app import radio
+    slugs = ("al-jazeera-live", "bbc-world-service", "ary-news-live", "geo-news-live", "cnn-live", "fox-news-live")
+    for slug in slugs:
+        r = client.get(f"/genre/{slug}")
+        assert r.status_code == 200, slug
+    assert "Al Jazeera Live Audio" in client.get("/genre/al-jazeera-live").get_data(as_text=True)
+    assert "BBC Urdu stopped its radio bulletins" in client.get("/genre/bbc-world-service").get_data(as_text=True)
+    assert radio._fits("cnn-live", {"name": "CNN International", "tags": ""})
+    assert not radio._fits("cnn-live", {"name": "Radio Mirchi", "tags": "news"})
+    assert not radio._fits("ary-news-live", {"name": "Mary Radio", "tags": ""})
+    html = client.get("/").get_data(as_text=True)
+    assert 'id="famous-news"' in html and "/genre/al-jazeera-live" in html
+    sitemap = client.get("/sitemap.xml").get_data(as_text=True)
+    assert "/genre/al-jazeera-live" in sitemap

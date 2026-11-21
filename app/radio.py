@@ -340,8 +340,22 @@ _NEWS_RE = re.compile(r"news|khabar|akhbar|خبر|أخبار|samachar|current af
 _SPORT_RE = re.compile(r"sport|cricket|football|soccer|talksport|espn|\bnba\b|\bnfl\b|\bf1\b", re.I)
 
 
+# Famous-channel pages keep only stations that really carry the channel's name (no look-alikes)
+CHANNEL_WORDS = {
+    "al-jazeera-live": ("jazeera", "الجزيرة"),
+    "bbc-world-service": ("bbc",),
+    "ary-news-live": ("ary news", "ary-news", "arynews"),
+    "geo-news-live": ("geo news", "geo-news", "geonews", "geo tv", "جیو"),
+    "cnn-live": ("cnn",),
+    "fox-news-live": ("fox news", "foxnews"),
+}
+
+
 def _fits(slug, st):
     text = f"{st.get('name') or ''} {st.get('tags') or ''}"
+    if slug in CHANNEL_WORDS:
+        low = (st.get("name") or "").lower()
+        return any(w in low for w in CHANNEL_WORDS[slug])
     if slug in ("news", "english-news"):
         return not _RELIGIOUS_RE.search(text) and (bool(_NEWS_RE.search(text)) or not _MUSIC_RE.search(text)) \
             and not _MUSIC_RE.search(st.get("name") or "") and not _SPORT_RE.search(st.get("name") or "")
@@ -355,7 +369,7 @@ def _fits(slug, st):
 def genre_stations(slug):
     if slug not in GENRES:
         raise KeyError(slug)
-    if slug in ("news", "english-news", "sports", "cricket", "football", "talk"):
+    if slug in ("news", "english-news", "sports", "cricket", "football", "talk") or slug in CHANNEL_WORDS:
         return [st for st in _genre_stations(slug) if _fits(slug, st)]
     return _genre_stations(slug)
 
