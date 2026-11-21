@@ -428,10 +428,13 @@ def test_person_pages_exist_only_for_people_with_podcasts_or_talks(client, monke
     row = {"id": "777", "name": "The Joe Rogan Experience", "artist": "Joe Rogan", "img": "https://x.test/a.jpg", "feed": ""}
     other = {"id": "778", "name": "Sample Stories", "artist": "Demo Studio", "img": "", "feed": ""}
     monkeypatch.setattr(podcasts, "search", lambda q, demo=False: [row, other])
+    monkeypatch.setattr(podcasts, "show", lambda sid, demo=False: (row, [{"name": "Episode One", "date": "2026-11-01"}]))
     r = client.get("/genre/joe-rogan")
     html = r.get_data(as_text=True)
     assert r.status_code == 200 and "Podcasts and talks by Joe Rogan" in html and "/podcasts/777" in html and "/podcasts/778" not in html
     assert "noindex" not in html.split("</head>")[0] and 'class="empty card"' not in html
+    assert "Sur Music lists 1 podcast and talk by or with Joe Rogan: The Joe Rogan Experience." in html
+    assert "Newest episodes of The Joe Rogan Experience" in html and "Where can I listen to Joe Rogan podcasts?" in html
     monkeypatch.setattr(podcasts, "search", lambda q, demo=False: [other])
     assert client.get("/genre/mufti-menk").status_code == 404
     assert "/genre/joe-rogan" in client.get("/sitemap.xml").get_data(as_text=True) or True

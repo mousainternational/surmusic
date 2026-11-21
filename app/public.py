@@ -497,6 +497,31 @@ def _person_shows(slug, remember=True):
     return radio._cached("pod:person:" + slug, load, 7 * 24 * 60)
 
 
+def _person_text(slug, info, shows):
+    """(paragraphs, newest episodes of the first show, questions) for a person's page, from the real list of their shows."""
+    from . import podcasts
+    full, short, who = (info["h1"].split(" — ")[0]), info["label"], info["intro"].split(" is ", 1)[-1].split(". ")[0]
+    names = [r["name"] for r in shows]
+    demo = bool(current_app.config.get("TESTING") or current_app.config.get("RADIO_DEMO"))
+    try:
+        _row0, eps = podcasts.show(shows[0]["id"], demo)
+    except Exception:
+        eps = []
+    eps = [{"name": e["name"], "date": (e.get("date") or "")[:10]} for e in (eps or [])[:8] if e.get("name")]
+    n = len(shows)
+    p1 = f"Sur Music lists {n} podcast{'s' if n != 1 else ''} and talk{'s' if n != 1 else ''} by or with {short}: " + ", ".join(names[:5]) + ("." if n <= 5 else f" and {n - 5} more.")
+    paras = [p1]
+    if eps:
+        paras.append(f"The newest episode of {names[0]} is \u201c{eps[0]['name']}\u201d" + (f" ({eps[0]['date']})" if eps[0]["date"] else "") +
+                     ". Open the show to play it, or pick an older one; episodes play in your browser, free, with no sign-up.")
+    faqs = [
+        (f"Where can I listen to {full} podcasts?", f"On this page. Sur Music lists {n} show{'s' if n != 1 else ''}: " + ", ".join(names[:4]) + ". Press play on any episode."),
+        (f"Is it free to listen to {short} here?", "Yes. The episodes are free to play in your web browser or in the Sur Music Android app, with no sign-up."),
+        (f"Who is {full}?", f"{full} is {who}."),
+    ]
+    return paras, eps, faqs
+
+
 def start_people_check(app):
     """Slowly, in the background, find which famous people really have podcasts or talks (one lookup every 10 seconds, once a week)."""
     if app.config.get("TESTING") or app.config.get("RADIO_DEMO"):
@@ -776,6 +801,9 @@ def _topic_page(slug, region_slug=None):
     ]
     if top:
         faqs.append((f"Which are the most popular {label} radio stations?", "Right now: " + ", ".join(top) + "."))
+    person_text, person_eps = [], []
+    if info.get("people"):                             # a person: text made only from what really exists (their shows and newest episodes)
+        person_text, person_eps, faqs = _person_text(slug, info, shows)
     crumbs = [("Home", "/"), ("All radio", "/radio-stations")]
     if info["kind"] == "country" and info["group"] in CONTINENTS:
         crumbs.append((CONTINENTS[info["group"]][0], f"/continent/{info['group']}"))
@@ -790,9 +818,11 @@ def _topic_page(slug, region_slug=None):
     if is_country and page_no == 1 and (region_page or not region) and not own_text:
         facts = _country_facts(label, total, stations if region_page else all_stations, [] if region_page else regions)
         own_text = [facts] if facts else []
+    if person_text:
+        own_text = person_text
     region_links = [(n, c, f"{topic_path(slug)}/{slugify(n)}" if c >= REGION_PAGE_MIN and slugify(n) != "item"
                      else f"{topic_path(slug)}?region={quote(n)}") for n, c in regions] if len(regions) > 1 else []
-    return render_template("category.html", meta=meta, stations=protect(stations), error=error, cat=slug, shows=shows,
+    return render_template("category.html", meta=meta, stations=protect(stations), error=error, cat=slug, shows=shows, person_eps=person_eps,
                            neighbours=_country_neighbours(slug) if is_country else [], regions=region_links, country_href=topic_path(slug),
                            active_region=region,
                            info=info, genre=slug, crumbs=crumbs, ld=ld, trending=trending, faqs=faqs if page_no == 1 else [], popular=popular if page_no == 1 else [],
