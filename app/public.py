@@ -471,6 +471,54 @@ def _top_stations(n=24):
     return _TOP["v"][:n]
 
 
+def _person_shows(slug, remember=True):
+    """Podcasts, talks and shows by this person (their name must be in the show or the podcaster's name).
+    [] = checked, there are none; None = could not check right now. Kept in the database copy for a week."""
+    t = TOPICS.get(slug) or {}
+    if not t.get("people"):
+        return []
+    from . import podcasts
+    full = (t.get("h1") or "").split(" — ")[0]
+    words = [w for w in re.split(r"\W+", full.lower()) if len(w) > 1]
+    demo = bool(current_app.config.get("TESTING") or current_app.config.get("RADIO_DEMO"))
+
+    def load():
+        if demo:
+            rows = podcasts.search(full, True)
+        else:
+            try:
+                data = podcasts._api("/search", term=full[:60], media="podcast", limit=24)
+            except Exception:
+                raise radio.RadioError("podcast directory not reachable")
+            rows = [x for x in (podcasts._row(r) for r in data.get("results", [])) if x]
+        return [r for r in rows if all(w in f"{r['name']} {r['artist']}".lower() for w in words)][:12]
+    if not remember:
+        return radio._peek("pod:person:" + slug)
+    return radio._cached("pod:person:" + slug, load, 7 * 24 * 60)
+
+
+def start_people_check(app):
+    """Slowly, in the background, find which famous people really have podcasts or talks (one lookup every 3 seconds, once a week)."""
+    if app.config.get("TESTING") or app.config.get("RADIO_DEMO"):
+        return None
+    import threading
+    import time
+
+    def run():
+        time.sleep(90)
+        with app.app_context():
+            for slug in sorted(k for k, t in TOPICS.items() if t.get("people")):
+                try:
+                    if radio._peek("pod:person:" + slug) is None:
+                        _person_shows(slug)
+                        time.sleep(3)
+                except Exception:
+                    time.sleep(3)
+    t = threading.Thread(target=run, daemon=True, name="people-check")
+    t.start()
+    return t
+
+
 @bp.app_template_global("relax_types")
 def _relax_types():
     """The sounds shown as chips on every Relax and sleep page (the same ones as in the app)."""
@@ -672,10 +720,19 @@ def _country_facts(label, total, stations, regions):
 
 def _topic_page(slug, region_slug=None):
     info = base_info = TOPICS[slug]
-    try:
-        stations, error = without_blocked(radio.genre_stations(slug)), None
-    except radio.RadioError as exc:
-        stations, error = [], str(exc)
+    if info.get("people"):                         # a person: only podcasts and talks by them; no such audio, no page
+        shows = _person_shows(slug)
+        if shows is None:
+            abort(503)
+        if not shows:
+            abort(404)
+        stations, error = [], None
+    else:
+        shows = []
+        try:
+            stations, error = without_blocked(radio.genre_stations(slug)), None
+        except radio.RadioError as exc:
+            stations, error = [], str(exc)
     total = len(stations)
     all_stations = stations
     is_country = info["kind"] == "country"
@@ -708,7 +765,7 @@ def _topic_page(slug, region_slug=None):
         own = []
     description = f"Free live {info['label']} radio. {own[0]}" if own else info["description"]   # own text: a description no other page has
     meta = build_meta(info["seo_title"], description, page=None if region_page else f"genre-{slug}",
-                      noindex=(not stations) or radio.only_pool(slug, stations) or page_no > 1 or bool(region and not region_page))      # an empty page (or page 2, 3, or one region) is not shown in Google
+                      noindex=(not stations and not shows) or page_no > 1 or bool(region and not region_page))      # an empty page (or page 2, 3, or one region) is not shown in Google
     meta["keywords"] = topic_keywords(info)
     label = info["label"]
     top = [x["name"] for x in all_stations[:3] if x.get("name")]
@@ -735,7 +792,7 @@ def _topic_page(slug, region_slug=None):
         own_text = [facts] if facts else []
     region_links = [(n, c, f"{topic_path(slug)}/{slugify(n)}" if c >= REGION_PAGE_MIN and slugify(n) != "item"
                      else f"{topic_path(slug)}?region={quote(n)}") for n, c in regions] if len(regions) > 1 else []
-    return render_template("category.html", meta=meta, stations=protect(stations), error=error, cat=slug,
+    return render_template("category.html", meta=meta, stations=protect(stations), error=error, cat=slug, shows=shows,
                            neighbours=_country_neighbours(slug) if is_country else [], regions=region_links, country_href=topic_path(slug),
                            active_region=region,
                            info=info, genre=slug, crumbs=crumbs, ld=ld, trending=trending, faqs=faqs if page_no == 1 else [], popular=popular if page_no == 1 else [],
@@ -2049,7 +2106,7 @@ def sitemap():
     for k, t in TOPICS.items():                                   # a person's page counts only when a station carries the name
         if t.get("people"):
             try:
-                if any(radio._fits(k, x) for x in (radio._peek("genre:" + k) or []) if isinstance(x, dict)):
+                if _person_shows(k, remember=False):
                     pages.append(topic_path(k))
             except Exception:
                 pass

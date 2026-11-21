@@ -175,6 +175,11 @@ def create_app(overrides=None):
         _radio.start_list_warming(app)
     except Exception:  # pragma: no cover - warming is only a speed-up
         pass
+    try:
+        from . import public as _public
+        _public.start_people_check(app)
+    except Exception:  # pragma: no cover - the check is only a speed-up
+        pass
     return app
 
 

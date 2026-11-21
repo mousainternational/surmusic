@@ -37,7 +37,9 @@
       {% if error and not stations %}
       <div class="empty card"><p>{{ error }} Please try again in a minute.</p></div>
       {% else %}
-      {% if not stations %}<div class="empty card"><p>No live stations of this type are online right now. Please try again later, or explore the other types above.</p></div>{% endif %}
+      {% if shows %}<section class="card" aria-labelledby="by-person"><h2 class="h3" id="by-person">Podcasts and talks by {{ info.label }}</h2>
+        <ul class="logo-row">{% for r in shows %}<li><a href="/podcasts/{{ r.id }}" title="{{ r.name }}">{% if r.img %}<img src="{{ r.img }}" alt="{{ r.name }}" width="76" height="76" loading="lazy" decoding="async" referrerpolicy="no-referrer">{% endif %}<span>{{ r.name }}</span></a></li>{% endfor %}</ul></section>{% endif %}
+      {% if not stations and not info.people %}<div class="empty card"><p>No live stations of this type are online right now. Please try again later, or explore the other types above.</p></div>{% endif %}
       {% if stations %}<input class="list-find" type="search" data-filter-list placeholder="Type to find a channel…" aria-label="Find a channel on this page" autocomplete="off">{% endif %}
       <p class="muted small">{{ total or (stations | length) }} live stations{% if pages and pages > 1 %} · page {{ page_no }} of {{ pages }}{% endif %} · secure streams that play in your browser. More stations are available in the <a href="{{ url_for('public.download_page') }}">Android app</a>.</p>
       {% if regions %}<nav class="chips region-chips" aria-label="Stations by region">
