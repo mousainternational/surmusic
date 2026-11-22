@@ -677,7 +677,7 @@ def _home_filters():
     cats = [("Religious", topic_path("religious")), ("Music", topic_path("music")), ("News", topic_path("news")),
             ("Business", topic_path("business")), ("Daily life", topic_path("daily-life")),
             ("Kids", topic_path("kids")), ("Cooking", topic_path("cooking")),
-            ("Science & Tech", topic_path("technology")), ("Voices", "/voices"), ("Relax and sleep", topic_path("relax-sleep")),
+            ("Science & Tech", topic_path("technology")), ("Relax and sleep", topic_path("relax-sleep")),
             ("Accessibility", "/accessibility")]
     return countries, languages, cats
 

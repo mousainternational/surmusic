@@ -467,7 +467,7 @@ def test_voices_page_strict_match_and_strips_keep_a_last_good_copy(client, monke
     public._note_found("joe-rogan", [{"id": "1", "name": "The Joe Rogan Experience", "artist": "Joe Rogan", "img": "https://x.test/jr.jpg"}])
     html = client.get("/voices").get_data(as_text=True)
     assert "/genre/joe-rogan" in html and "noindex" not in html.split("</head>")[0]
-    assert "/voices" in client.get("/").get_data(as_text=True)                 # the Voices tab
+    assert 'id="famous-voices"' in client.get("/").get_data(as_text=True)    # the row stays on the home page, no extra tab
     public._FOUND.clear()
     boston = {"id": "9", "name": "Boston Confidential", "artist": "Somebody Else", "img": "https://x.test/b.jpg", "feed": ""}
     monkeypatch.setattr(podcasts, "search", lambda q, demo=False: [boston])
