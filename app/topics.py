@@ -838,6 +838,7 @@ _PEOPLE_KIND = {
     "speaker": ("Speeches & Talks", "speeches, lectures and talks", "talk"),
     "politics": ("Speeches & Politics", "speeches, interviews and political talk", "talk"),
     "podcast": ("Podcasts & Interviews", "podcast episodes and interviews", "talk"),
+    "business": ("Talks & Interviews", "talks, interviews and podcasts", "talk"),
 }
 
 

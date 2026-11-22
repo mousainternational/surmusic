@@ -508,7 +508,7 @@ def _person_shows(slug, remember=True):
 
 
 _FOUND = {}                  # people whose podcasts or talks really exist: slug -> (label, cover picture)
-_KIND_FIRST = ["podcast", "speaker", "politics", "quran", "naat", "bhajan", "gurbani", "gospel", "qawwali", "music"]
+_KIND_FIRST = ["podcast", "speaker", "business", "politics", "quran", "naat", "bhajan", "gurbani", "gospel", "qawwali", "music"]
 
 
 def _note_found(slug, shows):
