@@ -1541,5 +1541,6 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 .logo-row.moving { overflow: hidden; scroll-snap-type: none; }
 .logo-row.moving.is-on { display: flex; width: max-content; animation: voices-move var(--dur, 40s) linear infinite; }
 .logo-row.moving.is-on:hover, .logo-row.moving.is-on:focus-within, .logo-row.moving.is-paused { animation-play-state: paused; }
-@keyframes voices-move { to { transform: translateX(-50%); } }
+@keyframes voices-move { to { transform: translateX(calc(-1 * var(--w, 50%))); } }
 @media (prefers-reduced-motion: reduce) { .logo-row.moving.is-on { animation: none; width: auto; overflow-x: auto; } }
+#famous-voices .wrap { overflow: hidden; }

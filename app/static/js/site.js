@@ -697,16 +697,29 @@ document.addEventListener("error", function (e) {
   });
 })();
 
-/* the Famous voices row moves by itself (like a ticker); it stops on touch or hover and for people who ask for less motion */
+/* the Famous voices row moves by itself, like a ticker, even with only a few people: the list is repeated until it fills the screen twice.
+   It stops on touch or hover, and stays still for people who ask for less motion. */
 (function () {
   var row = document.querySelector("#famous-voices .logo-row");
   if (!row || (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) { return; }
   var items = Array.prototype.slice.call(row.children);
-  if (items.length < 6) { return; }
-  items.forEach(function (li) { var c = li.cloneNode(true); c.setAttribute("aria-hidden", "true");
-    c.querySelectorAll("a").forEach(function (a) { a.tabIndex = -1; }); row.appendChild(c); });
-  row.style.setProperty("--dur", Math.max(30, items.length * 3) + "s");
-  row.classList.add("moving", "is-on");
+  if (!items.length) { return; }
+  function start() {
+    var one = row.scrollWidth;                       // width of one full set of people
+    var box = row.parentNode.clientWidth || 360;
+    if (!one) { return; }
+    var copies = Math.max(1, Math.ceil(box / one)) + 1;   // enough sets to fill the screen, plus one to slide into
+    for (var n = 0; n < copies; n++) {
+      items.forEach(function (li) { var c = li.cloneNode(true); c.setAttribute("aria-hidden", "true");
+        c.querySelectorAll("a").forEach(function (a) { a.tabIndex = -1; }); row.appendChild(c); });
+    }
+    var gap = parseFloat(getComputedStyle(row).columnGap || getComputedStyle(row).gap) || 14;
+    var w = one + gap;
+    row.style.setProperty("--w", w + "px");
+    row.style.setProperty("--dur", Math.max(12, w / 45) + "s");           // about 45 pixels a second
+    row.classList.add("moving", "is-on");
+  }
+  if (document.readyState === "complete") { start(); } else { window.addEventListener("load", start); }
   row.addEventListener("touchstart", function () { row.classList.add("is-paused"); }, { passive: true });
   row.addEventListener("touchend", function () { setTimeout(function () { row.classList.remove("is-paused"); }, 4000); }, { passive: true });
 })();
