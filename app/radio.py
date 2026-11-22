@@ -465,7 +465,13 @@ def _genre_stations(slug):
 def keep(key, data):
     """Save a last-good copy of a list for cold starts (restarts), at most every 6 hours, so a restart never empties a strip."""
     from . import lowdb
-    if not data or not lowdb.enabled():
+    if not data:
+        return
+    if not lowdb.enabled():                           # no low-database mode (tests, small installs): write it straight away
+        db = get_db()
+        db.execute("DELETE FROM station_cache WHERE cache_key = ?", (key,))
+        db.execute("INSERT INTO station_cache (cache_key, body, fetched_at) VALUES (?, ?, ?)", (key, json.dumps(data), utcnow()))
+        db.commit()
         return
     seen, _ = lowdb.cache_get("radio-saved:" + key)
     if not seen:

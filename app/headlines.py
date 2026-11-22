@@ -69,13 +69,13 @@ def parse(text, limit=14):
     return out
 
 
-def _fetch(url):
+def _fetch(url, limit=6):
     try:
         req = urllib.request.Request(url, headers={
             "User-Agent": "SurMusic/1.0 (+https://surmusicradio.com)", "Accept": "application/rss+xml, application/xml"})
         with urllib.request.urlopen(req, timeout=8) as r:  # noqa: S310 (fixed https host)
             raw = r.read(600 * 1024 + 1)
-        return parse(raw.decode("utf-8", "replace"), limit=6) if len(raw) <= 600 * 1024 else []
+        return parse(raw.decode("utf-8", "replace"), limit=limit) if len(raw) <= 600 * 1024 else []
     except Exception:
         return []
 
@@ -118,3 +118,31 @@ def get(cc):
     if start:
         threading.Thread(target=_load, args=(cc,), daemon=True).start()
     return hit[1] if hit else []
+
+
+_people = {}         # person's name -> (fetched_at, items), kept 30 minutes in memory
+
+
+def person_news(name, upcoming=False):
+    """The newest headlines about one person (Google News, English): [{t, s, u}]. Waits for the network (a few seconds at most);
+    the last good copy is kept in memory so busy pages never fetch twice in 30 minutes."""
+    key = (name, upcoming)
+    with _lock:
+        hit = _people.get(key)
+    if hit and time.time() - hit[0] < TTL * 2:
+        return hit[1]
+    more = ' (upcoming OR announces OR "coming soon" OR launch OR "new project" OR "will release" OR "set to")' if upcoming else ""
+    q = urllib.parse.quote(f'"{name}"{more} when:30d')
+    items = _fetch(f"https://news.google.com/rss/search?q={q}&hl=en-US&gl=US&ceid=US:en", limit=8)
+    with _lock:
+        if items or not hit:
+            _people[key] = (time.time(), items)
+        if len(_people) > 600:
+            for k in sorted(_people, key=lambda k: _people[k][0])[:100]:
+                _people.pop(k, None)
+    return items or (hit[1] if hit else [])
+
+
+def demo_person_news(name, upcoming=False):
+    """Stand-in used in demo mode and in tests: no network."""
+    return []

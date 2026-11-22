@@ -429,6 +429,9 @@ def test_person_pages_exist_only_for_people_with_podcasts_or_talks(client, monke
     other = {"id": "778", "name": "Sample Stories", "artist": "Demo Studio", "img": "", "feed": ""}
     monkeypatch.setattr(podcasts, "search", lambda q, demo=False: [row, other])
     monkeypatch.setattr(podcasts, "show", lambda sid, demo=False: (row, [{"name": "Episode One", "date": "2026-11-01"}]))
+    assert client.get("/genre/joe-rogan").status_code == 503 and client.get("/genre/joe-rogan").headers["Retry-After"]   # not looked up yet: come back later
+    with client.application.app_context():                                       # what the background check does
+        public._person_shows("joe-rogan"); public._person_news("joe-rogan"); public._person_news("joe-rogan", upcoming=True)
     r = client.get("/genre/joe-rogan")
     html = r.get_data(as_text=True)
     assert r.status_code == 200 and "Podcasts and talks by Joe Rogan" in html and "/podcasts/777" in html and "/podcasts/778" not in html
@@ -436,6 +439,8 @@ def test_person_pages_exist_only_for_people_with_podcasts_or_talks(client, monke
     assert "Sur Music lists 1 podcast and talk by or with Joe Rogan: The Joe Rogan Experience." in html
     assert "Newest episodes of The Joe Rogan Experience" in html and "Where can I listen to Joe Rogan podcasts?" in html
     monkeypatch.setattr(podcasts, "search", lambda q, demo=False: [other])
+    with client.application.app_context():
+        public._person_shows("mufti-menk"); public._person_news("mufti-menk"); public._person_news("mufti-menk", upcoming=True)
     assert client.get("/genre/mufti-menk").status_code == 404
     assert "/genre/joe-rogan" in client.get("/sitemap.xml").get_data(as_text=True) or True
 
@@ -471,5 +476,27 @@ def test_voices_page_strict_match_and_strips_keep_a_last_good_copy(client, monke
     public._FOUND.clear()
     boston = {"id": "9", "name": "Boston Confidential", "artist": "Somebody Else", "img": "https://x.test/b.jpg", "feed": ""}
     monkeypatch.setattr(podcasts, "search", lambda q, demo=False: [boston])
+    with client.application.app_context():
+        for k in ("boston", "adele"):
+            public._person_shows(k); public._person_news(k); public._person_news(k, upcoming=True)
     assert client.get("/genre/boston").status_code == 404                       # a one-word band name must not match a stranger's show
-    assert client.get("/genre/adele").status_code == 404                        # songs are not offered: no page for a singer
+    assert client.get("/genre/adele").status_code == 404                        # songs and no news: no page
+
+
+def test_person_page_is_an_information_hub_podcasts_and_latest_news(client, monkeypatch):
+    from app import headlines, podcasts, public
+    monkeypatch.setattr(podcasts, "search", lambda q, demo=False: [])
+    def check(slug):
+        with client.application.app_context():
+            public._person_shows(slug); public._person_news(slug); public._person_news(slug, upcoming=True)
+    check("mark-zuckerberg")
+    assert client.get("/genre/mark-zuckerberg").status_code == 404                # looked up, nothing to show: no page
+    monkeypatch.setattr(headlines, "demo_person_news", lambda name, upcoming=False: [{"t": "New project coming soon" if upcoming else "Big announcement today", "s": "Daily Paper", "u": "https://news.test/a"}])
+    check("mark-zuckerberg")
+    r = client.get("/genre/mark-zuckerberg")
+    html = r.get_data(as_text=True)
+    assert r.status_code == 200 and "Latest news about Mark Zuckerberg" in html and "https://news.test/a" in html and "Daily Paper" in html
+    assert "Upcoming projects &amp; announcements" in html and "New project coming soon" in html
+    assert "What is the latest news about Mark Zuckerberg?" in html and "noindex" not in html.split("</head>")[0]
+    check("adele")
+    assert client.get("/genre/adele").status_code == 200                           # a singer: the news alone is enough for a page

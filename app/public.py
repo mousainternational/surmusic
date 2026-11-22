@@ -507,6 +507,58 @@ def _person_shows(slug, remember=True):
     return value
 
 
+def _person_news(slug, wait=True, upcoming=False):
+    """Newest headlines about a person. wait=False (a visitor's page): only what is already saved, never the network.
+    wait=True (the background check): fetch, save the list (or a 'checked, nothing' mark) and return it."""
+    t = TOPICS.get(slug) or {}
+    if not t.get("people"):
+        return []
+    key = ("keep:pu:" if upcoming else "keep:pn:") + slug
+    if not wait:
+        try:
+            return [x for x in (radio._peek(key) or []) if x.get("t")]
+        except Exception:
+            return []
+    from . import headlines
+    demo = bool(current_app.config.get("TESTING") or current_app.config.get("RADIO_DEMO"))
+    fetch = headlines.demo_person_news if demo else headlines.person_news          # tests never touch the network
+    items = fetch((t.get("h1") or "").split(" — ")[0], upcoming)
+    radio.keep(key, items or [{"t": "", "s": "", "u": ""}])
+    return items or []
+
+
+def _stored_checked(slug):
+    """True when the news of this person has been looked up before (even if it found nothing)."""
+    try:
+        return radio._peek("keep:pn:" + slug) is not None
+    except Exception:
+        return False
+
+
+_CHECKING = set()
+
+
+def _check_person_soon(slug):
+    """A visitor reached a person who is not checked yet: look them up in the background (once), so the next visit has the page."""
+    import threading
+    if slug in _CHECKING or len(_CHECKING) > 5:
+        return
+    _CHECKING.add(slug)
+    app = current_app._get_current_object()
+
+    def run():
+        try:
+            with app.app_context():
+                _person_shows(slug)
+                _person_news(slug, wait=True)
+                _person_news(slug, wait=True, upcoming=True)
+        except Exception:
+            pass
+        finally:
+            _CHECKING.discard(slug)
+    threading.Thread(target=run, daemon=True, name="person-check").start()
+
+
 _FOUND = {}                  # people whose podcasts or talks really exist: slug -> (label, cover picture)
 _KIND_FIRST = ["podcast", "speaker", "business", "politics", "quran", "naat", "bhajan", "gurbani", "gospel", "qawwali", "music"]
 
@@ -557,28 +609,31 @@ def _famous_voices(n=24):
     return [(topic_path(k), _FOUND[k][0], _FOUND[k][1]) for k in sorted(_FOUND, key=prio)[:n]]
 
 
-def _person_text(slug, info, shows):
-    """(paragraphs, newest episodes of the first show, questions) for a person's page, from the real list of their shows."""
+def _person_text(slug, info, shows, news=()):
+    """(paragraphs, newest episodes of the first show, questions) for a person's page, from what really exists: their shows and the newest headlines."""
     from . import podcasts
     full, short, who = (info["h1"].split(" — ")[0]), info["label"], info["intro"].split(" is ", 1)[-1].split(". ")[0]
     names = [r["name"] for r in shows]
     demo = bool(current_app.config.get("TESTING") or current_app.config.get("RADIO_DEMO"))
-    try:
-        _row0, eps = podcasts.show(shows[0]["id"], demo)
-    except Exception:
-        eps = []
+    eps = []
+    if shows:                                          # the newest episodes only if the show is already in memory: the page never waits for a podcaster's server
+        with podcasts._lock:
+            hit = podcasts._shows.get(str(shows[0]["id"]))
+        eps = (hit[1][1] if hit else (podcasts.show(shows[0]["id"], True)[1] if demo else [])) or []
     eps = [{"name": e["name"], "date": (e.get("date") or "")[:10]} for e in (eps or [])[:8] if e.get("name")]
     n = len(shows)
-    p1 = f"Sur Music lists {n} podcast{'s' if n != 1 else ''} and talk{'s' if n != 1 else ''} by or with {short}: " + ", ".join(names[:5]) + ("." if n <= 5 else f" and {n - 5} more.")
-    paras = [p1]
-    if eps:
-        paras.append(f"The newest episode of {names[0]} is \u201c{eps[0]['name']}\u201d" + (f" ({eps[0]['date']})" if eps[0]["date"] else "") +
-                     ". Open the show to play it, or pick an older one; episodes play in your browser, free, with no sign-up.")
-    faqs = [
-        (f"Where can I listen to {full} podcasts?", f"On this page. Sur Music lists {n} show{'s' if n != 1 else ''}: " + ", ".join(names[:4]) + ". Press play on any episode."),
-        (f"Is it free to listen to {short} here?", "Yes. The episodes are free to play in your web browser or in the Sur Music Android app, with no sign-up."),
-        (f"Who is {full}?", f"{full} is {who}."),
-    ]
+    paras, faqs = [], []
+    if shows:
+        paras.append(f"Sur Music lists {n} podcast{'s' if n != 1 else ''} and talk{'s' if n != 1 else ''} by or with {short}: " + ", ".join(names[:5]) + ("." if n <= 5 else f" and {n - 5} more."))
+        if eps:
+            paras.append(f"The newest episode of {names[0]} is \u201c{eps[0]['name']}\u201d" + (f" ({eps[0]['date']})" if eps[0]["date"] else "") +
+                         ". Open the show to play it, or pick an older one; episodes play in your browser, free, with no sign-up.")
+        faqs.append((f"Where can I listen to {full} podcasts?", f"On this page. Sur Music lists {n} show{'s' if n != 1 else ''}: " + ", ".join(names[:4]) + ". Press play on any episode."))
+        faqs.append((f"Is it free to listen to {short} here?", "Yes. The episodes are free to play in your web browser or in the Sur Music Android app, with no sign-up."))
+    if news:
+        paras.append(f"This page also follows the latest news about {short}. The newest headline is \u201c{news[0]['t']}\u201d" + (f" ({news[0]['s']})" if news[0].get("s") else "") + ".")
+        faqs.append((f"What is the latest news about {full}?", f"The newest headline is \u201c{news[0]['t']}\u201d. The list on this page is refreshed from public news feeds and links to the original reports."))
+    faqs.append((f"Who is {full}?", f"{full} is {who}."))
     return paras, eps, faqs
 
 
@@ -617,6 +672,17 @@ def start_people_check(app):
                     fresh = []
                 time.sleep(4)
             indexnow.send_pages(app, fresh + ["/voices"])
+    def run_news():                                     # headlines for every person, one lookup every 3 seconds (a different site from Apple's)
+        time.sleep(20)
+        with app.app_context():
+            for slug in sorted((k for k, t in TOPICS.items() if t.get("people")), key=lambda k: (_KIND_FIRST.index(TOPICS[k].get("pkind")) if TOPICS[k].get("pkind") in _KIND_FIRST else 99)):
+                try:
+                    if not radio._peek("keep:pn:" + slug):
+                        _person_news(slug)
+                        time.sleep(3)
+                except Exception:
+                    time.sleep(3)
+    threading.Thread(target=run_news, daemon=True, name="people-news").start()
     t = threading.Thread(target=run, daemon=True, name="people-check")
     t.start()
     return t
@@ -824,14 +890,21 @@ def _country_facts(label, total, stations, regions):
 def _topic_page(slug, region_slug=None):
     info = base_info = TOPICS[slug]
     if info.get("people"):                         # a person: only podcasts and talks by them; no such audio, no page
-        shows = _person_shows(slug)
-        if shows is None:
-            abort(503)
-        if not shows:
+        shows = _person_shows(slug, remember=False)         # only what is already saved: a visitor never waits for Apple or for the news feed
+        news = _person_news(slug, wait=False)
+        shown = {n["t"].lower()[:60] for n in news}
+        soon = [x for x in _person_news(slug, wait=False, upcoming=True) if x["t"].lower()[:60] not in shown][:6]
+        shows = shows or []
+        if not shows and not news:
+            if (info.get("pkind") != "music" and radio._peek("pod:p3:" + slug) is None) or not _stored_checked(slug):       # not looked up yet: come back soon (not "gone")
+                _check_person_soon(slug)
+                resp = make_response("This page is being prepared. Please check again in a little while.", 503)
+                resp.headers["Retry-After"] = "3600"
+                return resp
             abort(404)
         stations, error = [], None
     else:
-        shows = []
+        shows, news, soon = [], [], []
         try:
             stations, error = without_blocked(radio.genre_stations(slug)), None
         except radio.RadioError as exc:
@@ -868,7 +941,7 @@ def _topic_page(slug, region_slug=None):
         own = []
     description = f"Free live {info['label']} radio. {own[0]}" if own else info["description"]   # own text: a description no other page has
     meta = build_meta(info["seo_title"], description, page=None if region_page else f"genre-{slug}",
-                      noindex=(not stations and not shows) or page_no > 1 or bool(region and not region_page))      # an empty page (or page 2, 3, or one region) is not shown in Google
+                      noindex=(not stations and not shows and not news) or page_no > 1 or bool(region and not region_page))      # an empty page (or page 2, 3, or one region) is not shown in Google
     meta["keywords"] = topic_keywords(info)
     label = info["label"]
     top = [x["name"] for x in all_stations[:3] if x.get("name")]
@@ -881,7 +954,7 @@ def _topic_page(slug, region_slug=None):
         faqs.append((f"Which are the most popular {label} radio stations?", "Right now: " + ", ".join(top) + "."))
     person_text, person_eps = [], []
     if info.get("people"):                             # a person: text made only from what really exists (their shows and newest episodes)
-        person_text, person_eps, faqs = _person_text(slug, info, shows)
+        person_text, person_eps, faqs = _person_text(slug, info, shows, news)
     crumbs = [("Home", "/"), ("All radio", "/radio-stations")]
     if info["kind"] == "country" and info["group"] in CONTINENTS:
         crumbs.append((CONTINENTS[info["group"]][0], f"/continent/{info['group']}"))
@@ -900,7 +973,7 @@ def _topic_page(slug, region_slug=None):
         own_text = person_text
     region_links = [(n, c, f"{topic_path(slug)}/{slugify(n)}" if c >= REGION_PAGE_MIN and slugify(n) != "item"
                      else f"{topic_path(slug)}?region={quote(n)}") for n, c in regions] if len(regions) > 1 else []
-    return render_template("category.html", meta=meta, stations=protect(stations), error=error, cat=slug, shows=shows, person_eps=person_eps,
+    return render_template("category.html", meta=meta, stations=protect(stations), error=error, cat=slug, shows=shows, person_eps=person_eps, news=news, soon=soon,
                            neighbours=_country_neighbours(slug) if is_country else [], regions=region_links, country_href=topic_path(slug),
                            active_region=region,
                            info=info, genre=slug, crumbs=crumbs, ld=ld, trending=trending, faqs=faqs if page_no == 1 else [], popular=popular if page_no == 1 else [],
@@ -2242,7 +2315,7 @@ def sitemap():
     for k, t in TOPICS.items():                                   # a person's page counts only when a station carries the name
         if t.get("people"):
             try:
-                if _person_shows(k, remember=False):
+                if _person_shows(k, remember=False) or _person_news(k, wait=False):
                     pages.append(topic_path(k))
             except Exception:
                 pass

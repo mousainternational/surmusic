@@ -41,6 +41,12 @@
         <ul class="logo-row">{% for r in shows %}<li><a href="/podcasts/{{ r.id }}" title="{{ r.name }}">{% if r.img %}<img src="{{ r.img }}" alt="{{ r.name }}" width="76" height="76" loading="lazy" decoding="async" referrerpolicy="no-referrer">{% endif %}<span>{{ r.name }}</span></a></li>{% endfor %}</ul></section>{% endif %}
       {% if person_eps %}<section class="card" aria-labelledby="newest-eps"><h2 class="h3" id="newest-eps">Newest episodes of {{ shows[0].name }}</h2>
         <ul class="plain">{% for e in person_eps %}<li><a href="/podcasts/{{ shows[0].id }}">{{ e.name }}</a>{% if e.date %} <span class="muted small">· {{ e.date }}</span>{% endif %}</li>{% endfor %}</ul></section>{% endif %}
+      {% if news %}<section class="card" aria-labelledby="news-of"><h2 class="h3" id="news-of">Latest news about {{ info.label }}</h2>
+        <ul class="plain">{% for n in news %}<li><a href="{{ n.u }}" target="_blank" rel="noopener nofollow">{{ n.t }}</a>{% if n.s %} <span class="muted small">· {{ n.s }}</span>{% endif %}</li>{% endfor %}</ul>
+        <p class="muted small">Headlines come from public news feeds; each link opens the original report.</p></section>{% endif %}
+      {% if soon %}<section class="card" aria-labelledby="soon-of"><h2 class="h3" id="soon-of">Upcoming projects &amp; announcements — {{ info.label }}</h2>
+        <ul class="plain">{% for n in soon %}<li><a href="{{ n.u }}" target="_blank" rel="noopener nofollow">{{ n.t }}</a>{% if n.s %} <span class="muted small">· {{ n.s }}</span>{% endif %}</li>{% endfor %}</ul>
+        <p class="muted small">Found automatically in public news feeds; each link opens the original report.</p></section>{% endif %}
       {% if not stations and not info.people %}<div class="empty card"><p>No live stations of this type are online right now. Please try again later, or explore the other types above.</p></div>{% endif %}
       {% if stations %}<input class="list-find" type="search" data-filter-list placeholder="Type to find a channel…" aria-label="Find a channel on this page" autocomplete="off">{% endif %}
       <p class="muted small">{{ total or (stations | length) }} live stations{% if pages and pages > 1 %} · page {{ page_no }} of {{ pages }}{% endif %} · secure streams that play in your browser. More stations are available in the <a href="{{ url_for('public.download_page') }}">Android app</a>.</p>
