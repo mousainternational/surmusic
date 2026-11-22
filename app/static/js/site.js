@@ -696,3 +696,17 @@ document.addEventListener("error", function (e) {
     document.querySelectorAll(".logo-row img").forEach(function (img) { if (img.complete && img.naturalWidth === 0) { drop(img); } });
   });
 })();
+
+/* the Famous voices row moves by itself (like a ticker); it stops on touch or hover and for people who ask for less motion */
+(function () {
+  var row = document.querySelector("#famous-voices .logo-row");
+  if (!row || (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) { return; }
+  var items = Array.prototype.slice.call(row.children);
+  if (items.length < 6) { return; }
+  items.forEach(function (li) { var c = li.cloneNode(true); c.setAttribute("aria-hidden", "true");
+    c.querySelectorAll("a").forEach(function (a) { a.tabIndex = -1; }); row.appendChild(c); });
+  row.style.setProperty("--dur", Math.max(30, items.length * 3) + "s");
+  row.classList.add("moving", "is-on");
+  row.addEventListener("touchstart", function () { row.classList.add("is-paused"); }, { passive: true });
+  row.addEventListener("touchend", function () { setTimeout(function () { row.classList.remove("is-paused"); }, 4000); }, { passive: true });
+})();

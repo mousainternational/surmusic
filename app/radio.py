@@ -462,6 +462,18 @@ def _genre_stations(slug):
                    current_app.config["RADIO_CACHE_MINUTES"])
 
 
+def keep(key, data):
+    """Save a last-good copy of a list for cold starts (restarts), at most every 6 hours, so a restart never empties a strip."""
+    from . import lowdb
+    if not data or not lowdb.enabled():
+        return
+    seen, _ = lowdb.cache_get("radio-saved:" + key)
+    if not seen:
+        lowdb.cache_set("radio-saved:" + key, True, 6 * 3600)
+        lowdb.defer("DELETE FROM station_cache WHERE cache_key = ?", (key,))
+        lowdb.defer("INSERT INTO station_cache (cache_key, body, fetched_at) VALUES (?, ?, ?)", (key, json.dumps(data), utcnow()))
+
+
 def _peek(key):
     """A cached list without fetching anything (memory first, then the database copy, even if old)."""
     from . import lowdb

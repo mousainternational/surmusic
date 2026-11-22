@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% block content %}
+<div class="wrap page">
+  {{ ui.breadcrumbs(crumbs) }}
+  <header class="page-head"><div><h1>Famous voices — podcasts, talks &amp; speeches</h1>
+    <p class="muted">People from every faith, country and field whose podcasts, talks or speeches you can play here, free.</p></div></header>
+  {% if people %}
+  <ul class="logo-grid">{% for href, label, pic in people %}<li><a href="{{ href }}" title="Listen to {{ label }}"><img src="{{ pic }}" alt="{{ label }} podcast cover" width="96" height="96" loading="{{ 'eager' if loop.index <= 12 else 'lazy' }}" decoding="async" referrerpolicy="no-referrer"><span>{{ label }}</span></a></li>{% endfor %}</ul>
+  {% else %}<div class="empty card"><p>The list of voices is being prepared. Please check again in a little while.</p></div>{% endif %}
+</div>
+{% endblock %}

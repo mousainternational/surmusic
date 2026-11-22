@@ -479,8 +479,16 @@ def _person_shows(slug, remember=True):
         return []
     from . import podcasts
     full = (t.get("h1") or "").split(" — ")[0]
-    words = [w for w in re.split(r"\W+", full.lower()) if len(w) > 1]
+    low = full.lower()
     demo = bool(current_app.config.get("TESTING") or current_app.config.get("RADIO_DEMO"))
+    if t.get("pkind") == "music":                      # songs are not offered here, and a band name can match a stranger's show
+        return []
+
+    def by_person(r):
+        art, nm = (r.get("artist") or "").lower(), (r.get("name") or "").lower()
+        if " " not in low:                             # one-word names are too easy to confuse: the podcaster's name must be exactly it
+            return art == low
+        return low in art or low in nm
 
     def load():
         if demo:
@@ -491,10 +499,10 @@ def _person_shows(slug, remember=True):
             except Exception:
                 raise radio.RadioError("podcast directory not reachable")
             rows = [x for x in (podcasts._row(r) for r in data.get("results", [])) if x]
-        return [r for r in rows if all(w in f"{r['name']} {r['artist']}".lower() for w in words)][:12]
+        return [r for r in rows if by_person(r)][:12]
     if not remember:
-        return radio._peek("pod:person:" + slug)
-    value = radio._cached("pod:person:" + slug, load, 7 * 24 * 60)
+        return radio._peek("pod:p2:" + slug)
+    value = radio._cached("pod:p2:" + slug, load, 7 * 24 * 60)
     _note_found(slug, value)
     return value
 
@@ -553,12 +561,12 @@ def start_people_check(app):
     import time
 
     def run():
-        time.sleep(30)
+        time.sleep(5)
         with app.app_context():
             todo = []
-            for slug in [k for k, t in TOPICS.items() if t.get("people")]:       # already checked in an earlier run: just remember them
+            for slug in [k for k, t in TOPICS.items() if t.get("people") and t.get("pkind") != "music"]:       # already checked in an earlier run: just remember them
                 try:
-                    done = radio._peek("pod:person:" + slug)
+                    done = radio._peek("pod:p2:" + slug)
                 except Exception:
                     done = None
                 if done is None:
@@ -572,7 +580,7 @@ def start_people_check(app):
                     _person_shows(slug)
                 except Exception:
                     pass
-                time.sleep(10)
+                time.sleep(6)
     t = threading.Thread(target=run, daemon=True, name="people-check")
     t.start()
     return t
@@ -669,7 +677,7 @@ def _home_filters():
     cats = [("Religious", topic_path("religious")), ("Music", topic_path("music")), ("News", topic_path("news")),
             ("Business", topic_path("business")), ("Daily life", topic_path("daily-life")),
             ("Kids", topic_path("kids")), ("Cooking", topic_path("cooking")),
-            ("Science & Tech", topic_path("technology")), ("Relax and sleep", topic_path("relax-sleep")),
+            ("Science & Tech", topic_path("technology")), ("Voices", "/voices"), ("Relax and sleep", topic_path("relax-sleep")),
             ("Accessibility", "/accessibility")]
     return countries, languages, cats
 
@@ -964,6 +972,14 @@ def api_podcasts():
     from . import podcasts
     demo = bool(current_app.config.get("TESTING") or current_app.config.get("RADIO_DEMO"))
     rows = podcasts.featured(demo)
+    if not demo:
+        if rows:
+            radio.keep("keep:strip", rows)
+        else:                                               # cold start: show the last good strip at once
+            try:
+                rows = radio._peek("keep:strip") or []
+            except Exception:
+                rows = []
     resp = jsonify({"items": [{"i": r["id"], "n": r["name"], "a": r["artist"], "m": r["img"]} for r in rows]})
     resp.headers["Cache-Control"] = "public, max-age=600" if rows else "no-store"      # an empty answer (cold start) is never kept
     return resp
@@ -1103,6 +1119,17 @@ def pakistan_fm():
     crumbs = [("Home", "/"), ("Pakistan radio", "/country/pakistan"), ("Pakistan FM by frequency", "/pakistan-fm-radio")]
     return render_template("pakistan_fm.html", meta=meta, rows=PK_FM, faqs=faqs, crumbs=crumbs,
                            ld=[breadcrumb_ld(crumbs), faq_items_ld(faqs)])
+
+
+@bp.route("/voices")
+def voices():
+    """Famous voices: every person who really has podcasts, talks or speeches here (filled in by the background check, kept in the database)."""
+    people = _famous_voices(2000)
+    meta = build_meta("Famous Voices — Podcasts, Talks & Speeches | Sur Music",
+                      "Podcasts, talks, lectures and speeches by famous people from every faith, country and field. Free to play in your browser, no sign-up.",
+                      page="voices", noindex=not people)
+    crumbs = [("Home", "/"), ("Famous voices", "/voices")]
+    return render_template("voices.html", meta=meta, people=people, crumbs=crumbs, ld=[breadcrumb_ld(crumbs)])
 
 
 @bp.route("/top-100")
@@ -1652,7 +1679,16 @@ def api_headlines():
     if current_app.config.get("TESTING") or current_app.config.get("RADIO_DEMO"):
         items = []
     else:
-        items = headlines.get(visitor_country())
+        cc = visitor_country()
+        items = headlines.get(cc)
+        key = "keep:news:" + (cc if re.fullmatch(r"[A-Z]{2}", cc or "") else "US")
+        if items:
+            radio.keep(key, items)
+        else:
+            try:
+                items = radio._peek(key) or []
+            except Exception:
+                items = []
     resp = jsonify({"items": items})
     resp.headers["Cache-Control"] = "private, max-age=120" if items else "no-store"
     resp.headers["Vary"] = "Accept-Language, CF-IPCountry"
@@ -2142,7 +2178,7 @@ def sitemap():
     site = current_app.config["SITE_URL"]
     pages = ["/", "/bollywood", "/lollywood", "/hollywood", "/download", "/donate", "/about", "/contact", "/faq",
              "/privacy", "/terms", "/disclaimer", "/donation-disclaimer", "/cookies"]
-    pages += ["/for-stations", "/radio-stations", "/top-100", "/pakistan-fm-radio", "/podcasts", "/accessibility", "/reviews", "/islam", "/markets", "/live-news", "/blog"] + (["/trending"] if trends.by_country() else []) + [f"/blog/{p['slug']}" for p in blog_data.POSTS] + [f"/continent/{c}" for c in CONTINENTS]
+    pages += ["/for-stations", "/radio-stations", "/top-100", "/pakistan-fm-radio", "/podcasts", "/accessibility", "/reviews", "/islam", "/markets", "/live-news", "/blog"] + (["/voices"] if _FOUND else []) + (["/trending"] if trends.by_country() else []) + [f"/blog/{p['slug']}" for p in blog_data.POSTS] + [f"/continent/{c}" for c in CONTINENTS]
     pages += [topic_path(k) for _, items in _listed_types() for k, _ in items]
     pages += [topic_path(k) for c in CONTINENTS for k, _, _ in _listed_countries(c)] + ["/deals"]
     from . import podcasts as _pod

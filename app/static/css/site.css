@@ -1532,3 +1532,14 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 .logo-row a { display: flex; flex-direction: column; align-items: center; gap: 6px; text-decoration: none; color: inherit; }
 .logo-row img { width: 76px; height: 76px; object-fit: contain; background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 4px; }
 .logo-row span { font-size: .72rem; line-height: 1.2; text-align: center; max-height: 2.4em; overflow: hidden; }
+
+/* famous voices: a grid page and a moving row on the home page */
+.logo-grid { list-style: none; margin: 16px 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 16px; }
+.logo-grid a { display: flex; flex-direction: column; align-items: center; gap: 6px; text-decoration: none; color: inherit; }
+.logo-grid img { width: 96px; height: 96px; object-fit: cover; border-radius: 16px; border: 1px solid var(--border); background: #fff; }
+.logo-grid span { font-size: .8rem; line-height: 1.2; text-align: center; }
+.logo-row.moving { overflow: hidden; scroll-snap-type: none; }
+.logo-row.moving.is-on { display: flex; width: max-content; animation: voices-move var(--dur, 40s) linear infinite; }
+.logo-row.moving.is-on:hover, .logo-row.moving.is-on:focus-within, .logo-row.moving.is-paused { animation-play-state: paused; }
+@keyframes voices-move { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .logo-row.moving.is-on { animation: none; width: auto; overflow-x: auto; } }

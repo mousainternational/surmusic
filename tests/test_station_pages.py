@@ -458,3 +458,18 @@ def test_home_shows_a_row_of_famous_voices_with_real_podcasts_only(client, monke
     assert 'id="famous-voices"' in html and "/genre/joe-rogan" in html and "https://x.test/jr.jpg" in html
     assert "/genre/mufti-menk" not in html
     public._FOUND.clear()
+
+
+def test_voices_page_strict_match_and_strips_keep_a_last_good_copy(client, monkeypatch):
+    from app import podcasts, public
+    public._FOUND.clear()
+    assert client.get("/voices").status_code == 200
+    public._note_found("joe-rogan", [{"id": "1", "name": "The Joe Rogan Experience", "artist": "Joe Rogan", "img": "https://x.test/jr.jpg"}])
+    html = client.get("/voices").get_data(as_text=True)
+    assert "/genre/joe-rogan" in html and "noindex" not in html.split("</head>")[0]
+    assert "/voices" in client.get("/").get_data(as_text=True)                 # the Voices tab
+    public._FOUND.clear()
+    boston = {"id": "9", "name": "Boston Confidential", "artist": "Somebody Else", "img": "https://x.test/b.jpg", "feed": ""}
+    monkeypatch.setattr(podcasts, "search", lambda q, demo=False: [boston])
+    assert client.get("/genre/boston").status_code == 404                       # a one-word band name must not match a stranger's show
+    assert client.get("/genre/adele").status_code == 404                        # songs are not offered: no page for a singer
