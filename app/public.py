@@ -488,7 +488,7 @@ def _person_shows(slug, remember=True):
         art, nm = (r.get("artist") or "").lower(), (r.get("name") or "").lower()
         if " " not in low:                             # one-word names are too easy to confuse: the podcaster's name must be exactly it
             return art == low
-        return low in art or low in nm
+        return low in art                              # the podcaster is the person (not a stranger's episode that only mentions the name)
 
     def load():
         if demo:
@@ -501,8 +501,8 @@ def _person_shows(slug, remember=True):
             rows = [x for x in (podcasts._row(r) for r in data.get("results", [])) if x]
         return [r for r in rows if by_person(r)][:12]
     if not remember:
-        return radio._peek("pod:p2:" + slug)
-    value = radio._cached("pod:p2:" + slug, load, 7 * 24 * 60)
+        return radio._peek("pod:p3:" + slug)
+    value = radio._cached("pod:p3:" + slug, load, 7 * 24 * 60)
     _note_found(slug, value)
     return value
 
@@ -518,9 +518,38 @@ def _note_found(slug, shows):
             _FOUND[slug] = (TOPICS[slug]["label"], pic)
 
 
+_REFRESH = {"t": 0, "busy": False}
+
+
+def _spawn_found_refresh():
+    """Every worker learns, in the background, about people another worker (or an earlier run) already found: the database copies are read."""
+    import threading
+    import time
+    if time.time() - _REFRESH["t"] < 90 or _REFRESH["busy"]:
+        return
+    _REFRESH["busy"] = True
+    app = current_app._get_current_object()
+    if app.config.get("TESTING") or app.config.get("RADIO_DEMO"):
+        _REFRESH.update(t=time.time(), busy=False)
+        return
+
+    def run():
+        try:
+            with app.app_context():
+                for k, t in TOPICS.items():
+                    if t.get("people") and t.get("pkind") != "music" and k not in _FOUND:
+                        _note_found(k, radio._peek("pod:p3:" + k))
+        except Exception:
+            pass
+        finally:
+            _REFRESH.update(t=time.time(), busy=False)
+    threading.Thread(target=run, daemon=True, name="voices-refresh").start()
+
+
 @bp.app_template_global("famous_voices")
 def _famous_voices(n=24):
     """People with real podcasts or talks, as a row of covers on the home page (filled in by the background check)."""
+    _spawn_found_refresh()
     order = {k: i for i, k in enumerate(TOPICS)}
     def prio(k):
         kind = TOPICS[k].get("pkind")
@@ -566,7 +595,7 @@ def start_people_check(app):
             todo = []
             for slug in [k for k, t in TOPICS.items() if t.get("people") and t.get("pkind") != "music"]:       # already checked in an earlier run: just remember them
                 try:
-                    done = radio._peek("pod:p2:" + slug)
+                    done = radio._peek("pod:p3:" + slug)
                 except Exception:
                     done = None
                 if done is None:
