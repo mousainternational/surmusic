@@ -575,12 +575,19 @@ def start_people_check(app):
                     _note_found(slug, done)
             first = lambda k: _KIND_FIRST.index(TOPICS[k].get("pkind")) if TOPICS[k].get("pkind") in _KIND_FIRST else 99
             todo.sort(key=first)                                                # podcasters and speakers first (the sort keeps the list order)
-            for slug in todo:                                                   # the rest, one lookup every 10 seconds
+            from . import indexnow
+            fresh = []
+            for slug in todo:                                                   # the rest, one lookup every 4 seconds (Apple allows about 20 a minute)
                 try:
-                    _person_shows(slug)
+                    if _person_shows(slug) and slug in _FOUND:
+                        fresh.append(topic_path(slug))
                 except Exception:
                     pass
-                time.sleep(6)
+                if len(fresh) >= 20:                                            # tell Bing, Yahoo, Yandex about the new pages as they appear
+                    indexnow.send_pages(app, fresh + ["/voices"])
+                    fresh = []
+                time.sleep(4)
+            indexnow.send_pages(app, fresh + ["/voices"])
     t = threading.Thread(target=run, daemon=True, name="people-check")
     t.start()
     return t

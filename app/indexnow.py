@@ -70,6 +70,25 @@ def _run(app):
         log.info("IndexNow not sent: %s", exc)
 
 
+def send_pages(app, paths):
+    """Tell Bing, Yahoo, Yandex and others about some new pages right now (the real https site only)."""
+    site = app.config["SITE_URL"]
+    if not paths or app.config.get("TESTING") or not site.startswith("https://") or "localhost" in site:
+        return False
+    key = key_for(app.config["SECRET_KEY"])
+    body = json.dumps({"host": site.split("://", 1)[-1], "key": key, "keyLocation": f"{site}/{key}.txt",
+                       "urlList": [site + p for p in paths[:9000]]}).encode()
+    req = urllib.request.Request("https://api.indexnow.org/indexnow", data=body, method="POST",
+                                 headers={"Content-Type": "application/json; charset=utf-8"})
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            log.info("IndexNow sent %d new pages, answer %s", len(paths), r.status)
+        return True
+    except Exception as exc:  # never break the site for this
+        log.info("IndexNow not sent: %s", exc)
+        return False
+
+
 def start(app):
     """Background, once per new version, only on the real https site."""
     site = app.config["SITE_URL"]
