@@ -632,7 +632,7 @@ def _person_text(slug, info, shows, news=()):
         faqs.append((f"Is it free to listen to {short} here?", "Yes. The episodes are free to play in your web browser or in the Sur Music Android app, with no sign-up."))
     if news:
         paras.append(f"This page also follows the latest news about {short}. The newest headline is \u201c{news[0]['t']}\u201d" + (f" ({news[0]['s']})" if news[0].get("s") else "") + ".")
-        faqs.append((f"What is the latest news about {full}?", f"The newest headline is \u201c{news[0]['t']}\u201d. The list on this page is refreshed from public news feeds and links to the original reports."))
+        faqs.append((f"What is the latest news about {full}?", f"The newest headline is \u201c{news[0]['t']}\u201d. The list on this page is refreshed automatically from public news feeds."))
     faqs.append((f"Who is {full}?", f"{full} is {who}."))
     return paras, eps, faqs
 

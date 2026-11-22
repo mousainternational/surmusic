@@ -495,7 +495,7 @@ def test_person_page_is_an_information_hub_podcasts_and_latest_news(client, monk
     check("mark-zuckerberg")
     r = client.get("/genre/mark-zuckerberg")
     html = r.get_data(as_text=True)
-    assert r.status_code == 200 and "Latest news about Mark Zuckerberg" in html and "https://news.test/a" in html and "Daily Paper" in html
+    assert r.status_code == 200 and "Latest news about Mark Zuckerberg" in html and "Daily Paper" in html and "https://news.test/a" not in html           # headlines are text: no link leaves the site
     assert "Upcoming projects &amp; announcements" in html and "New project coming soon" in html
     assert "What is the latest news about Mark Zuckerberg?" in html and "noindex" not in html.split("</head>")[0]
     check("adele")
