@@ -434,17 +434,112 @@ def featured(demo=False):
     return out
 
 
+def _norm(text):
+    """Lower case, accents removed, only letters and digits (any script) separated by single spaces."""
+    import unicodedata
+    t = unicodedata.normalize("NFKD", str(text or "")).lower()
+    t = "".join(ch for ch in t if not unicodedata.combining(ch))
+    return " ".join(re.sub(r"[^\w]+", " ", t, flags=re.UNICODE).replace("_", " ").split())
+
+
+def _text_score(nq, field):
+    """0..1: how well one name matches the typed words (a wrong letter or two still scores high)."""
+    import difflib
+    if not nq or not field:
+        return 0.0
+    if field == nq or field.startswith(nq + " "):
+        return 1.0
+    if nq in field:
+        return 0.95
+    qt, ft = nq.split(), field.split()
+    per = [max(difflib.SequenceMatcher(None, w, f).ratio() for f in ft) for w in qt]
+    words = sum(per) / len(per) if min(per) >= 0.72 else 0.0
+    best = difflib.SequenceMatcher(None, nq, field).ratio()
+    if len(ft) > len(qt):                                   # the typed words may be the start of a longer show name
+        best = max(best, max(difflib.SequenceMatcher(None, nq, " ".join(ft[i:i + len(qt)])).ratio() for i in range(len(ft) - len(qt) + 1)))
+    return max(0.9 * words, best)
+
+
+def _score(row, q):
+    nq = _norm(q)
+    return max(_text_score(nq, _norm(row.get("name"))), _text_score(nq, _norm(row.get("artist"))))
+
+
+def _known_names():
+    """Names the site already knows: famous people, scholars and the shows it has listed. Used to repair a typed name."""
+    names = [w for w, _m in SCHOLARS]
+    try:
+        from .topics import TOPICS
+        names += [(t.get("h1") or "").split(" — ")[0] for t in TOPICS.values() if t.get("people")]
+    except Exception:
+        pass
+    with _lock:
+        for _t, rows in list(_cat.values()):
+            for r in rows:
+                names += [r.get("name") or "", r.get("artist") or ""]
+        for _t, val in list(_shows.values()):
+            names.append((val[0] or {}).get("name") or "" if isinstance(val, tuple) and val else "")
+    seen, out = set(), []
+    for n in names:
+        k = _norm(n)
+        if k and k not in seen:
+            seen.add(k); out.append(n)
+    return out
+
+
+def _corrections(q):
+    """Other spellings to try when the typed name finds nothing close: the nearest known names, and the word without doubled letters."""
+    import difflib
+    nq = _norm(q)
+    known = {_norm(n): n for n in _known_names()}
+    out = [known[k] for k in difflib.get_close_matches(nq, list(known), n=3, cutoff=0.6)]
+    single = re.sub(r"(.)\1+", r"\1", nq)
+    if single != nq and single not in [_norm(x) for x in out]:
+        out.append(single)
+    return [x for x in out if _norm(x) != nq][:4]
+
+
+def _search_rows(term):
+    rows = []
+    try:
+        data = _api("/search", term=term, media="podcast", limit=24)
+        rows = [x for x in (_row(r) for r in data.get("results", [])) if x]
+    except Exception:
+        pass
+    seen = {r["id"] for r in rows}
+    return rows + [r for r in index_search(term[:60], 15) if r["id"] not in seen]
+
+
+def rank(rows, q):
+    """Best match first; when something matches well, the wrong ones are left out. A typed name never fills the page with strangers."""
+    scored = sorted(((_score(r, q), i, r) for i, r in enumerate(rows)), key=lambda x: (-x[0], x[1]))
+    if not scored:
+        return []
+    top = scored[0][0]
+    floor = 0.6 if top >= 0.7 else 0.4
+    return [r for sc, _i, r in scored if sc >= floor][:24]
+
+
 def search(q, demo=False):
     q = (q or "").strip()[:60]
     if not q:
         return []
     if demo:
-        return [s for s in DEMO_SHOWS if q.lower() in s["name"].lower()]
-    try:
-        data = _api("/search", term=q, media="podcast", limit=24)
-    except Exception:
-        return []
-    return [x for x in (_row(r) for r in data.get("results", [])) if x]
+        return rank([s for s in DEMO_SHOWS], q) if any(_score(s, q) >= 0.6 for s in DEMO_SHOWS) else []
+    rows = _search_rows(q)
+    cors = []
+    if not rows or max(_score(r, q) for r in rows) < 0.75:         # nothing close: maybe a typing mistake, so ask for the right spelling too
+        seen = {r["id"] for r in rows}
+        cors = _corrections(q)
+        for term in cors:
+            for r in _search_rows(term):
+                if r["id"] not in seen:
+                    seen.add(r["id"]); rows.append(r)
+            if rows and max(_score(r, q) for r in rows) >= 0.85:
+                break
+    if rows and cors and max(_score(r, q) for r in rows) < 0.75:   # the right spelling may be what matches: rank against the closest one
+        q = max(((max(_score(r, c) for r in rows), c) for c in cors))[1]
+    return rank(rows, q)
 
 
 def _text(el, tag):
