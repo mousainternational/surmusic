@@ -4,6 +4,7 @@ One request every 30 minutes asks for all the cities at once. Visitors only ever
 database copy): a page never waits for the weather service, and a restart does not empty it.
 """
 import json
+import logging
 import re
 import threading
 import urllib.parse
@@ -60,6 +61,8 @@ CODES = {0: "Clear sky", 1: "Mostly clear", 2: "Partly cloudy", 3: "Overcast", 4
          82: "Violent rain showers", 85: "Snow showers", 86: "Heavy snow showers", 95: "Thunderstorm", 96: "Thunderstorm with hail", 99: "Thunderstorm with hail"}
 
 TTL = 1800
+log = logging.getLogger(__name__)
+_BATCH = 20                      # cities per request (smaller requests are less likely to be refused)
 _lock = threading.Lock()
 _DATA = {}                       # slug -> {t (saved at), now: {...}, days: [...]}
 _THREAD = {"pid": None}
@@ -95,17 +98,20 @@ def parse_place(block):
 
 
 def refresh_all(fetch=None):
-    """One request per 40 cities; returns how many cities were updated. A failed request keeps the old copy."""
+    """One request per 20 cities; returns how many cities were updated. A failed request keeps the old copy."""
     fetch = fetch or _get
     got = 0
-    for i in range(0, len(CITIES), 40):
-        part = CITIES[i:i + 40]
+    for i in range(0, len(CITIES), _BATCH):
+        if i and fetch is _get:
+            time.sleep(1)
+        part = CITIES[i:i + _BATCH]
         url = ("https://api.open-meteo.com/v1/forecast?latitude=" + ",".join(str(c[3]) for c in part) + "&longitude=" + ",".join(str(c[4]) for c in part)
                + "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m"
                "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=7")
         try:
             data = fetch(url)
-        except Exception:
+        except Exception as exc:
+            log.warning("Weather request failed (%s %s)", exc.__class__.__name__, getattr(exc, "code", "") or str(exc)[:80])
             continue
         for city, block in zip(part, data if isinstance(data, list) else [data]):
             info = parse_place(block)

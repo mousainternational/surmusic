@@ -647,7 +647,7 @@ def test_weather_pages(app, client):
              "daily": {"time": ["2026-11-23", "2026-11-24"], "weather_code": [2, 61], "temperature_2m_max": [32, 30], "temperature_2m_min": [19, 18],
                        "precipitation_probability_max": [10, 60]}}
     names = [c[0] for c in weather.CITIES]
-    got = weather.refresh_all(lambda url: [block] * (url.count(",") + 1 if False else len(names[:40]) if "latitude=31.55" in url else len(names) - 40))
+    got = weather.refresh_all(lambda url: [block] * (url.split("latitude=")[1].split("&")[0].count(",") + 1))
     assert got == len(names)
     html = client.get("/weather/lahore").get_data(as_text=True)
     assert "Lahore Weather Today" in html and "31°C" in html and "Light rain" in html and "data-share-page" in html

@@ -55,3 +55,19 @@ def test_second_directory_adds_shows_with_apple_id_and_is_safe_without_key(monke
     monkeypatch.setattr(podcasts.urllib.request, "urlopen", lambda req, timeout=0: R())
     rows = podcasts.index_search("Someone Famous")
     assert [r["id"] for r in rows] == ["123"] and rows[0]["img"].startswith("https://")
+
+
+def test_weather_asks_in_small_batches_and_one_failure_keeps_the_rest():
+    from app import weather
+    calls = []
+
+    def fetch(url):
+        calls.append(url)
+        if len(calls) == 1:
+            raise OSError("refused")
+        n = url.split("latitude=")[1].split("&")[0].count(",") + 1
+        return [{"current": {"temperature_2m": 20, "weather_code": 0}, "daily": {"time": ["2026-11-23"] * 7, "weather_code": [0] * 7, "temperature_2m_max": [25] * 7, "temperature_2m_min": [15] * 7}}] * n
+    weather._DATA.clear()
+    got = weather.refresh_all(fetch)
+    assert len(calls) == -(-len(weather.CITIES) // weather._BATCH) and 0 < got < len(weather.CITIES)
+    weather._DATA.clear()
