@@ -30,7 +30,8 @@ SCHOLARS = [("Dr Israr Ahmed", "israr"), ("Engineer Muhammad Ali Mirza", "mirza"
 CATEGORIES = {
     "islamic-scholars": ("Islamic scholars", [("scholars",), ("search", "urdu islamic bayan", "PK"), ("search", "islamic lectures urdu", "PK")]),
     "urdu": ("Urdu podcasts", [("search", "urdu podcast", "PK"), ("search", "pakistan podcast", "PK")]),
-    "islamic": ("Islamic lectures & Quran", [("search", "islamic lectures", "US"), ("search", "quran tafseer", "US"), ("search", "seerah", "US")]),
+    "islamic": ("Islamic lectures & Quran", [("search", "islamic lectures", "US"), ("search", "quran tafseer", "US"), ("search", "seerah", "US"),
+                                              ("search", "ahlulbayt majlis podcast", "US"), ("search", "shia islam podcast", "US")]),
     "hindi": ("Hindi podcasts", [("search", "hindi podcast", "IN"), ("search", "hindi talk show", "IN")]),
     "cricket": ("Cricket", [("search", "cricket podcast", "IN"), ("search", "cricket podcast", "PK")]),
     "bollywood": ("Bollywood & film", [("search", "bollywood podcast", "IN")]),
@@ -50,7 +51,6 @@ CATEGORIES = {
     "health": ("Health & fitness", [("search", "health fitness podcast", "US"), ("search", "healthy lifestyle nutrition podcast", "US"), ("search", "mental health wellbeing podcast", "US")]),
     "motivation": ("Motivation & self-growth", [("search", "motivation podcast", "US"), ("search", "self improvement podcast", "US"), ("search", "success mindset podcast", "US")]),
     "languages": ("Learn languages", [("search", "learn english podcast", "US"), ("search", "learn languages podcast", "US"), ("search", "english speaking practice podcast", "IN")]),
-    "ahl-e-bait": ("Ahl-e-Bait & Shia podcasts", [("search", "ahlulbayt podcast", "US"), ("search", "shia islam podcast", "US"), ("search", "majlis muharram podcast", "US"), ("search", "urdu majlis ahlebait", "PK")]),
     "arts": ("Arts & culture", [("search", "arts podcast", "US"), ("search", "books literature podcast", "US"), ("search", "arts culture podcast", "IN")]),
     "comedy": ("Comedy", [("search", "comedy podcast", "US"), ("search", "funny stories comedy podcast", "US"), ("search", "comedy podcast", "IN"), ("search", "comedy podcast", "PK")]),
     "fiction": ("Fiction & audio stories", [("search", "fiction audio drama podcast", "US"), ("search", "audio stories podcast", "US")]),
@@ -261,7 +261,7 @@ GENRES = {"news": 1489, "education": 1304, "business": 1321, "technology": 1318,
 # The worldwide page of a category starts with Apple's own chart too (a search for a word alone brings shows that only have the word in their name).
 # Cricket and Bollywood are not whole Apple categories, so they stay searches. Extra charts are added where one chart is not the whole subject.
 # The newer Apple categories are built when a visitor opens them (then kept 12 hours), not all at once at every start: the 512 MB free server stays calm.
-ON_DEMAND = {"ahl-e-bait", "arts", "comedy", "fiction", "government", "history", "leisure", "music", "society", "sports", "true-crime", "tv-film"}
+ON_DEMAND = {"arts", "comedy", "fiction", "government", "history", "leisure", "music", "society", "sports", "true-crime", "tv-film"}
 GLOBAL_GENRES = {k: v for k, v in GENRES.items() if k not in ("cricket", "bollywood")}
 EXTRA_GENRES = {"motivation": [1517], "health": [1514, 1517]}
 LIST_FULL = 30                                      # enough shows from the charts: the word searches are not needed
@@ -630,13 +630,8 @@ PAGE_TEXT = {
           ("Who owns these lectures?", "Each lecture belongs to its scholar or publisher. Sur Music only links to the podcast and plays it from the original server.")]),
     "urdu": ("Urdu podcasts: talks and discussion in Urdu from Pakistan and around the world. Press play, free, no app needed.",
              "Urdu podcasts on talks, stories, society, religion and daily life from Pakistan and the Urdu-speaking world. The list comes from the Apple Podcasts directory and refreshes by itself. Press play on any episode.", []),
-    "ahl-e-bait": ("Ahl-e-Bait and Shia podcasts: majlis, lectures and discussion on the Ahl-e-Bait, in English and Urdu. Press play, free in your browser.",
-                   "Podcasts about the Ahl-e-Bait and Shia Islam: lectures, Muharram majlis and discussion by scholars and speakers, in English and Urdu, gathered from the Apple Podcasts directory and the Podcast Index. Many majalis are published only on YouTube, so this page shows only what is published as a podcast. For live majlis, noha and Ahl-e-Bait radio, open the Majlis & Noha radio page.",
-                   [("Which scholars are on this page?", "Shows by scholars and speakers such as Sayed Ammar Nakshawani and Sheikh Mohammad Ali Shomali appear when they publish a podcast. The list comes from the podcast directories, not from us."),
-                    ("Is there live Ahl-e-Bait radio?", "Yes. The Majlis & Noha radio page lists live stations for majlis, noha, marsiya and Muharram programmes."),
-                    ("Who owns these lectures?", "Each lecture belongs to its speaker or publisher. Sur Music only links to the podcast and plays it from the original server.")]),
     "islamic": ("Islamic lectures and Quran podcasts: tafseer, seerah, bayan and reminders. Press play on any episode, free in your browser.",
-                "Islamic lectures, Quran tafseer, seerah and short reminders from many podcasters. Choose a show and press play, or open the show to see the newest and the oldest episodes.", []),
+                "Islamic lectures, Quran tafseer, seerah, majlis and Ahl-e-Bait talks, and short reminders from many podcasters. Choose a show and press play, or open the show to see the newest and the oldest episodes.", []),
     "hindi": ("Hindi podcasts: stories, talks and discussion in Hindi. Press play on any episode, free in your browser.",
               "Hindi podcasts on stories, talks, film and daily life, from the Apple Podcasts directory. The list refreshes by itself.", []),
     "cricket": ("Cricket podcasts: match talk, analysis and stories from Pakistan, India and the world. Press play, free in your browser.",

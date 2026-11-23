@@ -437,7 +437,6 @@ If you want to hear your own language, start here.
 
 - [Cricket podcasts](/podcasts/c/cricket) for match talk and analysis.
 - [Bollywood and film](/podcasts/c/bollywood) and [celebrity interviews](/podcasts/c/celebrity) for long conversations with people from film, music and sport.
-- [Ahl-e-Bait and Shia podcasts](/podcasts/c/ahl-e-bait) for majlis, lectures and discussion on the Ahl-e-Bait.
 - [Arts and culture](/podcasts/c/arts), [comedy](/podcasts/c/comedy), [fiction and audio stories](/podcasts/c/fiction), [history](/podcasts/c/history) and [society and culture](/podcasts/c/society) for everyday curiosity.
 - [Government and politics](/podcasts/c/government), [sports](/podcasts/c/sports), [true crime](/podcasts/c/true-crime), [TV and film](/podcasts/c/tv-film), [music talk](/podcasts/c/music) and [hobbies and leisure](/podcasts/c/leisure) for more of what you like.
 - [News and talk](/podcasts/c/news) for daily headlines and discussion.
