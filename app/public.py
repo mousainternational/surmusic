@@ -1908,6 +1908,55 @@ def api_welcome():
 _WX_ICONS = (("thunder", "⛈️"), ("snow", "❄️"), ("rain", "🌧️"), ("drizzle", "🌦️"), ("shower", "🌦️"), ("fog", "🌫️"), ("overcast", "☁️"), ("cloud", "⛅"))
 
 
+@bp.route("/api/app/weather")
+def api_app_weather():
+    """Weather for the Android app: every listed city that has data, with its 7-day forecast."""
+    _weather_start()
+    out = []
+    for name, country, _key, _la, _lo in weather.CITIES:
+        d = _weather_data(slugify(name, 60))
+        if d:
+            out.append({"name": name, "country": country, "temp": d["temp"], "text": d["text"],
+                        "days": [{k: v for k, v in day.items() if isinstance(v, (str, int, float)) or v is None} for day in d["days"][:7]]})
+    return _json_cached({"cities": out}, 600 if out else 0)
+
+
+@bp.route("/api/app/news")
+def api_app_news():
+    """Today's headlines for the Android app (the same ones as the /today page)."""
+    try:
+        today_news.start(current_app._get_current_object(), radio.keep, radio._peek)
+    except Exception:
+        pass
+    data = today_news.get()
+    if not data["sections"]:
+        try:
+            today_news.load_saved(radio._peek("keep:today"))
+        except Exception:
+            pass
+        data = today_news.get()
+    ready = len(data["sections"]) >= 3
+    return _json_cached({"sections": [{"name": k, "items": [{"t": n.get("t", ""), "s": n.get("s", "")} for n in v[:12]]}
+                                      for k, v in data["sections"].items()] if ready else []}, 600 if ready else 0)
+
+
+@bp.route("/api/app/voices")
+def api_app_voices():
+    """Famous voices for the Android app: only people who really have podcasts or talks."""
+    people = _famous_voices(2000)
+    return _json_cached({"items": [{"slug": path.rsplit("/", 1)[-1], "n": label, "m": cover or ""} for path, label, cover in people]},
+                        600 if people else 0)
+
+
+@bp.route("/api/app/voices/<slug>")
+def api_app_voice_shows(slug):
+    """The shows of one famous voice, in the same shape as /api/podcasts."""
+    if slug not in _FOUND:
+        abort(404)
+    rows = _person_shows(slug, remember=False) or []
+    return _json_cached({"items": [{"i": r["id"], "n": r["name"], "a": r["artist"], "m": r["img"]} for r in rows]}, 600 if rows else 0)
+
+
 @bp.route("/api/weather-chip")
 def api_weather_chip():
     """The small weather gadget in the header: the visitor's own city if it is in the list, else the first listed city of the visitor's country."""
