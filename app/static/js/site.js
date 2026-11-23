@@ -390,7 +390,7 @@ document.addEventListener("toggle", function (e) {
       ["click", "pointerenter", "focus", "touchstart"].forEach(function (ev) { ad.addEventListener(ev, preload, { passive: true }); });
       ad.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); preload(); document.getElementById("mm-files").click(); } });
     }
-    document.querySelectorAll(".mm-chip[data-act]").forEach(function (c) {
+    document.querySelectorAll("#player [data-act]").forEach(function (c) {
       if (c.getAttribute("data-chip")) return; c.setAttribute("data-chip", "1");
       c.addEventListener("click", function () {
         var act = c.getAttribute("data-act");
