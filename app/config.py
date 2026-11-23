@@ -48,7 +48,7 @@ class Config:
     SESSION_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SECURE = _bool("SESSION_COOKIE_SECURE", True)
     # "Remember me" sessions last this many days; others end when the browser closes.
-    PERMANENT_SESSION_LIFETIME = _int("REMEMBER_DAYS", 30) * 86400
+    PERMANENT_SESSION_LIFETIME = _int("REMEMBER_DAYS", 365) * 86400
     ADMIN_SESSION_HOURS = _int("ADMIN_SESSION_HOURS", 8)
 
     # Radio Browser (open station directory) — fetched on the server and cached.

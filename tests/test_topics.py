@@ -592,3 +592,11 @@ def test_quick_row_under_header(client):
     html = client.get("/").get_data(as_text=True)
     assert 'class="mbar"' in html and "Sign in" in html and "Sign up free" in html and "Favourites" in html
     assert 'id="a2hs-bar"' in html and 'id="a2hs-bar-help"' in html
+
+
+def test_member_stays_signed_in_for_a_year(app, client):
+    from tests.conftest import signup
+    assert app.config["PERMANENT_SESSION_LIFETIME"].total_seconds() == 365 * 86400 if hasattr(app.config["PERMANENT_SESSION_LIFETIME"], "total_seconds") else app.config["PERMANENT_SESSION_LIFETIME"] == 365 * 86400
+    signup(client)
+    with client.session_transaction() as s:
+        assert s.permanent and s.get("uid")
