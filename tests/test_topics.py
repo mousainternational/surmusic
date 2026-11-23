@@ -610,3 +610,9 @@ def test_topic_news_search_is_not_an_exact_phrase(monkeypatch):
     headlines.person_news("south africa vs bangladesh", exact=False)
     headlines.person_news("Imran Khan")
     assert "%22south" not in seen[0] and "%22Imran" in seen[1]
+
+
+def test_more_mentors_and_motivational_speakers_listed():
+    from app.topics import TOPICS
+    for k in ("robin-sharma", "andrew-huberman", "qasim-ali-shah", "sandeep-maheshwari", "nassim-nicholas-taleb"):
+        assert k in TOPICS and TOPICS[k].get("people")
