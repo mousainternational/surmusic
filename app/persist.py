@@ -487,7 +487,7 @@ def start(app):
     threading.Thread(target=loop, name="data-backup", daemon=True).start()
 
     try:                                                  # statistics: every 30 min (Cloudflare) or 3 hours (GitHub commits)
-        stats_every = max(5, int(os.environ.get("STATS_BACKUP_MINUTES", "30" if _kv_on() else "180")))
+        stats_every = max(5, int(os.environ.get("STATS_BACKUP_MINUTES", "30" if _kv_on() else "60")))
     except ValueError:
         stats_every = 30
 

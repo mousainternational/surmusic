@@ -520,6 +520,7 @@ table.events td, table.events th { padding: 8px 10px; }
 .ev-k-play, .ev-k-listened { background: color-mix(in srgb, var(--brand) 16%, transparent); color: var(--brand); }
 .ev-k-download, .ev-k-favorite { background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--warn); }
 .bars-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.bars-list { max-height: 340px; overflow-y: auto; padding-right: 4px; scrollbar-width: thin; }   /* long lists scroll inside their card */
 .bars-list li { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(60px, 1fr) auto; gap: 10px; align-items: center; font-size: .9rem; }
 .bl-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bl-bar { height: 10px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
