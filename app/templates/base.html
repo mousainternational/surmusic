@@ -79,12 +79,12 @@
         </div>
       </details>
       <span class="hd-sep" aria-hidden="true"></span>
-      <a class="hd-pill hd-fav hue-amber" href="{{ url_for('public.favorites') }}" {% if here == '/favorites' %}aria-current="page"{% endif %}>★ Favourites</a>
+      <a class="hd-pill hd-fav hue-amber mb-dup" href="{{ url_for('public.favorites') }}" {% if here == '/favorites' %}aria-current="page"{% endif %}>★ Favourites</a>
       <a class="hd-pill hue-violet" href="/blog" {% if here.startswith('/blog') %}aria-current="page"{% endif %}>Guides</a>
       <a class="hd-pill hue-teal" href="{{ url_for('public.download_page') }}" {% if here == '/download' %}aria-current="page"{% endif %}>Get app</a>
       <a class="hd-pill hue-green" href="{{ url_for('public.contact') }}" {% if here == '/contact' %}aria-current="page"{% endif %}>Support</a>
       {%- if user %}
-      <details class="hd-dd hd-acct hue-blue">
+      <details class="hd-dd hd-acct hue-blue mb-dup">
         <summary class="hd-pill" aria-label="My account menu">👤<span class="acct-t"> Account</span></summary>
         <div class="hd-panel">
           <p class="hd-who">{{ user.display_name or user.email.split('@')[0] }}</p>
@@ -97,8 +97,8 @@
         </div>
       </details>
       {%- else %}
-        <a class="hd-pill hue-blue" href="{{ url_for('auth.login') }}" {% if here == '/login' %}aria-current="page"{% endif %}>Sign in</a>
-        <a class="btn btn-sm btn-primary hd-signup" href="{{ url_for('auth.signup') }}">Sign up free</a>
+        <a class="hd-pill hue-blue mb-dup" href="{{ url_for('auth.login') }}" {% if here == '/login' %}aria-current="page"{% endif %}>Sign in</a>
+        <a class="btn btn-sm btn-primary hd-signup mb-dup" href="{{ url_for('auth.signup') }}">Sign up free</a>
       {%- endif %}
       <a class="btn btn-sm btn-accent" href="{{ url_for('public.donate') }}">Donate</a>
       <button class="theme-toggle" type="button" aria-label="Switch light or dark theme" title="Switch theme">

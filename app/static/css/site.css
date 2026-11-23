@@ -1553,3 +1553,6 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 .mbar-help { margin: 0; padding: 8px 16px; font-size: .85rem; background: var(--surface-2); }
 .mbar-help[hidden] { display: none; }
 @media (min-width: 1200px) { .mbar, .mbar-help { display: none; } }
+
+/* the quick row under the header already has these four: on phones and tablets they are not repeated inside the 3-line menu */
+@media (max-width: 1199px) { .menu .mb-dup { display: none !important; } }

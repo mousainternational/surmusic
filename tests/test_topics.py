@@ -616,3 +616,8 @@ def test_more_mentors_and_motivational_speakers_listed():
     from app.topics import TOPICS
     for k in ("robin-sharma", "andrew-huberman", "qasim-ali-shah", "sandeep-maheshwari", "nassim-nicholas-taleb"):
         assert k in TOPICS and TOPICS[k].get("people")
+
+
+def test_menu_does_not_repeat_the_quick_row(client):
+    html = client.get("/").get_data(as_text=True)
+    assert html.count("mb-dup") >= 3 and 'class="mbar"' in html
