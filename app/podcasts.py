@@ -5,6 +5,7 @@ own server, and every show page names the podcaster. Every request has a time li
 import ipaddress
 from concurrent.futures import ThreadPoolExecutor
 import json
+import os
 import re
 import socket
 import threading
@@ -144,6 +145,39 @@ def _row(r, strict=True):
     img = _https(r.get("artworkUrl100") or r.get("artworkUrl60") or "")
     return {"id": sid, "name": (r.get("collectionName") or "Podcast")[:120], "artist": (r.get("artistName") or "")[:100],
             "img": img.replace("100x100", "200x200") if img else "", "feed": _https(r.get("feedUrl") or "")}
+
+
+def index_on():
+    return bool(os.environ.get("PODCASTINDEX_KEY") and os.environ.get("PODCASTINDEX_SECRET"))
+
+
+def index_search(term, limit=20):
+    """A second free directory (podcastindex.org, needs the owner's free key). Returns show rows that also have an Apple id,
+    so every show page keeps working. [] when no key or on any error."""
+    if not index_on():
+        return []
+    try:
+        import hashlib
+        key, secret = os.environ["PODCASTINDEX_KEY"].strip(), os.environ["PODCASTINDEX_SECRET"].strip()
+        stamp = str(int(time.time()))
+        req = urllib.request.Request("https://api.podcastindex.org/api/1.0/search/byterm?" + urllib.parse.urlencode({"q": term, "max": limit}), headers={
+            "User-Agent": UA, "X-Auth-Date": stamp, "X-Auth-Key": key,
+            "Authorization": hashlib.sha1((key + secret + stamp).encode()).hexdigest()})
+        with urllib.request.urlopen(req, timeout=8) as r:  # noqa: S310 (fixed https host)
+            data = json.loads(r.read(MAX_JSON + 1).decode("utf-8", "replace"))
+        out = []
+        for f in data.get("feeds") or []:
+            sid = str(f.get("itunesId") or "")
+            if not sid.isdigit() or f.get("explicit"):
+                continue
+            title, author = (f.get("title") or ""), (f.get("author") or f.get("ownerName") or "")
+            if not _family_ok(title, author):
+                continue
+            img = _https(f.get("artwork") or f.get("image") or "")
+            out.append({"id": sid, "name": title[:120] or "Podcast", "artist": author[:100], "img": img, "feed": _https(f.get("url") or "")})
+        return out
+    except Exception:
+        return []
 
 
 def _txt(v):

@@ -503,6 +503,8 @@ def _person_shows(slug, remember=True):
             except Exception:
                 raise radio.RadioError("podcast directory not reachable")
             rows = [x for x in (podcasts._row(r) for r in data.get("results", [])) if x]
+            seen = {r["id"] for r in rows}
+            rows += [r for r in podcasts.index_search(full[:60]) if r["id"] not in seen]       # a second free directory
         return [r for r in rows if by_person(r)][:12]
     if not remember:
         return radio._peek("pod:p3:" + slug)
