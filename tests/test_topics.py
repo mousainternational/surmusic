@@ -557,3 +557,24 @@ def test_failed_news_fetch_is_not_marked_checked(monkeypatch):
     with app.app_context():
         assert public._person_news("elon-musk") == []
         assert public._stored_checked("elon-musk") is False
+
+
+def test_trending_topic_pages(app, client):
+    from app import public
+    ctx = app.app_context()
+    ctx.push()
+    public._TREND_PAGES.clear()
+    items = [{"t": "Big match tonight in Lahore", "s": "Daily Paper", "u": "https://news.test/a"},
+             {"t": "Fans fill the stadium", "s": "Sports Desk", "u": "https://news.test/b"},
+             {"t": "Sexy leaked video goes viral", "s": "Gossip", "u": "https://news.test/c"}]
+    slug = public._trend_save("Pakistan vs England", "sports", "/genre/sports", items)
+    assert slug == "pakistan-vs-england"
+    html = client.get("/trending/pakistan-vs-england").get_data(as_text=True)
+    assert "Big match tonight in Lahore" in html and "Fans fill the stadium" in html
+    assert "Sexy" not in html and "news.test" not in html            # no adult headline, no outbound link
+    assert client.get("/trending/never-seen").status_code == 404
+    assert public._trend_save("Adult porn topic", "news", "/genre/news", items) is None
+    assert public._trend_save("Thin topic", "news", "/genre/news", items[:1]) is None
+    assert "/trending/pakistan-vs-england" in client.get("/sitemap.xml").get_data(as_text=True)
+    public._TREND_PAGES.clear()
+    ctx.pop()

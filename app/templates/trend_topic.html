@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% import "_ad.html" as ads with context %}
+{% block content %}
+<div class="wrap page narrow">
+  {{ ui.breadcrumbs([('Home', '/'), ('Trending now', '/trending'), (term, request.path)]) }}
+  <header class="page-head">
+    <h1>{{ term }}: Latest News and Updates</h1>
+    <p class="lead">{{ term }} is trending right now. Here are the newest headlines about it, refreshed automatically about every 30 minutes, with live radio to follow it while you listen.</p>
+  </header>
+  {{ ads.ad('top') }}
+  <section class="card" aria-labelledby="tn">
+    <h2 class="h3" id="tn">Latest headlines about {{ term }}</h2>
+    <ul class="plain">{% for n in news %}<li>{{ n.t }}{% if n.s %} <span class="muted small">· {{ n.s }}</span>{% endif %}</li>{% endfor %}</ul>
+    <p class="muted small">Headlines come from public news feeds, shown with the name of the news source.{% if updated %} Updated {{ updated }}.{% endif %}</p>
+  </section>
+  <section class="card">
+    <h2 class="h3">Listen while you follow it</h2>
+    <p><a class="btn btn-accent" href="{{ href }}">▶ {{ {'sports': 'Live commentary', 'news': 'News radio', 'debate': 'Talk radio', 'markets': 'See rates', 'movies': 'Film music radio', 'music': 'Music radio'}.get(kind, 'Listen') }}</a>
+    <a class="btn" href="/trending">All trending topics</a></p>
+  </section>
+  {% if others %}<section class="card" aria-labelledby="ot">
+    <h2 class="h3" id="ot">Other trending topics</h2>
+    <ul class="trend-list">{% for k, t in others %}<li><a href="/trending/{{ k }}">{{ t }}</a></li>{% endfor %}</ul>
+  </section>{% endif %}
+  {% if faqs %}<section class="topic-faq card"><h2 class="h3">Questions</h2>
+    {% for q, a in faqs %}<details><summary>{{ q }}</summary><p>{{ a }}</p></details>{% endfor %}</section>{% endif %}
+</div>
+{% endblock %}

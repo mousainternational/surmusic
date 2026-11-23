@@ -2,6 +2,7 @@
 import json
 import threading
 import re
+import time
 from datetime import datetime, timedelta, timezone
 from xml.sax.saxutils import escape
 
@@ -2151,9 +2152,117 @@ def live_news_page():
                            trending=trends.top(8), ld=[breadcrumb_ld(crumbs), faq_ld(islam_data.LIVE_NEWS_FAQ)])
 
 
+_ADULT_TOPIC = re.compile(r"\b(sex|sexy|sexual|porn|porno|nude|nudes|naked|erotic|rape|nsfw|xxx|escort|onlyfans|fetish|strip club)\b", re.I)
+_TREND_PAGES = {}               # slug -> {term, kind, href, news, ts}: the pages of what people search right now (kept small, refreshed by the background thread)
+
+
+def _trend_slug(term):
+    return slugify(term, 60)
+
+
+def _trend_save(term, kind, href, news):
+    """Remember one trending topic's page (only real, family-safe headlines); the newest 150 topics stay."""
+    slug = _trend_slug(term)
+    news = [n for n in (news or []) if n.get("t") and not _ADULT_TOPIC.search(n["t"])]
+    if len(news) < 2 or _ADULT_TOPIC.search(term):
+        return None
+    _TREND_PAGES[slug] = {"term": term, "kind": kind, "href": href, "news": [{"t": n["t"], "s": n.get("s", "")} for n in news[:8]], "ts": time.time()}
+    if len(_TREND_PAGES) > 150:
+        for old in sorted(_TREND_PAGES, key=lambda k: _TREND_PAGES[k]["ts"])[:len(_TREND_PAGES) - 150]:
+            _TREND_PAGES.pop(old, None)
+    radio.keep("keep:tr:" + slug, _TREND_PAGES[slug])
+    radio.keep("keep:tr:index", [[k, v["term"]] for k, v in _TREND_PAGES.items()])
+    return slug
+
+
+def _trend_page_data(slug):
+    """What a visitor sees: the saved copy in memory, else the database copy; never the network."""
+    hit = _TREND_PAGES.get(slug)
+    if hit:
+        return hit
+    try:
+        data = radio._peek("keep:tr:" + slug)
+    except Exception:
+        data = None
+    if isinstance(data, dict) and data.get("news") and slug == _trend_slug(data.get("term", "")):
+        _TREND_PAGES[slug] = data
+        return data
+    return None
+
+
+def _trend_known():
+    """[(slug, term)] of the saved trending pages, newest first (after a restart: from the database copy of the list)."""
+    if not _TREND_PAGES:
+        try:
+            for slug, term in (radio._peek("keep:tr:index") or [])[:150]:
+                _trend_page_data(slug)
+        except Exception:
+            pass
+    return [(k, v["term"]) for k, v in sorted(_TREND_PAGES.items(), key=lambda kv: -kv[1]["ts"])]
+
+
+def start_trend_pages(app):
+    """Every 30 minutes, for each trending topic (all countries), read the newest public headlines and keep them as a page of its own."""
+    if app.config.get("TESTING") or app.config.get("RADIO_DEMO"):
+        return None
+    import time as _t
+    from . import headlines, indexnow
+
+    def run():
+        _t.sleep(60)
+        while True:
+            fresh = []
+            try:
+                with app.app_context():
+                    seen = set()
+                    for c in trends.by_country():
+                        for r in c["rows"]:
+                            if r["term"].lower() in seen or len(seen) >= 80:
+                                continue
+                            seen.add(r["term"].lower())
+                            if _ADULT_TOPIC.search(r["term"]):
+                                continue
+                            slug = _trend_slug(r["term"])
+                            old = _TREND_PAGES.get(slug)
+                            if old and _t.time() - old["ts"] < 1500:
+                                continue
+                            items = headlines.person_news(r["term"])
+                            if items is not None and _trend_save(r["term"], r["kind"], r["href"], items) and not old:
+                                fresh.append("/trending/" + slug)
+                            _t.sleep(3)
+                    if fresh:
+                        indexnow.send_pages(app, fresh[:50] + ["/trending"])
+            except Exception:
+                pass
+            _t.sleep(1800)
+    t = threading.Thread(target=run, daemon=True, name="trend-pages")
+    t.start()
+    return t
+
+
+@bp.route("/trending/<slug>")
+def trending_topic(slug):
+    data = _trend_page_data(slug)
+    if not data:
+        abort(404)
+    term, news = data["term"], data["news"]
+    others = [(k, v) for k, v in _trend_known() if k != slug][:12]
+    title = f"{term}: Latest News and Updates"
+    meta = build_meta(title, f"What is happening with {term} right now: {news[0]['t']}. Updated automatically from public news feeds, with live radio to follow it.",
+                      canonical_path=f"/trending/{slug}")
+    faqs = [(f"What is the latest news about {term}?", f"The newest headline is \u201c{news[0]['t']}\u201d" + (f" ({news[0]['s']})" if news[0].get("s") else "") + ". This page refreshes by itself about every 30 minutes."),
+            (f"Why is {term} trending?", f"{term} is one of the things many people are searching for right now. The headlines on this page show what is being reported about it today.")]
+    crumbs = [("Home", "/"), ("Trending now", "/trending"), (term, f"/trending/{slug}")]
+    return render_template("trend_topic.html", meta=meta, term=term, news=news, kind=data["kind"], href=data["href"], others=others, faqs=faqs,
+                           updated=time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime(data["ts"])), ld=[breadcrumb_ld(crumbs), faq_items_ld(faqs)])
+
+
 @bp.route("/trending")
 def trending_page():
     countries = trends.by_country()
+    for c in countries:                                    # a topic with a page of its own opens it; the radio link stays beside it
+        for r in c["rows"]:
+            r["page"] = "/trending/" + _trend_slug(r["term"]) if _trend_page_data(_trend_slug(r["term"])) else ""
     meta = build_meta("Trending Now: News, Elections, Cricket, Weather, Songs",
                       "What people in Pakistan, India, the UAE, Europe, the USA and more are searching for right now: "
                       "news, elections, war, weather, cricket, gold, songs and movies. Updated every 30 minutes.",
@@ -2289,7 +2398,7 @@ def sitemap():
     site = current_app.config["SITE_URL"]
     pages = ["/", "/bollywood", "/lollywood", "/hollywood", "/download", "/donate", "/about", "/contact", "/faq",
              "/privacy", "/terms", "/disclaimer", "/donation-disclaimer", "/cookies"]
-    pages += ["/for-stations", "/radio-stations", "/top-100", "/pakistan-fm-radio", "/podcasts", "/accessibility", "/reviews", "/islam", "/markets", "/live-news", "/blog"] + (["/voices"] if _FOUND else []) + (["/trending"] if trends.by_country() else []) + [f"/blog/{p['slug']}" for p in blog_data.POSTS] + [f"/continent/{c}" for c in CONTINENTS]
+    pages += ["/for-stations", "/radio-stations", "/top-100", "/pakistan-fm-radio", "/podcasts", "/accessibility", "/reviews", "/islam", "/markets", "/live-news", "/blog"] + (["/voices"] if _FOUND else []) + (["/trending"] if trends.by_country() else []) + [f"/trending/{k}" for k, _ in _trend_known()] + [f"/blog/{p['slug']}" for p in blog_data.POSTS] + [f"/continent/{c}" for c in CONTINENTS]
     pages += [topic_path(k) for _, items in _listed_types() for k, _ in items]
     pages += [topic_path(k) for c in CONTINENTS for k, _, _ in _listed_countries(c)] + ["/deals"]
     from . import podcasts as _pod

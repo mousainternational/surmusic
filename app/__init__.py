@@ -178,6 +178,7 @@ def create_app(overrides=None):
     try:
         from . import public as _public
         _public.start_people_check(app)
+        _public.start_trend_pages(app)
     except Exception:  # pragma: no cover - the check is only a speed-up
         pass
     return app
