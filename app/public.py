@@ -571,8 +571,13 @@ _FOUND = {}                  # people whose podcasts or talks really exist: slug
 
 
 def _page_exists(slug):
-    """False for a person who has no podcast or talk to play (that page is a 404, so nothing may link to it)."""
-    return not (TOPICS.get(slug) or {}).get("people") or slug in _FOUND
+    """False for a person whose page would be empty (no audio and no headlines): that page is a 404, so nothing may link to it."""
+    if not (TOPICS.get(slug) or {}).get("people") or slug in _FOUND:
+        return True
+    try:
+        return bool(_person_news(slug, wait=False))
+    except Exception:
+        return False
 
 
 _KIND_FIRST = ["podcast", "speaker", "business", "politics", "quran", "naat", "bhajan", "gurbani", "gospel", "qawwali", "music"]
@@ -604,6 +609,13 @@ def _voices_restore():
             continue
         _note_found(slug, v["s"])
         n += 1
+    for slug, items in ((data or {}).get("news") or {}).items() if isinstance(data, dict) else ():
+        t = TOPICS.get(slug) or {}
+        if t.get("people") and isinstance(items, list) and items:
+            try:
+                radio.seed_saved("keep:pn2:" + slug, items)
+            except Exception:
+                pass
     _VOICES_SAVED["n"] = max(_VOICES_SAVED["n"], n)
     return n
 
@@ -618,7 +630,13 @@ def _voices_save():
             snap[k] = {"l": _FOUND[k][0], "p": _FOUND[k][1], "s": shows}
     if not snap or len(snap) < _VOICES_SAVED["n"] * 0.8:
         return "skipped"
-    result = persist.save_json("voices", {"people": snap})
+    news = {}
+    for k, t in TOPICS.items():                        # the headlines too: pages that Google already knows never come back empty after a restart
+        if t.get("people"):
+            items = [{"t": x["t"], "s": x.get("s", ""), "u": x.get("u", "")} for x in (radio._peek("keep:pn2:" + k) or []) if x.get("t")][:6]
+            if items:
+                news[k] = items
+    result = persist.save_json("voices", {"people": snap, "news": news})
     if result in ("pushed", "unchanged"):
         _VOICES_SAVED["n"] = max(_VOICES_SAVED["n"], len(snap))
     return result
@@ -751,7 +769,7 @@ def start_people_check(app):
         with app.app_context():
             for slug in sorted((k for k, t in TOPICS.items() if t.get("people")), key=lambda k: (_KIND_FIRST.index(TOPICS[k].get("pkind")) if TOPICS[k].get("pkind") in _KIND_FIRST else 99)):
                 try:
-                    if radio._peek("pod:p3:" + slug) and not radio._peek("keep:pn2:" + slug):       # only people who have audio: nobody else has a page
+                    if not radio._peek("keep:pn2:" + slug):
                         _person_news(slug)
                         time.sleep(3)
                 except Exception:
@@ -970,8 +988,8 @@ def _topic_page(slug, region_slug=None):
         shown = {n["t"].lower()[:60] for n in news}
         soon = [x for x in _person_news(slug, wait=False, upcoming=True) if x["t"].lower()[:60] not in shown][:6]
         shows = shows or []
-        if not shows:                                      # no podcast or talk to play: no page, whatever the news says (a visitor who searches a name must find audio)
-            if info.get("pkind") != "music" and radio._peek("pod:p3:" + slug) is None:       # not looked up yet: come back soon (not "gone")
+        if not shows and not news:                         # nothing real to show (no audio, no headlines): never an empty page
+            if (info.get("pkind") != "music" and radio._peek("pod:p3:" + slug) is None) or not _stored_checked(slug):       # not looked up yet: come back soon (not "gone")
                 _check_person_soon(slug)
                 resp = make_response("This page is being prepared. Please check again in a little while.", 503)
                 resp.headers["Retry-After"] = "3600"
@@ -2674,10 +2692,10 @@ def sitemap():
                     and strong_station(st):
                 seen.add(st["uuid"])
                 pages.append(station_path(st))
-    for k, t in TOPICS.items():                                   # a person's page counts only when they have a podcast or talk to play
+    for k, t in TOPICS.items():                                   # a person's page counts only when it has real content (a podcast or talk, or real headlines)
         if t.get("people"):
             try:
-                if _person_shows(k, remember=False):
+                if _person_shows(k, remember=False) or _person_news(k, wait=False):
                     pages.append(topic_path(k))
             except Exception:
                 pass

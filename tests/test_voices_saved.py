@@ -84,3 +84,26 @@ def test_no_menu_or_sitemap_link_to_a_person_without_audio(client):
     public._note_found("mufti-menk", [{"id": "2", "name": "Menk", "artist": "x", "img": "https://i.test/m.jpg"}])
     assert public._page_exists("mufti-menk") is True
     public._FOUND.clear()
+
+
+def test_a_page_with_real_headlines_stays_open_and_linked_and_headlines_survive_a_restart(app, client, monkeypatch):
+    from app import persist
+    news = [{"t": "A real headline", "s": "Paper", "u": "https://n.test/a"}]
+    saved = {}
+    monkeypatch.setattr(persist, "save_json", lambda name, obj: saved.update({name: obj}) or "pushed")
+    with app.app_context():
+        public._FOUND.clear()
+        radio.seed_saved("keep:pn2:bill-nye", news)
+        radio.seed_saved("keep:pn2:adele", [{"t": "", "s": "", "u": ""}])
+        radio.seed_saved("pod:p3:bill-nye", [])
+        assert public._page_exists("bill-nye") is True and public._page_exists("adele") is False
+        assert "/genre/bill-nye" in client.get("/sitemap.xml").get_data(as_text=True)
+        r = client.get("/genre/bill-nye")
+        assert r.status_code == 200 and "A real headline" in r.get_data(as_text=True)
+        public._FOUND["x-found"] = ("X", "https://i.test/x.jpg")
+        public._VOICES_SAVED["n"] = 0
+        monkeypatch.setattr(radio, "_peek", lambda key, _o=radio._peek: ([{"id": "1"}] if key == "pod:p3:x-found" else _o(key)))
+        public._voices_save()
+        assert saved["voices"]["news"]["bill-nye"][0]["t"] == "A real headline" and "adele" not in saved["voices"]["news"]
+        public._FOUND.clear()
+        public._VOICES_SAVED["n"] = 0
