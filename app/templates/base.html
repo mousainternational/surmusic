@@ -242,15 +242,15 @@
       <button id="pl-fav" class="pl-btn pl-fav" type="button" aria-label="Add to favourites" aria-pressed="false">★</button>
       <button id="pl-sleep" class="pl-btn pl-sleep" type="button" aria-label="Sleep timer: off. Press to set 15 minutes, then 30, 60, 90 or off." title="Sleep timer"><span aria-hidden="true">⏲</span><span id="pl-sleep-t" class="pl-sleep-t" aria-hidden="true"></span></button>
       <span id="pl-sleep-live" class="sr" role="status" aria-live="polite"></span>
-      <label id="mm-add" class="pl-btn pl-mm-add" for="mm-files" role="button" tabindex="0" data-src="{{ asset('js/my-music.js') }}" title="Add songs from this device" aria-label="Add songs from this device"><span aria-hidden="true">＋♪</span></label>
+      <label id="mm-add" class="pl-btn pl-mm-add" data-mm-add for="mm-files" role="button" tabindex="0" data-src="{{ asset('js/my-music.js') }}" title="Add songs from this device" aria-label="Add songs from this device"><span aria-hidden="true">＋♪</span></label>
       <button id="mm-open" class="pl-btn pl-mm" type="button" data-act="playlists" data-src="{{ asset('js/my-music.js') }}" title="My music: playlists, shuffle, repeat, speed" aria-label="My music: playlists, shuffle, repeat and speed" aria-haspopup="dialog" aria-expanded="false" aria-controls="mm-panel"><span aria-hidden="true">📋</span></button>
       <button id="np-open" class="pl-btn np-open" type="button" data-src="{{ asset('js/nowplaying.js') }}" aria-label="Open the big player with lights" aria-haspopup="dialog" title="Big player with lights"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v2H6v4H4zm10 0h6v6h-2V6h-4zM4 14h2v4h4v2H4zm14 0h2v6h-6v-2h4z"/></svg></button>
     </div>
     <label class="pl-vol"><span class="sr">Volume</span><input id="pl-vol" type="range" min="0" max="1" step="0.01" value="0.8"></label>
   </div>
   <audio id="pl-audio" preload="none"></audio>
-  {%- include "_mymusic_panel.html" %}
 </div>
+{%- include "_mymusic_panel.html" %}
 <div id="np" class="np" data-skin="aurora" data-all="{{ 1 if np_all else 0 }}" role="dialog" aria-modal="true" aria-label="Now playing" hidden>
   <canvas id="np-canvas" class="np-canvas" aria-hidden="true"></canvas>
   <div class="np-top">
@@ -282,6 +282,13 @@
       <button id="np-fav" class="np-b" type="button" aria-label="Add to favourites" aria-pressed="false">★</button>
     </div>
     <label class="np-vol"><span class="sr">Volume</span><input id="np-vol" type="range" min="0" max="1" step="0.01" value="0.8"></label>
+    <div class="np-mm" role="group" aria-label="My music: play songs from this device">
+      <label class="np-mmc np-mmc-main" for="mm-files" role="button" tabindex="0" data-mm-add data-src="{{ asset('js/my-music.js') }}">＋ Add songs</label>
+      <button class="np-mmc" type="button" data-act="playlists" data-src="{{ asset('js/my-music.js') }}">📋 Songs &amp; playlists</button>
+      <button class="np-mmc" type="button" data-act="shuffle" aria-pressed="false">🔀 Shuffle</button>
+      <button class="np-mmc" type="button" data-act="repeat">🔁 Repeat: all</button>
+      <button class="np-mmc" type="button" data-act="speed">⚡ 1×</button>
+    </div>
   </div>
 </div>
 {% endblock %}

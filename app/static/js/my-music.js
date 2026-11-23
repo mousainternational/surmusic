@@ -9,11 +9,11 @@
     if (on) chips();
   }
   var speeds = ["0.5", "0.75", "1", "1.25", "1.5", "2"];
-  function chips() {                                  // keep the labels of the buttons in the player bar in step with the panel
-    var sh = $("mm-c-shuffle"), rp = $("mm-c-repeat"), sp = $("mm-c-speed");
-    if (sh) { var on = $("mm-shuffle").getAttribute("aria-pressed") === "true"; sh.setAttribute("aria-pressed", String(on)); sh.textContent = "🔀 Shuffle" + (on ? ": on" : ""); }
-    if (rp) rp.textContent = "🔁 " + $("mm-repeat").textContent;
-    if (sp) sp.textContent = "⚡ " + (+$("mm-speed").value) + "×";
+  function chips() {                                  // keep the buttons in the player bar and the big player in step with the panel
+    var on = $("mm-shuffle").getAttribute("aria-pressed") === "true";
+    document.querySelectorAll('[data-act="shuffle"]').forEach(function (c) { c.setAttribute("aria-pressed", String(on)); c.textContent = "🔀 Shuffle" + (on ? ": on" : ""); });
+    document.querySelectorAll('[data-act="repeat"]').forEach(function (c) { c.textContent = "🔁 " + $("mm-repeat").textContent; });
+    document.querySelectorAll('[data-act="speed"]').forEach(function (c) { c.textContent = "⚡ " + (+$("mm-speed").value) + "×"; });
   }
   window.SurMyMusic = {
     toggle: function () { setOpen(panel.hidden); }, open: function () { setOpen(true); },

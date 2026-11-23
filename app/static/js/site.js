@@ -378,19 +378,19 @@ document.addEventListener("toggle", function (e) {
     if (!b.getAttribute("data-wired")) {
       b.setAttribute("data-wired", "1");
     }
-    var ad = document.getElementById("mm-add");
-    if (ad && !ad.getAttribute("data-wired")) {                         // "＋♪" in the player bar: one tap opens the phone's / computer's file chooser
-      ad.setAttribute("data-wired", "1");
+    document.querySelectorAll("[data-mm-add]").forEach(function (ad) {   // "＋ Add songs": one tap opens the phone's / computer's file chooser
+      if (ad.getAttribute("data-wired")) return; ad.setAttribute("data-wired", "1");
+      var src = ad.getAttribute("data-src") || b.getAttribute("data-src");
       var preload = function () {
         if (window.SurMyMusic || loading) return; loading = true;
-        var sc = document.createElement("script"); sc.src = ad.getAttribute("data-src");
+        var sc = document.createElement("script"); sc.src = src;
         sc.onerror = function () { loading = false; };
         document.head.appendChild(sc);
       };
       ["click", "pointerenter", "focus", "touchstart"].forEach(function (ev) { ad.addEventListener(ev, preload, { passive: true }); });
       ad.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); preload(); document.getElementById("mm-files").click(); } });
-    }
-    document.querySelectorAll("#player [data-act]").forEach(function (c) {
+    });
+    document.querySelectorAll("[data-act]").forEach(function (c) {
       if (c.getAttribute("data-chip")) return; c.setAttribute("data-chip", "1");
       c.addEventListener("click", function () {
         var act = c.getAttribute("data-act");
