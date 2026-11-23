@@ -103,7 +103,16 @@ class _Safe(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
-def _get(url, limit, timeout=7):
+def _cut_feed(data, limit):
+    """A podcast feed bigger than the limit: keep the newest episodes (they come first) and close the XML after the last whole item."""
+    head = data[:limit]
+    end = head.rfind(b"</item>")
+    if end < 0:
+        raise ValueError("too large")
+    return head[:end + len(b"</item>")] + b"</channel></rss>"
+
+
+def _get(url, limit, timeout=7, partial=False):
     u = urllib.parse.urlsplit(url)
     if u.scheme != "https" or not u.hostname or not _public_host(u.hostname):
         raise ValueError("blocked address")
@@ -112,6 +121,8 @@ def _get(url, limit, timeout=7):
     with opener.open(req, timeout=timeout) as r:
         data = r.read(limit + 1)
     if len(data) > limit:
+        if partial:
+            return _cut_feed(data, limit)
         raise ValueError("too large")
     return data
 
@@ -476,7 +487,7 @@ def show(sid, demo=False):
         if not row or not row["feed"]:
             return (hit[1] if hit else ((row, []) if row else (None, [])))
         try:
-            _title, eps, art = parse_feed(_get(row["feed"], MAX_FEED, timeout=9), sid)
+            _title, eps, art = parse_feed(_get(row["feed"], MAX_FEED, timeout=9, partial=True), sid)
         except Exception:                                  # the podcaster's own server is slow or down: still open the show page, without episodes
             return hit[1] if hit else (row, [])
         if art and not row["img"]:

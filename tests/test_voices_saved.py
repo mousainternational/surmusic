@@ -116,3 +116,15 @@ def test_a_page_not_ready_yet_says_we_are_working_on_it_with_status_503(client):
     html = r.get_data(as_text=True)
     assert r.status_code == 503 and r.headers["Retry-After"] and "We are working on this page" in html and "noindex" in html.split("</head>")[0]
     assert "Back to home" in html
+
+
+def test_a_very_big_podcast_feed_still_shows_its_newest_episodes():
+    from app import podcasts
+    items = "".join(f'<item><title>Episode {i}</title><enclosure url="https://a.test/{i}.mp3" type="audio/mpeg"/><description>{"x" * 400}</description></item>' for i in range(300))
+    xml = ('<?xml version="1.0"?><rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"><channel><title>Big Show</title>' + items + "</channel></rss>").encode()
+    cut = podcasts._cut_feed(xml, 50_000)
+    title, eps, _art = podcasts.parse_feed(cut, "1")
+    assert title == "Big Show" and 50 < len(eps) < 300 and eps[0]["name"] == "Episode 0"
+    import pytest
+    with pytest.raises(ValueError):
+        podcasts._cut_feed(b"<rss>" + b"x" * 100, 50)
