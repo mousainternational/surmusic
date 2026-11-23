@@ -2,7 +2,7 @@ def test_my_music_page_is_open_indexable_and_in_the_sitemap(client):
     r = client.get("/my-music")
     assert r.status_code == 200
     html = r.get_data(as_text=True)
-    assert "Free music" in html and 'id="mm-auto"' in html
+    assert "Free music" in html and 'id="mm-page-open"' in html
     assert "noindex" not in html.split("</head>")[0]
     assert "<video" not in html and html.count('id="pl-audio"') == 1       # one player only: the radio player bar
     assert "FAQPage" in html and "BreadcrumbList" in html
@@ -26,4 +26,4 @@ def test_my_music_buttons_are_in_the_big_now_playing_screen_too(client):
     for act in ("playlists", "shuffle", "repeat", "speed"):
         assert f'data-act="{act}"' in big
     assert 'for="mm-files"' in big and big.count("data-mm-add") >= 1
-    assert '</audio>\n</div>' in html and html.index('id="mm-panel"') > html.index('</audio>') and html.index('id="mm-panel"') < html.index('id="np"')   # outside the bar, so it can sit above the big screen
+    assert 'id="mm-panel"' in big and 'id="mm-panel"' not in html.split('id="np"', 1)[0]      # the song list is part of the big player, not a separate panel

@@ -394,6 +394,7 @@ document.addEventListener("toggle", function (e) {
       if (c.getAttribute("data-chip")) return; c.setAttribute("data-chip", "1");
       c.addEventListener("click", function () {
         var act = c.getAttribute("data-act");
+        if (c.closest("#player")) { var npb = document.getElementById("np-open"); if (npb) npb.click(); }     // the small bar has no room: the songs live in the big player
         if (window.SurMyMusic) { window.SurMyMusic.act(act); return; }
         if (loading) return; loading = true;
         var sc = document.createElement("script"); sc.src = b.getAttribute("data-src");
@@ -403,8 +404,7 @@ document.addEventListener("toggle", function (e) {
       });
     });
     var po = document.getElementById("mm-page-open");
-    if (po && !po.getAttribute("data-wired")) { po.setAttribute("data-wired", "1"); po.addEventListener("click", function () { if (!window.SurMyMusic || document.getElementById("mm-panel").hidden) b.click(); }); }
-    if (document.getElementById("mm-auto") && !window.SurMyMusic) b.click();       // the My music page opens the panel by itself
+    if (po && !po.getAttribute("data-wired")) { po.setAttribute("data-wired", "1"); po.addEventListener("click", function () { b.click(); }); }
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wire); else wire();
   document.addEventListener("page:load", wire);

@@ -1,8 +1,8 @@
-{#- My music: the visitor's own songs, inside the player bar (a panel above it). Script loaded on first use (js/my-music.js). -#}
-<div id="mm-panel" class="mm-panel" role="dialog" aria-label="My music: play songs from this device" hidden>
+{#- My music: the visitor's own songs. Lives INSIDE the big Now Playing player (no separate panel). Script loaded on first use (js/my-music.js). -#}
+<div id="mm-panel" class="np-mmbody" role="region" aria-label="My music: songs and playlists" hidden>
   <div class="mm-top">
     <strong>🎵 My music</strong>
-    <button class="mm-x" id="mm-close" type="button" aria-label="Close My music">×</button>
+    <button class="mm-x" id="mm-close" type="button" aria-label="Hide the song list">×</button>
   </div>
   <section class="mm" id="mm" aria-label="Your files">
     <div class="mm-drop" id="mm-drop">

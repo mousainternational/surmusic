@@ -2,12 +2,14 @@
 (function () {
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
-  var panel = $("mm-panel"), opener = $("mm-open");
+  var panel = $("mm-panel");
   if (!$("mm") || !panel) return;
-  function setOpen(on) {
-    panel.hidden = !on; if (opener) opener.setAttribute("aria-expanded", String(on));
+  function setOpen(on) {                               // the song list is a part of the big player: shown or hidden in place
+    panel.hidden = !on;
+    document.querySelectorAll('[data-act="playlists"]').forEach(function (c) { c.setAttribute("aria-expanded", String(on)); });
     if (on) chips();
   }
+  $("mm-close").addEventListener("click", function () { setOpen(false); });
   var speeds = ["0.5", "0.75", "1", "1.25", "1.5", "2"];
   function chips() {                                  // keep the buttons in the player bar and the big player in step with the panel
     var on = $("mm-shuffle").getAttribute("aria-pressed") === "true";
@@ -19,6 +21,7 @@
     toggle: function () { setOpen(panel.hidden); }, open: function () { setOpen(true); },
     act: function (what) {
       if (what === "playlists") { setOpen(panel.hidden); return; }
+      if (what === "songs") { setOpen(true); return; }
       if (what === "shuffle") $("mm-shuffle").click();
       else if (what === "repeat") $("mm-repeat").click();
       else if (what === "speed") { var sel = $("mm-speed"); sel.value = speeds[(speeds.indexOf(sel.value) + 1) % speeds.length]; sel.dispatchEvent(new Event("change")); }
@@ -26,7 +29,6 @@
     }
   };
   $("mm-close").addEventListener("click", function () { setOpen(false); if (opener) opener.focus(); });
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !panel.hidden) setOpen(false); });
   var items = [], orig = [], shuffle = false, repeat = 1, seq = 0;      // repeat: 0 off, 1 all, 2 one
   var KEY = "mm-playlists";
   function P() { return window.SurPlayer; }
