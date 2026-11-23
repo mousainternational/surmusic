@@ -1787,6 +1787,38 @@ def api_welcome():
     return resp
 
 
+_WX_ICONS = (("thunder", "⛈️"), ("snow", "❄️"), ("rain", "🌧️"), ("drizzle", "🌦️"), ("shower", "🌦️"), ("fog", "🌫️"), ("overcast", "☁️"), ("cloud", "⛅"))
+
+
+@bp.route("/api/weather-chip")
+def api_weather_chip():
+    """The small weather gadget in the header: the visitor's own city if it is in the list, else the first listed city of the visitor's country."""
+    code = (visitor_country() or "").upper()
+    city = ""
+    try:
+        city = (analytics._location()[1] or "").strip().lower()
+    except Exception:
+        city = ""
+    pick = next((c for c in weather.CITIES if city and c[0].lower() == city), None)
+    own = None
+    if not pick and city and code:
+        own = weather.place(code, city)                       # the visitor's own town: looked up in the background the first time
+    if not pick and not own and code:
+        pick = next((c for c in weather.CITIES if (TOPICS.get(c[2]) or {}).get("code") == code), None)
+    out = {}
+    d = own or (_weather_data(slugify(pick[0], 60)) if pick else None)
+    name = own["name"] if own else (pick[0] if pick else "")
+    if d:
+        low = d["text"].lower()
+        out = {"href": "/weather" if own else "/weather/" + slugify(pick[0], 60), "name": name, "temp": d["temp"], "text": d["text"],
+               "icon": next((i for k, i in _WX_ICONS if k in low), "☀️"), "own": bool(own), "more": bool(city and code and not own and not (pick and pick[0].lower() == city))}
+    _weather_start()
+    resp = jsonify(out)
+    resp.headers["Cache-Control"] = "private, no-store"            # differs for every visitor: never shared by a cache
+    resp.headers["Vary"] = "Accept-Language, CF-IPCountry"
+    return resp
+
+
 @bp.route("/api/headlines")
 def api_headlines():
     """Headlines for the news strip: the visitor's own country (English edition), refreshed by itself."""

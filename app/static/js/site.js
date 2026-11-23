@@ -762,3 +762,26 @@ document.addEventListener("error", function (e) {
     else window.prompt("Copy this link", data.url);
   });
 })();
+
+
+// ---------- weather gadget next to the search box: the visitor's own city, filled in after the page is shown (never holds the page) ----------
+(function () {
+  function load(again) {
+    var chip = document.getElementById("wx-chip");
+    if (!chip) return;
+    fetch("/api/weather-chip", { credentials: "same-origin" }).then(function (r) { return r.ok ? r.json() : {}; }).then(function (d) {
+      if (d && d.href) {
+        chip.href = d.href;
+        chip.title = d.name + ": " + d.temp + "\u00b0C, " + String(d.text || "").toLowerCase();
+        chip.setAttribute("aria-label", "Weather in " + chip.title);
+        chip.querySelector(".wx-i").textContent = d.icon || "";
+        chip.querySelector(".wx-t").textContent = d.temp + "\u00b0";
+        chip.querySelector(".wx-name").textContent = d.name;
+        chip.hidden = false;
+      }
+      if (again && (!d || !d.href || d.more)) setTimeout(function () { load(false); }, 8000);   // the visitor's own town is being looked up: look once more
+    }).catch(function () { /* no weather: the gadget stays hidden */ });
+  }
+  function init() { load(true); }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+})();

@@ -6,6 +6,7 @@ database copy): a page never waits for the weather service, and a restart does n
 import json
 import re
 import threading
+import urllib.parse
 import time
 import urllib.request
 
@@ -168,3 +169,61 @@ _SAFE = re.compile(r"[^a-z0-9-]")
 
 def valid_slug(slug):
     return bool(slug) and not _SAFE.search(slug) and slug in BY_SLUG
+
+
+# ---------------------------------------------------------------- any other place a visitor comes from (for the header gadget)
+_PLACES = {}                 # "CC:city" -> {"t", "name", ...weather} or {"t", "none": True}
+_BUSY = set()
+
+
+def _place_key(cc, city):
+    return f"{cc.upper()}:{' '.join(city.lower().split())[:60]}"
+
+
+def fetch_place(cc, city, get=None):
+    """Find the place (Open-Meteo's free name search) and read its weather. Stored in memory; an unknown place is remembered too."""
+    get = get or _get
+    key = _place_key(cc, city)
+    try:
+        found = (get("https://geocoding-api.open-meteo.com/v1/search?name=" + urllib.parse.quote(city[:60]) + "&count=1&language=en&format=json&countryCode=" + cc.upper()) or {}).get("results") or []
+        if not found:
+            info = {"none": True}
+        else:
+            p = found[0]
+            data = get("https://api.open-meteo.com/v1/forecast?latitude=%s&longitude=%s" % (float(p["latitude"]), float(p["longitude"]))
+                       + "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m"
+                       "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=7")
+            info = parse_place(data) or {"none": True}
+            info["name"] = str(p.get("name") or city)[:60]
+    except Exception:
+        return None
+    info["t"] = time.time()
+    with _lock:
+        _PLACES[key] = info
+        if len(_PLACES) > 300:
+            for k in sorted(_PLACES, key=lambda k: _PLACES[k]["t"])[:60]:
+                _PLACES.pop(k, None)
+    return info
+
+
+def place(cc, city):
+    """The saved weather of a visitor's own place (None = not known yet: it is looked up in the background for the next look)."""
+    import os
+    if not re.fullmatch(r"[A-Za-z]{2}", cc or "") or not city or len(city) > 60 or not re.fullmatch(r"[^\W\d_][\w .'\-]*", city, re.U):
+        return None
+    key = _place_key(cc, city)
+    with _lock:
+        hit = _PLACES.get(key)
+    if hit and time.time() - hit["t"] < (TTL if not hit.get("none") else 6 * 3600):
+        return None if hit.get("none") else hit
+    if os.environ.get("PYTEST_CURRENT_TEST") or key in _BUSY or len(_BUSY) >= 3:
+        return None if not hit or hit.get("none") else hit
+    _BUSY.add(key)
+
+    def run():
+        try:
+            fetch_place(cc, city)
+        finally:
+            _BUSY.discard(key)
+    threading.Thread(target=run, daemon=True, name="weather-place").start()
+    return None if not hit or hit.get("none") else hit

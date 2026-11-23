@@ -1563,3 +1563,9 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
   .menu a:not(.btn), .menu a.hd-pill:not(.btn), .menu .hd-dd > summary.hd-pill, .menu a.btn, .menu .linklike, .menu .a11y-t { font-size: .88rem; font-weight: 600; letter-spacing: .01em; line-height: 1.25; }
   .menu a.hd-pill:not(.btn), .menu .hd-dd > summary.hd-pill { padding: 10px 14px; }
 }
+
+/* weather gadget next to the search box: the same height and style as the other header buttons */
+.wx-chip[hidden] { display: none; }
+.wx-chip .wx-i { margin-right: 4px; }
+.wx-chip .wx-name { display: none; margin-left: 5px; }
+@media (min-width: 1500px) { .wx-chip .wx-name { display: inline; } }

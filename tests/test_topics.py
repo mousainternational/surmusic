@@ -670,3 +670,32 @@ def test_todays_news_page(client):
     empty = client.get("/today")
     assert empty.status_code == 200 and "being loaded" in empty.get_data(as_text=True) and "noindex" in empty.get_data(as_text=True)
     assert "/today" not in client.get("/sitemap.xml").get_data(as_text=True)
+
+
+def test_weather_gadget(client):
+    from app import weather
+    assert 'id="wx-chip"' in client.get("/").get_data(as_text=True)
+    weather._DATA.clear()
+    r = client.get("/api/weather-chip")
+    assert r.get_json() == {} and "no-store" in r.headers["Cache-Control"]
+    weather._DATA["lahore"] = {"t": 1, "temp": 29, "feels": 30, "hum": 40, "wind": 5, "text": "Light rain", "days": [{"d": "2026-11-23", "hi": 31, "lo": 18, "text": "Rain", "rain": 40}]}
+    r = client.get("/api/weather-chip", headers={"Accept-Language": "en-PK"})
+    assert r.get_json()["href"] == "/weather/lahore" and r.get_json()["temp"] == 29 and "🌧" in r.get_json()["icon"]
+    weather._DATA.clear()
+
+
+def test_weather_of_the_visitors_own_town():
+    from app import weather
+    weather._PLACES.clear()
+    block = {"current": {"temperature_2m": 12.2, "weather_code": 3}, "daily": {"time": ["2026-11-23"], "weather_code": [3], "temperature_2m_max": [14], "temperature_2m_min": [8]}}
+    calls = []
+    def fake(url):
+        calls.append(url)
+        return {"results": [{"name": "Gilgit", "latitude": 35.9, "longitude": 74.3}]} if "geocoding" in url else block
+    info = weather.fetch_place("PK", "Gilgit", fake)
+    assert info["name"] == "Gilgit" and info["temp"] == 12 and "countryCode=PK" in calls[0]
+    assert weather.place("PK", "Gilgit")["temp"] == 12            # saved: no new lookup
+    assert weather.fetch_place("PK", "Nowhereville", lambda url: {"results": []})["none"] is True
+    assert weather.place("PK", "Nowhereville") is None
+    assert weather.place("PK", "<script>") is None and weather.place("Pakistan", "Gilgit") is None
+    weather._PLACES.clear()
