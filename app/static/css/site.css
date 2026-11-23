@@ -11,7 +11,7 @@
   --link: #b51b54;   /* darker than --brand so small links pass WCAG AA contrast (6.5:1 on white) */
   --grad: linear-gradient(135deg, #ff3d86 0%, #ff6f5b 55%, #ffb13f 100%);
   --shadow: 0 1px 2px rgba(22, 18, 31, .06), 0 8px 24px rgba(22, 18, 31, .07);
-  --radius: 16px; --radius-sm: 10px; --player-h: 76px;
+  --radius: 16px; --radius-sm: 10px; --player-h: 112px;
   color-scheme: light;
 }
 /* Dark theme (default for most music listeners) */
@@ -1431,7 +1431,7 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 
 /* Phones: the player is two rows (station name on top, buttons below) so nothing is squeezed or wrapped letter by letter */
 @media (max-width: 759px) {
-  :root { --player-h: 118px; }
+  :root { --player-h: 154px; }
   .player-inner { grid-template-columns: minmax(0, 1fr); gap: 4px; padding-top: 6px; padding-bottom: 6px; }
   .pl-now { min-width: 0; }
   .pl-text { flex: 1 1 auto; min-width: 0; }
@@ -1597,3 +1597,8 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 .mm-top { display: flex; align-items: center; justify-content: space-between; }
 .mm-panel h3 { margin: 12px 0 4px; font-size: 15px; }
 .mm-panel .mm { border: 0; padding: 0; margin: 8px 0 0; background: none; }
+.pl-mmrow { display: flex; gap: 6px; overflow-x: auto; padding-top: 0; padding-bottom: 8px; scrollbar-width: none; }
+.pl-mmrow::-webkit-scrollbar { display: none; }
+.mm-chip { flex: 0 0 auto; height: 30px; padding: 0 12px; border-radius: 15px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font: inherit; font-size: 13px; font-weight: 600; display: inline-grid; place-items: center; cursor: pointer; white-space: nowrap; }
+.mm-chip-main { background: var(--accent, #ff3d86); color: var(--accent-text, #fff); border-color: transparent; }
+.mm-chip[aria-pressed="true"] { outline: 2px solid var(--accent, #ff3d86); }

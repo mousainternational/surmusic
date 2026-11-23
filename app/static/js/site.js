@@ -377,16 +377,31 @@ document.addEventListener("toggle", function (e) {
     if (!b) return;
     if (!b.getAttribute("data-wired")) {
       b.setAttribute("data-wired", "1");
-      b.addEventListener("click", function () {
-        if (window.SurMyMusic) { window.SurMyMusic.toggle(); return; }
+    }
+    var ad = document.getElementById("mm-add");
+    if (ad && !ad.getAttribute("data-wired")) {                         // "＋♪" in the player bar: one tap opens the phone's / computer's file chooser
+      ad.setAttribute("data-wired", "1");
+      var preload = function () {
+        if (window.SurMyMusic || loading) return; loading = true;
+        var sc = document.createElement("script"); sc.src = ad.getAttribute("data-src");
+        sc.onerror = function () { loading = false; };
+        document.head.appendChild(sc);
+      };
+      ["click", "pointerenter", "focus", "touchstart"].forEach(function (ev) { ad.addEventListener(ev, preload, { passive: true }); });
+      ad.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); preload(); document.getElementById("mm-files").click(); } });
+    }
+    document.querySelectorAll(".mm-chip[data-act]").forEach(function (c) {
+      if (c.getAttribute("data-chip")) return; c.setAttribute("data-chip", "1");
+      c.addEventListener("click", function () {
+        var act = c.getAttribute("data-act");
+        if (window.SurMyMusic) { window.SurMyMusic.act(act); return; }
         if (loading) return; loading = true;
-        var sc = document.createElement("script");
-        sc.src = b.getAttribute("data-src");
-        sc.onload = function () { if (window.SurMyMusic) window.SurMyMusic.toggle(); };
+        var sc = document.createElement("script"); sc.src = b.getAttribute("data-src");
+        sc.onload = function () { if (window.SurMyMusic) window.SurMyMusic.act(act); };
         sc.onerror = function () { loading = false; };
         document.head.appendChild(sc);
       });
-    }
+    });
     var po = document.getElementById("mm-page-open");
     if (po && !po.getAttribute("data-wired")) { po.setAttribute("data-wired", "1"); po.addEventListener("click", function () { if (!window.SurMyMusic || document.getElementById("mm-panel").hidden) b.click(); }); }
     if (document.getElementById("mm-auto") && !window.SurMyMusic) b.click();       // the My music page opens the panel by itself

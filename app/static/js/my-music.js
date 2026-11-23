@@ -6,8 +6,25 @@
   if (!$("mm") || !panel) return;
   function setOpen(on) {
     panel.hidden = !on; if (opener) opener.setAttribute("aria-expanded", String(on));
+    if (on) chips();
   }
-  window.SurMyMusic = { toggle: function () { setOpen(panel.hidden); }, open: function () { setOpen(true); } };
+  var speeds = ["0.5", "0.75", "1", "1.25", "1.5", "2"];
+  function chips() {                                  // keep the labels of the buttons in the player bar in step with the panel
+    var sh = $("mm-c-shuffle"), rp = $("mm-c-repeat"), sp = $("mm-c-speed");
+    if (sh) { var on = $("mm-shuffle").getAttribute("aria-pressed") === "true"; sh.setAttribute("aria-pressed", String(on)); sh.textContent = "🔀 Shuffle" + (on ? ": on" : ""); }
+    if (rp) rp.textContent = "🔁 " + $("mm-repeat").textContent;
+    if (sp) sp.textContent = "⚡ " + (+$("mm-speed").value) + "×";
+  }
+  window.SurMyMusic = {
+    toggle: function () { setOpen(panel.hidden); }, open: function () { setOpen(true); },
+    act: function (what) {
+      if (what === "playlists") { setOpen(panel.hidden); return; }
+      if (what === "shuffle") $("mm-shuffle").click();
+      else if (what === "repeat") $("mm-repeat").click();
+      else if (what === "speed") { var sel = $("mm-speed"); sel.value = speeds[(speeds.indexOf(sel.value) + 1) % speeds.length]; sel.dispatchEvent(new Event("change")); }
+      chips();
+    }
+  };
   $("mm-close").addEventListener("click", function () { setOpen(false); if (opener) opener.focus(); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !panel.hidden) setOpen(false); });
   var items = [], orig = [], shuffle = false, repeat = 1, seq = 0;      // repeat: 0 off, 1 all, 2 one
@@ -147,4 +164,6 @@
     $("mm-plname").value = ""; renderPls(); say("Saved playlist “" + name + "”.");
   });
   renderPls(); render();
+  var pending = $("mm-files").files;                 // songs chosen with the "＋♪" button before this file had finished loading
+  if (pending && pending.length) { add(pending); $("mm-files").value = ""; }
 })();
