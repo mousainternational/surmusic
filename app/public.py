@@ -1143,6 +1143,30 @@ def accessibility():
                                faq_items_ld(_A11Y_FAQ)])
 
 
+_MY_MUSIC_FAQ = [
+    ("Are my songs uploaded to Sur Music?",
+     "No. Your songs are played straight from your own device. Nothing is uploaded, so your music stays private."),
+    ("Which file types can I play?",
+     "MP3, M4A, AAC, WAV, OGG, FLAC and other audio formats your browser supports."),
+    ("Do my playlists stay after I close the page?",
+     "Playlist names and track names are saved in this browser. The song files stay on your device, so next time pick the same files "
+     "and your playlists fill in automatically."),
+]
+
+
+@bp.route("/my-music")
+def my_music():
+    """A free music player for songs stored on the visitor's own computer or phone (nothing is uploaded)."""
+    meta = build_meta("Free Music Player — Play Songs From Your Computer",
+                      "Free online music player: play MP3 and other songs from your own computer or phone, build playlists, "
+                      "shuffle and repeat. Nothing is uploaded. No sign-up.",
+                      page="my-music")
+    page = page_ld("WebPage", "Free music player for your own songs", meta["description"])
+    return render_template("my_music.html", meta=meta, faqs=_MY_MUSIC_FAQ,
+                           ld=[page, breadcrumb_ld([("Home", "/"), ("My music player", "/my-music")]),
+                               faq_items_ld(_MY_MUSIC_FAQ)])
+
+
 LETTERS = "abcdefghijklmnopqrstuvwxyz"
 
 # Pakistani FM stations people search for as "<name> <frequency> <city>" (public frequency lists)
@@ -2674,7 +2698,7 @@ def sitemap():
     site = current_app.config["SITE_URL"]
     pages = ["/", "/bollywood", "/lollywood", "/hollywood", "/download", "/donate", "/about", "/contact", "/faq",
              "/privacy", "/terms", "/disclaimer", "/donation-disclaimer", "/cookies"]
-    pages += ["/for-stations", "/radio-stations", "/top-100", "/pakistan-fm-radio", "/podcasts", "/accessibility", "/reviews", "/islam", "/markets", "/live-news", "/blog"] + (["/voices"] if _FOUND else []) + (["/trending"] if trends.by_country() else []) + [f"/trending/{k}" for k, _ in _trend_known()] + (["/weather"] + [f"/weather/{k}" for k in weather.saved_copy()] if weather.saved_copy() else []) + (["/today"] if len(today_news.get()["sections"]) >= 3 else []) + [f"/blog/{p['slug']}" for p in blog_data.POSTS] + [f"/continent/{c}" for c in CONTINENTS]
+    pages += ["/for-stations", "/radio-stations", "/top-100", "/pakistan-fm-radio", "/podcasts", "/accessibility", "/my-music", "/reviews", "/islam", "/markets", "/live-news", "/blog"] + (["/voices"] if _FOUND else []) + (["/trending"] if trends.by_country() else []) + [f"/trending/{k}" for k, _ in _trend_known()] + (["/weather"] + [f"/weather/{k}" for k in weather.saved_copy()] if weather.saved_copy() else []) + (["/today"] if len(today_news.get()["sections"]) >= 3 else []) + [f"/blog/{p['slug']}" for p in blog_data.POSTS] + [f"/continent/{c}" for c in CONTINENTS]
     pages += [topic_path(k) for _, items in _listed_types() for k, _ in items]
     pages += [topic_path(k) for c in CONTINENTS for k, _, _ in _listed_countries(c)] + ["/deals"]
     from . import podcasts as _pod
