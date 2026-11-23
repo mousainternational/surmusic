@@ -480,6 +480,20 @@ def keep(key, data):
         lowdb.defer("INSERT INTO station_cache (cache_key, body, fetched_at) VALUES (?, ?, ?)", (key, json.dumps(data), utcnow()))
 
 
+def seed_saved(key, data):
+    """Put a copy that was saved outside the server (after a restart) back where _peek() finds it. Does nothing if a copy is already there."""
+    from . import lowdb
+    if not data or _peek(key):
+        return False
+    db = get_db()
+    db.execute("DELETE FROM station_cache WHERE cache_key = ?", (key,))
+    db.execute("INSERT INTO station_cache (cache_key, body, fetched_at) VALUES (?, ?, ?)", (key, json.dumps(data), utcnow()))
+    db.commit()
+    if lowdb.enabled():
+        lowdb.cache_set("radio-peek:" + key, data, 1800)          # a 'nothing' answer cached a moment ago must not hide it
+    return True
+
+
 def _peek(key):
     """A cached list without fetching anything (memory first, then the database copy, even if old)."""
     from . import lowdb

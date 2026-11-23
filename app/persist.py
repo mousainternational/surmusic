@@ -533,3 +533,92 @@ def push_all_on_exit():
             push_stats_url(url)
         except Exception:  # pragma: no cover
             pass
+
+
+# ------------------------------------------------------------------ small named documents (the famous-voices list)
+_doc_state = {}          # name -> {"hash", "sha"}
+
+
+def _doc_path(name):
+    return f"surmusic-{name}.json.gz.enc"
+
+
+def _doc_kv_url(name):
+    a, n = os.environ["BACKUP_CF_ACCOUNT_ID"].strip(), os.environ["BACKUP_CF_NAMESPACE_ID"].strip()
+    return f"https://api.cloudflare.com/client/v4/accounts/{a}/storage/kv/namespaces/{n}/values/{_doc_path(name)}"
+
+
+def _doc_gh_url(name):
+    repo = os.environ["BACKUP_GITHUB_REPO"].strip().strip("/")
+    return f"https://api.github.com/repos/{repo}/contents/{_doc_path(name)}", os.environ.get("BACKUP_GITHUB_BRANCH", "main")
+
+
+def save_json(name, obj):
+    """Keep one small document safe through restarts (same private place and encryption as the account backup).
+    Returns 'pushed', 'unchanged', 'off' or 'failed'. Never raises."""
+    if not enabled():
+        return "off"
+    try:
+        payload = json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        digest = hashlib.sha256(payload).hexdigest()
+        st = _doc_state.setdefault(name, {"hash": None, "sha": None})
+        if digest == st["hash"]:
+            return "unchanged"
+        blob = seal(payload)
+        if len(blob) > MAX_BYTES:
+            return "failed"
+        if _kv_on():
+            code, _raw = _kv_http("PUT", _doc_kv_url(name), blob, token=os.environ["BACKUP_CF_TOKEN"])
+            ok = code == 200
+        else:
+            url, branch = _doc_gh_url(name)
+            token = os.environ["BACKUP_GITHUB_TOKEN"]
+            if st["sha"] is None:
+                code, raw = _http("GET", f"{url}?ref={branch}", token=token)
+                if code == 200:
+                    st["sha"] = json.loads(raw).get("sha")
+            body = {"message": f"Sur Music {name} backup", "branch": branch, "content": base64.b64encode(blob).decode("ascii")}
+            if st["sha"]:
+                body["sha"] = st["sha"]
+            code, raw = _http("PUT", url, body, token=token)
+            ok = code in (200, 201)
+            if ok:
+                st["sha"] = json.loads(raw).get("content", {}).get("sha")
+        if ok:
+            st["hash"] = digest
+        return "pushed" if ok else "failed"
+    except Exception as exc:
+        log.warning("Saving %s failed: %s", name, exc.__class__.__name__)
+        return "failed"
+
+
+def load_json(name):
+    """The saved document, or None (nothing saved yet, no backup place, or an error). Never raises."""
+    if not enabled():
+        return None
+    try:
+        if _kv_on():
+            code, raw = _kv_http("GET", _doc_kv_url(name), token=os.environ["BACKUP_CF_TOKEN"])
+            if code != 200:
+                return None
+            payload = unseal(raw)
+        else:
+            url, branch = _doc_gh_url(name)
+            token = os.environ["BACKUP_GITHUB_TOKEN"]
+            code, raw = _http("GET", f"{url}?ref={branch}", token=token)
+            if code != 200:
+                return None
+            meta = json.loads(raw)
+            content = meta.get("content") or ""
+            if not content and meta.get("git_url"):
+                code, raw = _http("GET", meta["git_url"], token=token)
+                if code != 200:
+                    return None
+                content = json.loads(raw).get("content") or ""
+            _doc_state.setdefault(name, {"hash": None, "sha": None})["sha"] = meta.get("sha")
+            payload = unseal(base64.b64decode(content))
+        _doc_state.setdefault(name, {"hash": None, "sha": None})["hash"] = hashlib.sha256(payload).hexdigest()
+        return json.loads(payload)
+    except Exception as exc:
+        log.warning("Loading %s failed: %s", name, exc.__class__.__name__)
+        return None

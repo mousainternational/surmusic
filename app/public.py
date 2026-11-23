@@ -576,6 +576,45 @@ def _note_found(slug, shows):
             _FOUND[slug] = (TOPICS[slug]["label"], pic)
 
 
+_VOICES_SAVED = {"n": 0}
+
+
+def _voices_restore():
+    """After a restart: the famous-voices list (and each person's shows) comes back from the saved copy outside the server, so it never starts empty."""
+    from . import persist
+    data = persist.load_json("voices")
+    people = data.get("people") if isinstance(data, dict) else None
+    n = 0
+    for slug, v in (people or {}).items():
+        t = TOPICS.get(slug) or {}
+        if not t.get("people") or not isinstance(v, dict) or not v.get("s"):
+            continue
+        try:
+            radio.seed_saved("pod:p3:" + slug, v["s"])
+        except Exception:
+            continue
+        _note_found(slug, v["s"])
+        n += 1
+    _VOICES_SAVED["n"] = max(_VOICES_SAVED["n"], n)
+    return n
+
+
+def _voices_save():
+    """Keep the list safe outside the server (only when it changed; never replace a good copy with a much smaller one)."""
+    from . import persist
+    snap = {}
+    for k in list(_FOUND):
+        shows = radio._peek("pod:p3:" + k)
+        if shows:
+            snap[k] = {"l": _FOUND[k][0], "p": _FOUND[k][1], "s": shows}
+    if not snap or len(snap) < _VOICES_SAVED["n"] * 0.8:
+        return "skipped"
+    result = persist.save_json("voices", {"people": snap})
+    if result in ("pushed", "unchanged"):
+        _VOICES_SAVED["n"] = max(_VOICES_SAVED["n"], len(snap))
+    return result
+
+
 _REFRESH = {"t": 0, "busy": False}
 
 
@@ -594,6 +633,8 @@ def _spawn_found_refresh():
     def run():
         try:
             with app.app_context():
+                if not _FOUND:
+                    _voices_restore()
                 for k, t in TOPICS.items():
                     if t.get("people") and t.get("pkind") != "music" and k not in _FOUND:
                         _note_found(k, radio._peek("pod:p3:" + k))
@@ -643,16 +684,34 @@ def _person_text(slug, info, shows, news=()):
     return paras, eps, faqs
 
 
+_PEOPLE_THREAD = {"pid": None}
+
+
 def start_people_check(app):
     """Slowly, in the background, find which famous people really have podcasts or talks (one lookup every 10 seconds, once a week)."""
-    if app.config.get("TESTING") or app.config.get("RADIO_DEMO"):
+    if app.config.get("TESTING") or app.config.get("RADIO_DEMO") or _PEOPLE_THREAD["pid"] == os.getpid():
         return None
+    _PEOPLE_THREAD["pid"] = os.getpid()
     import threading
     import time
 
+    def save_loop():                                     # keep the famous-voices list safe outside the server, every 10 minutes if it changed
+        time.sleep(90)
+        while True:
+            try:
+                with app.app_context():
+                    _voices_save()
+            except Exception:
+                pass
+            time.sleep(600)
+
     def run():
-        time.sleep(5)
+        time.sleep(2)
         with app.app_context():
+            try:
+                _voices_restore()                        # first: the saved list, so nothing already found is looked up again
+            except Exception:
+                pass
             todo = []
             for slug in [k for k, t in TOPICS.items() if t.get("people") and t.get("pkind") != "music"]:       # already checked in an earlier run: just remember them
                 try:
@@ -689,6 +748,7 @@ def start_people_check(app):
                 except Exception:
                     time.sleep(3)
     threading.Thread(target=run_news, daemon=True, name="people-news").start()
+    threading.Thread(target=save_loop, daemon=True, name="voices-save").start()
     t = threading.Thread(target=run, daemon=True, name="people-check")
     t.start()
     return t
@@ -2350,6 +2410,7 @@ def _start_background_jobs():
     try:
         app = current_app._get_current_object()
         start_trend_pages(app)
+        start_people_check(app)
         weather.start(app, radio.keep, radio._peek)
         today_news.start(app, radio.keep, radio._peek)
         digest.start(app, _digest_collect)
