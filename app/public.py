@@ -2226,7 +2226,7 @@ def start_trend_pages(app):
                             old = _TREND_PAGES.get(slug)
                             if old and _t.time() - old["ts"] < 1500:
                                 continue
-                            items = headlines.person_news(r["term"])
+                            items = headlines.person_news(r["term"], exact=False)       # a match or a topic is never one exact phrase in a headline
                             if items is not None and _trend_save(r["term"], r["kind"], r["href"], items) and not old:
                                 fresh.append("/trending/" + slug)
                             _t.sleep(3)

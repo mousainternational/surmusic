@@ -128,16 +128,16 @@ def get(cc):
 _people = {}         # person's name -> (fetched_at, items), kept 30 minutes in memory
 
 
-def person_news(name, upcoming=False):
+def person_news(name, upcoming=False, exact=True):
     """The newest headlines about one person (Google News, English): [{t, s, u}]. Waits for the network (a few seconds at most);
     the last good copy is kept in memory so busy pages never fetch twice in 30 minutes."""
-    key = (name, upcoming)
+    key = (name, upcoming, exact)
     with _lock:
         hit = _people.get(key)
     if hit and time.time() - hit[0] < TTL * 2:
         return hit[1]
     more = ' (upcoming OR announces OR "coming soon" OR launch OR "new project" OR "will release" OR "set to")' if upcoming else ""
-    q = urllib.parse.quote(f'"{name}"{more} when:30d')
+    q = urllib.parse.quote((f'"{name}"' if exact else name) + f"{more} when:30d")
     try:
         items = _fetch(f"https://news.google.com/rss/search?q={q}&hl=en-US&gl=US&ceid=US:en", limit=8, strict=True)
     except Exception:

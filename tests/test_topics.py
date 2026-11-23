@@ -600,3 +600,13 @@ def test_member_stays_signed_in_for_a_year(app, client):
     signup(client)
     with client.session_transaction() as s:
         assert s.permanent and s.get("uid")
+
+
+def test_topic_news_search_is_not_an_exact_phrase(monkeypatch):
+    from app import headlines
+    seen = []
+    monkeypatch.setattr(headlines, "_fetch", lambda url, limit=6, strict=False: seen.append(url) or [])
+    headlines._people.clear()
+    headlines.person_news("south africa vs bangladesh", exact=False)
+    headlines.person_news("Imran Khan")
+    assert "%22south" not in seen[0] and "%22Imran" in seen[1]
