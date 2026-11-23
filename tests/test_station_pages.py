@@ -490,13 +490,26 @@ def test_person_page_is_an_information_hub_podcasts_and_latest_news(client, monk
         with client.application.app_context():
             public._person_shows(slug); public._person_news(slug); public._person_news(slug, upcoming=True)
     check("mark-zuckerberg")
-    assert client.get("/genre/mark-zuckerberg").status_code == 404                # looked up, nothing to show: no page
+    assert client.get("/genre/mark-zuckerberg").status_code == 404                # looked up, no podcast or talk: no page
     monkeypatch.setattr(headlines, "demo_person_news", lambda name, upcoming=False: [{"t": "New project coming soon" if upcoming else "Big announcement today", "s": "Daily Paper", "u": "https://news.test/a"}])
+    check("mark-zuckerberg")
+    assert client.get("/genre/mark-zuckerberg").status_code == 404                # news alone never makes a page: the visitor came for audio
+    assert "/genre/mark-zuckerberg" not in client.get("/sitemap.xml").get_data(as_text=True)
+    zuck = {"id": "55", "name": "Zuck Talks", "artist": "Mark Zuckerberg", "img": "https://x.test/z.jpg", "feed": ""}
+    monkeypatch.setattr(podcasts, "search", lambda q, demo=False: [zuck])
+    monkeypatch.setattr(podcasts, "show", lambda sid, demo=False: (zuck, []))
+    from app import radio
+    with client.application.app_context():
+        radio.get_db().execute("DELETE FROM station_cache WHERE cache_key LIKE 'pod:p3:mark-zuckerberg%'"); radio.get_db().commit()
+        from app import lowdb
+        if lowdb.enabled():
+            lowdb.cache_drop("radio")
     check("mark-zuckerberg")
     r = client.get("/genre/mark-zuckerberg")
     html = r.get_data(as_text=True)
     assert r.status_code == 200 and "Latest news about Mark Zuckerberg" in html and "Daily Paper" in html and "https://news.test/a" not in html           # headlines are text: no link leaves the site
     assert "Upcoming projects &amp; announcements" in html and "New project coming soon" in html
     assert "What is the latest news about Mark Zuckerberg?" in html and "noindex" not in html.split("</head>")[0]
+    assert "/genre/mark-zuckerberg" in client.get("/sitemap.xml").get_data(as_text=True)
     check("adele")
-    assert client.get("/genre/adele").status_code == 200                           # a singer: the news alone is enough for a page
+    assert client.get("/genre/adele").status_code == 404                           # a singer: songs are not offered and news alone is no page

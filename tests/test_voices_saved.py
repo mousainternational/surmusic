@@ -73,3 +73,14 @@ def test_weather_asks_one_city_at_a_time_and_one_failure_keeps_the_rest():
     first = weather.get("lahore") or next(iter(weather._DATA.values()))
     assert first["text"] == "Light rain" and first["days"][0]["hi"] > first["days"][0]["lo"] and 8 < first["wind"] < 10
     weather._DATA.clear()
+
+
+def test_no_menu_or_sitemap_link_to_a_person_without_audio(client):
+    public._FOUND.clear()
+    html = client.get("/").get_data(as_text=True)
+    assert "/genre/adele" not in html and "/genre/mufti-menk" not in html
+    assert "/genre/adele" not in client.get("/llms.txt").get_data(as_text=True)
+    assert public._page_exists("adele") is False and public._page_exists("pakistan") is True
+    public._note_found("mufti-menk", [{"id": "2", "name": "Menk", "artist": "x", "img": "https://i.test/m.jpg"}])
+    assert public._page_exists("mufti-menk") is True
+    public._FOUND.clear()

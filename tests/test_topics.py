@@ -26,10 +26,15 @@ def test_page_text_for_search(client):
 
 
 def test_all_radio_page_links_everything(client):
+    from app import public
+    public._FOUND.clear()
     html = client.get("/radio-stations").get_data(as_text=True)
     from app.topics import SECT_PAGES
     for slug, t in TOPICS.items():
         if slug in SECT_PAGES:                      # kept for search engines only (sitemap), not shown as a button
+            assert "/genre/" + slug + '"' not in html
+            continue
+        if t.get("people"):                         # nobody without a podcast or talk is linked: that page is a 404
             assert "/genre/" + slug + '"' not in html
             continue
         assert ("/country/" if t["kind"] == "country" else "/genre/") + slug + '"' in html

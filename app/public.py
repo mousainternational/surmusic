@@ -263,7 +263,7 @@ def _type_menu():
         out.append((key, icon, title, [(topic_path(s), TOPICS[s]["label"]) for s in slugs
                                        if s in TOPICS and not radio.known_empty(s)]))
     out[-1][3].extend((topic_path(k), v["label"]) for k, v in GENRE_PAGES.items()
-                      if k not in placed and not radio.known_empty(k))
+                      if k not in placed and not radio.known_empty(k) and _page_exists(k))
     return [g for g in out if g[3]]
 
 
@@ -568,6 +568,13 @@ def _check_person_soon(slug):
 
 
 _FOUND = {}                  # people whose podcasts or talks really exist: slug -> (label, cover picture)
+
+
+def _page_exists(slug):
+    """False for a person who has no podcast or talk to play (that page is a 404, so nothing may link to it)."""
+    return not (TOPICS.get(slug) or {}).get("people") or slug in _FOUND
+
+
 _KIND_FIRST = ["podcast", "speaker", "business", "politics", "quran", "naat", "bhajan", "gurbani", "gospel", "qawwali", "music"]
 
 
@@ -744,7 +751,7 @@ def start_people_check(app):
         with app.app_context():
             for slug in sorted((k for k, t in TOPICS.items() if t.get("people")), key=lambda k: (_KIND_FIRST.index(TOPICS[k].get("pkind")) if TOPICS[k].get("pkind") in _KIND_FIRST else 99)):
                 try:
-                    if not radio._peek("keep:pn2:" + slug):
+                    if radio._peek("pod:p3:" + slug) and not radio._peek("keep:pn2:" + slug):       # only people who have audio: nobody else has a page
                         _person_news(slug)
                         time.sleep(3)
                 except Exception:
@@ -963,8 +970,8 @@ def _topic_page(slug, region_slug=None):
         shown = {n["t"].lower()[:60] for n in news}
         soon = [x for x in _person_news(slug, wait=False, upcoming=True) if x["t"].lower()[:60] not in shown][:6]
         shows = shows or []
-        if not shows and not news:
-            if (info.get("pkind") != "music" and radio._peek("pod:p3:" + slug) is None) or not _stored_checked(slug):       # not looked up yet: come back soon (not "gone")
+        if not shows:                                      # no podcast or talk to play: no page, whatever the news says (a visitor who searches a name must find audio)
+            if info.get("pkind") != "music" and radio._peek("pod:p3:" + slug) is None:       # not looked up yet: come back soon (not "gone")
                 _check_person_soon(slug)
                 resp = make_response("This page is being prepared. Please check again in a little while.", 503)
                 resp.headers["Retry-After"] = "3600"
@@ -2575,7 +2582,7 @@ def llms_txt():
     """A plain-text summary of the site for AI assistants and answer engines (llms.txt)."""
     site = current_app.config["SITE_URL"]
     s = get_settings()
-    types = [(k, v) for k, v in GENRE_PAGES.items() if not radio.known_empty(k)][:40]
+    types = [(k, v) for k, v in GENRE_PAGES.items() if not radio.known_empty(k) and _page_exists(k)][:40]
     big = ["pakistan", "india", "usa", "uk", "uae", "saudi-arabia", "canada", "australia", "germany", "france", "turkey",
            "bangladesh", "afghanistan", "qatar", "oman"]
     body = (f"# {s['site_full_name']}\n\n"
@@ -2667,10 +2674,10 @@ def sitemap():
                     and strong_station(st):
                 seen.add(st["uuid"])
                 pages.append(station_path(st))
-    for k, t in TOPICS.items():                                   # a person's page counts only when a station carries the name
+    for k, t in TOPICS.items():                                   # a person's page counts only when they have a podcast or talk to play
         if t.get("people"):
             try:
-                if _person_shows(k, remember=False) or _person_news(k, wait=False):
+                if _person_shows(k, remember=False):
                     pages.append(topic_path(k))
             except Exception:
                 pass
