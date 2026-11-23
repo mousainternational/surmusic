@@ -88,7 +88,9 @@
       who.textContent = $("pl-name").textContent + ": ";
       st.appendChild(who);
     }
-    st.appendChild(document.createTextNode((s === "loading" && slowMsg) ? "Slow connection — still trying…" : (STATUS[s] || "")));
+    var mine = state.station && state.station.local;
+    st.appendChild(document.createTextNode((s === "loading" && slowMsg) ? "Slow connection — still trying…"
+      : (mine && s === "playing" ? "Playing from your device" : mine && s === "error" ? "This file cannot be played here — press Next" : (STATUS[s] || ""))));
     if (s === "playing" && state.track) {
       var tr = document.createElement("span"); tr.className = "trk"; tr.textContent = " · ♪ " + state.track;
       st.appendChild(tr);
@@ -116,7 +118,7 @@
   function pollTrack() {
     clearTimeout(trackTimer);
     var cur = state.station;
-    if (!cur || bar.getAttribute("data-state") !== "playing") return;
+    if (!cur || cur.local || bar.getAttribute("data-state") !== "playing") return;
     api("POST", "/api/nowplaying", { station: cur }).then(function (r) {
       if (state.station === cur) showTrack(r && r.title);
     }, function () { /* no song name: just keep playing */ }).then(function () {
@@ -179,6 +181,7 @@
   function beat(stop, keepalive) {
     var s = state.station;
     if (!s && !stop) return;
+    if (s && s.local && !stop) return;                       // the visitor's own file: nothing is reported
     fetch("/api/heartbeat", {
       method: "POST", credentials: "same-origin", keepalive: !!keepalive,
       headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf() },
@@ -220,18 +223,17 @@
     // (a Quran station played from search used to be counted as "Bollywood")
     if (list && list.length) state.category = category || "";
     else state.category = category || state.category;
-    if (state.locked) { showGate(station); return; }
+    if (state.locked && !station.local) { showGate(station); return; }
     if (state.station && state.station.uuid !== station.uuid) stopBeats(false);
     state.station = station;
     state.track = ""; clearTimeout(trackTimer);
-    local("sm-last", { station: station, category: state.category });
-    rememberRecent(station);
+    if (!station.local) { local("sm-last", { station: station, category: state.category }); rememberRecent(station); }
     renderNow();
     clearDog();
     setState("loading");
     resolveUrl(station).then(function (url) {
       if (state.station !== station) return;               // user already picked another station
-      if (!/^https:\/\//.test(url || "")) { setState("error"); return; }
+      if (!(station.local ? /^blob:/ : /^https:\/\//).test(url || "")) { setState("error"); return; }
       audio.src = url;
       audio.volume = Number($("pl-vol").value);
       var p = audio.play();
@@ -244,12 +246,12 @@
     if ("mediaSession" in navigator) {
       try {
         navigator.mediaSession.metadata = new MediaMetadata({
-          title: station.name, artist: "Sur Music · Live radio", album: station.country || "",
+          title: station.name, artist: station.local ? "My music" : "Sur Music · Live radio", album: station.country || "",
           artwork: station.favicon ? [{ src: station.favicon, sizes: "96x96" }] : []
         });
       } catch (e) { /* older browsers */ }
     }
-    api("POST", "/api/play", { station: station, category: state.category }).catch(function (status) {
+    if (!station.local) api("POST", "/api/play", { station: station, category: state.category }).catch(function (status) {
       if (status === 410 && state.station === station) forgetRemoved(station);
     });
   }
@@ -302,8 +304,21 @@
       setTimeout(function () { if (state.station === dead && bar.getAttribute("data-state") === "error") step(1); }, 1500);
     }
   });
+  audio.addEventListener("ended", function () {           // a file from the visitor's own device: go on with the list
+    var st = state.station;
+    if (!st || !st.local) return;
+    var h = window.SurPlayer && window.SurPlayer.onEnded;
+    if (h && h(st)) return;
+    step(1);
+  });
   audio.addEventListener("stalled", function () { if (!audio.paused) setState("loading"); });
 
+  window.SurPlayer = {                                    // used by /my-music: the visitor's own files play in this same player
+    audio: audio, onEnded: null,
+    playLocal: function (list, i) { if (list && list[i]) play(list[i], list, ""); },
+    setList: function (list) { state.list = list; },
+    pause: function () { pause(); }
+  };
   $("pl-play").addEventListener("click", toggle);
   $("pl-next").addEventListener("click", function () { step(1); });
   $("pl-prev").addEventListener("click", function () { step(-1); });
@@ -378,7 +393,7 @@
     return location.origin + "/station/" + st.uuid + "/" + slug;
   }
   function shareNow() {
-    var st = state.station, url = st ? stationUrl(st) : location.origin + "/";
+    var st = state.station && !state.station.local ? state.station : null, url = st ? stationUrl(st) : location.origin + "/";
     var text = st ? "Listen to " + st.name + " live, free:" : "Listen to free live radio from all over the world:";
     if (navigator.share) {
       navigator.share({ title: st ? st.name : "Sur Music", text: text, url: url }).catch(function () { /* closed by the user */ });
@@ -400,6 +415,7 @@
   // ---------- favourites ----------
   function localFavs() { return local("sm-favs") || []; }
   function toggleFav(st) {
+    if (st.local) return;                                  // a file on the visitor's own device
     var on = state.favIds.has(st.uuid);
     if (state.loggedIn) {
       var req = on ? api("DELETE", "/api/favorites/" + encodeURIComponent(st.uuid))
