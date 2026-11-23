@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="wrap page narrow center error-page">
+  <p class="error-code" aria-hidden="true">⏳</p>
+  <h1>We are working on this page</h1>
+  <p class="muted">It will be ready in a little while. Please come back soon, or look around the rest of Sur Music in the meantime.</p>
+  <p><a href="{{ url_for('public.home') }}">← Back to home</a> · <a href="/voices">Famous voices</a> · <a href="/radio-stations">All radio stations</a></p>
+</div>
+{% endblock %}

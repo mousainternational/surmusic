@@ -429,7 +429,8 @@ def test_person_pages_exist_only_for_people_with_podcasts_or_talks(client, monke
     other = {"id": "778", "name": "Sample Stories", "artist": "Demo Studio", "img": "", "feed": ""}
     monkeypatch.setattr(podcasts, "search", lambda q, demo=False: [row, other])
     monkeypatch.setattr(podcasts, "show", lambda sid, demo=False: (row, [{"name": "Episode One", "date": "2026-11-01"}]))
-    assert client.get("/genre/joe-rogan").status_code == 503 and client.get("/genre/joe-rogan").headers["Retry-After"]   # not looked up yet: come back later
+    first = client.get("/genre/joe-rogan")                                       # not looked up yet: come back later (one request: the lookup starts in the background)
+    assert first.status_code == 503 and first.headers["Retry-After"] and "We are working on this page" in first.get_data(as_text=True)
     with client.application.app_context():                                       # what the background check does
         public._person_shows("joe-rogan"); public._person_news("joe-rogan"); public._person_news("joe-rogan", upcoming=True)
     r = client.get("/genre/joe-rogan")

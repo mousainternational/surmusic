@@ -980,6 +980,13 @@ def _country_facts(label, total, stations, regions):
     return text
 
 
+def _preparing():
+    """A page whose data is not loaded yet: a friendly 'we are working on it' page. Status 503 (not 404/200) so Google keeps the page and comes back."""
+    resp = make_response(render_template("errors/preparing.html", meta={"title": "Page is being prepared | Sur Music", "noindex": True}), 503)
+    resp.headers["Retry-After"] = "600"
+    return resp
+
+
 def _topic_page(slug, region_slug=None):
     info = base_info = TOPICS[slug]
     if info.get("people"):                         # a person: only podcasts and talks by them; no such audio, no page
@@ -991,7 +998,7 @@ def _topic_page(slug, region_slug=None):
         if not shows and not news:                         # nothing real to show (no audio, no headlines): never an empty page
             if (info.get("pkind") != "music" and radio._peek("pod:p3:" + slug) is None) or not _stored_checked(slug):       # not looked up yet: come back soon (not "gone")
                 _check_person_soon(slug)
-                resp = make_response("This page is being prepared. Please check again in a little while.", 503)
+                resp = _preparing()
                 resp.headers["Retry-After"] = "3600"
                 return resp
             abort(404)
@@ -2504,7 +2511,7 @@ def weather_city(slug):
     city, country, key, _la, _lo = weather.BY_SLUG[slug]
     d = _weather_data(slug)
     if not d:
-        resp = make_response("This page is being prepared. Please check again in a little while.", 503)
+        resp = _preparing()
         resp.headers["Retry-After"] = "600"
         return resp
     today = d["days"][0]

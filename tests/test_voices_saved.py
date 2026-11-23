@@ -107,3 +107,12 @@ def test_a_page_with_real_headlines_stays_open_and_linked_and_headlines_survive_
         assert saved["voices"]["news"]["bill-nye"][0]["t"] == "A real headline" and "adele" not in saved["voices"]["news"]
         public._FOUND.clear()
         public._VOICES_SAVED["n"] = 0
+
+
+def test_a_page_not_ready_yet_says_we_are_working_on_it_with_status_503(client):
+    from app import weather
+    weather._DATA.clear()
+    r = client.get("/weather/lahore")
+    html = r.get_data(as_text=True)
+    assert r.status_code == 503 and r.headers["Retry-After"] and "We are working on this page" in html and "noindex" in html.split("</head>")[0]
+    assert "Back to home" in html
