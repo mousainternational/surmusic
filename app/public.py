@@ -1318,6 +1318,8 @@ def podcasts_page():
 @bp.route("/podcasts/c/<slug>")
 def podcast_category(slug):
     from . import podcasts
+    if slug in ("ahl-e-bait", "ahl-e-bait@pk", "ahl-e-bait@in"):            # a short-lived page: Shia podcasts now live inside Islamic lectures
+        return redirect("/podcasts/c/islamic", code=301)
     if not podcasts.valid(slug):
         abort(404)
     demo = bool(current_app.config.get("TESTING") or current_app.config.get("RADIO_DEMO"))

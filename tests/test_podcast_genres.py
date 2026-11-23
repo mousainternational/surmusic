@@ -51,7 +51,7 @@ def test_start_up_warming_skips_the_on_demand_categories(monkeypatch):
 
 
 def test_shia_content_lives_inside_islamic_not_in_a_category_of_its_own(client):
-    assert "ahl-e-bait" not in podcasts.CATEGORIES and client.get("/podcasts/c/ahl-e-bait").status_code == 404
+    assert "ahl-e-bait" not in podcasts.CATEGORIES and client.get("/podcasts/c/ahl-e-bait").status_code == 301
     words = " ".join(st[1] for st in podcasts.CATEGORIES["islamic"][1])
     assert "ahlulbayt" in words and "shia" in words                          # found by the Islamic lectures page
     sc = {m for _w, m in podcasts.SCHOLARS}
@@ -61,3 +61,10 @@ def test_shia_content_lives_inside_islamic_not_in_a_category_of_its_own(client):
 def test_majlis_and_noha_radio_stations_are_inside_the_islamic_page():
     from app.topics import TOPICS
     assert all(p in TOPICS["islamic"]["paths"] for p in TOPICS["majlis"]["paths"])      # one Islamic page holds them; no separate button
+
+
+def test_old_ahl_e_bait_address_goes_to_islamic_lectures_not_to_an_error(client):
+    r = client.get("/podcasts/c/ahl-e-bait")
+    assert r.status_code == 301 and r.headers["Location"].endswith("/podcasts/c/islamic")
+    assert client.get("/podcasts/c/ahl-e-bait", follow_redirects=True).status_code == 200
+    assert "/podcasts/c/ahl-e-bait" not in client.get("/sitemap.xml").get_data(as_text=True)
