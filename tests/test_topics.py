@@ -541,3 +541,10 @@ def test_a_city_has_one_page_and_its_old_copy_redirects(client):
     assert r.status_code == 301 and r.headers["Location"].endswith("/genre/vienna")
     assert client.get("/genre/vienna").status_code == 200
     assert client.get("/genre/not-a-city-xyz").status_code == 404
+
+
+def test_removed_people_not_listed():
+    from app.people import PEOPLE_DATA
+    text = "|".join(PEOPLE_DATA.values())
+    for name in ("Narendra Modi", "Benjamin Netanyahu"):
+        assert name not in text
