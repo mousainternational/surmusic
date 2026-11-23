@@ -795,7 +795,7 @@ def home():
                            popular=_popular(), home_faq=islam_data.HOME_FAQ, market_sections=markets.view(),
                            guides=blog_data.posts_sorted()[:3],
                            filters=_home_filters(),
-                           trending=trends.top(6),
+                           trending=_trend_rows(trends.top(6)),
                            ld=[website_ld(), webapp_ld(), organization_ld(), faq_ld(islam_data.HOME_FAQ)])
 
 
@@ -964,7 +964,7 @@ def _topic_page(slug, region_slug=None):
     crumbs.append((base_info["h1"].split(" — ")[0], topic_path(slug)))
     if region_page:
         crumbs.append((region_page, request.path))
-    trending = trends.top(8) if slug in ("sports", "news", "english-news", "talk", "pop") else []
+    trending = _trend_rows(trends.top(8)) if slug in ("sports", "news", "english-news", "talk", "pop") else []
     ld = [breadcrumb_ld(crumbs), collection_ld(info["h1"], info["description"], request.path if region_page else topic_path(slug), stations if region_page else all_stations)]
     if page_no == 1 and faqs:
         ld.append(faq_items_ld(faqs))
@@ -2149,7 +2149,7 @@ def live_news_page():
               ("Turkey", "/country/turkey"), ("Pakistan", "/country/pakistan"), ("India", "/country/india"),
               ("Canada", "/country/canada"), ("Australia", "/country/australia")]
     return render_template("live_news.html", meta=meta, topics=topics, faq=islam_data.LIVE_NEWS_FAQ,
-                           trending=trends.top(8), ld=[breadcrumb_ld(crumbs), faq_ld(islam_data.LIVE_NEWS_FAQ)])
+                           trending=_trend_rows(trends.top(8)), ld=[breadcrumb_ld(crumbs), faq_ld(islam_data.LIVE_NEWS_FAQ)])
 
 
 from .headlines import _SKIP as _ADULT_TOPIC  # noqa: E402  (one list of adult words for every headline and topic)
@@ -2201,10 +2201,15 @@ def _trend_known():
     return [(k, v["term"]) for k, v in sorted(_TREND_PAGES.items(), key=lambda kv: -kv[1]["ts"])]
 
 
+_TREND_THREAD = {"pid": None}
+
+
 def start_trend_pages(app):
-    """Every 30 minutes, for each trending topic (all countries), read the newest public headlines and keep them as a page of its own."""
-    if app.config.get("TESTING") or app.config.get("RADIO_DEMO"):
+    """Every 30 minutes, for each trending topic (all countries), read the newest public headlines and keep them as a page of its own.
+    Started once per process: at start-up, and again by the first visitor of a worker (a thread made before the server forks its workers does not follow them)."""
+    if app.config.get("TESTING") or app.config.get("RADIO_DEMO") or _TREND_THREAD["pid"] == os.getpid():
         return None
+    _TREND_THREAD["pid"] = os.getpid()
     import time as _t
     from . import headlines, indexnow
 
@@ -2234,10 +2239,24 @@ def start_trend_pages(app):
                         indexnow.send_pages(app, fresh[:50] + ["/trending"])
             except Exception:
                 pass
-            _t.sleep(1800)
+            _t.sleep(1800 if _TREND_PAGES else 120)         # nothing yet (the trending list was not ready): look again soon
     t = threading.Thread(target=run, daemon=True, name="trend-pages")
     t.start()
     return t
+
+
+def _trend_rows(rows):
+    """The trending terms for a strip: a topic that has a page of its own opens it (and says so); the others keep their radio link."""
+    try:
+        start_trend_pages(current_app._get_current_object())
+    except Exception:
+        pass
+    out = []
+    for r in rows or []:
+        slug = _trend_slug(r["term"])
+        page = _trend_page_data(slug)
+        out.append(dict(r, href="/trending/" + slug, action="Latest news") if page else r)
+    return out
 
 
 @bp.route("/trending/<slug>")
@@ -2260,6 +2279,10 @@ def trending_topic(slug):
 @bp.route("/trending")
 def trending_page():
     countries = trends.by_country()
+    try:
+        start_trend_pages(current_app._get_current_object())
+    except Exception:
+        pass
     for c in countries:                                    # a topic with a page of its own opens it; the radio link stays beside it
         for r in c["rows"]:
             r["page"] = "/trending/" + _trend_slug(r["term"]) if _trend_page_data(_trend_slug(r["term"])) else ""

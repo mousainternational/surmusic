@@ -621,3 +621,16 @@ def test_more_mentors_and_motivational_speakers_listed():
 def test_menu_does_not_repeat_the_quick_row(client):
     html = client.get("/").get_data(as_text=True)
     assert html.count("mb-dup") >= 3 and 'class="mbar"' in html
+
+
+def test_trending_strip_opens_topic_page_when_it_exists(app):
+    from app import public
+    with app.app_context():
+        public._TREND_PAGES.clear()
+        rows = [{"term": "Pakistan vs England", "href": "/genre/sports", "action": "▶ Live commentary", "kind": "sports"},
+                {"term": "Unknown thing", "href": "/genre/news", "action": "▶ News radio", "kind": "news"}]
+        public._trend_save("Pakistan vs England", "sports", "/genre/sports", [{"t": "One", "s": "A"}, {"t": "Two", "s": "B"}])
+        out = public._trend_rows(rows)
+        assert out[0]["href"] == "/trending/pakistan-vs-england" and out[0]["action"] == "Latest news"
+        assert out[1]["href"] == "/genre/news"
+        public._TREND_PAGES.clear()
