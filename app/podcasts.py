@@ -48,6 +48,17 @@ CATEGORIES = {
     "health": ("Health & fitness", [("search", "health fitness podcast", "US"), ("search", "healthy lifestyle nutrition podcast", "US"), ("search", "mental health wellbeing podcast", "US")]),
     "motivation": ("Motivation & self-growth", [("search", "motivation podcast", "US"), ("search", "self improvement podcast", "US"), ("search", "success mindset podcast", "US")]),
     "languages": ("Learn languages", [("search", "learn english podcast", "US"), ("search", "learn languages podcast", "US"), ("search", "english speaking practice podcast", "IN")]),
+    "arts": ("Arts & culture", [("search", "arts podcast", "US"), ("search", "books literature podcast", "US"), ("search", "arts culture podcast", "IN")]),
+    "comedy": ("Comedy", [("search", "comedy podcast", "US"), ("search", "funny stories comedy podcast", "US"), ("search", "comedy podcast", "IN"), ("search", "comedy podcast", "PK")]),
+    "fiction": ("Fiction & audio stories", [("search", "fiction audio drama podcast", "US"), ("search", "audio stories podcast", "US")]),
+    "government": ("Government & politics", [("search", "politics podcast", "US"), ("search", "government policy podcast", "US"), ("search", "politics podcast", "PK")]),
+    "history": ("History", [("search", "history podcast", "US"), ("search", "world history podcast", "US"), ("search", "history podcast", "IN")]),
+    "leisure": ("Hobbies & leisure", [("search", "hobbies podcast", "US"), ("search", "travel food games podcast", "US")]),
+    "music": ("Music talk & interviews", [("search", "music interviews podcast", "US"), ("search", "music podcast", "IN"), ("search", "music podcast", "PK")]),
+    "society": ("Society & culture", [("search", "society culture podcast", "US"), ("search", "relationships family podcast", "US"), ("search", "society culture podcast", "PK")]),
+    "sports": ("Sports", [("search", "sports podcast", "US"), ("search", "football podcast", "GB"), ("search", "sports podcast", "IN"), ("search", "sports podcast", "PK")]),
+    "true-crime": ("True crime & mysteries", [("search", "true crime podcast", "US"), ("search", "mystery investigation podcast", "US")]),
+    "tv-film": ("TV & film", [("search", "tv film podcast", "US"), ("search", "movie reviews podcast", "US"), ("search", "tv film podcast", "IN")]),
     "top-pakistan": ("Top podcasts in Pakistan", [("chart", "pk")]),
     "top-india": ("Top podcasts in India", [("chart", "in")]),
     "top-world": ("Top podcasts worldwide", [("chart", "us")]),
@@ -241,7 +252,9 @@ LEARN_LANG = {
 # Apple's category numbers: a category of a country starts with Apple's own chart of that category in that country,
 # so Pakistan shows what Pakistan really listens to and not the same world list. The searches only fill up what is missing.
 GENRES = {"news": 1489, "education": 1304, "business": 1321, "technology": 1318, "science": 1533, "health": 1512,
-          "kids": 1305, "cricket": 1545, "bollywood": 1309, "motivation": 1500}
+          "kids": 1305, "cricket": 1545, "bollywood": 1309, "motivation": 1500,
+          "arts": 1301, "comedy": 1303, "fiction": 1483, "government": 1511, "history": 1487, "leisure": 1502, "music": 1310,
+          "society": 1324, "sports": 1545, "true-crime": 1488, "tv-film": 1309}
 # The worldwide page of a category starts with Apple's own chart too (a search for a word alone brings shows that only have the word in their name).
 # Cricket and Bollywood are not whole Apple categories, so they stay searches. Extra charts are added where one chart is not the whole subject.
 GLOBAL_GENRES = {k: v for k, v in GENRES.items() if k not in ("cricket", "bollywood")}
@@ -326,6 +339,7 @@ def _build(slug):
             else:
                 data = _api("/search", term=step[1], media="podcast", limit=25, country=step[2])
                 rows = [x for x in (_row(r) for r in data.get("results", [])) if x]
+                rows += index_search(step[1], 15)                  # the second directory (Podcast Index) adds its shows when its key is set
         except Exception as e:
             _errors[slug] = f"{step[0]}: {type(e).__name__}: {str(e)[:150]}"
             continue
