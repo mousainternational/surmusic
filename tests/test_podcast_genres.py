@@ -27,3 +27,15 @@ def test_second_directory_shows_fill_category_pages(monkeypatch):
     assert [r["id"] for r in podcasts._build("urdu")] == ["777"]
     monkeypatch.setattr(podcasts, "index_search", lambda term, limit=20: [])      # no key: pages work as before
     assert podcasts._build("urdu") == []
+
+
+def test_home_has_a_dropdown_of_every_podcast_category(client):
+    html = client.get("/").get_data(as_text=True)
+    assert 'id="pr-cat-sel"' in html
+    sel = html.split('id="pr-cat-sel"', 1)[1].split("</select>", 1)[0]
+    for slug in podcasts.CATEGORIES:
+        assert (f'value="{slug}"' in sel) == (not slug.startswith("top-"))
+    names = [x.split("<", 1)[0] for x in sel.split(">")[2:] if x.split("<", 1)[0]]
+    assert names[0].startswith("Choose") and names[1:] == sorted(names[1:], key=str.lower)      # A to Z: no faith or topic is put first
+    js = client.get("/static/js/podrows.js").data
+    assert b"pr-cat-sel" in js and b"/podcasts/c/" in js

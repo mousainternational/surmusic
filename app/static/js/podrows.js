@@ -51,6 +51,11 @@
       }).catch(function () { /* the row simply stays hidden */ });
   }
   function init() {
+    var cats = document.getElementById("pr-cat-sel");                // the list of every podcast category: choosing one opens its page
+    if (cats && !cats.getAttribute("data-w")) {
+      cats.setAttribute("data-w", "1");
+      cats.addEventListener("change", function () { if (cats.value) window.location.assign("/podcasts/c/" + encodeURIComponent(cats.value)); });
+    }
     var rows = document.querySelectorAll(".pr-row"); if (!rows.length) return;
     var all = function () { rows.forEach(function (r) { fill(r, 0); }); };
     var host = document.querySelector(".pr-rows");

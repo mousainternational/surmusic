@@ -879,11 +879,13 @@ def _home_filters():
 
 @bp.route("/")
 def home():
+    from . import podcasts
     stations, error = _stations_for("bollywood")
     meta = build_meta(page="home", canonical_path="/")
     return render_template("home.html", meta=meta, stations=protect(stations[:60]), error=error, cat="bollywood",
                            popular=_popular(), home_faq=islam_data.HOME_FAQ, market_sections=markets.view(),
                            guides=blog_data.posts_sorted()[:3],
+                           pod_cats=sorted(((k, v[0]) for k, v in podcasts.CATEGORIES.items() if not k.startswith("top-")), key=lambda x: x[1].lower()),
                            filters=_home_filters(),
                            trending=_trend_rows(trends.top(6)),
                            ld=[website_ld(), webapp_ld(), organization_ld(), faq_ld(islam_data.HOME_FAQ)])

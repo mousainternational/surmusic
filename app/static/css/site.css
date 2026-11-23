@@ -1490,6 +1490,8 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 
 /* podcast rows: cover pictures in a scrolling row, like a podcast app */
 .pr-rows { padding-top: 0; }
+.pr-cats { margin: 0 0 4px; font-size: 14px; }
+.pr-cats select { font: inherit; padding: 4px 8px; border-radius: 8px; border: 1px solid var(--line, #d9d3ee); max-width: 100%; }
 .pr-row { margin: 18px 0 6px; }
 .pr-row .section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 .pr-row .section-head h2 { margin: 0; }
