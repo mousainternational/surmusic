@@ -548,3 +548,12 @@ def test_removed_people_not_listed():
     text = "|".join(PEOPLE_DATA.values())
     for name in ("Narendra Modi", "Benjamin Netanyahu", "Amit Shah", "Yogi Adityanath"):
         assert name not in text
+
+
+def test_failed_news_fetch_is_not_marked_checked(monkeypatch):
+    from app import headlines, public, create_app
+    app = create_app({"TESTING": True, "SECRET_KEY": "x" * 40})
+    monkeypatch.setattr(headlines, "demo_person_news", lambda name, upcoming=False: None)
+    with app.app_context():
+        assert public._person_news("elon-musk") == []
+        assert public._stored_checked("elon-musk") is False

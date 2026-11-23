@@ -69,7 +69,7 @@ def parse(text, limit=14):
     return out
 
 
-def _fetch(url, limit=6):
+def _fetch(url, limit=6, strict=False):
     try:
         req = urllib.request.Request(url, headers={
             "User-Agent": "SurMusic/1.0 (+https://surmusicradio.com)", "Accept": "application/rss+xml, application/xml"})
@@ -77,6 +77,8 @@ def _fetch(url, limit=6):
             raw = r.read(600 * 1024 + 1)
         return parse(raw.decode("utf-8", "replace"), limit=limit) if len(raw) <= 600 * 1024 else []
     except Exception:
+        if strict:
+            raise
         return []
 
 
@@ -133,7 +135,10 @@ def person_news(name, upcoming=False):
         return hit[1]
     more = ' (upcoming OR announces OR "coming soon" OR launch OR "new project" OR "will release" OR "set to")' if upcoming else ""
     q = urllib.parse.quote(f'"{name}"{more} when:30d')
-    items = _fetch(f"https://news.google.com/rss/search?q={q}&hl=en-US&gl=US&ceid=US:en", limit=8)
+    try:
+        items = _fetch(f"https://news.google.com/rss/search?q={q}&hl=en-US&gl=US&ceid=US:en", limit=8, strict=True)
+    except Exception:
+        return None                       # the feed was unreachable (not "no news"): the caller must not mark this person as checked
     with _lock:
         if items or not hit:
             _people[key] = (time.time(), items)

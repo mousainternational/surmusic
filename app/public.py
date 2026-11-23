@@ -513,7 +513,7 @@ def _person_news(slug, wait=True, upcoming=False):
     t = TOPICS.get(slug) or {}
     if not t.get("people"):
         return []
-    key = ("keep:pu:" if upcoming else "keep:pn:") + slug
+    key = ("keep:pu2:" if upcoming else "keep:pn2:") + slug
     if not wait:
         try:
             return [x for x in (radio._peek(key) or []) if x.get("t")]
@@ -523,6 +523,8 @@ def _person_news(slug, wait=True, upcoming=False):
     demo = bool(current_app.config.get("TESTING") or current_app.config.get("RADIO_DEMO"))
     fetch = headlines.demo_person_news if demo else headlines.person_news          # tests never touch the network
     items = fetch((t.get("h1") or "").split(" — ")[0], upcoming)
+    if items is None:                                  # the news feed failed: say nothing is saved, so the next round tries again
+        return []
     radio.keep(key, items or [{"t": "", "s": "", "u": ""}])
     return items or []
 
@@ -530,7 +532,7 @@ def _person_news(slug, wait=True, upcoming=False):
 def _stored_checked(slug):
     """True when the news of this person has been looked up before (even if it found nothing)."""
     try:
-        return radio._peek("keep:pn:" + slug) is not None
+        return radio._peek("keep:pn2:" + slug) is not None
     except Exception:
         return False
 
@@ -677,7 +679,7 @@ def start_people_check(app):
         with app.app_context():
             for slug in sorted((k for k, t in TOPICS.items() if t.get("people")), key=lambda k: (_KIND_FIRST.index(TOPICS[k].get("pkind")) if TOPICS[k].get("pkind") in _KIND_FIRST else 99)):
                 try:
-                    if not radio._peek("keep:pn:" + slug):
+                    if not radio._peek("keep:pn2:" + slug):
                         _person_news(slug)
                         time.sleep(3)
                 except Exception:
