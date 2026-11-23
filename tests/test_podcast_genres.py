@@ -39,3 +39,12 @@ def test_home_has_a_dropdown_of_every_podcast_category(client):
     assert names[0].startswith("Choose") and names[1:] == sorted(names[1:], key=str.lower)      # A to Z: no faith or topic is put first
     js = client.get("/static/js/podrows.js").data
     assert b"pr-cat-sel" in js and b"/podcasts/c/" in js
+
+
+def test_start_up_warming_skips_the_on_demand_categories(monkeypatch):
+    built = []
+    monkeypatch.setattr(podcasts, "category", lambda slug, demo=False: built.append(slug) or [])
+    monkeypatch.setattr(podcasts.time, "sleep", lambda s: None)
+    podcasts.warm()
+    assert "urdu" in built and "top-world" in built
+    assert not (set(built) & podcasts.ON_DEMAND) and podcasts.ON_DEMAND == set(APPLE_TOP_LEVEL)

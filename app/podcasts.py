@@ -257,6 +257,8 @@ GENRES = {"news": 1489, "education": 1304, "business": 1321, "technology": 1318,
           "society": 1324, "sports": 1545, "true-crime": 1488, "tv-film": 1309}
 # The worldwide page of a category starts with Apple's own chart too (a search for a word alone brings shows that only have the word in their name).
 # Cricket and Bollywood are not whole Apple categories, so they stay searches. Extra charts are added where one chart is not the whole subject.
+# The newer Apple categories are built when a visitor opens them (then kept 12 hours), not all at once at every start: the 512 MB free server stays calm.
+ON_DEMAND = {"arts", "comedy", "fiction", "government", "history", "leisure", "music", "society", "sports", "true-crime", "tv-film"}
 GLOBAL_GENRES = {k: v for k, v in GENRES.items() if k not in ("cricket", "bollywood")}
 EXTRA_GENRES = {"motivation": [1517], "health": [1514, 1517]}
 LIST_FULL = 30                                      # enough shows from the charts: the word searches are not needed
@@ -574,7 +576,7 @@ PAGE_TEXT = {
 def warm():
     """Right after every start, build all podcast lists at once in the background (four at a time), so a first-time visitor
     finds them ready. The most important lists are built first."""
-    order = ["top-world", "top-pk", "top-in", "top-us", "top-gb", "top-ae", "top-sa", "top-bd"] + [k for k in CATEGORIES if not k.startswith("top-")]
+    order = ["top-world", "top-pk", "top-in", "top-us", "top-gb", "top-ae", "top-sa", "top-bd"] + [k for k in CATEGORIES if not k.startswith("top-") and k not in ON_DEMAND]
     def one(slug):
         try:
             category(slug)
