@@ -546,5 +546,5 @@ def test_a_city_has_one_page_and_its_old_copy_redirects(client):
 def test_removed_people_not_listed():
     from app.people import PEOPLE_DATA
     text = "|".join(PEOPLE_DATA.values())
-    for name in ("Narendra Modi", "Benjamin Netanyahu"):
+    for name in ("Narendra Modi", "Benjamin Netanyahu", "Amit Shah", "Yogi Adityanath"):
         assert name not in text
