@@ -112,6 +112,18 @@
     </nav>
   </div>
 </header>
+{#- Phones and tablets: the things people must not miss (sign in, sign up, favourites, the app, install) sit in a row right under the header, as they do on a computer -#}
+<div class="mbar" role="navigation" aria-label="Quick links">
+  {%- if user %}
+  <a class="mbar-a" href="{{ url_for('auth.account') }}">👤 My account</a>
+  {%- else %}
+  <a class="mbar-a" href="{{ url_for('auth.login') }}">Sign in</a>
+  <a class="mbar-a mbar-go" href="{{ url_for('auth.signup') }}">Sign up free</a>
+  {%- endif %}
+  <a class="mbar-a" href="{{ url_for('public.favorites') }}">★ Favourites</a>
+  <button class="mbar-a" type="button" id="a2hs-bar" hidden>📲 Save on phone</button>
+</div>
+<p class="mbar-help" id="a2hs-bar-help" hidden>On iPhone: tap the Share button, then “Add to Home Screen”. On Android: open the browser menu and choose “Add to Home screen”.</p>
 {% endblock %}
 {#- Waving flag of the visitor's own country, filled by site.js from /api/welcome; hidden until it knows the country -#}
 <div class="wlc" id="wlc" role="status" hidden>

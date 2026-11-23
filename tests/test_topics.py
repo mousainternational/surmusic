@@ -586,3 +586,9 @@ def test_adult_headlines_and_topics_are_dropped():
         ["Calm budget news", "Sexual content row", "Lingerie brand opens", "Stripper arrested", "Rapist jailed", "Good cricket win"])) + "</channel></rss>")
     out = [x["t"] for x in headlines.parse(feed)]
     assert out == ["Calm budget news", "Good cricket win"]
+
+
+def test_quick_row_under_header(client):
+    html = client.get("/").get_data(as_text=True)
+    assert 'class="mbar"' in html and "Sign in" in html and "Sign up free" in html and "Favourites" in html
+    assert 'id="a2hs-bar"' in html and 'id="a2hs-bar-help"' in html

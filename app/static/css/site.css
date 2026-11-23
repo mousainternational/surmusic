@@ -1544,3 +1544,12 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 @keyframes voices-move { to { transform: translateX(calc(-1 * var(--w, 50%))); } }
 @media (prefers-reduced-motion: reduce) { .logo-row.moving.is-on { animation: none; width: auto; overflow-x: auto; } }
 #famous-voices .wrap { overflow: hidden; }
+
+/* ---------- quick buttons under the header on phones and tablets (sign in, sign up, favourites, save): all the same size, always inside the screen ---------- */
+.mbar { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; padding: 8px 16px; background: var(--bg); border-bottom: 1px solid var(--border); }
+.mbar-a { display: flex; align-items: center; justify-content: center; min-height: 42px; min-width: 0; padding: 0 10px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-family: inherit; font-size: .95rem; font-weight: 600; line-height: 1.1; text-align: center; text-decoration: none; cursor: pointer; }
+.mbar-a[hidden] { display: none; }
+.mbar-go { background: var(--brand); border-color: var(--brand); color: #2a0a17; }
+.mbar-help { margin: 0; padding: 8px 16px; font-size: .85rem; background: var(--surface-2); }
+.mbar-help[hidden] { display: none; }
+@media (min-width: 1200px) { .mbar, .mbar-help { display: none; } }

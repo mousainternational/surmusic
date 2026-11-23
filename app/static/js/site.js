@@ -723,3 +723,28 @@ document.addEventListener("error", function (e) {
   row.addEventListener("touchstart", function () { row.classList.add("is-paused"); }, { passive: true });
   row.addEventListener("touchend", function () { setTimeout(function () { row.classList.remove("is-paused"); }, 4000); }, { passive: true });
 })();
+
+
+// ---------- "Save on phone" in the row under the header: installs the site like an app (or shows how on iPhone) ----------
+(function () {
+  var deferred = null;
+  function standalone() {
+    return (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
+  }
+  function init() {
+    var b = document.getElementById("a2hs-bar"), help = document.getElementById("a2hs-bar-help");
+    if (!b || standalone()) return;
+    b.hidden = false;                                   // always offered: if the browser cannot install it, a short how-to opens
+    b.addEventListener("click", function () {
+      if (deferred) {
+        deferred.prompt();
+        deferred.userChoice.then(function () { deferred = null; }, function () { /* ignore */ });
+      } else if (help) {
+        help.hidden = !help.hidden;
+      }
+    });
+  }
+  window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); deferred = e; });
+  window.addEventListener("appinstalled", function () { var b = document.getElementById("a2hs-bar"); if (b) b.hidden = true; });
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+})();
