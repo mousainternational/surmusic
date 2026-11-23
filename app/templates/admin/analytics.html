@@ -49,7 +49,7 @@
     {%- set st = [] %}{% for s in a.stations %}{% set _ = st.append({'label': s.label, 'visitors': s.n}) %}{% endfor %}
     {{ b.bars(st, empty='No plays yet.') }}
   </div>
-  <div class="card"><h2 class="h3">🔗 Where visitors came from</h2>{{ b.bars(a.referrers, empty='Direct visits only so far.') }}</div>
+  <div class="card"><h2 class="h3">🔗 Where visitors came from</h2>{{ b.bars(a.referrers, empty='No visits yet.') }}</div>
   <div class="card"><h2 class="h3">📄 Top pages</h2>{{ b.bars(a.pages) }}</div>
   <div class="card"><h2 class="h3">📱 Devices</h2>{{ b.bars(a.devices) }}
     <h2 class="h3 mt">Browsers</h2>{{ b.bars(a.browsers) }}

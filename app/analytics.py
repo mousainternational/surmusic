@@ -283,6 +283,50 @@ def live_now():
     return {"listeners": listeners, "online": online or 0}
 
 
+_SECOND_LEVEL = {"co", "com", "org", "net", "gov", "edu", "ac"}
+_OWN = ("surmusic",)                         # our own site (www, bare domain, hosting address) is never a "source"
+
+
+def source_name(ref):
+    """One short name for where a visit came from: m.facebook.com, l.facebook.com and facebook.com are all 'facebook.com';
+    an empty address or our own site is 'Direct (typed, app or bookmark)'."""
+    host = ref or ""
+    if "//" in host:
+        try:
+            host = urlparse(host).netloc
+        except ValueError:
+            host = ""
+    host = host.lower().split(":")[0].strip(".")
+    if host.startswith("www."):
+        host = host[4:]
+    if not host or any(w in host for w in _OWN):
+        return "Direct (typed, app or bookmark)"
+    if host == "mail.google.com":
+        return host
+    labels = host.split(".")
+    if labels[0] == "google" or "google" in labels[-3:-1] or host.endswith(".google.com"):
+        return "google.com"
+    if host in ("t.co", "twitter.com", "x.com") or host.endswith(".twitter.com"):
+        return "x.com"
+    if len(labels) >= 3 and labels[-2] in _SECOND_LEVEL:
+        return ".".join(labels[-3:])
+    return ".".join(labels[-2:]) if len(labels) >= 2 else host
+
+
+def referrer_sources(db, since, limit=10):
+    """Where visitors came from, counted once per visitor by the address of their FIRST page in the period, so the
+    rows add up to the visitors of the period (Direct included) like the other boxes."""
+    rows = db.all("SELECT e.visitor_id AS v, e.referrer AS r FROM events e JOIN (SELECT visitor_id, MIN(id) AS m FROM events "
+                  "WHERE kind = 'page_view' AND created_at >= ? AND visitor_id <> '' GROUP BY visitor_id) x ON x.m = e.id", (since,))
+    counts = {}
+    for row in rows:
+        name = source_name(row["r"])
+        counts[name] = counts.get(name, 0) + 1
+    out = [{"label": k, "visitors": v, "n": v} for k, v in counts.items()]
+    out.sort(key=lambda x: (-x["visitors"], x["label"]))
+    return out[:int(limit)]
+
+
 def summary(days):
     db = get_db()
     since = _since(days=days)
@@ -338,7 +382,7 @@ def summary(days):
         "totals": totals, "days": days_list,
         "peak": max([d["visitors"] for d in days_list] + [d["plays"] for d in days_list] + [1]),
         "countries": countries, "cities": cities,
-        "pages": top("path", "page_view"), "referrers": top("referrer", "page_view"),
+        "pages": top("path", "page_view"), "referrers": referrer_sources(db, since),
         "devices": top("device"), "browsers": top("browser"), "systems": top("os"),
         "stations": stations,
     }
