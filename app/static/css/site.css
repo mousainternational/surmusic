@@ -1556,3 +1556,10 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 
 /* the quick row under the header already has these four: on phones and tablets they are not repeated inside the 3-line menu */
 @media (max-width: 1199px) { .menu .mb-dup { display: none !important; } }
+
+/* phones and tablets: a little smaller, clean and easy to read text in the header buttons and the 3-line menu (all the same size) */
+@media (max-width: 1199px) {
+  .mbar-a { font-size: .84rem; font-weight: 600; letter-spacing: .01em; }
+  .menu a:not(.btn), .menu a.hd-pill:not(.btn), .menu .hd-dd > summary.hd-pill, .menu a.btn, .menu .linklike, .menu .a11y-t { font-size: .88rem; font-weight: 600; letter-spacing: .01em; line-height: 1.25; }
+  .menu a.hd-pill:not(.btn), .menu .hd-dd > summary.hd-pill { padding: 10px 14px; }
+}
