@@ -47,4 +47,13 @@ def test_start_up_warming_skips_the_on_demand_categories(monkeypatch):
     monkeypatch.setattr(podcasts.time, "sleep", lambda s: None)
     podcasts.warm()
     assert "urdu" in built and "top-world" in built
-    assert not (set(built) & podcasts.ON_DEMAND) and podcasts.ON_DEMAND == set(APPLE_TOP_LEVEL)
+    assert not (set(built) & podcasts.ON_DEMAND) and podcasts.ON_DEMAND == set(APPLE_TOP_LEVEL) | {"ahl-e-bait"}
+
+
+def test_ahl_e_bait_page_and_shia_scholars_are_listed(client):
+    assert podcasts.valid("ahl-e-bait") and podcasts.valid("ahl-e-bait@pk")
+    assert client.get("/podcasts/c/ahl-e-bait").status_code == 200
+    assert "/podcasts/c/ahl-e-bait" in client.get("/sitemap.xml").get_data(as_text=True)
+    assert "Majlis" in podcasts.PAGE_TEXT["ahl-e-bait"][1]
+    words = {m for _w, m in podcasts.SCHOLARS}
+    assert {"nakshawani", "shomali", "naqvi"} <= words and {"qadhi", "israr"} <= words          # the list stays mixed: every school has its names
