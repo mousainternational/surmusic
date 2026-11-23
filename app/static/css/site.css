@@ -1588,3 +1588,12 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 .mm-x { background: none; border: 0; color: inherit; font-size: 20px; cursor: pointer; padding: 4px 8px; }
 .mm-plnew { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
 .mm-plnew input { flex: 1; min-width: 140px; }
+
+/* My music panel: opens above the player bar */
+.pl-mm { font-size: 18px; }
+.mm-panel { position: fixed; z-index: 70; right: 8px; left: 8px; max-width: 520px; margin-left: auto; bottom: calc(var(--player-h, 64px) + env(safe-area-inset-bottom) + 6px); max-height: 70vh; overflow: auto;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+.mm-panel[hidden] { display: none; }
+.mm-top { display: flex; align-items: center; justify-content: space-between; }
+.mm-panel h3 { margin: 12px 0 4px; font-size: 15px; }
+.mm-panel .mm { border: 0; padding: 0; margin: 8px 0 0; background: none; }

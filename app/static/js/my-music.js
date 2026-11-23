@@ -2,7 +2,14 @@
 (function () {
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
-  if (!$("mm")) return;
+  var panel = $("mm-panel"), opener = $("mm-open");
+  if (!$("mm") || !panel) return;
+  function setOpen(on) {
+    panel.hidden = !on; if (opener) opener.setAttribute("aria-expanded", String(on));
+  }
+  window.SurMyMusic = { toggle: function () { setOpen(panel.hidden); }, open: function () { setOpen(true); } };
+  $("mm-close").addEventListener("click", function () { setOpen(false); if (opener) opener.focus(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !panel.hidden) setOpen(false); });
   var items = [], orig = [], shuffle = false, repeat = 1, seq = 0;      // repeat: 0 off, 1 all, 2 one
   var KEY = "mm-playlists";
   function P() { return window.SurPlayer; }

@@ -369,6 +369,32 @@ document.addEventListener("toggle", function (e) {
   document.addEventListener("page:load", wire);
 })();
 
+/* My music (songs from the visitor's own device) lives in the player bar; its file is fetched the first time it is wanted */
+(function () {
+  var loading = false;
+  function wire() {
+    var b = document.getElementById("mm-open");
+    if (!b) return;
+    if (!b.getAttribute("data-wired")) {
+      b.setAttribute("data-wired", "1");
+      b.addEventListener("click", function () {
+        if (window.SurMyMusic) { window.SurMyMusic.toggle(); return; }
+        if (loading) return; loading = true;
+        var sc = document.createElement("script");
+        sc.src = b.getAttribute("data-src");
+        sc.onload = function () { if (window.SurMyMusic) window.SurMyMusic.toggle(); };
+        sc.onerror = function () { loading = false; };
+        document.head.appendChild(sc);
+      });
+    }
+    var po = document.getElementById("mm-page-open");
+    if (po && !po.getAttribute("data-wired")) { po.setAttribute("data-wired", "1"); po.addEventListener("click", function () { if (!window.SurMyMusic || document.getElementById("mm-panel").hidden) b.click(); }); }
+    if (document.getElementById("mm-auto") && !window.SurMyMusic) b.click();       // the My music page opens the panel by itself
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wire); else wire();
+  document.addEventListener("page:load", wire);
+})();
+
 // A partner-offer picture that cannot load (wrong or blocked address) is replaced by a small bag icon, never a broken image.
 (function () {
   function fix(img) {
