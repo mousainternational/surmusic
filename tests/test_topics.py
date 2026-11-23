@@ -640,17 +640,25 @@ def test_share_button_on_pages(client):
     assert "data-share-page" in client.get("/").get_data(as_text=True)
 
 
+def _met_block(temp=31.4, sym="lightrain", days=2):
+    from datetime import datetime, timedelta, timezone
+    base = datetime(2026, 11, 23, 0, 0, tzinfo=timezone.utc)
+    series = []
+    for h in range(days * 24):
+        t = base + timedelta(hours=h)
+        series.append({"time": t.strftime("%Y-%m-%dT%H:%M:%SZ"), "data": {"instant": {"details": {"air_temperature": temp - 6 + (h % 24) / 2, "relative_humidity": 40, "wind_speed": 2.5}},
+                                                                             "next_1_hours": {"summary": {"symbol_code": sym + "_day"}}, "next_6_hours": {"summary": {"symbol_code": sym}}}})
+    return {"properties": {"timeseries": series}}
+
+
 def test_weather_pages(app, client):
     from app import weather
     weather._DATA.clear()
-    block = {"current": {"temperature_2m": 31.4, "apparent_temperature": 33, "relative_humidity_2m": 40, "weather_code": 2, "wind_speed_10m": 9},
-             "daily": {"time": ["2026-11-23", "2026-11-24"], "weather_code": [2, 61], "temperature_2m_max": [32, 30], "temperature_2m_min": [19, 18],
-                       "precipitation_probability_max": [10, 60]}}
     names = [c[0] for c in weather.CITIES]
-    got = weather.refresh_all(lambda url: [block] * (url.split("latitude=")[1].split("&")[0].count(",") + 1))
+    got = weather.refresh_all(lambda url: _met_block())
     assert got == len(names)
     html = client.get("/weather/lahore").get_data(as_text=True)
-    assert "Lahore Weather Today" in html and "31°C" in html and "Light rain" in html and "data-share-page" in html
+    assert "Lahore Weather Today" in html and "25°C" in html and "Light rain" in html and "data-share-page" in html
     assert client.get("/weather/atlantis").status_code == 404
     assert "Lahore weather" in client.get("/weather").get_data(as_text=True)
     assert "/weather/lahore" in client.get("/sitemap.xml").get_data(as_text=True)
@@ -687,13 +695,13 @@ def test_weather_gadget(client):
 def test_weather_of_the_visitors_own_town():
     from app import weather
     weather._PLACES.clear()
-    block = {"current": {"temperature_2m": 12.2, "weather_code": 3}, "daily": {"time": ["2026-11-23"], "weather_code": [3], "temperature_2m_max": [14], "temperature_2m_min": [8]}}
+    block = _met_block(18.2, "cloudy", 1)
     calls = []
     def fake(url):
         calls.append(url)
         return {"results": [{"name": "Gilgit", "latitude": 35.9, "longitude": 74.3}]} if "geocoding" in url else block
     info = weather.fetch_place("PK", "Gilgit", fake)
-    assert info["name"] == "Gilgit" and info["temp"] == 12 and "countryCode=PK" in calls[0]
+    assert info["name"] == "Gilgit" and info["temp"] == 12 and info["text"] == "Overcast" and "countryCode=PK" in calls[0]
     assert weather.place("PK", "Gilgit")["temp"] == 12            # saved: no new lookup
     assert weather.fetch_place("PK", "Nowhereville", lambda url: {"results": []})["none"] is True
     assert weather.place("PK", "Nowhereville") is None

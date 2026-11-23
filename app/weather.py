@@ -60,9 +60,8 @@ CODES = {0: "Clear sky", 1: "Mostly clear", 2: "Partly cloudy", 3: "Overcast", 4
          67: "Freezing rain", 71: "Light snow", 73: "Snow", 75: "Heavy snow", 77: "Snow grains", 80: "Rain showers", 81: "Rain showers",
          82: "Violent rain showers", 85: "Snow showers", 86: "Heavy snow showers", 95: "Thunderstorm", 96: "Thunderstorm with hail", 99: "Thunderstorm with hail"}
 
-TTL = 1800
+TTL = 3 * 3600                    # MET Norway: the same place is not asked more often than every 3 hours
 log = logging.getLogger(__name__)
-_BATCH = 20                      # cities per request (smaller requests are less likely to be refused)
 _lock = threading.Lock()
 _DATA = {}                       # slug -> {t (saved at), now: {...}, days: [...]}
 _THREAD = {"pid": None}
@@ -73,7 +72,7 @@ def _num(v):
 
 
 def _get(url):
-    req = urllib.request.Request(url, headers={"User-Agent": "SurMusic/1.0 (+https://surmusicradio.com)", "Accept": "application/json"})
+    req = urllib.request.Request(url, headers={"User-Agent": "SurMusicRadio/1.0 (+https://www.surmusicradio.com)", "Accept": "application/json"})
     with urllib.request.urlopen(req, timeout=15) as r:  # noqa: S310 (fixed https host)
         raw = r.read(3 * 1024 * 1024 + 1)
     if len(raw) > 3 * 1024 * 1024:
@@ -97,28 +96,73 @@ def parse_place(block):
             "wind": _num(cur.get("wind_speed_10m")), "text": CODES.get(cur.get("weather_code"), "Changing"), "days": days[:7]}
 
 
+_MET_TEXT = (("thunder", "Thunderstorm"), ("heavysnow", "Heavy snow"), ("lightsnow", "Light snow"), ("snow", "Snow"), ("sleet", "Rain and snow"),
+             ("heavyrain", "Heavy rain"), ("lightrain", "Light rain"), ("showers", "Rain showers"), ("rain", "Rain"), ("fog", "Fog"),
+             ("partlycloudy", "Partly cloudy"), ("cloudy", "Overcast"), ("fair", "Mainly clear"), ("clearsky", "Clear sky"))
+
+
+def met_text(code):
+    low = str(code or "").lower()
+    return next((t for k, t in _MET_TEXT if k in low), "Changing")
+
+
+def parse_met(block, lon=0.0):
+    """One MET Norway (api.met.no) forecast -> what a page shows, or None if it is incomplete. Days follow the place's own clock (longitude / 15)."""
+    from datetime import datetime, timedelta, timezone
+    series = ((block or {}).get("properties") or {}).get("timeseries") or []
+    shift = timedelta(hours=round(float(lon) / 15))
+    days, order, now = {}, [], None
+    for e in series:
+        try:
+            when = datetime.fromisoformat(e["time"].replace("Z", "+00:00")).astimezone(timezone.utc) + shift
+            det = e["data"]["instant"]["details"]
+            t = det["air_temperature"]
+        except (KeyError, TypeError, ValueError):
+            continue
+        data = e["data"]
+        sym = ((data.get("next_1_hours") or data.get("next_6_hours") or {}).get("summary") or {}).get("symbol_code")
+        if now is None:
+            now = {"temp": _num(t), "feels": _num(t), "hum": _num(det.get("relative_humidity")),
+                   "wind": _num(det.get("wind_speed") * 3.6) if isinstance(det.get("wind_speed"), (int, float)) else None, "text": met_text(sym)}
+        d = when.strftime("%Y-%m-%d")
+        if d not in days:
+            days[d] = {"d": d, "temps": [], "mid": None, "best": 99}
+            order.append(d)
+        days[d]["temps"].append(t)
+        sym6 = ((data.get("next_6_hours") or {}).get("summary") or {}).get("symbol_code") or sym
+        gap = abs(when.hour - 12)
+        if sym6 and gap < days[d]["best"]:
+            days[d]["best"], days[d]["mid"] = gap, sym6
+    out = [{"d": d, "hi": _num(max(days[d]["temps"])), "lo": _num(min(days[d]["temps"])), "text": met_text(days[d]["mid"]), "rain": None} for d in order if days[d]["temps"]]
+    if now is None or not out:
+        return None
+    now["days"] = out[:7]
+    return now
+
+
+def _met_url(lat, lon):
+    return "https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=%.4f&lon=%.4f" % (float(lat), float(lon))
+
+
 def refresh_all(fetch=None):
-    """One request per 20 cities; returns how many cities were updated. A failed request keeps the old copy."""
+    """One request per city to MET Norway (free, no key), about half a second apart; returns how many cities were updated.
+    A failed request keeps the old copy."""
+    live = fetch is None
     fetch = fetch or _get
     got = 0
-    for i in range(0, len(CITIES), _BATCH):
-        if i and fetch is _get:
-            time.sleep(1)
-        part = CITIES[i:i + _BATCH]
-        url = ("https://api.open-meteo.com/v1/forecast?latitude=" + ",".join(str(c[3]) for c in part) + "&longitude=" + ",".join(str(c[4]) for c in part)
-               + "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m"
-               "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=7")
+    for i, c in enumerate(CITIES):
+        if live and i:
+            time.sleep(0.5)
         try:
-            data = fetch(url)
+            block = fetch(_met_url(c[3], c[4]))
         except Exception as exc:
             log.warning("Weather request failed (%s %s)", exc.__class__.__name__, getattr(exc, "code", "") or str(exc)[:80])
             continue
-        for city, block in zip(part, data if isinstance(data, list) else [data]):
-            info = parse_place(block)
-            if info:
-                with _lock:
-                    _DATA[slugify(city[0], 60)] = dict(info, t=time.time())
-                got += 1
+        info = parse_met(block, c[4])
+        if info:
+            with _lock:
+                _DATA[slugify(c[0], 60)] = dict(info, t=time.time())
+            got += 1
     return got
 
 
@@ -196,10 +240,8 @@ def fetch_place(cc, city, get=None):
             info = {"none": True}
         else:
             p = found[0]
-            data = get("https://api.open-meteo.com/v1/forecast?latitude=%s&longitude=%s" % (float(p["latitude"]), float(p["longitude"]))
-                       + "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m"
-                       "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=7")
-            info = parse_place(data) or {"none": True}
+            data = get(_met_url(p["latitude"], p["longitude"]))
+            info = parse_met(data, p["longitude"]) or {"none": True}
             info["name"] = str(p.get("name") or city)[:60]
     except Exception:
         return None

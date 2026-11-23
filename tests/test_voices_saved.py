@@ -57,17 +57,19 @@ def test_second_directory_adds_shows_with_apple_id_and_is_safe_without_key(monke
     assert [r["id"] for r in rows] == ["123"] and rows[0]["img"].startswith("https://")
 
 
-def test_weather_asks_in_small_batches_and_one_failure_keeps_the_rest():
+def test_weather_asks_one_city_at_a_time_and_one_failure_keeps_the_rest():
     from app import weather
+    from tests.test_topics import _met_block
     calls = []
 
     def fetch(url):
         calls.append(url)
         if len(calls) == 1:
             raise OSError("refused")
-        n = url.split("latitude=")[1].split("&")[0].count(",") + 1
-        return [{"current": {"temperature_2m": 20, "weather_code": 0}, "daily": {"time": ["2026-11-23"] * 7, "weather_code": [0] * 7, "temperature_2m_max": [25] * 7, "temperature_2m_min": [15] * 7}}] * n
+        return _met_block()
     weather._DATA.clear()
     got = weather.refresh_all(fetch)
-    assert len(calls) == -(-len(weather.CITIES) // weather._BATCH) and 0 < got < len(weather.CITIES)
+    assert len(calls) == len(weather.CITIES) and got == len(weather.CITIES) - 1 and all("api.met.no" in u for u in calls)
+    first = weather.get("lahore") or next(iter(weather._DATA.values()))
+    assert first["text"] == "Light rain" and first["days"][0]["hi"] > first["days"][0]["lo"] and 8 < first["wind"] < 10
     weather._DATA.clear()
