@@ -17,7 +17,8 @@
   <section class="card">
     <h2 class="h3">Listen while you follow it</h2>
     <p><a class="btn btn-accent" href="{{ href }}">▶ {{ {'sports': 'Live commentary', 'news': 'News radio', 'debate': 'Talk radio', 'markets': 'See rates', 'movies': 'Film music radio', 'music': 'Music radio'}.get(kind, 'Listen') }}</a>
-    <a class="btn" href="/trending">All trending topics</a></p>
+    <a class="btn" href="/trending">All trending topics</a>
+    <button class="btn share-page" type="button" data-share-page>↗ Share</button></p>
   </section>
   {% if others %}<section class="card" aria-labelledby="ot">
     <h2 class="h3" id="ot">Other trending topics</h2>

@@ -196,8 +196,19 @@
     if (station.url) return Promise.resolve(station.url);
     return api("POST", "/api/stream", { station: station }).then(function (r) { return r.url; });
   }
+  // A podcast episode or talk has a position: pausing keeps it, and play carries on from there (live radio has no position, so it reconnects).
+  function isEpisode(st) { return !!(st && st.url && /(^|,)\s*podcast\s*(,|$)/i.test(st.tags || "")); }
+  function resumeEpisode(station) {
+    if (!isEpisode(station) || !state.station || state.station.uuid !== station.uuid || !audio.getAttribute("src") || !audio.paused) return false;
+    if (bar.getAttribute("data-state") !== "paused") return false;
+    setState("loading");
+    var p = audio.play();
+    if (p && p.catch) p.catch(function (err) { if (err && err.name !== "AbortError") setState("error"); });
+    return true;
+  }
   function play(station, list, category) {
     if (!station) return;
+    if (resumeEpisode(station)) return;
     if (list && list.length) state.list = list;
     if (!state.list.length || !state.list.some(function (s) { return s.uuid === station.uuid; })) {
       // e.g. a station restored after sign-in: use the list on this page that contains it (or the first list)
@@ -257,6 +268,10 @@
     state.list = state.list.filter(function (s) { return s.uuid !== station.uuid; });
   }
   function pause() {
+    if (isEpisode(state.station) && audio.getAttribute("src")) {       // keep the place in the episode
+      audio.pause(); stopBeats(true); setState("paused"); markLists();
+      return;
+    }
     audio.pause(); audio.removeAttribute("src"); audio.load();
     stopBeats(true);
     setState("paused"); markLists();

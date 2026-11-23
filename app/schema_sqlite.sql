@@ -214,3 +214,9 @@ CREATE TABLE IF NOT EXISTS station_likes (
   created_at TEXT NOT NULL,
   PRIMARY KEY (station_uuid, ip_hash)
 );
+
+CREATE TABLE IF NOT EXISTS digest_optin (
+  user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  token TEXT NOT NULL UNIQUE,
+  last_sent TEXT
+);

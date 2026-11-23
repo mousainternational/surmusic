@@ -634,3 +634,39 @@ def test_trending_strip_opens_topic_page_when_it_exists(app):
         assert out[0]["href"] == "/trending/pakistan-vs-england" and out[0]["action"] == "Latest news"
         assert out[1]["href"] == "/genre/news"
         public._TREND_PAGES.clear()
+
+
+def test_share_button_on_pages(client):
+    assert "data-share-page" in client.get("/").get_data(as_text=True)
+
+
+def test_weather_pages(app, client):
+    from app import weather
+    weather._DATA.clear()
+    block = {"current": {"temperature_2m": 31.4, "apparent_temperature": 33, "relative_humidity_2m": 40, "weather_code": 2, "wind_speed_10m": 9},
+             "daily": {"time": ["2026-11-23", "2026-11-24"], "weather_code": [2, 61], "temperature_2m_max": [32, 30], "temperature_2m_min": [19, 18],
+                       "precipitation_probability_max": [10, 60]}}
+    names = [c[0] for c in weather.CITIES]
+    got = weather.refresh_all(lambda url: [block] * (url.count(",") + 1 if False else len(names[:40]) if "latitude=31.55" in url else len(names) - 40))
+    assert got == len(names)
+    html = client.get("/weather/lahore").get_data(as_text=True)
+    assert "Lahore Weather Today" in html and "31°C" in html and "Light rain" in html and "data-share-page" in html
+    assert client.get("/weather/atlantis").status_code == 404
+    assert "Lahore weather" in client.get("/weather").get_data(as_text=True)
+    assert "/weather/lahore" in client.get("/sitemap.xml").get_data(as_text=True)
+    weather._DATA.clear()
+    assert client.get("/weather/lahore").status_code == 503
+
+
+def test_todays_news_page(client):
+    from app import today
+    today._DATA.update(t=0.0, sections={})
+    feed = lambda url: [{"t": f"Headline {i} here", "s": "Paper", "u": "https://n.test/x"} for i in range(5)]
+    assert today.refresh_all(feed, pause=0) == len(today.SECTIONS)
+    html = client.get("/today").get_data(as_text=True)
+    assert "World headlines" in html and "Headline 1 here" in html and "n.test" not in html and "data-share-page" in html
+    assert "/today" in client.get("/sitemap.xml").get_data(as_text=True)
+    today._DATA.update(t=0.0, sections={})
+    empty = client.get("/today")
+    assert empty.status_code == 200 and "being loaded" in empty.get_data(as_text=True) and "noindex" in empty.get_data(as_text=True)
+    assert "/today" not in client.get("/sitemap.xml").get_data(as_text=True)

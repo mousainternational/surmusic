@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% import "_ad.html" as ads with context %}
+{% block content %}
+<div class="wrap page narrow">
+  {{ ui.breadcrumbs([('Home', '/'), ('Weather', '/weather')]) }}
+  <header class="page-head">
+    <h1>Weather Today: Temperature and 7-Day Forecast for Big Cities</h1>
+    <p class="lead">Pick a city for today's temperature and the week ahead. Every page refreshes by itself about every 30 minutes, and live radio is one tap away.</p>
+  </header>
+  {{ ads.ad('top') }}
+  {% for country, cities in groups.items() %}
+  <section class="card" aria-labelledby="w-{{ loop.index }}">
+    <h2 class="h3" id="w-{{ loop.index }}">{{ country }}</h2>
+    <ul class="trend-list">{% for c in cities %}<li><a href="/weather/{{ c.slug }}">{{ c.name }} weather</a>{% if c.temp is not none %} <span class="muted small">{{ c.temp }}°C, {{ c.text | lower }}</span>{% endif %}</li>{% endfor %}</ul>
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

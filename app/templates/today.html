@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% import "_ad.html" as ads with context %}
+{% block content %}
+<div class="wrap page narrow">
+  {{ ui.breadcrumbs([('Home', '/'), ("Today's news", '/today')]) }}
+  <header class="page-head">
+    <h1>Today's News Headlines: World, Pakistan, India, Business and Sport</h1>
+    <p class="lead">The newest headlines from many countries and subjects, refreshed by themselves about every 30 minutes. Keep <a href="/genre/news">news radio</a> playing while you read.</p>
+    <p><button class="btn share-page" type="button" data-share-page>↗ Share</button></p>
+  </header>
+  {{ ads.ad('top') }}
+  {% if not sections %}<section class="card"><p>The headlines are being loaded. Please check again in a minute.</p></section>{% endif %}
+  {% for name, items in sections.items() %}
+  <section class="card" aria-labelledby="n-{{ loop.index }}">
+    <h2 class="h3" id="n-{{ loop.index }}">{{ name }} headlines</h2>
+    <ul class="plain">{% for n in items %}<li>{{ n.t }}{% if n.s %} <span class="muted small">· {{ n.s }}</span>{% endif %}</li>{% endfor %}</ul>
+  </section>
+  {% endfor %}
+  <p class="muted small">Headlines come from public news feeds, shown with the name of the news source. Updated {{ updated }}. See also <a href="/trending">what is trending now</a> and <a href="/weather">the weather in big cities</a>.</p>
+</div>
+{% endblock %}

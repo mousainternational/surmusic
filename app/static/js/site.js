@@ -748,3 +748,17 @@ document.addEventListener("error", function (e) {
   window.addEventListener("appinstalled", function () { var b = document.getElementById("a2hs-bar"); if (b) b.hidden = true; });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();
+
+
+// ---------- "Share this page": the phone's own share sheet (WhatsApp, Facebook ...), or copy the link; nothing leaves the site by itself ----------
+(function () {
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-share-page]");
+    if (!b) return;
+    var data = { title: document.title, url: location.href.split("#")[0] };
+    if (navigator.share) { navigator.share(data).catch(function () { /* cancelled */ }); return; }
+    var done = function () { var old = b.textContent; b.textContent = "Link copied"; setTimeout(function () { b.textContent = old; }, 2000); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(data.url).then(done, function () { window.prompt("Copy this link", data.url); });
+    else window.prompt("Copy this link", data.url);
+  });
+})();

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui with context %}
+{% import "_ad.html" as ads with context %}
+{% block content %}
+<div class="wrap page narrow">
+  {{ ui.breadcrumbs([('Home', '/'), ('Weather', '/weather'), (city, request.path)]) }}
+  <header class="page-head">
+    <h1>{{ city }} Weather Today: Temperature and 7-Day Forecast</h1>
+    <p class="lead">Right now in {{ city }}, {{ country }}: <strong>{{ d.temp }}°C ({{ f(d.temp) }}°F)</strong>, {{ d.text | lower }}{% if d.feels is not none %}, feels like {{ d.feels }}°C{% endif %}{% if d.hum is not none %}, humidity {{ d.hum }}%{% endif %}{% if d.wind is not none %}, wind {{ d.wind }} km/h{% endif %}. This page updates by itself about every 30 minutes.</p>
+  </header>
+  {{ ads.ad('top') }}
+  <section class="card" aria-labelledby="wf">
+    <h2 class="h3" id="wf">{{ city }} 7-day forecast</h2>
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th scope="col">Day</th><th scope="col">Weather</th><th scope="col">Low</th><th scope="col">High</th><th scope="col">Rain</th></tr></thead>
+      <tbody>{% for x in d.days %}<tr><th scope="row">{{ x.d }}</th><td>{{ x.text }}</td><td>{{ x.lo }}°C</td><td>{{ x.hi }}°C</td><td>{% if x.rain is not none %}{{ x.rain }}%{% else %}-{% endif %}</td></tr>{% endfor %}</tbody>
+    </table></div>
+    <p class="muted small">Updated {{ updated }}. Temperatures in °C.</p>
+  </section>
+  <section class="card">
+    <h2 class="h3">Listen while you check the weather</h2>
+    <p><a class="btn btn-accent" href="{{ radio_href }}">▶ {{ country }} radio</a> <a class="btn" href="/genre/news">News radio</a> <button class="btn share-page" type="button" data-share-page>↗ Share</button></p>
+  </section>
+  {% if near %}<section class="card" aria-labelledby="wn"><h2 class="h3" id="wn">Weather in other cities of {{ country }}</h2>
+    <ul class="trend-list">{% for k, n in near %}<li><a href="/weather/{{ k }}">{{ n }} weather</a></li>{% endfor %}</ul></section>{% endif %}
+  {% if faqs %}<section class="topic-faq card"><h2 class="h3">Questions</h2>
+    {% for q, a in faqs %}<details><summary>{{ q }}</summary><p>{{ a }}</p></details>{% endfor %}</section>{% endif %}
+</div>
+{% endblock %}

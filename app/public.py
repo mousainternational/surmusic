@@ -25,6 +25,9 @@ from . import blog as blog_data
 from . import islam as islam_data
 from . import markets
 from . import trends
+from . import digest
+from . import weather
+from . import today as today_news
 from .seo import (absolute, article_ld, breadcrumb_ld, build_meta, collection_ld, faq_items_ld, faq_ld, topic_keywords, media_url, organization_ld, page_ld, station_ld, webapp_ld, android_app_ld,
                   website_ld)
 from .settings import (ADSENSE_CLIENT_RE, ads_active, affiliate_offers, donation_method, get_settings, is_blocked,
@@ -2276,6 +2279,129 @@ def trending_topic(slug):
                            updated=time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime(data["ts"])), ld=[breadcrumb_ld(crumbs), faq_items_ld(faqs)])
 
 
+def _weather_start():
+    try:
+        weather.start(current_app._get_current_object(), radio.keep, radio._peek)
+    except Exception:
+        pass
+
+
+def _weather_data(slug):
+    """The saved weather of a city (memory, else the database copy); never the network."""
+    hit = weather.get(slug)
+    if not hit:
+        try:
+            weather.load_saved(radio._peek("keep:weather"))
+        except Exception:
+            pass
+        hit = weather.get(slug)
+    return hit
+
+
+_JOBS = {"pid": None}
+
+
+def _digest_collect():
+    """(the newest trending topics with their first headline, the top world headlines) for the weekly message."""
+    trending = [{"term": v["term"], "t": v["news"][0]["t"]} for v in sorted(_TREND_PAGES.values(), key=lambda v: -v["ts"])[:8]]
+    world = (today_news.get()["sections"].get("World") or [])[:6]
+    return trending, world
+
+
+@bp.before_app_request
+def _start_background_jobs():
+    """The first request of every web process starts the automatic jobs (trending pages, weather, today's news, the weekly message):
+    a thread made before the server forks its workers does not follow them."""
+    if _JOBS["pid"] == os.getpid():
+        return
+    _JOBS["pid"] = os.getpid()
+    try:
+        app = current_app._get_current_object()
+        start_trend_pages(app)
+        weather.start(app, radio.keep, radio._peek)
+        today_news.start(app, radio.keep, radio._peek)
+        digest.start(app, _digest_collect)
+    except Exception:
+        pass
+
+
+@bp.route("/unsubscribe/<token>", methods=["GET", "POST"])
+def unsubscribe(token):
+    db = get_db()
+    done = False
+    valid = digest.token_exists(db, token)
+    if request.method == "POST" and valid:
+        done = digest.stop_by_token(db, token)
+        valid = False
+    return render_template("unsubscribe.html", meta={"title": "Weekly message | Sur Music", "noindex": True}, done=done, valid=valid)
+
+
+@bp.route("/today")
+def todays_news():
+    try:
+        today_news.start(current_app._get_current_object(), radio.keep, radio._peek)
+    except Exception:
+        pass
+    data = today_news.get()
+    if not data["sections"]:
+        try:
+            today_news.load_saved(radio._peek("keep:today"))
+        except Exception:
+            pass
+        data = today_news.get()
+    ready = len(data["sections"]) >= 3
+    first = next(iter(data["sections"].values()))[0]["t"] if ready else ""
+    meta = build_meta("Today's News Headlines: World, Pakistan, India, Sports",
+                      f"Today's top headlines from the world, Pakistan, India, the USA, the UK, business, technology and sport, refreshed automatically. Latest: {first}." if ready
+                      else "Today's top headlines from the world, Pakistan, India, the USA, the UK, business, technology and sport, refreshed automatically.",
+                      canonical_path="/today", noindex=not ready)
+    crumbs = [("Home", "/"), ("Today's news", "/today")]
+    return render_template("today.html", meta=meta, sections=data["sections"] if ready else {},
+                           updated=time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime(data["t"])), ld=[breadcrumb_ld(crumbs)])
+
+
+@bp.route("/weather")
+def weather_index():
+    _weather_start()
+    groups, any_data = {}, False
+    for name, country, key, _la, _lo in weather.CITIES:
+        slug = slugify(name, 60)
+        d = _weather_data(slug)
+        any_data = any_data or bool(d)
+        groups.setdefault(country, []).append({"slug": slug, "name": name, "temp": d["temp"] if d else None, "text": d["text"] if d else ""})
+    meta = build_meta("Weather Today in Pakistan, India, UAE, UK, USA and More",
+                      "Today's temperature and a 7-day forecast for Lahore, Karachi, Islamabad, Delhi, Mumbai, Dubai, Riyadh, London, New York and 60+ cities. Updated every 30 minutes, with live radio.",
+                      canonical_path="/weather", noindex=not any_data)
+    crumbs = [("Home", "/"), ("Weather", "/weather")]
+    return render_template("weather_index.html", meta=meta, groups=groups, ld=[breadcrumb_ld(crumbs)])
+
+
+@bp.route("/weather/<slug>")
+def weather_city(slug):
+    if not weather.valid_slug(slug):
+        abort(404)
+    _weather_start()
+    city, country, key, _la, _lo = weather.BY_SLUG[slug]
+    d = _weather_data(slug)
+    if not d:
+        resp = make_response("This page is being prepared. Please check again in a little while.", 503)
+        resp.headers["Retry-After"] = "600"
+        return resp
+    today = d["days"][0]
+    meta = build_meta(f"{city} Weather Today: Temperature & 7-Day Forecast",
+                      f"{city}, {country} weather now: {d['temp']}°C and {d['text'].lower()}. Today {today['lo']}° to {today['hi']}°C. 7-day forecast, updated every 30 minutes, with live radio.",
+                      canonical_path=f"/weather/{slug}")
+    faqs = [(f"What is the weather in {city} today?", f"Right now it is {d['temp']}°C ({weather.f_from_c(d['temp'])}°F) in {city} with {d['text'].lower()}. Today's low is {today['lo']}°C and the high is {today['hi']}°C."),
+            (f"Will it rain in {city} today?", f"The chance of rain today is {today['rain']}%." if today.get("rain") is not None else f"Check the 7-day forecast above for rain in {city}."),
+            (f"How often is the {city} weather updated?", "This page is refreshed automatically about every 30 minutes.")]
+    near = [x for x in weather.CITIES if x[1] == country and x[0] != city][:8]
+    crumbs = [("Home", "/"), ("Weather", "/weather"), (city, f"/weather/{slug}")]
+    radio_href = topic_path(key) if key in TOPICS else "/genre/news"
+    return render_template("weather_city.html", meta=meta, city=city, country=country, d=d, faqs=faqs, near=[(slugify(x[0], 60), x[0]) for x in near],
+                           radio_href=radio_href, f=weather.f_from_c, updated=time.strftime("%Y-%m-%d %H:%M UTC", time.gmtime(d["t"])),
+                           ld=[breadcrumb_ld(crumbs), faq_items_ld(faqs)])
+
+
 @bp.route("/trending")
 def trending_page():
     countries = trends.by_country()
@@ -2421,7 +2547,7 @@ def sitemap():
     site = current_app.config["SITE_URL"]
     pages = ["/", "/bollywood", "/lollywood", "/hollywood", "/download", "/donate", "/about", "/contact", "/faq",
              "/privacy", "/terms", "/disclaimer", "/donation-disclaimer", "/cookies"]
-    pages += ["/for-stations", "/radio-stations", "/top-100", "/pakistan-fm-radio", "/podcasts", "/accessibility", "/reviews", "/islam", "/markets", "/live-news", "/blog"] + (["/voices"] if _FOUND else []) + (["/trending"] if trends.by_country() else []) + [f"/trending/{k}" for k, _ in _trend_known()] + [f"/blog/{p['slug']}" for p in blog_data.POSTS] + [f"/continent/{c}" for c in CONTINENTS]
+    pages += ["/for-stations", "/radio-stations", "/top-100", "/pakistan-fm-radio", "/podcasts", "/accessibility", "/reviews", "/islam", "/markets", "/live-news", "/blog"] + (["/voices"] if _FOUND else []) + (["/trending"] if trends.by_country() else []) + [f"/trending/{k}" for k, _ in _trend_known()] + (["/weather"] + [f"/weather/{k}" for k in weather.saved_copy()] if weather.saved_copy() else []) + (["/today"] if len(today_news.get()["sections"]) >= 3 else []) + [f"/blog/{p['slug']}" for p in blog_data.POSTS] + [f"/continent/{c}" for c in CONTINENTS]
     pages += [topic_path(k) for _, items in _listed_types() for k, _ in items]
     pages += [topic_path(k) for c in CONTINENTS for k, _, _ in _listed_countries(c)] + ["/deals"]
     from . import podcasts as _pod

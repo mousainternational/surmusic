@@ -59,6 +59,15 @@
 
   <form class="card form" method="post">
     <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="digest">
+    <h2 class="h3">Weekly message</h2>
+    <label class="check"><input type="checkbox" name="digest" value="1" {% if digest_on %}checked{% endif %}> Send me a short weekly message: what is trending and today's headlines</label>
+    <p class="small muted">At most once a week, only to your confirmed account. Every message has a one-click link to stop.</p>
+    <button class="btn btn-primary">Save</button>
+  </form>
+
+  <form class="card form" method="post">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
     <input type="hidden" name="action" value="profile">
     <h2 class="h3">Profile</h2>
     <label for="display_name">Display name</label>

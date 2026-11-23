@@ -8,7 +8,7 @@ from flask import (Blueprint, Response, current_app, flash, g, redirect, render_
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from . import analytics, twofa
+from . import analytics, digest, twofa
 from .db import get_db, utcnow
 from .mailer import send_mail, send_mail_later, smtp_ready
 from .security import current_user, login_required, rate_limited, safe_next, start_session
@@ -106,6 +106,8 @@ def signup():
                                       "email_verified": 0, "created_at": utcnow()})
             db.commit()
             analytics.record("signup", uid, detail=form["display_name"])
+            if request.form.get("digest"):
+                digest.set_optin(db, uid, True)
             user = db.one("SELECT * FROM users WHERE id = ?", (uid,))
             status = _send_verification(user) if smtp_ready() else "pending_setup"
             if verification_required():
@@ -429,6 +431,9 @@ def account():
                 session["sv"] = sv  # keep this device signed in, sign out every other device
                 _security_notice(me, "Your password was changed")
                 flash("Password changed. You were signed out on all other devices.", "success")
+        elif action == "digest":
+            digest.set_optin(db, me["id"], bool(request.form.get("digest")))
+            flash("You will get the weekly message." if request.form.get("digest") else "The weekly message is switched off.", "success")
         elif action == "signout_all":
             sv = me["session_version"] + 1
             db.execute("UPDATE users SET session_version = ? WHERE id = ?", (sv, me["id"]))
@@ -446,7 +451,8 @@ def account():
     signins = [e for e in analytics.recent(user_id=me["id"], limit=60) if e["kind"] in ("login", "signup")][:5]
     return render_template("account/account.html", meta={"title": "My account | Sur Music", "noindex": True},
                            me=me, stats=stats, recent=recent, smtp=smtp_ready(), signins=signins,
-                           minutes=analytics.listening_minutes(me["id"]), two_step=twofa.is_enabled(me["id"]))
+                           minutes=analytics.listening_minutes(me["id"]), two_step=twofa.is_enabled(me["id"]),
+                           digest_on=digest.is_on(db, me["id"]))
 
 
 @bp.route("/account/export")
@@ -483,6 +489,7 @@ def account_delete():
     db.execute("DELETE FROM live_sessions WHERE user_id = ?", (me["id"],))
     db.execute("UPDATE events SET user_id = NULL WHERE user_id = ?", (me["id"],))
     db.execute("DELETE FROM user_2fa WHERE user_id = ?", (me["id"],))
+    db.execute("DELETE FROM digest_optin WHERE user_id = ?", (me["id"],))
     db.execute("DELETE FROM users WHERE id = ?", (me["id"],))
     db.commit()
     analytics.record("account_deleted")
