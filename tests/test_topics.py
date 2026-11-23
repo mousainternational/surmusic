@@ -578,3 +578,11 @@ def test_trending_topic_pages(app, client):
     assert "/trending/pakistan-vs-england" in client.get("/sitemap.xml").get_data(as_text=True)
     public._TREND_PAGES.clear()
     ctx.pop()
+
+
+def test_adult_headlines_and_topics_are_dropped():
+    from app import headlines
+    feed = ("<rss><channel>" + "".join(f"<item><title>{t} - Paper</title><link>https://n.test/{i}</link></item>" for i, t in enumerate(
+        ["Calm budget news", "Sexual content row", "Lingerie brand opens", "Stripper arrested", "Rapist jailed", "Good cricket win"])) + "</channel></rss>")
+    out = [x["t"] for x in headlines.parse(feed)]
+    assert out == ["Calm budget news", "Good cricket win"]

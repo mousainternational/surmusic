@@ -2152,7 +2152,7 @@ def live_news_page():
                            trending=trends.top(8), ld=[breadcrumb_ld(crumbs), faq_ld(islam_data.LIVE_NEWS_FAQ)])
 
 
-_ADULT_TOPIC = re.compile(r"\b(sex|sexy|sexual|porn|porno|nude|nudes|naked|erotic|rape|nsfw|xxx|escort|onlyfans|fetish|strip club)\b", re.I)
+from .headlines import _SKIP as _ADULT_TOPIC  # noqa: E402  (one list of adult words for every headline and topic)
 _TREND_PAGES = {}               # slug -> {term, kind, href, news, ts}: the pages of what people search right now (kept small, refreshed by the background thread)
 
 

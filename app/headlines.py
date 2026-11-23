@@ -14,7 +14,10 @@ import xml.etree.ElementTree as ET
 TTL = 15 * 60
 _ENGLISH_EDITIONS = {"US", "GB", "IN", "AU", "CA", "NZ", "IE", "SG", "ZA", "NG", "KE", "GH", "PK", "PH", "MY", "BD",
                      "TZ", "UG", "ZW", "NA", "BW", "ET", "LB", "SA", "AE", "IL", "HK"}
-_SKIP = re.compile(r"\b(porn|pornography|sex tape|nude|naked|onlyfans|escort)\b", re.I)
+_SKIP = re.compile(r"\b(porn|porno|pornography|pornographic|sex|sexy|sexual|sexually|sexuality|sextortion|sex tape|nude|nudes|nudity|naked|topless|"
+                   r"erotic|erotica|fetish|onlyfans|escort|escorts|stripper|strippers|strip club|lingerie|xxx|nsfw|adult film|adult films|"
+                   r"adult star|adult content|prostitute|prostitutes|prostitution|brothel|hookup|incest|rape|raped|rapist|rapists|"
+                   r"molest|molested|molestation|paedophile|pedophile|leaked mms|mms scandal|obscene|vulgar)\b", re.I)
 _lock = threading.Lock()
 _cache = {}          # country code -> (fetched_at, items)
 _busy = set()
