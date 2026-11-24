@@ -1,6 +1,20 @@
 {% extends "admin/_layout.html" %}
 {% block title %}Backup and restore{% endblock %}
 {% block admin %}
+<div class="card" id="auto-backup" style="margin-bottom:16px">
+  <h2 class="h3">Automatic safe copy</h2>
+  {% if auto.enabled %}
+  <p><strong style="color:#0a7a3d">ON — automatic.</strong> A private encrypted copy of accounts, settings, favourites, reviews and messages is saved by itself ({{ 'Cloudflare KV' if auto.where == 'cloudflare-kv' else 'a private GitHub repository' }}) about every 10 minutes when something changed, and again just before every restart. Visitor statistics have their own copy, saved about every hour. After a restart the site loads the copy back by itself. Nothing needs to be pressed.</p>
+  <ul class="small">
+    <li>Last copy written: <strong>{{ auto.last_ok or 'none since the last restart (nothing has changed)' }}</strong></li>
+    <li>Last check that the copy is current: <strong>{{ auto.last_check or 'not yet (the first check runs a minute after a start)' }}</strong></li>
+    <li>Statistics copy last confirmed: <strong>{{ auto.stats_last_ok or 'not yet (first check about 3 minutes after a start)' }}</strong></li>
+  </ul>
+  {% if auto.last_error %}<p style="color:#b42318"><strong>Last problem:</strong> {{ auto.last_error }}. The site tries again by itself at the next check.</p>{% endif %}
+  {% else %}
+  <p><strong style="color:#b42318">OFF — nothing is being saved outside the server.</strong> On the free hosting plan every restart starts from an empty copy, so accounts, settings and statistics can be lost. To switch it on, add these in the host's environment settings: <code>BACKUP_GITHUB_REPO</code> (a PRIVATE repository, owner/name) and <code>BACKUP_GITHUB_TOKEN</code> (a token with "Contents: read and write" on that repository only). After that it runs by itself.</p>
+  {% endif %}
+</div>
 <div class="grid donate-grid">
   <form class="card form" method="post" action="{{ url_for('admin.backup_download') }}">
     <input type="hidden" name="_csrf" value="{{ csrf_token() }}">

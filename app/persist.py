@@ -36,7 +36,7 @@ FORMAT = "surmusic-snapshot-v1"
 FILE_PATH = "surmusic-data.json.gz.enc"
 MAX_BYTES = 20 * 1024 * 1024          # never push more than this (GitHub file limit is far higher)
 
-_state = {"last_hash": None, "sha": None, "started": False, "last_ok": None, "last_error": None}
+_state = {"last_hash": None, "sha": None, "started": False, "last_ok": None, "last_error": None, "last_check": None}
 _lock = threading.Lock()
 
 
@@ -73,9 +73,14 @@ def backend():
     return "cloudflare-kv" if _kv_on() else ("github" if _gh_on() else "")
 
 
+def _now_text():
+    return time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
+
+
 def status():
     """For the admin panel and /healthz: no secrets."""
-    return {"enabled": enabled(), "where": backend(), "last_ok": _state["last_ok"], "last_error": _state["last_error"]}
+    return {"enabled": enabled(), "where": backend(), "last_ok": _state["last_ok"], "last_error": _state["last_error"],
+            "last_check": _state["last_check"], "stats_last_ok": _stats_state["last_ok"]}
 
 
 # ------------------------------------------------------------------ encryption
@@ -322,7 +327,7 @@ def push_url(url, force=False):
 STATS_PATH = "surmusic-stats.json.gz.enc"
 STATS_FORMAT = "surmusic-stats-v1"
 STATS_DAYS = 90
-_stats_state = {"sha": None, "last_hash": None}
+_stats_state = {"sha": None, "last_hash": None, "last_ok": None}
 
 
 def _stats_kv_url():
@@ -481,7 +486,8 @@ def start(app):
     def loop():
         time.sleep(60)
         while True:
-            push_url(app.config["DATABASE_URL"])
+            if push_url(app.config["DATABASE_URL"]) in ("pushed", "unchanged"):
+                _state["last_check"] = _now_text()              # the loop ran and the saved copy is current (shown in the admin Backup page)
             time.sleep(every * 60)
 
     threading.Thread(target=loop, name="data-backup", daemon=True).start()
@@ -494,7 +500,8 @@ def start(app):
     def stats_loop():
         time.sleep(180)
         while True:
-            push_stats_url(app.config["DATABASE_URL"])
+            if push_stats_url(app.config["DATABASE_URL"]) in ("pushed", "unchanged"):
+                _stats_state["last_ok"] = _now_text()
             time.sleep(stats_every * 60)
 
     threading.Thread(target=stats_loop, name="stats-backup", daemon=True).start()

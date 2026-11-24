@@ -653,7 +653,8 @@ def audit_log():
 @bp.route("/backup")
 @admin_required
 def backup():
-    return render_template("admin/backup.html", meta=META)
+    from . import persist
+    return render_template("admin/backup.html", meta=META, auto=persist.status())
 
 
 @bp.route("/backup/download", methods=["POST"])

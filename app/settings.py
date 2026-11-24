@@ -436,6 +436,10 @@ def setup_warnings(smtp_ready):
         w.append("IMPORTANT for Europe & UK visitors: in AdSense open Privacy & messaging → European regulations "
                  "and publish the consent message (it is free). Then tick “I published the European consent "
                  "message” in Ads. Google requires it for visitors from the EEA, UK and Switzerland.")
+    from . import persist
+    if not persist.enabled():
+        w.append("The automatic safe copy is OFF: accounts, settings and statistics can be lost at a restart on the free plan. "
+                 "Add BACKUP_GITHUB_REPO (a private repository) and BACKUP_GITHUB_TOKEN in the host's environment settings. See Backup.")
     for name, label in (("jazzcash", "JazzCash"), ("nayapay", "NayaPay"), ("wise", "Wise")):
         if donation_method(name) is None:
             w.append(f"{label} donations are hidden until you add the holder name, upload the official QR or "

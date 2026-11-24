@@ -33,3 +33,19 @@ def test_visit_sources_are_grouped_and_add_up_to_the_visitors(app):
         rows = {r["label"]: r["visitors"] for r in s["referrers"]}
         assert rows == {"facebook.com": 2, "Direct (typed, app or bookmark)": 2, "bing.com": 1}
         assert sum(rows.values()) == s["totals"]["visitors"]
+
+
+def test_backup_page_shows_whether_the_automatic_copy_is_on(client, app, monkeypatch):
+    from tests.conftest import ADMIN_EMAIL, ADMIN_PASSWORD
+    from app import persist
+    client.post("/login", data={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD, "_csrf": __import__("tests.conftest", fromlist=["csrf"]).csrf(client)})
+    html = client.get("/admin/backup").get_data(as_text=True)
+    assert "Automatic safe copy" in html and "OFF" in html and "BACKUP_GITHUB_REPO" in html
+    monkeypatch.setenv("BACKUP_GITHUB_REPO", "me/private")
+    monkeypatch.setenv("BACKUP_GITHUB_TOKEN", "t")
+    persist._state["last_ok"], persist._state["last_check"] = "2026-11-24 01:00:00 UTC", "2026-11-24 02:00:00 UTC"
+    try:
+        html = client.get("/admin/backup").get_data(as_text=True)
+    finally:
+        persist._state["last_ok"] = persist._state["last_check"] = None
+    assert "ON — automatic" in html and "2026-11-24 01:00:00 UTC" in html and "2026-11-24 02:00:00 UTC" in html
