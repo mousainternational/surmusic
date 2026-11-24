@@ -65,3 +65,17 @@ def test_hassan_allahyari_is_looked_up_with_the_scholars_and_only_listed_if_he_h
     assert [r["id"] for r in podcasts._build("islamic-scholars")] == ["991"]          # found: listed
     monkeypatch.setattr(podcasts, "_api", lambda *a, **k: {"results": []})
     assert podcasts._build("islamic-scholars") == []                                  # no show found: nobody is listed without audio
+
+
+def test_genre_pages_always_add_word_searches_after_a_chart_of_200(monkeypatch):
+    assert podcasts.LIST_FULL > 200
+    urls = []
+    monkeypatch.setattr(podcasts, "_get", lambda url, cap=0, *a, **k: (urls.append(url), b'{"feed":{"entry":[]}}')[1])
+    podcasts._chart_genre("us", 1489)
+    assert "limit=200" in urls[0]
+    terms = []
+    monkeypatch.setattr(podcasts, "_chart_genre", lambda cc, gid: [{"id": str(i), "name": f"C{i}", "artist": f"A{i}", "img": "https://e.com/a.jpg", "feed": ""} for i in range(200)])
+    monkeypatch.setattr(podcasts, "_api", lambda path, **k: (terms.append(k["term"]), {"results": []})[1])
+    monkeypatch.setattr(podcasts, "index_search", lambda t, limit=20: [])
+    podcasts._build("news")
+    assert len(terms) >= 5 and "world news podcast" in terms                  # not skipped just because the chart was long

@@ -36,7 +36,7 @@ CATEGORIES = {
     "hindi": ("Hindi podcasts", [("search", "hindi podcast", "IN"), ("search", "hindi talk show", "IN")]),
     "cricket": ("Cricket", [("search", "cricket podcast", "IN"), ("search", "cricket podcast", "PK")]),
     "bollywood": ("Bollywood & film", [("search", "bollywood podcast", "IN")]),
-    "news": ("News & talk", [("search", "news podcast", "PK"), ("search", "news podcast", "US")]),
+    "news": ("News & talk", [("search", "news podcast", "PK"), ("search", "news podcast", "US"), ("search", "world news podcast", "US"), ("search", "urdu news podcast", "PK"), ("search", "news podcast", "IN"), ("search", "news podcast", "GB"), ("search", "arabic news podcast", "AE")]),
     "kids": ("Kids & stories", [("search", "kids stories podcast", "US"), ("search", "bachon ki kahaniyan", "PK")]),
     "celebrity": ("Celebrity & interview podcasts", [("search", "celebrity interviews podcast", "US"), ("search", "celebrity podcast", "US"), ("search", "urdu interviews podcast", "PK"), ("search", "bollywood celebrity interviews", "IN")]),
     "christian": ("Christian sermons & Bible", [("search", "christian sermons podcast", "US"), ("search", "bible study podcast", "US"), ("search", "gospel worship podcast", "US")]),
@@ -214,7 +214,7 @@ def _chart(cc):
     try:
         return _chart_v2(cc)
     except Exception:                                  # Apple's older chart address, used when the new one is slow or down
-        data = json.loads(_get(f"https://itunes.apple.com/{cc}/rss/toppodcasts/limit=50/json", MAX_JSON).decode("utf-8", "replace"))
+        data = json.loads(_get(f"https://itunes.apple.com/{cc}/rss/toppodcasts/limit=200/json", MAX_JSON).decode("utf-8", "replace"))
         out = []
         for e in data.get("feed", {}).get("entry", []):
             sid = str(((e.get("id") or {}).get("attributes") or {}).get("im:id") or "")
@@ -265,12 +265,12 @@ GENRES = {"news": 1489, "education": 1304, "business": 1321, "technology": 1318,
 ON_DEMAND = {"arts", "comedy", "fiction", "government", "history", "leisure", "music", "society", "sports", "true-crime", "tv-film"}
 GLOBAL_GENRES = {k: v for k, v in GENRES.items() if k not in ("cricket", "bollywood")}
 EXTRA_GENRES = {"motivation": [1517], "health": [1514, 1517]}
-LIST_FULL = 30                                      # enough shows from the charts: the word searches are not needed
+LIST_FULL = 400                                     # the chart (up to 200 shows) never fills a page alone: the word searches always add their shows
 NO_COUNTRY = {"islamic-scholars"}
 
 
 def _chart_genre(cc, gid):
-    data = json.loads(_get(f"https://itunes.apple.com/{cc}/rss/toppodcasts/genre={int(gid)}/limit=50/json", MAX_JSON).decode("utf-8", "replace"))
+    data = json.loads(_get(f"https://itunes.apple.com/{cc}/rss/toppodcasts/genre={int(gid)}/limit=200/json", MAX_JSON).decode("utf-8", "replace"))
     out = []
     for e in (data.get("feed", {}).get("entry", []) if isinstance(data, dict) else []):
         sid = str(((e.get("id") or {}).get("attributes") or {}).get("im:id") or "")

@@ -163,6 +163,6 @@ def test_worldwide_category_starts_with_apples_chart_and_has_no_double_names(mon
     monkeypatch.setattr(podcasts, "_api", lambda path, **kw: asked.append(("search", kw.get("term"))) or {"results": []})
     rows = podcasts._build("motivation")
     assert asked[0] == ("genre", 1500)                           # Apple's Self-Improvement chart first
-    assert not [a for a in asked if a[0] == "search"]            # a full chart needs no word search
+    assert [a for a in asked if a[0] == "search"]                # a chart alone never fills a page: the word searches add their shows too
     assert len({r["name"].lower() for r in rows}) == len(rows)   # no show twice under the same name
     assert len(rows) >= 30
