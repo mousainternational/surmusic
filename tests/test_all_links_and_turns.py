@@ -15,7 +15,7 @@ def test_all_link_of_every_podcast_row_opens_that_row_not_the_list_of_categories
         assert href.startswith("/podcasts/c/")
         assert client.get(href).status_code == 200
     js = client.get("/static/js/podrows.js").data.decode()
-    assert '"/podcasts/c/" + d.slug' in js and '"/podcasts/c/" + cur' in js    # the visitor's own country / chosen faith replace the default
+    assert '"/podcasts/c/" + d.slug' in js and '"/podcasts/c/" + (cur ===' in js    # the visitor's own country / chosen faith replace the default
 
 
 def test_islamic_page_mixes_every_kind_near_the_top(monkeypatch):
@@ -43,3 +43,14 @@ def test_pages_ask_for_more_shows_from_both_directories_and_the_app_gets_up_to_2
     rows = [{"id": str(i), "name": f"Show {i}", "artist": f"A{i}", "img": "https://example.com/a.jpg", "feed": ""} for i in range(400)]
     monkeypatch.setattr(podcasts, "category", lambda slug, demo=False: rows)
     assert len(client.get("/api/podcasts/c/urdu").get_json()["items"]) == 250
+
+
+def test_a_category_page_shows_its_podcasts_first_and_keeps_the_category_list_folded(client):
+    html = client.get("/podcasts/c/islamic-scholars").get_data(as_text=True)
+    box = html.split('<details class="pod-cats-box">', 1)[1].split("</details>", 1)[0]
+    assert 'class="chip' in box and html.index("pod-cats-box") < html.index('class="pod-grid"')
+    assert "<details class=\"pod-cats-box\" open" not in html                 # folded: the shows are the first thing seen
+    assert "podcasts on this page" in html or "podcast on this page" in html
+    index = client.get("/podcasts").get_data(as_text=True)
+    assert "pod-cats-box" not in index and 'class="chip active" href="/podcasts"' in index   # the page of all categories keeps its chips
+    assert 'cur === "islamic-scholars" ? "islamic"' in client.get("/static/js/podrows.js").data.decode()

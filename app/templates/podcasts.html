@@ -12,10 +12,12 @@
       <button class="btn btn-primary" type="submit">Search</button>
     </form>
   </header>
-  <nav class="chips pod-cats" aria-label="Podcast pages">
+  {%- set chips %}<nav class="chips pod-cats" aria-label="Podcast pages">
     <a class="chip{{ ' active' if not here and not q }}" href="/podcasts">All</a>{% for k, c in cats.items() %}<a class="chip{{ ' active' if k == here }}" href="/podcasts/c/{{ k }}">{{ c[0] }}</a>{% endfor %}
-  </nav>
+  </nav>{% endset %}
+  {%- if here or q %}<details class="pod-cats-box"><summary>All podcast categories</summary>{{ chips }}</details>{% else %}{{ chips }}{% endif %}
   {% if rows %}
+  {%- if here and not q %}<p class="small muted pod-count">{{ rows | length }} podcast{{ '' if rows | length == 1 else 's' }} on this page</p>{% endif %}
   <ul class="pod-grid">
     {%- for r in rows %}
     <li><a class="pod-card" href="/podcasts/{{ r.id }}">

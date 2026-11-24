@@ -1619,3 +1619,7 @@ p.small > a, p.tiny > a, .section-head a { display: inline-block; min-height: 24
 .np-mmc-main { background: var(--accent, #ff3d86); border-color: transparent; }
 .np-mmc:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 .np-mmc[aria-pressed="true"] { outline: 2px solid #fff; }
+
+.pod-cats-box { margin: 10px 0 14px; }
+.pod-cats-box > summary { cursor: pointer; font-weight: 600; padding: 8px 0; }
+.pod-count { margin: 4px 0 10px; }
