@@ -25,7 +25,7 @@ SCHOLARS = [("Dr Israr Ahmed", "israr"), ("Engineer Muhammad Ali Mirza", "mirza"
             ("Molana Ilyas Qadri", "qadri"), ("Maulana Ishaq", "ishaq"), ("Mufti Menk", "menk"), ("Nouman Ali Khan", "nouman"),
             ("Yasir Qadhi", "qadhi"), ("Dr Zakir Naik", "zakir"), ("Molana Tariq Jamil bayan", "jamil"),
             ("Sayed Ammar Nakshawani", "nakshawani"), ("Sheikh Mohammad Ali Shomali", "shomali"), ("Allama Syed Zameer Akhtar Naqvi", "naqvi"),
-            ("Allama Talib Johri", "johri"), ("Maulana Syed Kalbe Jawad", "kalbe"), ("Maulana Syed Ali Raza Rizvi", "rizvi")]
+            ("Allama Talib Johri", "johri"), ("Maulana Syed Kalbe Jawad", "kalbe"), ("Maulana Syed Ali Raza Rizvi", "rizvi"), ("Hassan Allahyari", "allahyari")]
 TAKE_TURNS = {"islamic"}      # pages whose searches are different kinds of shows (lectures, tafseer, seerah, majlis, Shia): they take turns, so every kind is near the top
 # slug -> (page title, [recipe steps]). A step is ("scholars",), ("chart", country) or ("search", words, country).
 CATEGORIES = {

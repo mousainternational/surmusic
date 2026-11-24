@@ -54,3 +54,14 @@ def test_a_category_page_shows_its_podcasts_first_and_keeps_the_category_list_fo
     index = client.get("/podcasts").get_data(as_text=True)
     assert "pod-cats-box" not in index and 'class="chip active" href="/podcasts"' in index   # the page of all categories keeps its chips
     assert 'cur === "islamic-scholars" ? "islamic"' in client.get("/static/js/podrows.js").data.decode()
+
+
+def test_hassan_allahyari_is_looked_up_with_the_scholars_and_only_listed_if_he_has_a_show(monkeypatch):
+    assert ("Hassan Allahyari", "allahyari") in podcasts.SCHOLARS
+    hit = {"collectionId": "991", "collectionName": "Debates", "artistName": "Hassan Allahyari", "artworkUrl100": "https://example.com/100x100.jpg"}
+    def fake_api(path, **k):
+        return {"results": [hit]} if "allahyari" in k["term"].lower() else {"results": []}
+    monkeypatch.setattr(podcasts, "_api", fake_api); monkeypatch.setattr(podcasts, "index_search", lambda t, limit=20: [])
+    assert [r["id"] for r in podcasts._build("islamic-scholars")] == ["991"]          # found: listed
+    monkeypatch.setattr(podcasts, "_api", lambda *a, **k: {"results": []})
+    assert podcasts._build("islamic-scholars") == []                                  # no show found: nobody is listed without audio
