@@ -343,9 +343,9 @@ def _build(slug):
                 with ThreadPoolExecutor(6) as pool:
                     rows = [x for x in pool.map(one, SCHOLARS) if x]
             else:
-                data = _api("/search", term=step[1], media="podcast", limit=100, country=step[2])
+                data = _api("/search", term=step[1], media="podcast", limit=200, country=step[2])
                 rows = [x for x in (_row(r) for r in data.get("results", [])) if x]
-                rows += index_search(step[1], 40)                  # the second directory (Podcast Index) adds its shows when its key is set
+                rows += index_search(step[1], 80)                  # the second directory (Podcast Index) adds its shows when its key is set
         except Exception as e:
             _errors[slug] = f"{step[0]}: {type(e).__name__}: {str(e)[:150]}"
             continue

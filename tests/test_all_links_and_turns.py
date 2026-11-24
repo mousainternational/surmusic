@@ -39,10 +39,10 @@ def test_pages_ask_for_more_shows_from_both_directories_and_the_app_gets_up_to_2
         seen["index"] = limit; return []
     monkeypatch.setattr(podcasts, "_api", fake_api); monkeypatch.setattr(podcasts, "index_search", fake_index)
     podcasts._build("urdu")
-    assert seen == {"limit": 100, "index": 40}
-    rows = [{"id": str(i), "name": f"Show {i}", "artist": f"A{i}", "img": "https://example.com/a.jpg", "feed": ""} for i in range(400)]
+    assert seen == {"limit": 200, "index": 80}
+    rows = [{"id": str(i), "name": f"Show {i}", "artist": f"A{i}", "img": "https://example.com/a.jpg", "feed": ""} for i in range(600)]
     monkeypatch.setattr(podcasts, "category", lambda slug, demo=False: rows)
-    assert len(client.get("/api/podcasts/c/urdu").get_json()["items"]) == 250
+    assert len(client.get("/api/podcasts/c/urdu").get_json()["items"]) == 400
 
 
 def test_a_category_page_shows_its_podcasts_first_and_keeps_the_category_list_folded(client):
