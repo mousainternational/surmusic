@@ -26,6 +26,7 @@ SCHOLARS = [("Dr Israr Ahmed", "israr"), ("Engineer Muhammad Ali Mirza", "mirza"
             ("Yasir Qadhi", "qadhi"), ("Dr Zakir Naik", "zakir"), ("Molana Tariq Jamil bayan", "jamil"),
             ("Sayed Ammar Nakshawani", "nakshawani"), ("Sheikh Mohammad Ali Shomali", "shomali"), ("Allama Syed Zameer Akhtar Naqvi", "naqvi"),
             ("Allama Talib Johri", "johri"), ("Maulana Syed Kalbe Jawad", "kalbe"), ("Maulana Syed Ali Raza Rizvi", "rizvi")]
+TAKE_TURNS = {"islamic"}      # pages whose searches are different kinds of shows (lectures, tafseer, seerah, majlis, Shia): they take turns, so every kind is near the top
 # slug -> (page title, [recipe steps]). A step is ("scholars",), ("chart", country) or ("search", words, country).
 CATEGORIES = {
     "islamic-scholars": ("Islamic scholars", [("scholars",), ("search", "urdu islamic bayan", "PK"), ("search", "islamic lectures urdu", "PK")]),
@@ -318,7 +319,7 @@ def _build(slug):
         if slug in GLOBAL_GENRES:
             steps = [("genre", g, "us") for g in [GLOBAL_GENRES[slug]] + EXTRA_GENRES.get(slug, [])] + list(steps)
     full = 12 if _cat_country(slug) else LIST_FULL if slug in GLOBAL_GENRES else 0
-    names = set()
+    names, turns = set(), []
     for step in steps:
         if step[0] == "search" and full and len(out) >= full:      # the charts are already full: no word searches
             break
@@ -342,16 +343,23 @@ def _build(slug):
                 with ThreadPoolExecutor(6) as pool:
                     rows = [x for x in pool.map(one, SCHOLARS) if x]
             else:
-                data = _api("/search", term=step[1], media="podcast", limit=25, country=step[2])
+                data = _api("/search", term=step[1], media="podcast", limit=100, country=step[2])
                 rows = [x for x in (_row(r) for r in data.get("results", [])) if x]
-                rows += index_search(step[1], 15)                  # the second directory (Podcast Index) adds its shows when its key is set
+                rows += index_search(step[1], 40)                  # the second directory (Podcast Index) adds its shows when its key is set
         except Exception as e:
             _errors[slug] = f"{step[0]}: {type(e).__name__}: {str(e)[:150]}"
+            continue
+        if slug in TAKE_TURNS:                                # the page mixes several kinds: each kind gets a place near the top
+            turns.append(rows)
             continue
         for row in rows:
             key = re.sub(r"\W+", "", row["name"].lower())      # "Education podcast" and "Education Podcast" are one show shown twice
             if row["id"] not in seen and row["img"] and key not in names:
                 seen.add(row["id"]); names.add(key); out.append(row)
+    for row in [r for i in range(max((len(t) for t in turns), default=0)) for t in turns for r in t[i:i + 1]]:
+        key = re.sub(r"\W+", "", row["name"].lower())
+        if row["id"] not in seen and row["img"] and key not in names:
+            seen.add(row["id"]); names.add(key); out.append(row)
     if _cat_country(slug) and len(out) < 8:               # a small country has few shows of this kind: fill up with the same category from the wider list, then with the country chart
         cat, cc = _cat_country(slug)
         more = [("chart", cc)] if not out else []
