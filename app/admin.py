@@ -31,17 +31,19 @@ def dashboard():
     counts = {
         "users": db.scalar("SELECT COUNT(*) FROM users"),
         "users_7d": db.scalar("SELECT COUNT(*) FROM users WHERE created_at > ?", (_since(7),)),
-        "plays_24h": db.scalar("SELECT COUNT(*) FROM plays WHERE created_at > ?", (_since(1),)),
-        "plays_7d": db.scalar("SELECT COUNT(*) FROM plays WHERE created_at > ?", (_since(7),)),
+        "plays_24h": db.scalar("SELECT COUNT(*) FROM events WHERE kind = 'play' AND created_at > ?", (_since(1),)),
+        "plays_7d": db.scalar("SELECT COUNT(*) FROM events WHERE kind = 'play' AND created_at > ?", (_since(7),)),
         "favorites": db.scalar("SELECT COUNT(*) FROM favorites"),
         "unread": db.scalar("SELECT COUNT(*) FROM messages WHERE is_read = 0"),
         "downloads": db.scalar("SELECT COALESCE(SUM(download_count), 0) FROM apps"),
     }
-    top = db.all("SELECT station_name, category, COUNT(*) AS n FROM plays WHERE created_at > ? "
-                 "GROUP BY station_name, category ORDER BY n DESC LIMIT 10", (_since(7),))
+    # plays are read from the visitor statistics ("events"), which survive restarts; the old "plays" table is
+    # emptied by every restart on the free server, so the chart and the top list stayed blank
+    top = db.all("SELECT detail AS station_name, '' AS category, COUNT(*) AS n FROM events WHERE kind = 'play' "
+                 "AND created_at > ? AND detail <> '' GROUP BY detail ORDER BY n DESC LIMIT 10", (_since(7),))
     days = []
     today = datetime.now(timezone.utc).date()
-    rows = db.all("SELECT SUBSTR(created_at, 1, 10) AS day, COUNT(*) AS n FROM plays WHERE created_at > ? "
+    rows = db.all("SELECT SUBSTR(created_at, 1, 10) AS day, COUNT(*) AS n FROM events WHERE kind = 'play' AND created_at > ? "
                   "GROUP BY SUBSTR(created_at, 1, 10)", ((today - timedelta(days=14)).isoformat(),))
     by_day = {r["day"]: r["n"] for r in rows}
     for i in range(13, -1, -1):

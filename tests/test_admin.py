@@ -302,3 +302,23 @@ def test_message_opens_and_is_marked_read(client, app):
     assert r.status_code == 200
     page = r.get_data(as_text=True)
     assert "Thurman Su" in page and "mailto:domains@search-surmusicradio.com" in page and f"/admin/messages/{mid}/delete" in page
+
+
+def test_dashboard_plays_from_statistics(client, app):
+    """The dashboard's plays chart and top stations use the saved visitor statistics, so they are not blank after
+    a restart empties the old "plays" table (the free server restarts often)."""
+    from app.db import get_db, utcnow
+    with app.app_context():
+        db = get_db()
+        for name in ("Radyo İLEF", "Radyo İLEF", "Hum FM 106.2"):
+            db.insert("events", {"kind": "play", "visitor_id": "v1", "detail": name, "created_at": utcnow()})
+        db.insert("events", {"kind": "page_view", "visitor_id": "v1", "path": "/", "created_at": utcnow()})
+        db.commit()
+        assert db.scalar("SELECT COUNT(*) FROM plays") == 0
+    login(client)
+    html = client.get("/admin/").get_data(as_text=True)
+    assert "No plays yet." not in html
+    top = html[html.index("Top stations this week"):]
+    assert "<td>Radyo İLEF</td><td>—</td><td>2</td>" in top and "<td>Hum FM 106.2</td><td>—</td><td>1</td>" in top
+    from datetime import datetime, timezone
+    assert f"<title>{datetime.now(timezone.utc).date().isoformat()}: 3</title>" in html   # today's bar: 3 plays
