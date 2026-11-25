@@ -501,3 +501,13 @@ def test_person_page_is_an_information_hub_podcasts_and_latest_news(client, monk
     assert "What is the latest news about Mark Zuckerberg?" in html and "noindex" not in html.split("</head>")[0]
     check("adele")
     assert client.get("/genre/adele").status_code == 200                           # a singer: the news alone is enough for a page
+
+
+def test_titles_use_words_people_search(client):
+    """Pages Google already shows for a query (positions 6-30) carry that query, in the searcher's language."""
+    for path, words in [("/country/indonesia", "Radio Online Indonesia"), ("/country/brazil", "Rádio Online Brasil ao Vivo"),
+                        ("/country/colombia", "Emisoras de Colombia en Vivo"), ("/country/france", "Radio Française en Direct"),
+                        ("/country/pakistan", "FM Radio Pakistan Live"), ("/country/india", "Indian Radio Live")]:
+        html = client.get(path).get_data(as_text=True)
+        title = html[html.index("<title>") + 7:html.index("</title>")]
+        assert words in title and len(title) <= 80, (path, title)

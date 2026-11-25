@@ -728,6 +728,32 @@ for _k, _t in TOPICS.items():                       # a hand-written country Bab
     if _t["kind"] == "country" and not _t["group"]:
         _t["group"] = "asia"
 
+# Titles in the words people really type (Search Console, Nov 2026: these pages showed at positions 6-30 for them),
+# often in the country's own language. Only the title and description change; the page stays the same.
+_SEARCHED_AS = {
+    "indonesia": ("Radio Online Indonesia — Radio Indonesia Live & FM Streaming",
+                  "Dengarkan radio online Indonesia gratis: radio FM, musik, berita dan talk show live. "
+                  "Listen to live Indonesian radio free in your browser — no app, no sign-up."),
+    "brazil": ("Rádio Online Brasil ao Vivo — Brazil Radio Stations Live",
+               "Ouça rádio online do Brasil ao vivo e grátis: FM, música, notícias e futebol. "
+               "Listen to live Brazilian radio free in your browser — no app, no sign-up."),
+    "colombia": ("Emisoras de Colombia en Vivo — Radio Colombia Online",
+                 "Escucha emisoras de Colombia en vivo y gratis: FM, música, noticias y fútbol. "
+                 "Listen to live Colombian radio free in your browser — no app, no sign-up."),
+    "france": ("Radio Française en Direct — French Radio Live Online",
+               "Écoutez la radio française en direct et gratuitement : pop, chanson, infos et talk. "
+               "Listen to live French radio free in your browser — no app, no sign-up."),
+    "pakistan": ("FM Radio Pakistan Live — Pakistani FM Stations Online Free",
+                 "Listen to FM radio Pakistan live and free: FM stations from Lahore, Karachi, Islamabad and all of "
+                 "Pakistan — music, news and more, in your browser."),
+    "india": ("Indian Radio Live — India FM Stations Online Free",
+              "Listen to live Indian radio free: FM stations from Mumbai, Delhi and across India — Hindi songs, "
+              "regional music and news, in your browser."),
+}
+for _k, (_title, _desc) in _SEARCHED_AS.items():
+    if _k in TOPICS:
+        TOPICS[_k]["seo_title"], TOPICS[_k]["description"] = _title, _desc
+
 # These countries (and all of Europe and Africa) get long lists: up to 1,000 stations / thousands of podcasts, not 300.
 BIG_COUNTRY_CODES = {"CN", "SG", "TH", "MY", "ID", "JP", "AU", "NZ", "MA", "US", "GB", "TR", "RU", "AZ"}
 for _k, _t in TOPICS.items():
