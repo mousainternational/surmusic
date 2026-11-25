@@ -1268,7 +1268,7 @@ def api_podcast_category(slug):
     demo = bool(current_app.config.get("TESTING") or current_app.config.get("RADIO_DEMO"))
     rows = podcasts.category(slug, demo)
     # an empty list (Apple was slow) must never be remembered by the phone or Cloudflare: the next request asks again
-    return _json_cached({"items": [{"i": r["id"], "n": r["name"], "a": r["artist"], "m": r["img"]} for r in rows[:400]]},
+    return _json_cached({"items": [{"i": r["id"], "n": r["name"], "a": r["artist"], "m": r["img"]} for r in rows[:1000]]},
                         600 if rows else 0)
 
 

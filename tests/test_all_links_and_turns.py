@@ -42,7 +42,7 @@ def test_pages_ask_for_more_shows_from_both_directories_and_the_app_gets_up_to_2
     assert seen == {"limit": 200, "index": 80}
     rows = [{"id": str(i), "name": f"Show {i}", "artist": f"A{i}", "img": "https://example.com/a.jpg", "feed": ""} for i in range(600)]
     monkeypatch.setattr(podcasts, "category", lambda slug, demo=False: rows)
-    assert len(client.get("/api/podcasts/c/urdu").get_json()["items"]) == 400
+    assert len(client.get("/api/podcasts/c/urdu").get_json()["items"]) == 600
 
 
 def test_a_category_page_shows_its_podcasts_first_and_keeps_the_category_list_folded(client):
@@ -79,3 +79,29 @@ def test_genre_pages_always_add_word_searches_after_a_chart_of_200(monkeypatch):
     monkeypatch.setattr(podcasts, "index_search", lambda t, limit=20: [])
     podcasts._build("news")
     assert len(terms) >= 5 and "world news podcast" in terms                  # not skipped just because the chart was long
+
+
+def test_big_countries_have_long_station_lists_and_the_others_stay_as_they_were():
+    from app import topics
+    for slug in ("china", "singapore", "thailand", "malaysia", "indonesia", "japan", "australia", "new-zealand", "morocco",
+                 "usa", "uk", "turkey", "russia", "azerbaijan", "germany", "france", "nigeria", "switzerland"):
+        t = topics.TOPICS[slug]
+        assert t["cap"] == 1000 and all("limit=1000" in p and "limit=300" not in p for p in t["paths"]), slug
+    assert "cap" not in topics.TOPICS["brazil"] and "limit=300" in topics.TOPICS["brazil"]["paths"][0]
+
+
+def test_big_country_podcast_page_adds_the_category_charts_and_stops_when_apple_has_no_shop(monkeypatch):
+    calls = []
+    def chart(cc):
+        calls.append(("chart", cc)); return [{"id": f"c{i}", "name": f"Chart {i}", "artist": f"A{i}", "img": "https://e.com/a.jpg", "feed": ""} for i in range(50)]
+    def genre(cc, gid):
+        calls.append(("genre", gid)); return [{"id": f"{gid}-{i}", "name": f"G{gid} show {i}", "artist": f"B{gid}{i}", "img": "https://e.com/a.jpg", "feed": ""} for i in range(40)]
+    monkeypatch.setattr(podcasts, "_chart", chart); monkeypatch.setattr(podcasts, "_chart_genre", genre)
+    assert len(podcasts._build("top-jp")) > 400 and ("genre", 1489) in calls
+    calls.clear()
+    monkeypatch.setattr(podcasts, "_chart", lambda cc: [])
+    assert podcasts._build("top-fr") == [] and not calls
+    calls.clear()
+    podcasts._build("top-br")                                                    # not in the list: only its own chart, as before
+    assert not [c for c in calls if c[0] == "genre"]
+    assert {"jp", "sg", "az", "de", "ng", "ma"} <= podcasts.BIG_PODCAST and "br" not in podcasts.BIG_PODCAST

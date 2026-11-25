@@ -77,6 +77,8 @@ _NEAR_THE = {"pk": "Pakistan", "in": "India", "us": "the United States", "gb": "
 from .topics import COUNTRY_PAGES as _CP                      # every country of the site: each gets its own "Top podcasts in <country>" chart
 NEAR = {v["code"].lower(): v["label"] for v in _CP.values() if v.get("code")}
 NEAR.update({k: n for k, n in _NEAR_THE.items() if k in NEAR or True})
+from .topics import BIG_COUNTRY_CODES as _BIGC                # these countries (and all of Europe and Africa) get long podcast lists
+BIG_PODCAST = {c.lower() for c in _BIGC} | {v["code"].lower() for v in _CP.values() if v.get("code") and v.get("group") in ("europe", "africa")}
 
 # Religion on the home page is neutral: the row starts with a mix of all faiths and the visitor may choose one. Nobody's belief is guessed from the country.
 FAITHS = [("islamic-scholars", "Islamic"), ("christian", "Christian"), ("jewish", "Jewish"), ("hindu", "Hindu"), ("sikh", "Sikh"), ("buddhist", "Buddhist")]
@@ -318,9 +320,15 @@ def _build(slug):
         steps = CATEGORIES[slug][1] if slug in CATEGORIES else LEARN_LANG[slug][1] if slug in LEARN_LANG else [("chart", slug[4:])]
         if slug in GLOBAL_GENRES:
             steps = [("genre", g, "us") for g in [GLOBAL_GENRES[slug]] + EXTRA_GENRES.get(slug, [])] + list(steps)
-    full = 12 if _cat_country(slug) else LIST_FULL if slug in GLOBAL_GENRES else 0
+    big_top = slug.startswith("top-") and slug[4:] in BIG_PODCAST and slug not in CATEGORIES
+    if big_top:                                           # the chart of the country plus the chart of every Apple category in it
+        steps = [("chart", slug[4:])] + [("genre", g, slug[4:]) for g in dict.fromkeys(GENRES.values())]
+    big_cat = bool(_cat_country(slug)) and _cat_country(slug)[1] in BIG_PODCAST
+    full = LIST_FULL if big_cat else 12 if _cat_country(slug) else LIST_FULL if slug in GLOBAL_GENRES else 0
     names, turns = set(), []
     for step in steps:
+        if big_top and step[0] == "genre" and not out:        # Apple has no shop for this country: no category charts either
+            break
         if step[0] == "search" and full and len(out) >= full:      # the charts are already full: no word searches
             break
         try:
@@ -374,7 +382,7 @@ def _build(slug):
                 if row["id"] not in seen and row["img"]:
                     seen.add(row["id"]); out.append(row)
     if slug.startswith("top-"):
-        return out
+        return out[:1000]
     per, kept = {}, []                                   # never more than two shows of one podcaster on one page
     for row in out:
         who = (row["artist"] or row["name"]).lower()

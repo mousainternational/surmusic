@@ -728,6 +728,13 @@ for _k, _t in TOPICS.items():                       # a hand-written country Bab
     if _t["kind"] == "country" and not _t["group"]:
         _t["group"] = "asia"
 
+# These countries (and all of Europe and Africa) get long lists: up to 1,000 stations / thousands of podcasts, not 300.
+BIG_COUNTRY_CODES = {"CN", "SG", "TH", "MY", "ID", "JP", "AU", "NZ", "MA", "US", "GB", "TR", "RU", "AZ"}
+for _k, _t in TOPICS.items():
+    if _t["kind"] == "country" and (_t.get("code") in BIG_COUNTRY_CODES or _t["group"] in ("europe", "africa")):
+        _t["paths"] = [p.replace("limit=300", "limit=1000") for p in _t["paths"]]
+        _t["cap"] = 1000
+
 def _channel(slug, label, h1, title, desc, intro, more, paths):
     TOPICS[slug] = dict(kind="genre", group="News, talk & sports", label=label, h1=h1, native="", seo_title=title,
                         description=desc, intro=intro, more=more, paths=paths, per=40, cap=60)
