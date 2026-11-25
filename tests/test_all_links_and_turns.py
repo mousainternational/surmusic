@@ -129,3 +129,27 @@ def test_a_device_the_owner_marked_is_never_counted_even_without_signing_in(app,
     assert visit(fake).status_code == 200 and events() == 2                       # a guessed cookie does not hide anybody
     post(owner, "/admin/not-me", {"mode": "off"}, page="/admin/")
     assert "Do not count this device" in owner.get("/admin/").get_data(as_text=True)
+
+
+def test_bad_bots_are_blocked_and_good_ones_are_not(client):
+    for ua in ("Mozilla/5.0 (compatible; SemrushBot/7~bl; +http://www.semrush.com/bot.html)",
+               "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; KeenableBot/1.0; +https://keenable.ai/bot)",
+               "Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)", "CCBot/2.0 (https://commoncrawl.org/faq/)"):
+        assert client.get("/", headers={"User-Agent": ua}).status_code == 403, ua
+        assert client.get("/robots.txt", headers={"User-Agent": ua}).status_code == 200      # they may still read the rules
+    for ua in ("Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+               "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)",
+               "Mozilla/5.0 AppleWebKit/537.36 (compatible; ClaudeBot/1.0; +claudebot@anthropic.com)",
+               "facebookexternalhit/1.1", "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit Safari"):
+        assert client.get("/", headers={"User-Agent": ua}).status_code == 200, ua
+    robots = client.get("/robots.txt").get_data(as_text=True)
+    assert "User-agent: SemrushBot" in robots and "Disallow: /contact?*station=" in robots
+
+
+def test_podcast_lists_kept_in_memory_are_limited(monkeypatch):
+    monkeypatch.setattr(podcasts, "CAT_KEEP", 3)
+    monkeypatch.setattr(podcasts, "_build", lambda slug: [{"id": slug, "name": slug, "artist": "a", "img": "", "feed": ""}])
+    podcasts._cat.clear()
+    for i in range(6):
+        podcasts.category(f"x{i}@jp", False)
+    assert len(podcasts._cat) <= 3

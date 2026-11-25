@@ -90,6 +90,7 @@ _errors = {}                                  # slug -> last error text (shown o
 _lock = threading.Lock()
 _building = set()
 _cat = {}                                     # slug -> (time, rows)
+CAT_KEEP = 80                                  # most lists kept in memory at once (Render free has 512 MB)
 _featured = {"at": 0.0, "rows": []}
 _shows = {}                                   # id -> (time, show)
 
@@ -416,6 +417,8 @@ def category(slug, demo=False):
     with _lock:
         if rows:
             _cat[slug] = (time.time(), rows)
+            while len(_cat) > CAT_KEEP:                                   # memory: keep only the newest lists in RAM (they rebuild on demand)
+                _cat.pop(min(_cat, key=lambda k: _cat[k][0]))
         elif hit:
             _cat[slug] = (time.time() - FEATURED_TTL + 120, hit[1])      # keep the old list, try again in two minutes
         return _cat[slug][1] if slug in _cat else []

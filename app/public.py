@@ -2325,12 +2325,14 @@ def _ads_txt_response(more_lines):
 def robots():
     site = current_app.config["SITE_URL"]
     rules = ("Disallow: /admin\nDisallow: /account\nDisallow: /api/\nDisallow: /login\nDisallow: /signup\n"
-             "Disallow: /forgot\nDisallow: /reset/\nDisallow: /search\nAllow: /\n")
+             "Disallow: /forgot\nDisallow: /reset/\nDisallow: /search\nDisallow: /contact?*station=\nAllow: /\n")
     # Search and AI-answer crawlers are named on purpose (a named group must repeat the rules).
     bots = ["Googlebot", "Bingbot", "OAI-SearchBot", "ChatGPT-User", "GPTBot", "ClaudeBot", "Claude-SearchBot",
             "Claude-User", "PerplexityBot", "Perplexity-User", "Google-Extended", "Applebot", "Applebot-Extended",
             "DuckDuckBot", "YandexBot", "Amazonbot"]
-    body = "User-agent: *\n" + rules + "\n"
+    body = "".join(f"User-agent: {b}\n" for b in ("SemrushBot", "AhrefsBot", "MJ12bot", "DotBot", "KeenableBot", "Bytespider",
+                                                    "PetalBot", "BLEXBot", "DataForSeoBot", "CCBot")) + "Disallow: /\n\n"
+    body += "User-agent: *\n" + rules + "\n"
     for b in bots:
         body += f"User-agent: {b}\n" + rules + "\n"
     body += f"Sitemap: {site}/sitemap.xml\n"

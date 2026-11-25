@@ -19,6 +19,23 @@ from .util import human_size, render_markdown, valid_email
 __version__ = "1.7.61"
 
 
+# Scrapers and SEO-tool crawlers: they bring no visitors and load the small server. Search engines, AI-answer bots and
+# social-share previews are NOT in this list.
+BAD_BOTS = ("semrush", "ahrefs", "mj12bot", "dotbot", "keenablebot", "bytespider", "petalbot", "blexbot", "dataforseo",
+            "serpstatbot", "zoominfobot", "barkrowler", "megaindex", "aspiegel", "seokicks", "screaming frog", "linkdex",
+            "rogerbot", "siteauditbot", "imagesiftbot", "ccbot", "ia_archiver", "seekport", "netcraft", "awariosmartbot",
+            "turnitin")
+
+
+def _block_bad_bots():
+    if request.path == "/robots.txt":
+        return None
+    ua = request.headers.get("User-Agent", "").lower()
+    if any(b in ua for b in BAD_BOTS):
+        return ("Automated access is not allowed.", 403, {"Content-Type": "text/plain"})
+    return None
+
+
 def create_app(overrides=None):
     try:
         from dotenv import load_dotenv
@@ -74,6 +91,7 @@ def create_app(overrides=None):
     app.register_blueprint(subs_bp)
 
     app.teardown_appcontext(dbmod.close_db)
+    app.before_request(_block_bad_bots)
     app.before_request(_to_main_address)
     app.before_request(_lowdb_touch)
     app.before_request(csrf_protect)
