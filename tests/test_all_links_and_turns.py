@@ -105,3 +105,27 @@ def test_big_country_podcast_page_adds_the_category_charts_and_stops_when_apple_
     podcasts._build("top-br")                                                    # not in the list: only its own chart, as before
     assert not [c for c in calls if c[0] == "genre"]
     assert {"jp", "sg", "az", "de", "ng", "ma"} <= podcasts.BIG_PODCAST and "br" not in podcasts.BIG_PODCAST
+
+
+def test_a_device_the_owner_marked_is_never_counted_even_without_signing_in(app, client):
+    from conftest import login, post
+    from app.db import Database
+    def events():
+        db = Database(app.config["DATABASE_URL"]); n = db.scalar("SELECT COUNT(*) FROM events WHERE kind = 'page_view'"); db.close(); return n
+    visit = lambda c: c.post("/api/track", json={"path": "/"}, headers={"X-CSRF-Token": __import__("conftest").csrf(c, "/")})
+    guest = app.test_client()
+    assert visit(guest).status_code == 200 and events() == 1                      # an ordinary visitor is counted
+    owner = app.test_client()
+    login(owner)
+    html = owner.get("/admin/").get_data(as_text=True)
+    assert "Do not count this device" in html
+    r = post(owner, "/admin/not-me", {"mode": "on"}, page="/admin/")
+    assert "sm_owner=" in r.headers.get("Set-Cookie", "")
+    assert "Count this device again" in owner.get("/admin/").get_data(as_text=True)
+    phone = app.test_client()                                                      # the phone only carries the cookie: it is not signed in
+    phone.set_cookie("sm_owner", owner.get_cookie("sm_owner").value)
+    assert visit(phone).status_code == 200 and events() == 1                      # not counted
+    fake = app.test_client(); fake.set_cookie("sm_owner", "x" * 32)
+    assert visit(fake).status_code == 200 and events() == 2                       # a guessed cookie does not hide anybody
+    post(owner, "/admin/not-me", {"mode": "off"}, page="/admin/")
+    assert "Do not count this device" in owner.get("/admin/").get_data(as_text=True)

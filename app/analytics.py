@@ -117,9 +117,24 @@ def is_admin_user(user_id):
         return False
 
 
+OWNER_COOKIE = "sm_owner"
+
+
+def _owner_token():
+    return hmac.new(current_app.config["SECRET_KEY"].encode(), b"owner-device", hashlib.sha256).hexdigest()[:32]
+
+
+def is_owner_device():
+    """True in a browser the owner marked as his own (Admin -> 'Do not count this device'): never counted, signed in or not."""
+    try:
+        return hmac.compare_digest(request.cookies.get(OWNER_COOKIE, ""), _owner_token())
+    except Exception:
+        return False
+
+
 def record(kind, user_id=None, path="", detail="", referrer=""):
     """Store one analytics event (skipped for bots and for the admin's own activity)."""
-    if kind not in KINDS or is_bot():
+    if kind not in KINDS or is_bot() or is_owner_device():
         return
     # failed sign-ins stay visible (someone else may be trying the admin account); everything the admin does is left out
     if kind != "login_failed" and is_admin_user(user_id or session.get("uid")):
@@ -177,7 +192,7 @@ _close = close_session
 
 def heartbeat(user_id, station_name, category):
     """Mark this browser as listening right now."""
-    if is_bot():
+    if is_bot() or is_owner_device():
         return
     device, browser, _ = parse_ua(request.headers.get("User-Agent", ""))
     code, city = _location()

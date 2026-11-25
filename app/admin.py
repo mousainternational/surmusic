@@ -56,7 +56,24 @@ def dashboard():
     today = analytics.summary(1)["totals"]
     return render_template("admin/dashboard.html", meta=META, counts=counts, top=top, days=days, peak=peak,
                            warnings=setup_warnings(smtp_ready()), live=live, today=today,
-                           recent=analytics.recent(limit=12), cf_cities=geo.cloudflare_cities())
+                           recent=analytics.recent(limit=12), cf_cities=geo.cloudflare_cities(), owner_device=analytics.is_owner_device())
+
+
+# ---------------------------------------------------------------- the owner's own devices
+
+@bp.route("/not-me", methods=["POST"])
+@admin_required
+def not_me():
+    """Mark this browser (e.g. the owner's phone) so that its visits, plays and downloads are never counted."""
+    resp = redirect(url_for("admin.dashboard"))
+    if request.form.get("mode") == "off":
+        resp.delete_cookie(analytics.OWNER_COOKIE)
+        flash("This device is counted again.", "ok")
+    else:
+        resp.set_cookie(analytics.OWNER_COOKIE, analytics._owner_token(), max_age=60 * 60 * 24 * 730, httponly=True,
+                        secure=request.is_secure, samesite="Lax")
+        flash("This device is no longer counted in the statistics.", "ok")
+    return resp
 
 
 # ---------------------------------------------------------------- analytics
