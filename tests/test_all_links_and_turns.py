@@ -133,14 +133,15 @@ def test_a_device_the_owner_marked_is_never_counted_even_without_signing_in(app,
 
 def test_bad_bots_are_blocked_and_good_ones_are_not(client):
     for ua in ("Mozilla/5.0 (compatible; SemrushBot/7~bl; +http://www.semrush.com/bot.html)",
-               "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; KeenableBot/1.0; +https://keenable.ai/bot)",
-               "Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)", "CCBot/2.0 (https://commoncrawl.org/faq/)"):
+               "Mozilla/5.0 (compatible; MJ12bot/v1.4.8; http://mj12bot.com/)",
+               "Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)", "Mozilla/5.0 (compatible; DotBot/1.2; +https://opensiteexplorer.org/dotbot)"):
         assert client.get("/", headers={"User-Agent": ua}).status_code == 403, ua
         assert client.get("/robots.txt", headers={"User-Agent": ua}).status_code == 200      # they may still read the rules
     for ua in ("Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
                "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)",
                "Mozilla/5.0 AppleWebKit/537.36 (compatible; ClaudeBot/1.0; +claudebot@anthropic.com)",
-               "facebookexternalhit/1.1", "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit Safari"):
+               "Mozilla/5.0 (compatible; PetalBot;+https://webmaster.petalsearch.com/site/petalbot)", "Mozilla/5.0 (compatible; Seekport Crawler)",
+               "Mozilla/5.0 AppleWebKit/537.36 (compatible; KeenableBot/1.0; +https://keenable.ai/bot)", "CCBot/2.0", "facebookexternalhit/1.1", "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit Safari"):
         assert client.get("/", headers={"User-Agent": ua}).status_code == 200, ua
     robots = client.get("/robots.txt").get_data(as_text=True)
     assert "User-agent: SemrushBot" in robots and "Disallow: /contact?*station=" in robots
@@ -153,3 +154,18 @@ def test_podcast_lists_kept_in_memory_are_limited(monkeypatch):
     for i in range(6):
         podcasts.category(f"x{i}@jp", False)
     assert len(podcasts._cat) <= 3
+
+
+def test_robots_and_owner_devices_get_no_adsense_code(app, client):
+    from app.settings import save_settings
+    with app.app_context():
+        save_settings({"ads_enabled": "1", "adsense_client": "ca-pub-1234567890123456", "ads_eu_consent": "1"})
+    assert "adsbygoogle" in client.get("/").get_data(as_text=True)
+    assert "adsbygoogle" not in client.get("/", headers={"User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1)"}).get_data(as_text=True)
+    me = app.test_client()
+    from app.analytics import OWNER_COOKIE
+    with app.test_request_context():
+        from app.analytics import _owner_token
+        tok = _owner_token()
+    me.set_cookie(OWNER_COOKIE, tok)
+    assert "adsbygoogle" not in me.get("/").get_data(as_text=True)

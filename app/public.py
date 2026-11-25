@@ -2330,8 +2330,7 @@ def robots():
     bots = ["Googlebot", "Bingbot", "OAI-SearchBot", "ChatGPT-User", "GPTBot", "ClaudeBot", "Claude-SearchBot",
             "Claude-User", "PerplexityBot", "Perplexity-User", "Google-Extended", "Applebot", "Applebot-Extended",
             "DuckDuckBot", "YandexBot", "Amazonbot"]
-    body = "".join(f"User-agent: {b}\n" for b in ("SemrushBot", "AhrefsBot", "MJ12bot", "DotBot", "KeenableBot", "Bytespider",
-                                                    "PetalBot", "BLEXBot", "DataForSeoBot", "CCBot")) + "Disallow: /\n\n"
+    body = "".join(f"User-agent: {b}\n" for b in ("SemrushBot", "AhrefsBot", "MJ12bot", "DotBot", "BLEXBot", "DataForSeoBot")) + "Disallow: /\n\n"
     body += "User-agent: *\n" + rules + "\n"
     for b in bots:
         body += f"User-agent: {b}\n" + rules + "\n"

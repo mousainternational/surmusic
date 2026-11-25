@@ -21,10 +21,15 @@ __version__ = "1.7.61"
 
 # Scrapers and SEO-tool crawlers: they bring no visitors and load the small server. Search engines, AI-answer bots and
 # social-share previews are NOT in this list.
-BAD_BOTS = ("semrush", "ahrefs", "mj12bot", "dotbot", "keenablebot", "bytespider", "petalbot", "blexbot", "dataforseo",
-            "serpstatbot", "zoominfobot", "barkrowler", "megaindex", "aspiegel", "seokicks", "screaming frog", "linkdex",
-            "rogerbot", "siteauditbot", "imagesiftbot", "ccbot", "ia_archiver", "seekport", "netcraft", "awariosmartbot",
+BAD_BOTS = ("semrush", "ahrefs", "mj12bot", "dotbot", "blexbot", "dataforseo", "serpstatbot", "zoominfobot", "barkrowler",
+            "megaindex", "seokicks", "screaming frog", "linkdex", "rogerbot", "siteauditbot", "imagesiftbot", "awariosmartbot",
             "turnitin")
+
+
+def _no_ads_for_this_visitor():
+    """Robots and the owner's own devices never get the AdSense code: nothing for a bot to click, no accidental own clicks."""
+    from . import analytics
+    return analytics.is_bot() or analytics.is_owner_device()
 
 
 def _block_bad_bots():
@@ -154,7 +159,7 @@ def create_app(overrides=None):
             "csrf_token": csrf_token,
             "csp_nonce": csp_nonce,
             "user": current_user(),
-            "ads_on": ads_active(),
+            "ads_on": ads_active() and not _no_ads_for_this_visitor(),
             "now_year": datetime.now().year,
             "geoip_on": _geo_available(),
             "app_version": __version__,
