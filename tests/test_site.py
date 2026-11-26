@@ -151,6 +151,29 @@ def test_radio_cache_and_stale_fallback(app, monkeypatch):
             radio.category_stations("bollywood")
 
 
+def test_offline_directory_list_is_not_cached(app, monkeypatch):
+    """When the online directory is down, the small offline copy is shown but never cached: the next visit asks the directory again."""
+    from app import radio
+    app.config["RADIO_DEMO"] = False
+    state = {"up": False}
+
+    def fake(path):
+        if not state["up"]:
+            raise radio.RadioError("down")
+        return [{"stationuuid": "naat-online-1", "name": "Naat Online FM", "url_resolved": "https://s.example/naat",
+                 "lastcheckok": 1, "hls": 0}]
+    monkeypatch.setattr(radio, "_fetch_json", fake)
+    offline = [{"stationuuid": "offline-1", "name": "Offline Naat FM", "url_resolved": "https://s.example/off",
+                "lastcheckok": 1, "hls": 0}]
+    monkeypatch.setattr(radio, "_local_lists", lambda paths, per, cap: list(offline))
+    with app.test_request_context():
+        first = radio.genre_stations("naat")
+        assert [s["name"] for s in first] == ["Offline Naat FM"]
+        state["up"] = True
+        names = [s["name"] for s in radio.genre_stations("naat")]
+        assert "Naat Online FM" in names
+
+
 def test_category_page_shows_error_gracefully(app, client, monkeypatch):
     from app import radio
     app.config["RADIO_DEMO"] = False

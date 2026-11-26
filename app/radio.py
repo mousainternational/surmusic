@@ -7,6 +7,7 @@ and speed). Only HTTPS streams are listed on the website, because browsers block
 import json
 import re
 import random
+import threading
 import time
 import urllib.parse
 import urllib.request
@@ -174,10 +175,13 @@ def _cached(key, loader, ttl_minutes):
             data = loader()
             lowdb.cache_set("radio:" + key, data, ttl_minutes * 60)
             return data
+        _FALLBACK.used = False
         try:
             data = loader()
         except RadioError:
             data = None
+        if data is not None and getattr(_FALLBACK, "used", False):
+            return data                               # directory down: show the offline list now, but do not cache it
         if data is not None:
             lowdb.cache_set("radio:" + key, data, ttl_minutes * 60)
             if key.startswith(("genre:", "cat:")):
@@ -197,12 +201,15 @@ def _cached(key, loader, ttl_minutes):
     fresh_after = datetime.now(timezone.utc) - timedelta(minutes=ttl_minutes)
     if row and datetime.fromisoformat(row["fetched_at"]) > fresh_after:
         return json.loads(row["body"])
+    _FALLBACK.used = False
     try:
         data = loader()
     except RadioError:
         if row:  # serve stale data rather than nothing
             return json.loads(row["body"])
         raise
+    if getattr(_FALLBACK, "used", False):             # directory down: keep the last good copy, never store the offline list
+        return json.loads(row["body"]) if row else data
     db.execute("DELETE FROM station_cache WHERE cache_key = ?", (key,))
     db.execute("INSERT INTO station_cache (cache_key, body, fetched_at) VALUES (?, ?, ?)",
                (key, json.dumps(data), utcnow()))
@@ -286,6 +293,9 @@ def _local_lists(paths, per, cap):
     return _best(out, cap) if out else []
 
 
+_FALLBACK = threading.local()   # set when _merge answered from our own saved copy (directory down): never cached
+
+
 def _merge(paths, per=None, cap=300):
     if current_app.config.get("RADIO_DEMO"):
         return _demo(paths)
@@ -303,6 +313,7 @@ def _merge(paths, per=None, cap=300):
     if all(r is None for r in results):
         local = _local_lists(paths, per, cap)          # the online directory is down: use our own saved copy of it
         if local:
+            _FALLBACK.used = True
             return local
         raise RadioError("The radio directory is not reachable right now.")
     merged = []
