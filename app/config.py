@@ -34,7 +34,7 @@ class Config:
     EPHEMERAL_STORAGE = os.environ.get("EPHEMERAL_STORAGE", "0") == "1"
     # Low-database mode (app/lowdb.py): keeps a free Neon database asleep. On by default on free hosting.
     LOW_DB_MODE = _bool("LOW_DB_MODE", EPHEMERAL_STORAGE)
-    LOW_DB_FLUSH_SECONDS = _int("LOW_DB_FLUSH_SECONDS", 900)
+    LOW_DB_FLUSH_SECONDS = _int("LOW_DB_FLUSH_SECONDS", 300)   # was 900: a restart loses at most 5 minutes of plays and visits
     LOW_DB_IDLE_FLUSH_SECONDS = _int("LOW_DB_IDLE_FLUSH_SECONDS", 600)
     STORAGE_DIR = os.environ.get("STORAGE_DIR", str(BASE_DIR / "data" / "storage"))
 

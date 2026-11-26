@@ -5,6 +5,12 @@ from app import db as dbmod
 from app import lowdb
 
 
+def test_queued_plays_are_written_at_least_every_five_minutes():
+    """A restart (memory limit) loses whatever is still queued in memory, so the default write interval must stay short."""
+    from app.config import Config
+    assert Config.LOW_DB_FLUSH_SECONDS <= 300
+
+
 def _count_connections(monkeypatch):
     counter = {"n": 0}
     real_init = dbmod.Database.__init__

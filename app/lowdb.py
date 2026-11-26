@@ -140,7 +140,7 @@ def touch_request():
 
 
 def _writer(app):
-    every = app.config.get("LOW_DB_FLUSH_SECONDS", 900)
+    every = app.config.get("LOW_DB_FLUSH_SECONDS", 300)
     idle = app.config.get("LOW_DB_IDLE_FLUSH_SECONDS", 600)
     st = state(app)
     while True:
