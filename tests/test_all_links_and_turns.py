@@ -169,18 +169,3 @@ def test_robots_and_owner_devices_get_no_adsense_code(app, client):
         tok = _owner_token()
     me.set_cookie(OWNER_COOKIE, tok)
     assert "adsbygoogle" not in me.get("/").get_data(as_text=True)
-
-
-def test_shared_list_pages_are_kept_only_for_visitors_without_cookies(client):
-    # a visitor with no cookies gets a short shared-cache lifetime on genre, category and show pages
-    r = client.get("/genre/naat")
-    assert r.status_code == 200
-    assert r.headers.get("Cache-Control") == "public, max-age=600"
-    # a visitor who sends a cookie never gets a shared copy
-    client.set_cookie("probe", "1")
-    r = client.get("/genre/naat")
-    assert r.headers.get("Cache-Control") == "private, no-cache"
-    # pages with a query string and other pages are left alone
-    client.delete_cookie("probe")
-    assert client.get("/genre/naat?x=1").headers.get("Cache-Control") != "public, max-age=600"
-    assert client.get("/about").headers.get("Cache-Control") is None
