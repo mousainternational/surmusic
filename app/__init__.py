@@ -2,6 +2,7 @@
 import hashlib
 import logging
 import os
+import re
 from datetime import datetime
 
 import click
@@ -39,6 +40,14 @@ def _block_bad_bots():
     if any(b in ua for b in BAD_BOTS):
         return ("Automated access is not allowed.", 403, {"Content-Type": "text/plain"})
     return None
+
+
+_SHARED_LIST_RE = re.compile(r"^/(genre/[a-z0-9-]+|podcasts/c/[a-z0-9@-]+|podcasts/\d+|podcasts)$")
+
+
+def _is_shared_list_page(path):
+    """Genre, podcast-category, podcast-show and /podcasts pages (see the after_request header rule)."""
+    return bool(_SHARED_LIST_RE.match(path))
 
 
 def create_app(overrides=None):
@@ -121,6 +130,14 @@ def create_app(overrides=None):
             # files linked with ?v=<hash> never change under that address: keep them for a year; fonts and images for 30 days
             resp.headers["Cache-Control"] = ("public, max-age=31536000, immutable" if request.args.get("v")
                                              else "public, max-age=2592000")
+        elif request.method == "GET" and _is_shared_list_page(request.path):
+            # Genre, category and show pages look the same for every visitor with no cookies. Only such a
+            # visitor's answer may be kept by Cloudflare for a short while; anything with a cookie stays private.
+            if resp.status_code == 200 and not request.cookies and not request.args \
+                    and not resp.headers.getlist("Set-Cookie"):
+                resp.headers["Cache-Control"] = "public, max-age=600"
+            else:
+                resp.headers["Cache-Control"] = "private, no-cache"
         return resp
 
     asset_hashes = {}
