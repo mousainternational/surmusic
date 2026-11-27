@@ -598,7 +598,8 @@ def _related_links(slug=None, st=None):
     idx = _cities()
     out = []
     if st is not None:
-        cslug = idx["country"].get((st.get("country") or "").strip().lower())
+        cslug = (idx["country"].get((st.get("country") or "").strip().lower())
+                 or CODE_TO_COUNTRY.get((st.get("countrycode") or "").strip().upper()))
         if cslug:
             out.append((topic_path(cslug), f"{TOPICS[cslug]['label']} radio"))
             code = TOPICS[cslug].get("code", "")
@@ -1024,6 +1025,17 @@ def _state_counts(stations, top=12):
     return sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[:top]
 
 
+_PLACE_WORDS = set()
+
+
+def _place_words():
+    """Lower-case names of every city and country page: a station tag like "lahore" is a place, not a style of music."""
+    if not _PLACE_WORDS:
+        _PLACE_WORDS.update(t["label"].lower() for t in TOPICS.values()
+                            if t.get("group") == "Cities" or t["kind"] == "country")
+    return _PLACE_WORDS
+
+
 def _country_facts(label, total, stations, regions):
     """One short paragraph made from the live list itself (so it is different on every country page and always true)."""
     if not total:
@@ -1032,7 +1044,7 @@ def _country_facts(label, total, stations, regions):
     for st in stations:
         for t in (st.get("tags") or "").split(","):
             t = t.strip().lower()
-            if t and len(t) > 2:
+            if t and len(t) > 2 and t not in _place_words():
                 tags[t] = tags.get(t, 0) + 1
     styles = [t for t, _ in sorted(tags.items(), key=lambda kv: (-kv[1], kv[0]))[:4]]
     text = f"Right now Sur Music lists {total} live {label} radio station{'s' if total != 1 else ''} that play in your browser."

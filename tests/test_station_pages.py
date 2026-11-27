@@ -578,3 +578,20 @@ def test_every_podcast_category_has_its_own_words_and_live_facts(client):
     assert len(descs) == len(podcasts.CATEGORIES)
     html = client.get("/podcasts/c/history").get_data(as_text=True)
     assert "This page lists" in html and "At the top right now:" in html
+
+
+def test_long_country_names_still_link_and_place_tags_are_not_styles(client, monkeypatch):
+    """A station whose country is spelled the long way still links to its country page (by country code),
+    and a city's "most common styles" never lists place names such as lahore or karachi."""
+    from app import public, radio
+    st = {"uuid": "rel-uk", "name": "World News", "url": "https://stream.example.com/w", "favicon": "",
+          "country": "The United Kingdom Of Great Britain And Northern Ireland", "countrycode": "GB",
+          "state": "London", "language": "English", "tags": "news", "bitrate": 56, "clicks": 40}
+    monkeypatch.setattr(radio, "station_by_uuid", lambda u: (st if u == "rel-uk" else None, ""))
+    html = client.get(public.station_path(st)).get_data(as_text=True)
+    part = html[html.index("Explore more radio"):]
+    assert 'href="/country/uk"' in part and 'href="/genre/london"' in part
+    text = public._country_facts("Lahore", 2, [{"name": "A", "tags": "lahore,karachi,pakistan,ghazal"},
+                                               {"name": "B", "tags": "lahore,ghazal,news"}], [])
+    styles = text.split("most common styles are ")[1].split(".")[0]
+    assert "ghazal" in styles and "lahore" not in styles and "karachi" not in styles and "pakistan" not in styles
