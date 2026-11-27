@@ -2784,9 +2784,15 @@ def sitemap():
                     pages.append(topic_path(k))
             except Exception:
                 pass
-    pages += [f"/stations/{c}" for c in "0" + LETTERS]
+    from . import directory as _dir
+    known_first = {(x.get("name") or "?").strip()[:1].lower() for x in radio.known_stations()}
+    for c in "0" + LETTERS:                                       # an A–Z page only when it has stations (an empty one is noindex)
+        if _dir.by_letter(c, limit=1)[1] or (c in known_first if c != "0" else any(
+                k not in LETTERS for k in known_first)):
+            pages.append(f"/stations/{c}")
     parts = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
     post_dates = {f"/blog/{bp['slug']}": bp.get("date") for bp in blog_data.POSTS}    # real publish dates only
+    pages = list(dict.fromkeys(pages))                            # each page once (a repeated link confuses search engines)
     for p in pages:
         day = post_dates.get(p)
         parts.append(f"<url><loc>{escape(site + p)}</loc>" + (f"<lastmod>{escape(day)}</lastmod>" if day else "") + "</url>")
