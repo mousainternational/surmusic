@@ -243,8 +243,8 @@ def _demo(paths):
                                     else DEMO_NAMES["bollywood"])
     country = DEMO_COUNTRY.get(key, "Pakistan")
     raw = [{"stationuuid": f"demo-{key}-{i}", "name": n, "url_resolved": f"https://stream.example.com/{key}/{i}",
-            "favicon": "", "country": country, "tags": key, "bitrate": 128, "hls": 0, "lastcheckok": 1,
-            "clickcount": 1000 - i} for i, n in enumerate(names)]
+            "favicon": "", "country": country, "tags": key, "language": "english", "bitrate": 128, "hls": 0,
+            "lastcheckok": 1, "clickcount": 1000 - i} for i, n in enumerate(names)]
     return normalize(raw)
 
 

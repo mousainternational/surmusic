@@ -1490,13 +1490,39 @@ def station_card(uuid):
 
 
 STATION_INDEX_CLICKS, STATION_INDEX_VOTES = 10, 500
+STATION_INDEX_INFO = 2      # of: genres, language, city/region, own website
+
+
+def _station_facts(st, similar):
+    """A short paragraph made only from what the directory really knows about this station (so every page differs)."""
+    from urllib.parse import urlsplit
+    out = []
+    where = ", ".join(x for x in [st.get("state"), st.get("country")] if x)
+    lang = st.get("language")
+    if where or lang:
+        out.append(f"{st['name']} broadcasts" + (f" from {where}" if where else "") + (f" in {lang}" if lang else "") + ".")
+    if st.get("codec") or st.get("bitrate"):
+        out.append("The live stream is " + " ".join(x for x in [f"{st['bitrate']} kbps" if st.get("bitrate") else "", st.get("codec") or ""] if x) + ".")
+    if st.get("votes") or st.get("clicks"):
+        out.append("Worldwide it has " + " and ".join(x for x in [f"{st['votes']:,} listener votes" if st.get("votes") else "",
+                                                                  f"{st['clicks']:,} recent plays" if st.get("clicks") else ""] if x) + ".")
+    host = urlsplit(st.get("homepage") or "").netloc.replace("www.", "")
+    if host:
+        out.append(f"Its own website is {host}.")
+    names = [x["name"] for x in similar[:3] if x.get("name")]
+    if names:
+        out.append("Listeners of " + st["name"] + " also play " + (", ".join(names[:-1]) + " and " + names[-1] if len(names) > 1 else names[0]) + ".")
+    return " ".join(out)
 
 
 def strong_station(st):
     """Only stations people really listen to go into Google. Thousands of near-identical station pages made Google
     rate the whole site as thin (30,000 found, 500 indexed); the other pages still work and are shared normally."""
-    return ((st.get("clicks") or 0) >= STATION_INDEX_CLICKS or (st.get("votes") or 0) >= STATION_INDEX_VOTES
-            or st.get("uuid") in radio.STATION_FIXES)     # its owner sent us the details: a real, cared-for page
+    if st.get("uuid") in radio.STATION_FIXES:      # its owner sent us the details: a real, cared-for page
+        return True
+    known = sum(1 for k in ("tags", "language", "state", "homepage") if st.get(k))
+    return ((st.get("clicks") or 0) >= STATION_INDEX_CLICKS or (st.get("votes") or 0) >= STATION_INDEX_VOTES) \
+        and known >= STATION_INDEX_INFO           # a page with almost nothing to say about the station is too thin
 
 
 @bp.route("/station/<uuid>")
@@ -1585,6 +1611,7 @@ def station_page(uuid, slug=None):
     ] if value]
     likes, dislikes = like_counts(st["uuid"])
     return render_template("station.html", meta=meta, st=protect([st])[0], similar=protect(similar), cat=key or "", faqs=faqs,
+                           facts=_station_facts(st, similar),
                            likes=likes, dislikes=dislikes,
                            back=back, back_href=back_href, crumbs=crumbs, ld=ld, share=share, embed_code=embed_code,
                            details=details)

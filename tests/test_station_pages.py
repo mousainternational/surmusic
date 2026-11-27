@@ -192,7 +192,7 @@ def test_each_list_keeps_its_own_kind():
 def test_world_directory_chunks_give_station_pages_and_sitemaps(app, client):
     from app import directory
     st = {"uuid": "aaaaaaaa-1111-2222-3333-444444444444", "name": "Directory Test FM", "url": "https://example.com/s.mp3",
-          "favicon": "", "country": "Kenya", "countrycode": "KE", "tags": "pop", "bitrate": 128, "clicks": 50}
+          "favicon": "", "country": "Kenya", "countrycode": "KE", "tags": "pop", "language": "swahili", "bitrate": 128, "clicks": 50}
     directory.save_chunk(app, 0, [st])
     assert "Sitemap: https://surmusic.example/sitemap-stations-0.xml" in client.get("/robots.txt").get_data(as_text=True)
     xml = client.get("/sitemap-stations-0.xml").get_data(as_text=True)
@@ -288,7 +288,7 @@ def test_weak_station_pages_stay_out_of_google_but_still_work(client, monkeypatc
     from app import directory, public, radio
     weak = {"uuid": "weak-1", "name": "Tiny Test FM", "url": "https://stream.example.com/tiny", "favicon": "",
             "country": "Pakistan", "tags": "pop", "bitrate": 128, "clicks": 2, "votes": 3}
-    strong = dict(weak, uuid="strong-1", name="Big Test FM", clicks=50)
+    strong = dict(weak, uuid="strong-1", name="Big Test FM", clicks=50, language="urdu", state="Punjab")
     monkeypatch.setattr(radio, "station_by_uuid", lambda u: ({"weak-1": weak, "strong-1": strong}.get(u), ""))
     page = client.get(public.station_path(weak)).get_data(as_text=True)
     assert 'name="robots" content="noindex, follow"' in page          # not in Google, links still followed
@@ -530,3 +530,21 @@ def test_thin_city_pages_get_real_facts_or_stay_out_of_google(client, monkeypatc
     monkeypatch.setattr(radio, "genre_stations", lambda slug: many[:3])
     head = client.get(f"/genre/{city}").get_data(as_text=True).split("</head>")[0]
     assert "noindex" in head
+
+
+def test_station_page_facts_and_thin_station_kept_out(client, monkeypatch):
+    """A station page carries a paragraph made from what the directory knows; a station with almost no details
+    (one of genres, language, city, website) stays out of Google even when popular."""
+    from app import public, radio
+    full = {"uuid": "full-1", "name": "Facts FM", "url": "https://stream.example.com/f", "favicon": "", "country": "Pakistan",
+            "state": "Punjab", "language": "Urdu", "tags": "pop", "bitrate": 128, "codec": "MP3", "clicks": 40, "votes": 12,
+            "homepage": "https://www.factsfm.example/"}
+    bare = {"uuid": "bare-1", "name": "Bare FM", "url": "https://stream.example.com/b", "favicon": "", "country": "Pakistan",
+            "tags": "", "bitrate": 0, "clicks": 90}
+    monkeypatch.setattr(radio, "station_by_uuid", lambda u: ({"full-1": full, "bare-1": bare}.get(u), ""))
+    page = client.get(public.station_path(full)).get_data(as_text=True)
+    assert "Facts FM broadcasts from Punjab, Pakistan in Urdu." in page and "128 kbps MP3" in page
+    assert "12 listener votes and 40 recent plays" in page and "Its own website is factsfm.example." in page
+    assert 'content="index, follow' in page
+    page = client.get(public.station_path(bare)).get_data(as_text=True)
+    assert 'name="robots" content="noindex, follow"' in page
