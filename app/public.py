@@ -983,7 +983,7 @@ def country_page(slug):
     return _topic_page(slug)
 
 
-THIN_LIST = 5              # a city or language page with fewer stations is kept out of Google (too little to show)
+THIN_LIST = 1              # only an empty city or language page is kept out of Google (the owner wants every real page in)
 _THIN_GROUPS = ("Cities", "World languages")
 REGION_PAGE_MIN = 3        # a region/city gets its own page only when it has at least this many stations (no thin pages)
 
@@ -1122,7 +1122,7 @@ def _topic_page(slug, region_slug=None):
     meta = build_meta(info["seo_title"], description, page=None if region_page else f"genre-{slug}",
                       noindex=(not stations and not shows and not news) or page_no > 1 or bool(region and not region_page)
                       or (info.get("group") in _THIN_GROUPS and total < THIN_LIST)        # too few stations: little for Google
-                      or bool(info.get("people") and not shows))                          # headlines only, no podcast or talk      # an empty page (or page 2, 3, or one region) is not shown in Google
+)      # an empty page (or page 2, 3, or one region) is not shown in Google
     meta["keywords"] = topic_keywords(info)
     label = info["label"]
     top = [x["name"] for x in all_stations[:3] if x.get("name")]
@@ -1410,9 +1410,6 @@ def podcast_category(slug):
     return _podcast_list(slug, "", podcasts.category(slug, demo))
 
 
-PODCAST_INDEX_EPS = 5
-
-
 def _podcast_facts(row, eps):
     """A paragraph from the show's own details and its newest episodes' notes, so each show page says something of its own."""
     if not eps:
@@ -1435,7 +1432,7 @@ def podcast_page(sid):
     if not row:
         abort(404)
     facts, notes = _podcast_facts(row, eps)
-    strong = len(eps) >= PODCAST_INDEX_EPS and len(notes) >= 3   # only a show with real episode notes goes to Google
+    strong = bool(eps)                     # every show with episodes goes to Google; one whose feed did not load is empty
     desc = f"Listen to {row['name']} by {row['artist']} free on Sur Music. Press play on any episode."
     if strong:
         desc = f"Listen to {row['name']} by {row['artist']} free: {len(eps)} episodes, newest first. Latest: {eps[0]['name'][:70]}."
@@ -1586,10 +1583,6 @@ def station_card(uuid):
     return Response(png, mimetype="image/png", headers={"Cache-Control": "public, max-age=86400"})
 
 
-STATION_INDEX_CLICKS, STATION_INDEX_VOTES = 10, 500
-STATION_INDEX_INFO = 2      # of: genres, language, city/region, own website
-
-
 def _station_facts(st, similar):
     """A short paragraph made only from what the directory really knows about this station (so every page differs)."""
     from urllib.parse import urlsplit
@@ -1613,13 +1606,8 @@ def _station_facts(st, similar):
 
 
 def strong_station(st):
-    """Only stations people really listen to go into Google. Thousands of near-identical station pages made Google
-    rate the whole site as thin (30,000 found, 500 indexed); the other pages still work and are shared normally."""
-    if st.get("uuid") in radio.STATION_FIXES:      # its owner sent us the details: a real, cared-for page
-        return True
-    known = sum(1 for k in ("tags", "language", "state", "homepage") if st.get(k))
-    return ((st.get("clicks") or 0) >= STATION_INDEX_CLICKS or (st.get("votes") or 0) >= STATION_INDEX_VOTES) \
-        and known >= STATION_INDEX_INFO           # a page with almost nothing to say about the station is too thin
+    """Every playing station goes into Google (the owner's choice): each page carries its own facts paragraph."""
+    return bool(st.get("uuid") and st.get("url"))
 
 
 @bp.route("/station/<uuid>")
@@ -2915,10 +2903,15 @@ def sitemap():
     for k, t in TOPICS.items():                                   # a person's page counts only when it has real content (a podcast or talk, or real headlines)
         if t.get("people"):
             try:
-                if _person_shows(k, remember=False):          # headlines alone are too little for Google
+                if _person_shows(k, remember=False) or _person_news(k, wait=False):   # a podcast or real headlines
                     pages.append(topic_path(k))
             except Exception:
                 pass
+    from . import podcasts as _pods
+    for _t, rows in list(_pods._cat.values()):                    # every podcast show page the site lists
+        for r in rows or []:
+            if r.get("id") and len(pages) < 45000:
+                pages.append(f"/podcasts/{r['id']}")
     from . import directory as _dir
     known_first = {(x.get("name") or "?").strip()[:1].lower() for x in radio.known_stations()}
     for c in "0" + LETTERS:                                       # an A–Z page only when it has stations (an empty one is noindex)

@@ -97,7 +97,7 @@ def test_a_page_with_real_headlines_stays_open_and_linked_and_headlines_survive_
         radio.seed_saved("keep:pn2:adele", [{"t": "", "s": "", "u": ""}])
         radio.seed_saved("pod:p3:bill-nye", [])
         assert public._page_exists("bill-nye") is True and public._page_exists("adele") is False
-        assert "/genre/bill-nye" not in client.get("/sitemap.xml").get_data(as_text=True)    # headlines only: open, but not offered to Google
+        assert "/genre/bill-nye" in client.get("/sitemap.xml").get_data(as_text=True)    # real headlines: offered to Google
         r = client.get("/genre/bill-nye")
         assert r.status_code == 200 and "A real headline" in r.get_data(as_text=True)
         public._FOUND["x-found"] = ("X", "https://i.test/x.jpg")

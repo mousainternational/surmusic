@@ -291,13 +291,13 @@ def test_weak_station_pages_stay_out_of_google_but_still_work(client, monkeypatc
     strong = dict(weak, uuid="strong-1", name="Big Test FM", clicks=50, language="urdu", state="Punjab")
     monkeypatch.setattr(radio, "station_by_uuid", lambda u: ({"weak-1": weak, "strong-1": strong}.get(u), ""))
     page = client.get(public.station_path(weak)).get_data(as_text=True)
-    assert 'name="robots" content="noindex, follow"' in page          # not in Google, links still followed
+    assert 'content="index, follow' in page                             # the owner wants every station page in Google
     assert 'property="og:title"' in page                                # WhatsApp / Facebook previews still work
     page = client.get(public.station_path(strong)).get_data(as_text=True)
     assert 'content="index, follow' in page
     monkeypatch.setattr(directory, "chunk_stations", lambda n: [weak, strong])
     xml = client.get("/sitemap-stations-1.xml").get_data(as_text=True)
-    assert "strong-1" in xml and "weak-1" not in xml
+    assert "strong-1" in xml and "weak-1" in xml
 
 
 def test_countries_with_search_impressions_have_own_text(client):
@@ -498,8 +498,8 @@ def test_person_page_is_an_information_hub_podcasts_and_latest_news(client, monk
     html = r.get_data(as_text=True)
     assert r.status_code == 200 and "Latest news about Mark Zuckerberg" in html and "Daily Paper" in html and "https://news.test/a" not in html           # headlines are text: no link leaves the site
     assert "Upcoming projects &amp; announcements" in html and "New project coming soon" in html
-    # headlines only, no podcast or talk: the page stays for visitors but is kept out of Google (too thin)
-    assert "What is the latest news about Mark Zuckerberg?" in html and "noindex" in html.split("</head>")[0]
+    # headlines only, no podcast or talk: the page is still offered to Google (the owner's choice)
+    assert "What is the latest news about Mark Zuckerberg?" in html and "noindex" not in html.split("</head>")[0]
     check("adele")
     assert client.get("/genre/adele").status_code == 200                           # a singer: the news alone is enough for a page
 
@@ -516,7 +516,7 @@ def test_titles_use_words_people_search(client):
 
 def test_thin_city_pages_get_real_facts_or_stay_out_of_google(client, monkeypatch):
     """City and language pages: a paragraph made from the live list (count, styles, most played stations by name);
-    with fewer than 5 stations the page is kept out of Google and out of the sitemap."""
+    only an empty page is kept out of Google; a small city with a few stations is in."""
     from app import radio
     from app.topics import TOPICS
     city = next(k for k, t in TOPICS.items() if t.get("group") == "Cities")
@@ -527,9 +527,9 @@ def test_thin_city_pages_get_real_facts_or_stay_out_of_google(client, monkeypatc
     head = html.split("</head>")[0]
     assert "Right now Sur Music lists 8 live" in html and "The most played right now are Station 0, Station 1 and Station 2" in html
     assert "noindex" not in head
-    monkeypatch.setattr(radio, "genre_stations", lambda slug: many[:3])
+    monkeypatch.setattr(radio, "genre_stations", lambda slug: many[:1])
     head = client.get(f"/genre/{city}").get_data(as_text=True).split("</head>")[0]
-    assert "noindex" in head
+    assert "noindex" not in head
 
 
 def test_station_page_facts_and_thin_station_kept_out(client, monkeypatch):
@@ -547,7 +547,7 @@ def test_station_page_facts_and_thin_station_kept_out(client, monkeypatch):
     assert "12 listener votes and 40 recent plays" in page and "Its own website is factsfm.example." in page
     assert 'content="index, follow' in page
     page = client.get(public.station_path(bare)).get_data(as_text=True)
-    assert 'name="robots" content="noindex, follow"' in page
+    assert 'content="index, follow' in page                             # every station page is offered to Google
 
 
 def test_pages_link_to_their_neighbours(client, monkeypatch):
@@ -598,15 +598,20 @@ def test_long_country_names_still_link_and_place_tags_are_not_styles(client, mon
 
 
 def test_podcast_show_page_with_real_episode_notes_goes_to_google(client, monkeypatch):
-    """A show with 5+ episodes and real episode notes gets its own paragraph, the notes, and is indexable;
-    a show with only bare episode titles stays out of Google."""
+    """Every show with episodes gets its own paragraph and is indexable; one whose feed gave nothing stays out."""
     from app import podcasts
     row = {"id": "777", "name": "Deep History", "artist": "Story House", "img": "", "feed": "x", "genre": "History"}
     eps = [{"uuid": f"e{i}", "name": f"Episode {i}", "url": f"https://a.example/{i}.mp3", "favicon": "", "country": "",
             "tags": "podcast", "bitrate": 0, "clicks": 0, "date": "16 Nov 2026", "about": f"The story of empire number {i}."}
            for i in range(6)]
-    monkeypatch.setattr(podcasts, "show", lambda sid, demo=False: (row, eps) if str(sid) == "777" else (row, [dict(e, about="") for e in eps]))
+    monkeypatch.setattr(podcasts, "show", lambda sid, demo=False: (row, eps) if str(sid) == "777" else (row, eps[:1] if str(sid) == "778" else []))
     html = client.get("/podcasts/777").get_data(as_text=True)
     assert "noindex" not in html and "is a history podcast by Story House" in html
     assert "About the latest episodes" in html and "The story of empire number 0." in html
-    assert "noindex" in client.get("/podcasts/778").get_data(as_text=True)
+    assert "noindex" not in client.get("/podcasts/778").get_data(as_text=True).split("</head>")[0]
+    assert "noindex" in client.get("/podcasts/779").get_data(as_text=True).split("</head>")[0]
+    podcasts._cat["test-list"] = (0, [row])
+    try:
+        assert "/podcasts/777</loc>" in client.get("/sitemap.xml").get_data(as_text=True)
+    finally:
+        podcasts._cat.pop("test-list", None)
