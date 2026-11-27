@@ -615,3 +615,20 @@ def test_podcast_show_page_with_real_episode_notes_goes_to_google(client, monkey
         assert "/podcasts/777</loc>" in client.get("/sitemap.xml").get_data(as_text=True)
     finally:
         podcasts._cat.pop("test-list", None)
+
+
+def test_station_snippet_uses_its_own_details_and_show_page_has_podcast_schema(client, monkeypatch):
+    from app import podcasts, public, radio
+    st = {"uuid": "desc-1", "name": "Snippet FM", "url": "https://stream.example.com/s", "favicon": "", "country": "Pakistan",
+          "state": "Sindh", "language": "Urdu", "tags": "news,talk,music,extra", "bitrate": 64, "clicks": 5,
+          "homepage": "https://www.snippet.example/"}
+    assert public._station_description(st) == ("Listen to Snippet FM live online free. Broadcasting from Sindh, Pakistan in Urdu: "
+                                               "news, talk, music. 64 kbps stream, official site snippet.example. Press play, no download.")
+    monkeypatch.setattr(radio, "station_by_uuid", lambda u: (st if u == "desc-1" else None, ""))
+    assert "Broadcasting from Sindh, Pakistan in Urdu" in client.get(public.station_path(st)).get_data(as_text=True)
+    row = {"id": "555", "name": "Schema Show", "artist": "Maker", "img": "https://i.example/a.jpg", "feed": "https://f.example/rss", "genre": "News"}
+    eps = [{"uuid": "e1", "name": "First", "url": "https://a.example/1.mp3", "favicon": "", "country": "", "tags": "podcast",
+            "bitrate": 0, "clicks": 0, "date": "", "about": "About the first."}]
+    monkeypatch.setattr(podcasts, "show", lambda sid, demo=False: (row, eps))
+    html = client.get("/podcasts/555").get_data(as_text=True)
+    assert '"PodcastSeries"' in html and '"PodcastEpisode"' in html and "https://a.example/1.mp3" in html

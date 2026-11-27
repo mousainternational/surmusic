@@ -1440,7 +1440,18 @@ def podcast_page(sid):
     crumbs = [("Home", "/"), ("Podcasts", "/podcasts"), (row["name"][:50], f"/podcasts/{sid}")]
     if request.args.get("order") == "old":
         eps = list(reversed(eps))
-    return render_template("podcast.html", meta=meta, show=row, eps=protect(eps), old=request.args.get("order") == "old", sid=sid, crumbs=crumbs, ld=[breadcrumb_ld(crumbs)],
+    series = {"@context": "https://schema.org", "@type": "PodcastSeries", "name": row["name"], "url": absolute(f"/podcasts/{sid}")}
+    if row.get("img"):
+        series["image"] = row["img"]
+    if row.get("genre"):
+        series["genre"] = row["genre"]
+    if facts:
+        series["description"] = facts[:300]
+    if row.get("feed"):
+        series["webFeed"] = row["feed"]
+    series["episode"] = [{"@type": "PodcastEpisode", "name": e["name"], **({"description": e["about"]} if e.get("about") else {}),
+                          "associatedMedia": {"@type": "MediaObject", "contentUrl": e["url"]}} for e in eps[:5] if e.get("name") and e.get("url")]
+    return render_template("podcast.html", meta=meta, show=row, eps=protect(eps), old=request.args.get("order") == "old", sid=sid, crumbs=crumbs, ld=[breadcrumb_ld(crumbs), series],
                            facts=facts, notes=notes)
 
 
@@ -1605,6 +1616,22 @@ def _station_facts(st, similar):
     return " ".join(out)
 
 
+def _station_description(st):
+    """The Google snippet, made from this station's own details (place, language, styles, stream, website)."""
+    from urllib.parse import urlsplit
+    where = ", ".join(x for x in [st.get("state"), st.get("country")] if x)
+    styles = ", ".join([t.strip() for t in (st.get("tags") or "").split(",") if t.strip()][:3])
+    text = f"Listen to {st['name']} live online free."
+    if where or st.get("language") or styles:
+        text += " Broadcasting" + (f" from {where}" if where else "") + (f" in {st['language']}" if st.get("language") else "") + \
+            (f": {styles}" if styles else "") + "."
+    host = urlsplit(st.get("homepage") or "").netloc.replace("www.", "")
+    extra = [f"{st['bitrate']} kbps stream" if st.get("bitrate") else "", f"official site {host}" if host else ""]
+    if any(extra):
+        text += " " + ", ".join(x for x in extra if x).capitalize() + "."
+    return text + " Press play, no download."
+
+
 def strong_station(st):
     """Every playing station goes into Google (the owner's choice): each page carries its own facts paragraph."""
     return bool(st.get("uuid") and st.get("url"))
@@ -1639,8 +1666,7 @@ def station_page(uuid, slug=None):
     tags = st.get("tags") or "music"
     title = f"{st['name']} Live — Listen Online Free" if not st.get("country") else \
         f"{st['name']} Live — {st['country']} Radio Online Free"
-    desc = (f"Listen to {st['name']} live online free on Sur Music. A radio station from {place} playing {tags}. "
-            "No download, no sign-up — press play.")
+    desc = _station_description(st)
     meta = build_meta(title, desc, canonical_path=want)
     if not strong_station(st):
         meta["robots"] = "noindex, follow"               # not in Google, but share previews and links still work
