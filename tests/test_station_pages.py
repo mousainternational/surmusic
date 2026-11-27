@@ -595,3 +595,18 @@ def test_long_country_names_still_link_and_place_tags_are_not_styles(client, mon
                                                {"name": "B", "tags": "lahore,ghazal,news"}], [])
     styles = text.split("most common styles are ")[1].split(".")[0]
     assert "ghazal" in styles and "lahore" not in styles and "karachi" not in styles and "pakistan" not in styles
+
+
+def test_podcast_show_page_with_real_episode_notes_goes_to_google(client, monkeypatch):
+    """A show with 5+ episodes and real episode notes gets its own paragraph, the notes, and is indexable;
+    a show with only bare episode titles stays out of Google."""
+    from app import podcasts
+    row = {"id": "777", "name": "Deep History", "artist": "Story House", "img": "", "feed": "x", "genre": "History"}
+    eps = [{"uuid": f"e{i}", "name": f"Episode {i}", "url": f"https://a.example/{i}.mp3", "favicon": "", "country": "",
+            "tags": "podcast", "bitrate": 0, "clicks": 0, "date": "16 Nov 2026", "about": f"The story of empire number {i}."}
+           for i in range(6)]
+    monkeypatch.setattr(podcasts, "show", lambda sid, demo=False: (row, eps) if str(sid) == "777" else (row, [dict(e, about="") for e in eps]))
+    html = client.get("/podcasts/777").get_data(as_text=True)
+    assert "noindex" not in html and "is a history podcast by Story House" in html
+    assert "About the latest episodes" in html and "The story of empire number 0." in html
+    assert "noindex" in client.get("/podcasts/778").get_data(as_text=True)

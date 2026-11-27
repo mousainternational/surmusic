@@ -1410,6 +1410,23 @@ def podcast_category(slug):
     return _podcast_list(slug, "", podcasts.category(slug, demo))
 
 
+PODCAST_INDEX_EPS = 5
+
+
+def _podcast_facts(row, eps):
+    """A paragraph from the show's own details and its newest episodes' notes, so each show page says something of its own."""
+    if not eps:
+        return "", []
+    kind = f"a {row['genre'].lower()} podcast" if row.get("genre") and row["genre"].lower() != "podcasts" else "a podcast"
+    text = f"{row['name']} is {kind}" + (f" by {row['artist']}" if row.get("artist") else "") + \
+        f". Sur Music lists {len(eps)} of its episode{'s' if len(eps) != 1 else ''}; the newest is “{eps[0]['name']}”" + \
+        (f", published {eps[0]['date'].strip()}" if eps[0].get("date") else "") + "."
+    if len(eps) > 1:
+        text += " Other recent episodes: " + "; ".join(e["name"] for e in eps[1:4] if e.get("name")) + "."
+    notes = [(e["name"], e["about"]) for e in eps[:6] if e.get("about") and e["about"] != e.get("name")][:3]
+    return text, notes
+
+
 @bp.route("/podcasts/<int:sid>")
 def podcast_page(sid):
     from . import podcasts
@@ -1417,13 +1434,17 @@ def podcast_page(sid):
     row, eps = podcasts.show(sid, demo)
     if not row:
         abort(404)
-    meta = build_meta(f"{row['name'][:44]} — Podcast",
-                      f"Listen to {row['name']} by {row['artist']} free on Sur Music. Press play on any episode.",
-                      page=f"podcast-{sid}", noindex=True)
+    facts, notes = _podcast_facts(row, eps)
+    strong = len(eps) >= PODCAST_INDEX_EPS and len(notes) >= 3   # only a show with real episode notes goes to Google
+    desc = f"Listen to {row['name']} by {row['artist']} free on Sur Music. Press play on any episode."
+    if strong:
+        desc = f"Listen to {row['name']} by {row['artist']} free: {len(eps)} episodes, newest first. Latest: {eps[0]['name'][:70]}."
+    meta = build_meta(f"{row['name'][:44]} — Podcast", desc, page=f"podcast-{sid}", noindex=not strong)
     crumbs = [("Home", "/"), ("Podcasts", "/podcasts"), (row["name"][:50], f"/podcasts/{sid}")]
     if request.args.get("order") == "old":
         eps = list(reversed(eps))
-    return render_template("podcast.html", meta=meta, show=row, eps=protect(eps), old=request.args.get("order") == "old", sid=sid, crumbs=crumbs, ld=[breadcrumb_ld(crumbs)])
+    return render_template("podcast.html", meta=meta, show=row, eps=protect(eps), old=request.args.get("order") == "old", sid=sid, crumbs=crumbs, ld=[breadcrumb_ld(crumbs)],
+                           facts=facts, notes=notes)
 
 
 @bp.route("/pakistan-fm-radio")

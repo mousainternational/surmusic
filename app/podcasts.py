@@ -173,7 +173,8 @@ def _row(r, strict=True):
         return None
     img = _https(r.get("artworkUrl100") or r.get("artworkUrl60") or "")
     return {"id": sid, "name": (r.get("collectionName") or "Podcast")[:120], "artist": (r.get("artistName") or "")[:100],
-            "img": img.replace("100x100", "200x200") if img else "", "feed": _https(r.get("feedUrl") or "")}
+            "img": img.replace("100x100", "200x200") if img else "", "feed": _https(r.get("feedUrl") or ""),
+            "genre": (r.get("primaryGenreName") or "")[:40]}
 
 
 def index_on():
