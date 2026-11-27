@@ -498,7 +498,8 @@ def test_person_page_is_an_information_hub_podcasts_and_latest_news(client, monk
     html = r.get_data(as_text=True)
     assert r.status_code == 200 and "Latest news about Mark Zuckerberg" in html and "Daily Paper" in html and "https://news.test/a" not in html           # headlines are text: no link leaves the site
     assert "Upcoming projects &amp; announcements" in html and "New project coming soon" in html
-    assert "What is the latest news about Mark Zuckerberg?" in html and "noindex" not in html.split("</head>")[0]
+    # headlines only, no podcast or talk: the page stays for visitors but is kept out of Google (too thin)
+    assert "What is the latest news about Mark Zuckerberg?" in html and "noindex" in html.split("</head>")[0]
     check("adele")
     assert client.get("/genre/adele").status_code == 200                           # a singer: the news alone is enough for a page
 
@@ -511,3 +512,21 @@ def test_titles_use_words_people_search(client):
         html = client.get(path).get_data(as_text=True)
         title = html[html.index("<title>") + 7:html.index("</title>")]
         assert words in title and len(title) <= 80, (path, title)
+
+
+def test_thin_city_pages_get_real_facts_or_stay_out_of_google(client, monkeypatch):
+    """City and language pages: a paragraph made from the live list (count, styles, most played stations by name);
+    with fewer than 5 stations the page is kept out of Google and out of the sitemap."""
+    from app import radio
+    from app.topics import TOPICS
+    city = next(k for k, t in TOPICS.items() if t.get("group") == "Cities")
+    many = [{"uuid": f"u{i}", "name": f"Station {i}", "url": "https://s.test/live", "favicon": "", "country": "Pakistan",
+             "tags": "news, music", "bitrate": 128, "clicks": 50 - i} for i in range(8)]
+    monkeypatch.setattr(radio, "genre_stations", lambda slug: many)
+    html = client.get(f"/genre/{city}").get_data(as_text=True)
+    head = html.split("</head>")[0]
+    assert "Right now Sur Music lists 8 live" in html and "The most played right now are Station 0, Station 1 and Station 2" in html
+    assert "noindex" not in head
+    monkeypatch.setattr(radio, "genre_stations", lambda slug: many[:3])
+    head = client.get(f"/genre/{city}").get_data(as_text=True).split("</head>")[0]
+    assert "noindex" in head

@@ -686,7 +686,7 @@ def _famous_voices(n=24):
 def _person_text(slug, info, shows, news=()):
     """(paragraphs, newest episodes of the first show, questions) for a person's page, from what really exists: their shows and the newest headlines."""
     from . import podcasts
-    full, short, who = (info["h1"].split(" — ")[0]), info["label"], info["intro"].split(" is ", 1)[-1].split(". ")[0]
+    full, short = (info["h1"].split(" — ")[0]), info["label"]
     names = [r["name"] for r in shows]
     demo = bool(current_app.config.get("TESTING") or current_app.config.get("RADIO_DEMO"))
     eps = []
@@ -702,12 +702,13 @@ def _person_text(slug, info, shows, news=()):
         if eps:
             paras.append(f"The newest episode of {names[0]} is \u201c{eps[0]['name']}\u201d" + (f" ({eps[0]['date']})" if eps[0]["date"] else "") +
                          ". Open the show to play it, or pick an older one; episodes play in your browser, free, with no sign-up.")
+            if len(eps) > 1:
+                paras.append("Recent episodes: " + "; ".join(f"\u201c{e['name']}\u201d" + (f" ({e['date']})" if e["date"] else "") for e in eps[1:4]) + ".")
         faqs.append((f"Where can I listen to {full} podcasts?", f"On this page. Sur Music lists {n} show{'s' if n != 1 else ''}: " + ", ".join(names[:4]) + ". Press play on any episode."))
         faqs.append((f"Is it free to listen to {short} here?", "Yes. The episodes are free to play in your web browser or in the Sur Music Android app, with no sign-up."))
     if news:
         paras.append(f"This page also follows the latest news about {short}. The newest headline is \u201c{news[0]['t']}\u201d" + (f" ({news[0]['s']})" if news[0].get("s") else "") + ".")
         faqs.append((f"What is the latest news about {full}?", f"The newest headline is \u201c{news[0]['t']}\u201d. The list on this page is refreshed automatically from public news feeds."))
-    faqs.append((f"Who is {full}?", f"{full} is {who}."))
     return paras, eps, faqs
 
 
@@ -922,6 +923,8 @@ def country_page(slug):
     return _topic_page(slug)
 
 
+THIN_LIST = 5              # a city or language page with fewer stations is kept out of Google (too little to show)
+_THIN_GROUPS = ("Cities", "World languages")
 REGION_PAGE_MIN = 3        # a region/city gets its own page only when it has at least this many stations (no thin pages)
 
 
@@ -976,6 +979,9 @@ def _country_facts(label, total, stations, regions):
     text = f"Right now Sur Music lists {total} live {label} radio station{'s' if total != 1 else ''} that play in your browser."
     if styles:
         text += " The most common styles are " + ", ".join(styles[:-1]) + (" and " if len(styles) > 1 else "") + styles[-1] + "."
+    names = [x["name"] for x in stations[:3] if x.get("name")]
+    if names:
+        text += " The most played right now " + ("are " + ", ".join(names[:-1]) + " and " + names[-1] if len(names) > 1 else "is " + names[0]) + "."
     places = [r for r, _ in regions[:5]]
     if len(places) >= 2:
         text += " Stations broadcast from " + ", ".join(places[:-1]) + " and " + places[-1] + "."
@@ -1043,7 +1049,9 @@ def _topic_page(slug, region_slug=None):
         own = []
     description = f"Free live {info['label']} radio. {own[0]}" if own else info["description"]   # own text: a description no other page has
     meta = build_meta(info["seo_title"], description, page=None if region_page else f"genre-{slug}",
-                      noindex=(not stations and not shows and not news) or page_no > 1 or bool(region and not region_page))      # an empty page (or page 2, 3, or one region) is not shown in Google
+                      noindex=(not stations and not shows and not news) or page_no > 1 or bool(region and not region_page)
+                      or (info.get("group") in _THIN_GROUPS and total < THIN_LIST)        # too few stations: little for Google
+                      or bool(info.get("people") and not shows))                          # headlines only, no podcast or talk      # an empty page (or page 2, 3, or one region) is not shown in Google
     meta["keywords"] = topic_keywords(info)
     label = info["label"]
     top = [x["name"] for x in all_stations[:3] if x.get("name")]
@@ -1068,7 +1076,7 @@ def _topic_page(slug, region_slug=None):
     if page_no == 1 and faqs:
         ld.append(faq_items_ld(faqs))
     own_text = (COUNTRY_ABOUT.get(slug) or GENRE_ABOUT.get(slug) or []) if page_no == 1 and not region_page else []
-    if is_country and page_no == 1 and (region_page or not region) and not own_text:
+    if (is_country or info.get("group") in _THIN_GROUPS) and page_no == 1 and (region_page or not region) and not own_text:
         facts = _country_facts(label, total, stations if region_page else all_stations, [] if region_page else regions)
         own_text = [facts] if facts else []
     if person_text:
@@ -2757,7 +2765,7 @@ def sitemap():
     pages += [topic_path(k) for c in CONTINENTS for k, _, _ in _listed_countries(c)] + ["/deals"]
     from . import podcasts as _pod
     pages += [f"/podcasts/c/{k}" for k in _pod.CATEGORIES]
-    seen = set()
+    seen, thin = set(), set()
     keys = {"cat:" + c for c in radio.CATEGORIES} | {"genre:" + g for g in radio.LISTED_GENRES}
     db = get_db()
     for key_row in db.all("SELECT cache_key FROM station_cache"):             # one list at a time: low memory
@@ -2769,6 +2777,8 @@ def sitemap():
         except (ValueError, TypeError):
             continue
         gslug = key_row["cache_key"][6:] if key_row["cache_key"].startswith("genre:") else ""
+        if (TOPICS.get(gslug) or {}).get("group") in _THIN_GROUPS and len(without_blocked(stations)) < THIN_LIST:
+            thin.add(topic_path(gslug))
         if gslug in COUNTRY_PAGES:                                    # a page for each region/city with enough stations
             pages += [f"{topic_path(gslug)}/{slugify(n)}" for n, c in _state_counts(without_blocked(stations), top=1000)
                       if c >= REGION_PAGE_MIN and slugify(n) != "item"]
@@ -2777,10 +2787,11 @@ def sitemap():
                     and strong_station(st):
                 seen.add(st["uuid"])
                 pages.append(station_path(st))
+    pages = [p for p in pages if p not in thin]
     for k, t in TOPICS.items():                                   # a person's page counts only when it has real content (a podcast or talk, or real headlines)
         if t.get("people"):
             try:
-                if _person_shows(k, remember=False) or _person_news(k, wait=False):
+                if _person_shows(k, remember=False):          # headlines alone are too little for Google
                     pages.append(topic_path(k))
             except Exception:
                 pass
