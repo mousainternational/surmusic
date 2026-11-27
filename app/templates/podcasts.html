@@ -6,6 +6,7 @@
   <header class="page-head">
     <h1>{{ heading }}</h1>
     <p class="lead">{{ intro }}</p>
+    {% if facts %}<p class="muted">{{ facts }}</p>{% endif %}
     <form class="hero-search" role="search" action="/podcasts" method="get">
       <label for="pod-q" class="sr">Search podcasts</label>
       <input id="pod-q" name="q" type="search" value="{{ q }}" placeholder="Search a podcast or a person…" maxlength="60" autocomplete="off">

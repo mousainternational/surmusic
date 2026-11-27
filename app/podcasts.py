@@ -689,6 +689,41 @@ PAGE_TEXT = {
                   "The most listened podcasts worldwide right now, taken from Apple's own chart, which updates by itself. Press play on any episode.", []),
 }
 
+# Own words for the categories that had none (they showed the general podcasts text, so Google saw copies).
+PAGE_TEXT.update({
+    "education": ("Education podcasts: study tips, learning, science explained and lessons for students. Free, in your browser.",
+                  "Podcasts for learning: study and exam tips, explained science and history, and lessons for school and college students. Pick a show and press play.", []),
+    "health": ("Health and fitness podcasts: exercise, nutrition, sleep and a healthy life. Free, in your browser.",
+               "Podcasts on exercise, nutrition, sleep, weight and a healthy daily routine, from doctors, trainers and health writers. For medical advice, always see your own doctor.", []),
+    "motivation": ("Motivation and self-growth podcasts: habits, confidence and success stories. Free, in your browser.",
+                   "Podcasts on habits, confidence, discipline, careers and success stories, to start the day with energy. Pick a show and press play on any episode.", []),
+    "languages": ("Language learning podcasts: learn English and other languages by listening. Free, in your browser.",
+                  "Podcasts that teach English and other languages by listening: everyday words, grammar, pronunciation and short conversations for beginners and improvers.", []),
+    "arts": ("Arts and culture podcasts: books, literature, art and design. Free, in your browser.",
+             "Podcasts about books, poetry, literature, painting, design and the people who make them, with interviews and reviews.", []),
+    "comedy": ("Comedy podcasts: funny talk, stand-up and stories. Free, in your browser.",
+               "Comedy podcasts with stand-up, funny conversations and stories to lighten the day. Pick a show and press play.", []),
+    "fiction": ("Fiction podcasts and audio stories: audio dramas, mysteries and stories read aloud. Free, in your browser.",
+                "Audio dramas, mysteries, fantasy and short stories read aloud, told in episodes like a radio play. Start from the first episode for the full story.", []),
+    "government": ("Politics and government podcasts: policy, elections and current affairs. Free, in your browser.",
+                   "Podcasts on politics, government, policy and elections, with discussion and interviews from many points of view.", []),
+    "history": ("History podcasts: world history, empires, wars and the stories behind them. Free, in your browser.",
+                "History podcasts on ancient and modern times, empires, wars, inventions and the people behind them, told as stories you can follow episode by episode.", []),
+    "leisure": ("Hobbies and leisure podcasts: travel, food, games and hobbies. Free, in your browser.",
+                "Podcasts on travel, food and cooking, games, cars, gardening and other hobbies, for relaxed listening.", []),
+    "music": ("Music talk podcasts: interviews with artists, music history and new releases. Free, in your browser.",
+              "Podcasts about music: interviews with singers and musicians, music history, the stories behind songs and new releases. For live music, open the radio stations on Sur Music.", []),
+    "society": ("Society and culture podcasts: relationships, family, people and daily life. Free, in your browser.",
+                "Podcasts on relationships, family, work, people and daily life, with personal stories and conversations about how we live.", []),
+    "sports": ("Sports podcasts: football, cricket and more, with match talk and analysis. Free, in your browser.",
+               "Sports podcasts with match talk, analysis and interviews on football, cricket and other sports. For live commentary, see the sports radio on Sur Music.", []),
+    "true-crime": ("True crime and mystery podcasts: real cases and investigations. Free, in your browser.",
+                   "True crime podcasts that follow real cases, investigations and unsolved mysteries, often told across many episodes.", []),
+    "tv-film": ("TV and film podcasts: movie reviews, series talk and behind the scenes. Free, in your browser.",
+                "Podcasts about films and TV series: reviews, recaps, news and interviews from behind the scenes.", []),
+})
+
+
 
 def warm():
     """Right after every start, build all podcast lists at once in the background (four at a time), so a first-time visitor

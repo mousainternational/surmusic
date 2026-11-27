@@ -564,3 +564,17 @@ def test_pages_link_to_their_neighbours(client, monkeypatch):
     html = client.get(public.station_path(st)).get_data(as_text=True)
     part = html[html.index("Explore more radio"):]
     assert 'href="/country/pakistan"' in part and 'href="/genre/lahore"' in part and 'href="/genre/ghazal"' in part
+
+
+def test_every_podcast_category_has_its_own_words_and_live_facts(client):
+    """No podcast category page repeats the general podcasts text, and each one names its own top shows."""
+    from app import podcasts
+    general = podcasts.PAGE_TEXT[""][1]
+    descs = set()
+    for slug in podcasts.CATEGORIES:
+        desc, intro, _ = podcasts.PAGE_TEXT.get(slug, podcasts.PAGE_TEXT[""])
+        assert intro != general, slug
+        descs.add(desc)
+    assert len(descs) == len(podcasts.CATEGORIES)
+    html = client.get("/podcasts/c/history").get_data(as_text=True)
+    assert "This page lists" in html and "At the top right now:" in html

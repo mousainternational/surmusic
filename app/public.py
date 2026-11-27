@@ -1370,7 +1370,12 @@ def _podcast_list(slug, q, rows):
     heading = (podcasts.label(slug) if slug else "Podcasts — Urdu, Islamic, Hindi, Cricket & News")
     crumbs = [("Home", "/"), ("Podcasts", "/podcasts")] + ([(podcasts.label(slug), f"/podcasts/c/{slug}")] if slug else [])
     ld = [breadcrumb_ld(crumbs)] + ([_podcast_ld(rows, heading)] if rows and not q else []) + ([faq_items_ld(faqs)] if faqs else [])
-    return render_template("podcasts.html", meta=meta, rows=rows, q=q, crumbs=crumbs, ld=ld, heading=heading, intro=intro, faqs=faqs,
+    facts = ""
+    if rows and not q:                     # a sentence made from the live list itself: different on every category page
+        top = [f"{r['name']}" + (f" by {r['artist']}" if r.get("artist") and r["artist"] != r["name"] else "") for r in rows[:3] if r.get("name")]
+        facts = f"This page lists {len(rows)} show{'s' if len(rows) != 1 else ''}" + \
+            (". At the top right now: " + "; ".join(top) + "." if top else ".")
+    return render_template("podcasts.html", meta=meta, rows=rows, q=q, crumbs=crumbs, ld=ld, heading=heading, intro=intro, faqs=faqs, facts=facts,
                            cats=podcasts.CATEGORIES, here=slug)
 
 
