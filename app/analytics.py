@@ -418,6 +418,15 @@ def recent(kind=None, user_id=None, limit=100, offset=0):
     for r in rows:
         r["label"] = KINDS.get(r["kind"], r["kind"])
         r["flag"], r["country_name"] = flag(r["country"]), country_name(r["country"]) if r["country"] else ""
+        if r["kind"] == "page_view" and (r["path"] or "").startswith(("/station/", "/podcasts/")) and r["visitor_id"]:
+            # did this visitor press play within 30 minutes after opening the page?
+            try:
+                end = (datetime.fromisoformat(r["created_at"]) + timedelta(minutes=30)).replace(microsecond=0).isoformat()
+                r["pressed"] = bool(db.scalar("SELECT COUNT(*) FROM events WHERE kind = 'play' AND visitor_id = ? "
+                                              "AND created_at >= ? AND created_at <= ?",
+                                              (r["visitor_id"], r["created_at"], end)))
+            except (TypeError, ValueError):
+                r["pressed"] = False
     return rows
 
 

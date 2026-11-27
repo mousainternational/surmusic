@@ -25,7 +25,7 @@
     {% if show_user %}<td>{% if r.user_id %}<a href="{{ url_for('admin.user_detail', uid=r.user_id) }}">{{ r.display_name or r.email }}</a>{% else %}<span class="muted">Guest</span>{% endif %}</td>{% endif %}
     <td class="nowrap">{% if r.country %}{{ r.flag }} {{ r.region ~ ', ' if r.region }}{{ r.country_name }}{% else %}<span class="muted">Unknown</span>{% endif %}</td>
     <td class="small">{{ r.device }} · {{ r.browser }} · {{ r.os }}</td>
-    <td class="small">{{ r.detail or r.path }}{% if r.referrer %} <span class="muted">from {{ r.referrer }}</span>{% endif %}</td>
+    <td class="small">{{ r.detail or r.path }}{% if r.pressed is defined %} <span class="muted">{% if r.pressed %}▶ play pressed{% else %}play not pressed{% endif %}</span>{% endif %}{% if r.referrer %} <span class="muted">from {{ r.referrer }}</span>{% endif %}</td>
   </tr>
   {%- endfor %}
   </tbody>
