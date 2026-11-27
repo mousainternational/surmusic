@@ -77,6 +77,10 @@
         <p>{{ a }}</p>
         {%- endfor %}
       </section>
+      {% if related and related[1] %}<nav class="topic-related card" aria-label="{{ related[0] }}">
+        <h2 class="h3">{{ related[0] }}</h2>
+        <p class="chips">{% for href, words in related[1] %}<a class="chip" href="{{ href }}">{{ words }}</a> {% endfor %}</p>
+      </nav>{% endif %}
       {% if similar %}
       <section class="section">
         <div class="section-head"><h2 class="h3">More stations like {{ st.name }}</h2><a href="{{ back_href }}">All {{ back }} →</a></div>

@@ -69,6 +69,10 @@
         <h2 class="h3">Questions about {{ info.label }} radio</h2>
         {% for q, a in faqs %}<details><summary>{{ q }}</summary><p>{{ a }}</p></details>{% endfor %}
       </section>{% endif %}
+      {% if related and related[1] %}<nav class="topic-related card" aria-label="{{ related[0] }}">
+        <h2 class="h3">{{ related[0] }}</h2>
+        <p class="chips">{% for href, words in related[1] %}<a class="chip" href="{{ href }}">{{ words }}</a> {% endfor %}</p>
+      </nav>{% endif %}
       {% if neighbours %}<section class="topic-neighbours card">
         <h2 class="h3">Radio from neighbouring countries</h2>
         <p class="chips">{% for href, name in neighbours %}<a class="chip" href="{{ href }}">{{ name }} radio</a> {% endfor %}</p>

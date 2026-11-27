@@ -548,3 +548,19 @@ def test_station_page_facts_and_thin_station_kept_out(client, monkeypatch):
     assert 'content="index, follow' in page
     page = client.get(public.station_path(bare)).get_data(as_text=True)
     assert 'name="robots" content="noindex, follow"' in page
+
+
+def test_pages_link_to_their_neighbours(client, monkeypatch):
+    """Internal links: a country lists its city pages, a city links to its country and other cities,
+    a station links to its country, city and genre pages."""
+    from app import public, radio
+    html = client.get("/country/pakistan").get_data(as_text=True)
+    assert "Cities in Pakistan" in html and 'href="/genre/lahore"' in html and 'href="/genre/karachi"' in html
+    html = client.get("/genre/lahore").get_data(as_text=True)
+    assert "More cities nearby" in html and 'href="/country/pakistan"' in html and 'href="/genre/karachi"' in html
+    st = {"uuid": "rel-1", "name": "Link FM", "url": "https://stream.example.com/l", "favicon": "", "country": "Pakistan",
+          "state": "Lahore", "language": "Urdu", "tags": "ghazal", "bitrate": 128, "clicks": 40}
+    monkeypatch.setattr(radio, "station_by_uuid", lambda u: (st if u == "rel-1" else None, ""))
+    html = client.get(public.station_path(st)).get_data(as_text=True)
+    part = html[html.index("Explore more radio"):]
+    assert 'href="/country/pakistan"' in part and 'href="/genre/lahore"' in part and 'href="/genre/ghazal"' in part

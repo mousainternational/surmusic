@@ -570,6 +570,65 @@ def _check_person_soon(slug):
 _FOUND = {}                  # people whose podcasts or talks really exist: slug -> (label, cover picture)
 
 
+_CITY_INDEX = {}
+
+
+def _cities():
+    """{country code: [(city slug, city label)]} and {(code, city name lower): slug}, from each city page's own search."""
+    if not _CITY_INDEX:
+        import re as _re
+        by_code, by_name = {}, {}
+        for k, t in TOPICS.items():
+            if t.get("group") != "Cities":
+                continue
+            m = _re.search(r"countrycode=([A-Z]{2})", " ".join(t.get("paths") or []))
+            if m:
+                by_code.setdefault(m.group(1), []).append((k, t["label"]))
+                by_name[(m.group(1), t["label"].lower())] = k
+        _CITY_INDEX.update(code=by_code, name=by_name,
+                           country={t["label"].lower(): k for k, t in TOPICS.items() if t["kind"] == "country"})
+    return _CITY_INDEX
+
+
+def _related_links(slug=None, st=None):
+    """(heading, [(href, words)]) that tie a page to its neighbours: country <-> its cities, a city -> its country and
+    other cities, a person -> other famous voices of the same kind, a station -> its country, city and genre.
+    Google reaches every strong page through these, and visitors find the next thing to play."""
+    from .topics import CODE_TO_COUNTRY
+    idx = _cities()
+    out = []
+    if st is not None:
+        cslug = idx["country"].get((st.get("country") or "").strip().lower())
+        if cslug:
+            out.append((topic_path(cslug), f"{TOPICS[cslug]['label']} radio"))
+            code = TOPICS[cslug].get("code", "")
+            city = idx["name"].get((code, (st.get("state") or "").strip().lower()))
+            if city:
+                out.append((topic_path(city), f"{TOPICS[city]['label']} radio"))
+        for tag in (st.get("tags") or "").split(","):
+            k = slugify(tag.strip(), 60) if tag.strip() else ""
+            if k in TOPICS and TOPICS[k]["kind"] != "country" and not TOPICS[k].get("people"):
+                out.append((topic_path(k), f"{TOPICS[k]['label']} radio"))
+        return ("Explore more radio", out[:5])
+    t = TOPICS.get(slug) or {}
+    if t.get("kind") == "country":
+        out = [(topic_path(k), f"{label} radio") for k, label in idx["code"].get(t.get("code", ""), [])[:24]]
+        return (f"Cities in {t['label']}", out)
+    if t.get("group") == "Cities":
+        code = next((c for c, items in idx["code"].items() if any(k == slug for k, _ in items)), "")
+        cslug = CODE_TO_COUNTRY.get(code)
+        if cslug:
+            out.append((topic_path(cslug), f"All {TOPICS[cslug]['label']} radio"))
+        out += [(topic_path(k), f"{label} radio") for k, label in idx["code"].get(code, []) if k != slug][:12]
+        return ("More cities nearby", out)
+    if t.get("people"):
+        kind = t.get("pkind")
+        out = [(topic_path(k), TOPICS[k]["label"]) for k in list(_FOUND)
+               if k != slug and (TOPICS.get(k) or {}).get("pkind") == kind][:12]
+        return ("More famous voices", out)
+    return ("", [])
+
+
 def _page_exists(slug):
     """False for a person whose page would be empty (no audio and no headlines): that page is a 404, so nothing may link to it."""
     if not (TOPICS.get(slug) or {}).get("people") or slug in _FOUND:
@@ -1088,7 +1147,7 @@ def _topic_page(slug, region_slug=None):
                            active_region=region,
                            info=info, genre=slug, crumbs=crumbs, ld=ld, trending=trending, faqs=faqs if page_no == 1 else [], popular=popular if page_no == 1 else [],
                            total=total, page_no=page_no, pages=pages, page_base=request.path,
-                           own_text=own_text)
+                           own_text=own_text, related=_related_links(slug) if not region_page else ("", []))
 
 
 def _listed_countries(continent, minimum=3):
@@ -1611,7 +1670,7 @@ def station_page(uuid, slug=None):
     ] if value]
     likes, dislikes = like_counts(st["uuid"])
     return render_template("station.html", meta=meta, st=protect([st])[0], similar=protect(similar), cat=key or "", faqs=faqs,
-                           facts=_station_facts(st, similar),
+                           facts=_station_facts(st, similar), related=_related_links(st=st),
                            likes=likes, dislikes=dislikes,
                            back=back, back_href=back_href, crumbs=crumbs, ld=ld, share=share, embed_code=embed_code,
                            details=details)
